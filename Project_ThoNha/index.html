@@ -1,0 +1,585 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="Thợ Nhà - Dịch vụ sửa chữa, bảo trì và cải tạo nhà cửa chuyên nghiệp. Sửa máy lạnh, máy giặt, điện nước, nhà vệ sinh uy tín tại TP.HCM">
+    <meta name="keywords" content="thợ sửa nhà, sửa máy lạnh, sửa máy giặt, sửa điện nước, cải tạo nhà, thợ điện, thợ nước">
+    <title>Thợ Nhà - Dịch Vụ Sửa Chữa Nhà Cửa Chuyên Nghiệp</title>
+    
+    <!-- Bootstrap CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+    <!-- Font Awesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <!-- Custom CSS -->
+    <link rel="stylesheet" href="css/style.css">
+    
+    <style>
+        /* Style cho card có thể click */
+        .service-card {
+            cursor: pointer;
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+        }
+        
+        .service-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 30px rgba(0,0,0,0.15);
+        }
+    </style>
+</head>
+<body>
+    <!-- Header -->
+    <div id="header-container"></div>
+
+    <!-- Hero Section -->
+    <section id="home" class="hero-section">
+        <div class="container">
+            <div class="row align-items-center g-5">
+                <div class="col-lg-6">
+                    <h1 class="hero-title">
+                        <span class="gradient-text">Thợ Nhà</span><br>
+                        Giải Pháp Sửa Chữa Toàn Diện
+                    </h1>
+                    <p class="hero-subtitle">
+                        Dịch vụ sửa chữa, bảo trì và cải tạo nhà cửa chuyên nghiệp. 
+                        Đội ngũ thợ giàu kinh nghiệm, cam kết chất lượng và uy tín.
+                    </p>
+                    
+                    <div class="row g-3 mb-4">
+                        <div class="col-md-4">
+                            <div class="feature-box">
+                                <div class="feature-icon">
+                                    <i class="fas fa-clock"></i>
+                                </div>
+                                <div>
+                                    <strong>24/7</strong><br>
+                                    <small>Hỗ trợ</small>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-4">
+                            <div class="feature-box">
+                                <div class="feature-icon">
+                                    <i class="fas fa-shield-alt"></i>
+                                </div>
+                                <div>
+                                    <strong>Bảo hành</strong><br>
+                                    <small>6 tháng</small>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-4">
+                            <div class="feature-box">
+                                <div class="feature-icon">
+                                    <i class="fas fa-phone-alt"></i>
+                                </div>
+                                <div>
+                                    <strong>Nhanh</strong><br>
+                                    <small>30 phút</small>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="d-flex gap-3 flex-wrap">
+                        <a href="#contact" class="btn btn-gradient">Liên hệ ngay</a>
+                        <a href="#services" class="btn btn-outline-gradient">Xem dịch vụ</a>
+                    </div>
+                </div>
+                <div class="col-lg-6">
+                    <div class="hero-image">
+                        <div class="image-wrapper">
+                            <img src="image/1.png" alt="Thợ sửa chữa chuyên nghiệp">
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- About Section -->
+    <section id="about" class="about-section">
+        <div class="container">
+            <h2 class="section-title">
+                <span class="gradient-text">Về Chúng Tôi</span>
+            </h2>
+            <p class="section-subtitle">
+                Thợ Nhà là đơn vị cung cấp dịch vụ sửa chữa, bảo trì và cải tạo nhà cửa hàng đầu tại Việt Nam với đội ngũ thợ lành nghề, giàu kinh nghiệm.
+            </p>
+            
+            <div class="row g-4 mb-5">
+                <div class="col-md-3 col-sm-6">
+                    <div class="stat-card">
+                        <div class="stat-icon">
+                            <i class="fas fa-users"></i>
+                        </div>
+                        <div class="stat-value">5000+</div>
+                        <div class="stat-label">Khách hàng tin tưởng</div>
+                    </div>
+                </div>
+                <div class="col-md-3 col-sm-6">
+                    <div class="stat-card">
+                        <div class="stat-icon">
+                            <i class="fas fa-award"></i>
+                        </div>
+                        <div class="stat-value">10+</div>
+                        <div class="stat-label">Năm kinh nghiệm</div>
+                    </div>
+                </div>
+                <div class="col-md-3 col-sm-6">
+                    <div class="stat-card">
+                        <div class="stat-icon">
+                            <i class="fas fa-thumbs-up"></i>
+                        </div>
+                        <div class="stat-value">98%</div>
+                        <div class="stat-label">Khách hàng hài lòng</div>
+                    </div>
+                </div>
+                <div class="col-md-3 col-sm-6">
+                    <div class="stat-card">
+                        <div class="stat-icon">
+                            <i class="fas fa-wrench"></i>
+                        </div>
+                        <div class="stat-value">15+</div>
+                        <div class="stat-label">Dịch vụ chuyên nghiệp</div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="row align-items-center g-5">
+                <div class="col-lg-6">
+                    <div class="image-wrapper">
+                        <img src="image/8.png" alt="Khách hàng hài lòng" style="width: 100%; height: 400px; object-fit: cover;">
+                    </div>
+                </div>
+                <div class="col-lg-6">
+                    <h3 class="mb-4" style="font-size: 2rem; font-weight: 700;">Tại Sao Chọn Thợ Nhà?</h3>
+                    
+                    <div class="check-item">
+                        <div class="check-icon">✓</div>
+                        <div>
+                            <h5 style="font-weight: 600; margin-bottom: 5px;">Đội Ngũ Chuyên Nghiệp</h5>
+                            <p style="color: #666; margin: 0;">Thợ được đào tạo bài bản, có chứng chỉ hành nghề và nhiều năm kinh nghiệm trong lĩnh vực sửa chữa.</p>
+                        </div>
+                    </div>
+                    
+                    <div class="check-item">
+                        <div class="check-icon">✓</div>
+                        <div>
+                            <h5 style="font-weight: 600; margin-bottom: 5px;">Cam Kết Chất Lượng</h5>
+                            <p style="color: #666; margin: 0;">Chúng tôi cam kết sử dụng vật liệu chính hãng, công nghệ hiện đại và quy trình làm việc chuyên nghiệp.</p>
+                        </div>
+                    </div>
+                    
+                    <div class="check-item">
+                        <div class="check-icon">✓</div>
+                        <div>
+                            <h5 style="font-weight: 600; margin-bottom: 5px;">Bảo Hành Dài Hạn</h5>
+                            <p style="color: #666; margin: 0;">Bảo hành 6-12 tháng cho tất cả dịch vụ. Hỗ trợ khách hàng 24/7 khi có vấn đề phát sinh.</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Services Section -->
+    <section id="services" class="services-section">
+        <div class="container">
+            <h2 class="section-title">
+                <span class="gradient-text">Dịch Vụ Của Chúng Tôi</span>
+            </h2>
+            <p class="section-subtitle">
+                Cung cấp đa dạng dịch vụ sửa chữa, bảo trì và cải tạo nhà cửa với đội ngũ thợ chuyên nghiệp, giá cả hợp lý.
+            </p>
+            <div class="row g-4" id="serviceGrid">
+                <!-- Sửa Máy Lạnh -->
+                <div class="col-lg-4 col-md-6 service-item" data-category="Sửa máy lạnh">
+                    <div class="service-card" data-service-id="1">
+                        <div class="service-image">
+                            <img src="image/2.jpg" alt="Sửa Máy Lạnh">
+                            <div class="service-icon"><i class="fas fa-wind"></i></div>
+                        </div>
+                        <div class="service-content">
+                            <h3 class="service-title">Sửa Máy Lạnh</h3>
+                            <p class="service-description">
+                                Sửa chữa, vệ sinh, bảo dưỡng máy lạnh các loại. Thay linh kiện chính hãng, nạp gas R410A, R32.
+                            </p>
+                            <div class="d-grid gap-2">
+                                <button class="btn btn-gradient booking-btn" data-service-name="Sửa máy lạnh">
+                                    <i class="fas fa-calendar-check"></i> Đặt lịch ngay
+                                </button>
+                                <button class="btn btn-outline-gradient detail-btn">
+                                    <i class="fas fa-info-circle"></i> Xem chi tiết
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Sửa Máy Giặt -->
+                <div class="col-lg-4 col-md-6 service-item" data-category="Sửa máy giặt">
+                    <div class="service-card" data-service-id="2">
+                        <div class="service-image">
+                            <img src="image/4.jpg" alt="Sửa Máy Giặt">
+                            <div class="service-icon"><i class="fas fa-tshirt"></i></div>
+                        </div>
+                        <div class="service-content">
+                            <h3 class="service-title">Sửa Máy Giặt</h3>
+                            <p class="service-description">
+                                Sửa máy giặt cửa trên, cửa ngang, máy giặt sấy. Thay motor, board mạch, cảm biến chính hãng.
+                            </p>
+                            <div class="d-grid gap-2">
+                                <button class="btn btn-gradient booking-btn" data-service-name="Sửa máy giặt">
+                                    <i class="fas fa-calendar-check"></i> Đặt lịch ngay
+                                </button>
+                                <button class="btn btn-outline-gradient detail-btn">
+                                    <i class="fas fa-info-circle"></i> Xem chi tiết
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Nhà Vệ Sinh -->
+                <div class="col-lg-4 col-md-6 service-item" data-category="Nhà vệ sinh">
+                    <div class="service-card" data-service-id="3">
+                        <div class="service-image">
+                            <img src="image/3.jpg" alt="Nhà vệ sinh">
+                            <div class="service-icon"><i class="fas fa-droplet"></i></div>
+                        </div>
+                        <div class="service-content">
+                            <h3 class="service-title">Nhà vệ sinh</h3>
+                            <p class="service-description">
+                                Thông tắc bồn cầu, sửa bồn cầu rò nước, thay thiết bị vệ sinh. Chống thấm nhà vệ sinh.
+                            </p>
+                            <div class="d-grid gap-2">
+                                <button class="btn btn-gradient booking-btn" data-service-name="Nhà vệ sinh">
+                                    <i class="fas fa-calendar-check"></i> Đặt lịch ngay
+                                </button>
+                                <button class="btn btn-outline-gradient detail-btn">
+                                    <i class="fas fa-info-circle"></i> Xem chi tiết
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Điện nước -->
+                <div class="col-lg-4 col-md-6 service-item" data-category="Điện nước">
+                    <div class="service-card" data-service-id="4">
+                        <div class="service-image">
+                            <img src="image/6.jpg" alt="Sửa Điện - Nước">
+                            <div class="service-icon">
+                                <i class="fas fa-bolt"></i>
+                            </div>
+                        </div>
+                        <div class="service-content">
+                            <h3 class="service-title">Sửa Điện - Nước</h3>
+                            <p class="service-description">
+                                Sửa chữa hệ thống điện nước trong nhà, xử lý nhanh các sự cố chập điện, rò rỉ nước.
+                            </p>
+                            <div class="d-grid gap-2">
+                                <button class="btn btn-gradient booking-btn" data-service-name="Điện nước">
+                                    <i class="fas fa-calendar-check"></i> Đặt lịch ngay
+                                </button>
+                                <button class="btn btn-outline-gradient detail-btn">
+                                    <i class="fas fa-info-circle"></i> Xem chi tiết
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Đồ gia dụng -->
+                <div class="col-lg-4 col-md-6 service-item" data-category="Đồ gia dụng">
+                    <div class="service-card" data-service-id="5">
+                        <div class="service-image">
+                            <img src="image/5.jpg" alt="Sửa Đồ Gia Dụng">
+                            <div class="service-icon">
+                                <i class="fas fa-home"></i>
+                            </div>
+                        </div>
+                        <div class="service-content">
+                            <h3 class="service-title">Sửa Đồ Gia Dụng</h3>
+                            <p class="service-description">
+                                Sửa chữa các thiết bị gia dụng như tủ lạnh, tivi, bếp từ, lò vi sóng.
+                            </p>
+                            <div class="d-grid gap-2">
+                                <button class="btn btn-gradient booking-btn" data-service-name="Đồ gia dụng">
+                                    <i class="fas fa-calendar-check"></i> Đặt lịch ngay
+                                </button>
+                                <button class="btn btn-outline-gradient detail-btn">
+                                    <i class="fas fa-info-circle"></i> Xem chi tiết
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Cải tạo nhà -->
+                <div class="col-lg-4 col-md-6 service-item" data-category="Cải tạo nhà">
+                    <div class="service-card" data-service-id="6">
+                        <div class="service-image">
+                            <img src="image/7.jpg" alt="Cải Tạo Nhà">
+                            <div class="service-icon">
+                                <i class="fas fa-hammer"></i>
+                            </div>
+                        </div>
+                        <div class="service-content">
+                            <h3 class="service-title">Cải Tạo Nhà</h3>
+                            <p class="service-description">
+                                Thi công cải tạo, sửa chữa nhà cửa: sơn nhà, trần thạch cao, lát nền, ốp tường.
+                            </p>
+                            <div class="d-grid gap-2">
+                                <button class="btn btn-gradient booking-btn" data-service-name="Cải tạo nhà">
+                                    <i class="fas fa-calendar-check"></i> Đặt lịch ngay
+                                </button>
+                                <button class="btn btn-outline-gradient detail-btn">
+                                    <i class="fas fa-info-circle"></i> Xem chi tiết
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Contact Section -->
+    <section id="contact" class="contact-section">
+        <div class="container">
+            <h2 class="section-title">
+                <span class="gradient-text">Liên Hệ Với Chúng Tôi</span>
+            </h2>
+            <p class="section-subtitle">
+                Hãy để lại thông tin, chúng tôi sẽ liên hệ tư vấn và báo giá miễn phí trong thời gian sớm nhất.
+            </p>
+            
+            <div class="row g-4 mb-5">
+                <div class="col-lg-3 col-md-6">
+                    <div class="contact-card">
+                        <div class="contact-icon">
+                            <i class="fas fa-phone-alt"></i>
+                        </div>
+                        <h5>Điện thoại</h5>
+                        <p class="mb-1"><strong>0123 456 789</strong></p>
+                        <small class="text-muted">Hỗ trợ 24/7</small>
+                    </div>
+                </div>
+                <div class="col-lg-3 col-md-6">
+                    <div class="contact-card">
+                        <div class="contact-icon">
+                            <i class="fas fa-envelope"></i>
+                        </div>
+                        <h5>Email</h5>
+                        <p class="mb-1"><strong><a href="/cdn-cgi/l/email-protection" class="__cf_email__" data-cfemail="ea9e828584828baa8d878b8386c4898587">[email&#160;protected]</a></strong></p>
+                        <small class="text-muted">Phản hồi trong 24h</small>
+                    </div>
+                </div>
+                <div class="col-lg-3 col-md-6">
+                    <div class="contact-card">
+                        <div class="contact-icon">
+                            <i class="fas fa-map-marker-alt"></i>
+                        </div>
+                        <h5>Địa chỉ</h5>
+                        <p class="mb-1"><strong>91, Lê Đức Thọ, P17, Quận Gò Vấp</strong></p>
+                        <small class="text-muted">TP. Hồ Chí Minh</small>
+                    </div>
+                </div>
+                <div class="col-lg-3 col-md-6">
+                    <div class="contact-card">
+                        <div class="contact-icon">
+                            <i class="fas fa-clock"></i>
+                        </div>
+                        <h5>Giờ làm việc</h5>
+                        <p class="mb-1"><strong>Thứ 2 - Chủ nhật</strong></p>
+                        <small class="text-muted">7:00 - 22:00</small>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Footer -->
+    <div id="footer-container"></div>
+
+    <!-- Modal Đặt Lịch -->
+    <div class="modal fade" id="bookingModal" tabindex="-1">
+        <div class="modal-dialog modal-lg modal-dialog-centered">
+            <div class="modal-content" style="border-radius: 20px;">
+                <div class="modal-header">
+                    <h5 class="modal-title fw-bold">🛠️ Đặt Lịch Dịch Vụ</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <form id="bookingForm">
+                        <div class="row g-3">
+                            <div class="col-md-6">
+                                <label for="name" class="form-label">Họ và tên <span class="text-danger">*</span></label>
+                                <input type="text" class="form-control" id="name" required>
+                            </div>
+                            <div class="col-md-6">
+                                <label for="phone" class="form-label">Số điện thoại <span class="text-danger">*</span></label>
+                                <input type="tel" class="form-control" id="phone" required>
+                            </div>
+                            <div class="col-md-6">
+                                <label for="mainService" class="form-label">Loại dịch vụ <span class="text-danger">*</span></label>
+                                <select class="form-select" id="mainService" required>
+                                    <option value="">-- Chọn loại dịch vụ --</option>
+                                </select>
+                            </div>
+                            <div class="col-md-6">
+                                <label for="subService" class="form-label">Dịch vụ cụ thể <span class="text-danger">*</span></label>
+                                <select class="form-select" id="subService" disabled required>
+                                    <option value="">-- Chọn dịch vụ chi tiết --</option>
+                                </select>
+                            </div>
+                            <div class="col-12">
+                                <label for="servicePrice" class="form-label">Giá dịch vụ</label>
+                                <input type="text" class="form-control" id="servicePrice" readonly>
+                            </div>
+                            <div class="col-12">
+                                <label for="address" class="form-label">Địa chỉ <span class="text-danger">*</span></label>
+                                <textarea class="form-control" id="address" rows="2" required></textarea>
+                            </div>
+                            <div class="col-12">
+                                <label for="note" class="form-label">Ghi chú</label>
+                                <textarea class="form-control" id="note" rows="2"></textarea>
+                            </div>
+                        </div>
+                        <div class="mt-4">
+                            <button type="submit" class="btn btn-gradient w-100">
+                                <i class="fas fa-check"></i> Xác nhận đặt lịch
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal Tra Cứu Đơn Hàng -->
+    <div class="modal fade" id="viewOrderModal" tabindex="-1">
+        <div class="modal-dialog modal-xl">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title fw-bold">🔍 Tra Cứu Đơn Hàng</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <form id="viewOrderForm">
+                        <input
+                            type="text"
+                            id="orderPhone"
+                            class="form-control"
+                            placeholder="Nhập số điện thoại"
+                            required
+                        >
+
+                        <button type="submit" class="btn btn-primary mt-2">
+                            Tra cứu
+                        </button>
+                    </form>
+
+                    <div id="orderResult" class="mt-3"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Bootstrap JS -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+    
+    <!-- Load Header & Footer -->
+    <script>
+        // Load header
+        fetch('header.html')
+            .then(response => response.text())
+            .then(data => {
+                document.getElementById('header-container').innerHTML = data;
+            });
+        
+        // Load footer
+        fetch('footer.html')
+            .then(response => response.text())
+            .then(data => {
+                document.getElementById('footer-container').innerHTML = data;
+            });
+    </script>
+
+    <!-- Service Card Click Handlers -->
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            // Lấy tất cả các service card
+            const serviceCards = document.querySelectorAll('.service-card');
+            const bookingButtons = document.querySelectorAll('.booking-btn');
+            const detailButtons = document.querySelectorAll('.detail-btn');
+            
+            // Xử lý click vào card để chuyển sang trang chi tiết
+            serviceCards.forEach(card => {
+                card.addEventListener('click', function(e) {
+                    // Kiểm tra xem click có phải từ nút đặt lịch hoặc nút xem chi tiết không
+                    if (!e.target.classList.contains('booking-btn') && 
+                        !e.target.closest('.booking-btn') &&
+                        !e.target.classList.contains('detail-btn') && 
+                        !e.target.closest('.detail-btn')) {
+                        const serviceId = this.getAttribute('data-service-id');
+                        // Chuyển hướng đến trang chi tiết dịch vụ
+                        window.location.href = `service-detail.php?id=${serviceId}`;
+                    }
+                });
+            });
+            
+            // Xử lý click vào nút "Xem chi tiết"
+            detailButtons.forEach(button => {
+                button.addEventListener('click', function(e) {
+                    // Ngăn sự kiện click lan ra card cha
+                    e.stopPropagation();
+                    
+                    // Lấy service-id từ card cha
+                    const serviceCard = this.closest('.service-card');
+                    const serviceId = serviceCard.getAttribute('data-service-id');
+                    
+                    // Chuyển hướng đến trang chi tiết
+                    window.location.href = `service_detail.php?id=${serviceId}`;
+                });
+            });
+            
+            // Xử lý click vào nút đặt lịch
+            bookingButtons.forEach(button => {
+                button.addEventListener('click', function(e) {
+                    // Ngăn sự kiện click lan ra card cha
+                    e.stopPropagation();
+                    
+                    // Lấy tên dịch vụ từ data attribute
+                    const serviceName = this.getAttribute('data-service-name');
+                    
+                    // Mở modal đặt lịch
+                    const bookingModal = new bootstrap.Modal(document.getElementById('bookingModal'));
+                    bookingModal.show();
+                    
+                    // Tự động chọn dịch vụ trong form (nếu có)
+                    const mainServiceSelect = document.getElementById('mainService');
+                    if (mainServiceSelect && serviceName) {
+                        // Tìm và chọn option phù hợp
+                        for (let i = 0; i < mainServiceSelect.options.length; i++) {
+                            if (mainServiceSelect.options[i].text.includes(serviceName) ||
+                                mainServiceSelect.options[i].value.includes(serviceName)) {
+                                mainServiceSelect.selectedIndex = i;
+                                // Trigger change event để cập nhật sub-service
+                                mainServiceSelect.dispatchEvent(new Event('change'));
+                                break;
+                            }
+                        }
+                    }
+                });
+            });
+        });
+    </script>
+    <script src="js/booking.js"></script>
+    <script src="js/order_tracking.js"></script>
+</body>
+</html>

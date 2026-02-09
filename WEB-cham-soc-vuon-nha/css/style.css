@@ -1,0 +1,866 @@
+/* ===============================
+   RESET + BASE
+================================ */
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+    font-family: "Segoe UI", Arial, sans-serif;
+}
+
+body {
+    background: #f4f6f5;
+    color: #333;
+    line-height: 1.6;
+}
+
+.container {
+    max-width: 1200px;
+    margin: auto;
+    padding: 0 20px;
+}
+
+/* ===============================
+   HEADER
+================================ */
+header {
+    background: #035c09;
+    padding: 15px 50px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+}
+
+header h1 {
+    color: #fff;
+    font-size: 24px;
+    letter-spacing: 1px;
+}
+
+nav a {
+    color: #e6dddd;
+    text-decoration: none;
+    margin-left: 24px;
+    font-size: 15px;
+}
+
+nav a.active,
+nav a:hover {
+    text-decoration: underline;
+}
+
+/* ===============================
+   HERO
+================================ */
+.hero {
+    height: 420px;
+    background: linear-gradient(
+        rgba(72, 180, 121, 0.025),
+        rgba(58, 127, 69, 0.45)
+    ), url("../images/hero.jpg") center/cover no-repeat;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+}
+
+.hero-content {
+    max-width: 700px;
+}
+
+.hero-content h2 {
+    font-size: 36px;
+    color: #544747;
+    margin-bottom: 12px;
+}
+
+.hero-content p {
+    color: #4c2f2f;
+    font-size: 18px;
+    margin-bottom: 28px;
+}
+
+/* ===============================
+   BUTTON
+================================ */
+.btn {
+    background: #2e7d32;
+    color: #fff;
+    padding: 12px 30px;
+    text-decoration: none;
+    border-radius: 4px;
+    font-weight: 600;
+    display: inline-block;
+    transition: 0.2s;
+}
+
+.btn:hover {
+    background: #1b5e20;
+}
+
+/* ===============================
+   INTRO
+================================ */
+.intro {
+    background: #fff;
+    margin-top: 60px;
+    margin-bottom: 60px;
+    padding: 60px 30px;
+    text-align: center;
+    border-radius: 8px;
+}
+
+.intro h2 {
+    font-size: 30px;
+    color: #245c2c;
+    margin-bottom: 16px;
+}
+
+.intro p {
+    max-width: 750px;
+    margin: auto;
+    font-size: 16px;
+    color: #555;
+}
+
+/* ===============================
+   HOME SERVICES
+================================ */
+.home-services {
+    margin-bottom: 80px;
+}
+
+.home-services h2 {
+    text-align: center;
+    font-size: 30px;
+    color: #245c2c;
+    margin-bottom: 40px;
+}
+
+.services-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 28px;
+}
+
+/* ===============================
+   SERVICE CARD
+================================ */
+.service-card {
+    background: #fff;
+    border-radius: 8px;
+    padding: 28px;
+    text-align: center;
+    box-shadow: 0 8px 24px rgba(0,0,0,0.08);
+    transition: 0.25s;
+}
+
+.service-card:hover {
+    transform: translateY(-5px);
+}
+
+.service-card h3 {
+    font-size: 18px;
+    color: #245c2c;
+    margin-bottom: 12px;
+}
+
+.service-card p {
+    color: #555;
+    font-size: 15px;
+}
+
+/* ===============================
+   CTA
+================================ */
+.cta {
+    background: #2e7d32;
+    color: #fff;
+    text-align: center;
+    padding: 70px 20px;
+}
+
+.cta h2 {
+    font-size: 28px;
+    margin-bottom: 20px;
+    color: #fff;
+}
+
+/* ===============================
+   FOOTER
+================================ */
+footer {
+    background: #1b5e20;
+    color: #fff;
+    text-align: center;
+    padding: 18px;
+    font-size: 14px;
+}
+
+/* ===============================
+   RESPONSIVE
+================================ */
+@media (max-width: 900px) {
+    .services-grid {
+        grid-template-columns: 1fr 1fr;
+    }
+}
+
+@media (max-width: 600px) {
+    header {
+        flex-direction: column;
+    }
+
+    nav {
+        margin-top: 10px;
+    }
+
+    .services-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .hero-content h2 {
+        font-size: 28px;
+    }
+}
+
+
+/* ===============================
+   ABOUT - SIMPLE LIKE INDEX
+================================ */
+.about-simple {
+    text-align: center;
+    margin: 80px auto;
+    max-width: 800px;
+}
+
+.about-simple h3 {
+    font-size: 28px;
+    color: #1b5e20;
+    margin-bottom: 25px;
+}
+
+.about-simple p {
+    font-size: 16px;
+    color: #555;
+    line-height: 1.75;
+    margin-bottom: 18px;
+}
+
+.about-simple img {
+    width: 100%;
+    max-width: 600px;
+    margin: 30px auto;
+    display: block;
+    border-radius: 14px;
+    box-shadow: 0 18px 40px rgba(0,0,0,0.12);
+}
+
+.about-simple .btn {
+    margin-top: 10px;
+    padding: 12px 28px;
+}
+
+/* ===============================
+   SERVICES PAGE
+================================ */
+
+/* HERO */
+.page-hero {
+    background: linear-gradient(
+        rgba(27,94,32,0.85),
+        rgba(27,94,32,0.85)
+    );
+    padding: 70px 20px;
+    text-align: center;
+    color: #fff;
+}
+
+.page-hero h2 {
+    font-size: 34px;
+}
+
+/* GRID DỊCH VỤ */
+.services-grid {
+    max-width: 1100px;
+    margin: 70px auto;
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 30px;
+}
+
+/* CARD */
+.service-card {
+    background: #ffffff;
+    padding: 30px 25px;
+    border-radius: 18px;
+    text-align: center;
+    box-shadow: 0 12px 30px rgba(0,0,0,0.08);
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+
+.service-card:hover {
+    transform: translateY(-8px);
+    box-shadow: 0 22px 45px rgba(0,0,0,0.12);
+}
+
+.service-card h3 {
+    font-size: 20px;
+    color: #1b5e20;
+    margin-bottom: 12px;
+}
+
+.service-card p {
+    font-size: 15px;
+    color: #555;
+    line-height: 1.6;
+}
+
+/* ===============================
+   RESPONSIVE
+================================ */
+@media (max-width: 992px) {
+    .services-grid {
+        grid-template-columns: repeat(2, 1fr);
+        max-width: 760px;
+    }
+}
+
+@media (max-width: 600px) {
+    .services-grid {
+        grid-template-columns: 1fr;
+        max-width: 420px;
+    }
+}
+
+
+/* ===============================
+   PRICING PAGE
+================================ */
+
+/* HERO */
+.page-hero {
+    background: linear-gradient(
+        rgba(27, 94, 32, 0.85),
+        rgba(27, 94, 32, 0.85)
+    );
+    padding: 70px 20px;
+    text-align: center;
+    color: #fff;
+}
+
+.page-hero h2 {
+    font-size: 34px;
+}
+
+/* GRID BẢNG GIÁ */
+.pricing-grid {
+    max-width: 1100px;
+    margin: 70px auto;
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 32px;
+}
+
+/* CARD */
+.pricing-card {
+    background: #ffffff;
+    border-radius: 20px;
+    padding: 32px 28px;
+    text-align: center;
+    box-shadow: 0 14px 35px rgba(0,0,0,0.08);
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+    position: relative;
+}
+
+.pricing-card:hover {
+    transform: translateY(-10px);
+    box-shadow: 0 25px 55px rgba(0,0,0,0.12);
+}
+
+/* TIÊU ĐỀ */
+.pricing-card h3 {
+    font-size: 20px;
+    color: #1b5e20;
+    margin-bottom: 12px;
+}
+
+/* GIÁ */
+.pricing-card .price {
+    font-size: 26px;
+    font-weight: 700;
+    color: #2e7d32;
+    margin-bottom: 22px;
+}
+
+/* DANH SÁCH */
+.pricing-card ul {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+}
+
+.pricing-card ul li {
+    font-size: 15px;
+    color: #555;
+    margin-bottom: 12px;
+    line-height: 1.6;
+}
+
+/* GÓI NỔI BẬT */
+.pricing-card.highlight {
+    border: 2px solid #2e7d32;
+    transform: scale(1.05);
+    background: linear-gradient(180deg, #ffffff, #f1f8f4);
+}
+
+.pricing-card.highlight:hover {
+    transform: scale(1.05) translateY(-10px);
+}
+
+/* BADGE */
+.badge {
+    position: absolute;
+    top: -14px;
+    right: 20px;
+    background: #2e7d32;
+    color: #ffffff;
+    font-size: 13px;
+    font-weight: 600;
+    padding: 6px 16px;
+    border-radius: 20px;
+}
+
+/* ===============================
+   RESPONSIVE
+================================ */
+@media (max-width: 992px) {
+    .pricing-grid {
+        grid-template-columns: repeat(2, 1fr);
+        max-width: 760px;
+    }
+}
+
+@media (max-width: 600px) {
+    .pricing-grid {
+        grid-template-columns: 1fr;
+        max-width: 420px;
+    }
+
+    .pricing-card.highlight {
+        transform: none;
+    }
+}
+
+
+/* ===============================
+   CONTACT PAGE
+================================ */
+
+/* HERO */
+.page-hero {
+    background: linear-gradient(
+        rgba(27, 94, 32, 0.85),
+        rgba(27, 94, 32, 0.85)
+    );
+    padding: 70px 20px;
+    text-align: center;
+    color: #ffffff;
+}
+
+.page-hero h2 {
+    font-size: 34px;
+    font-weight: 600;
+}
+
+/* LAYOUT */
+.contact-wrapper {
+    max-width: 1000px;
+    margin: 70px auto;
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 40px;
+    align-items: stretch;
+}
+
+/* ===============================
+   CONTACT INFO
+================================ */
+.contact-info {
+    background: #f1f8f4;
+    padding: 35px 30px;
+    border-radius: 18px;
+}
+
+.contact-info h3 {
+    font-size: 24px;
+    color: #1b5e20;
+    margin-bottom: 15px;
+}
+
+.contact-info p {
+    font-size: 15px;
+    color: #444;
+    margin-bottom: 12px;
+    line-height: 1.6;
+}
+
+/* ===============================
+   CONTACT FORM
+================================ */
+.contact-form {
+    background: #ffffff;
+    padding: 35px 30px;
+    border-radius: 18px;
+    box-shadow: 0 12px 30px rgba(0,0,0,0.08);
+}
+
+.contact-form h3 {
+    font-size: 22px;
+    margin-bottom: 20px;
+    color: #1b5e20;
+}
+
+/* INPUT */
+.contact-form input,
+.contact-form textarea {
+    width: 100%;
+    padding: 12px 14px;
+    margin-bottom: 14px;
+    border-radius: 8px;
+    border: 1px solid #ccc;
+    font-size: 15px;
+    transition: border-color 0.3s;
+}
+
+.contact-form input:focus,
+.contact-form textarea:focus {
+    outline: none;
+    border-color: #2e7d32;
+}
+
+/* BUTTON */
+.contact-form .btn {
+    width: 100%;
+    margin-top: 10px;
+    padding: 12px;
+    font-size: 16px;
+}
+
+/* ===============================
+   RESPONSIVE
+================================ */
+@media (max-width: 768px) {
+    .contact-wrapper {
+        grid-template-columns: 1fr;
+        max-width: 500px;
+    }
+}
+/* BỎ GẠCH CHÂN LINK TRONG SERVICE CARD */
+.service-card {
+    text-decoration: none;
+    color: inherit;
+}
+
+/* ĐẢM BẢO KHI HOVER CŨNG KHÔNG BỊ GẠCH */
+.service-card:hover {
+    text-decoration: none;
+}
+
+
+/* ===============================
+   SERVICE DETAIL PAGE
+================================ */
+
+/* Container riêng cho trang chi tiết */
+.service-page {
+    max-width: 900px;
+    margin: 60px auto;
+}
+
+/* Mỗi khối nội dung */
+.service-section {
+    background: #ffffff;
+    padding: 35px 40px;
+    border-radius: 18px;
+    box-shadow: 0 12px 35px rgba(0,0,0,0.08);
+    margin-bottom: 40px;
+}
+
+/* Tiêu đề trong trang chi tiết */
+.service-section h3 {
+    font-size: 22px;
+    color: #1b5e20;
+    margin-bottom: 18px;
+    position: relative;
+    padding-left: 14px;
+}
+
+/* Thanh nhấn bên trái tiêu đề */
+.service-section h3::before {
+    content: "";
+    position: absolute;
+    left: 0;
+    top: 4px;
+    width: 5px;
+    height: 24px;
+    background: #2e7d32;
+    border-radius: 3px;
+}
+
+/* Nội dung đoạn văn */
+.service-section p {
+    font-size: 16px;
+    color: #555;
+    line-height: 1.8;
+}
+
+/* Danh sách công việc & lợi ích */
+.service-section ul {
+    margin-top: 10px;
+    padding-left: 20px;
+}
+
+.service-section ul li {
+    font-size: 15.5px;
+    color: #555;
+    margin-bottom: 10px;
+    line-height: 1.7;
+}
+
+/* CTA cuối trang */
+.service-cta {
+    text-align: center;
+    margin-top: 30px;
+}
+
+.service-cta .btn {
+    font-size: 16px;
+    padding: 14px 36px;
+    border-radius: 30px;
+}
+
+/* ===============================
+   RESPONSIVE
+================================ */
+@media (max-width: 768px) {
+    .service-page {
+        margin: 40px auto;
+    }
+
+    .service-section {
+        padding: 25px 22px;
+    }
+
+    .service-section h3 {
+        font-size: 20px;
+    }
+}
+
+
+/* ===============================
+   SERVICE DETAIL – NEW LAYOUT
+================================ */
+
+.service-page {
+    max-width: 1100px;
+    margin: 60px auto;
+}
+
+/* KHỐI TRÊN: ẢNH + NỘI DUNG */
+.service-top {
+    display: grid;
+    grid-template-columns: 1fr 1.1fr;
+    gap: 50px;
+    align-items: center;
+    margin-bottom: 70px;
+}
+
+.service-top-image img {
+    width: 100%;
+    height: 360px;
+    object-fit: cover;
+    border-radius: 20px;
+    box-shadow: 0 20px 45px rgba(0,0,0,0.15);
+}
+
+.service-top-content h3 {
+    font-size: 26px;
+    color: #1b5e20;
+    margin-bottom: 15px;
+}
+
+.service-top-content p {
+    font-size: 16px;
+    line-height: 1.8;
+    color: #555;
+    margin-bottom: 20px;
+}
+
+.service-top-content h4 {
+    font-size: 20px;
+    color: #2e7d32;
+    margin-bottom: 10px;
+}
+
+.service-top-content ul {
+    padding-left: 20px;
+}
+
+.service-top-content ul li {
+    margin-bottom: 8px;
+    color: #444;
+}
+
+/* CÔNG VIỆC */
+.service-section {
+    background: #ffffff;
+    padding: 40px;
+    border-radius: 18px;
+    box-shadow: 0 12px 35px rgba(0,0,0,0.08);
+    margin-bottom: 60px;
+}
+
+.service-section h3 {
+    font-size: 24px;
+    margin-bottom: 20px;
+    color: #1b5e20;
+}
+
+.service-list {
+    padding-left: 20px;
+}
+
+.service-list li {
+    font-size: 16px;
+    margin-bottom: 10px;
+}
+
+/* CTA */
+.service-cta {
+    text-align: center;
+    margin-bottom: 60px;
+}
+
+/* MOBILE */
+@media (max-width: 768px) {
+    .service-top {
+        grid-template-columns: 1fr;
+        text-align: center;
+    }
+
+    .service-top-image img {
+        height: 260px;
+    }
+}
+
+/* ===== GIỚI THIỆU TRANG CHỦ ===== */
+.intro-layout {
+    display: grid;
+    grid-template-columns: 1.2fr 0.8fr;
+    gap: 64px;
+    padding: 80px 60px;
+    background: #f6faf7;
+    border-radius: 24px;
+    align-items: center;
+}
+
+/* TEXT */
+.intro-text h2 {
+    font-size: 32px;
+    margin-bottom: 20px;
+    color: #1b5e20;
+}
+
+.intro-text p {
+    font-size: 17px;
+    line-height: 1.7;
+    color: #333;
+}
+
+/* IMAGE */
+.intro-image {
+    display: flex;
+    justify-content: center;
+}
+
+.intro-image img {
+    width: 100%;
+    max-width: 420px;
+    border-radius: 20px;
+    box-shadow: 0 18px 40px rgba(0,0,0,0.15);
+}
+
+@media (max-width: 900px) {
+    .intro-layout {
+        grid-template-columns: 1fr;
+        padding: 50px 30px;
+        gap: 40px;
+        text-align: center;
+    }
+
+    .intro-text h2 {
+        font-size: 26px;
+    }
+}
+
+
+.site-footer {
+    background: #1f3d2b;
+    color: #fff;
+    padding: 50px 20px 20px;
+}
+
+.footer-container {
+    max-width: 1200px;
+    margin: 0 auto;
+    display: grid;
+    grid-template-columns: 1.2fr 1fr 1fr 1fr;
+    gap: 40px;
+    align-items: start; /* QUAN TRỌNG: canh thẳng hàng từ trên xuống */
+}
+
+.footer-column {
+    line-height: 1.7;
+}
+
+.footer-column h3 {
+    margin-bottom: 15px;
+    font-size: 18px;
+    color: #9be5b0;
+}
+
+.footer-column p {
+    font-size: 14px;
+    margin: 0;
+}
+
+.footer-column ul {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+}
+
+.footer-column ul li {
+    margin-bottom: 8px;
+}
+
+.footer-column ul li a {
+    color: #fff;
+    text-decoration: none;
+    font-size: 14px;
+}
+
+.footer-column ul li a:hover {
+    color: #9be5b0;
+}
+
+/* Footer dưới */
+.footer-bottom {
+    text-align: center;
+    margin-top: 35px;
+    padding-top: 15px;
+    border-top: 1px solid rgba(255,255,255,0.25);
+    font-size: 13px;
+    color: #ccc;
+}
