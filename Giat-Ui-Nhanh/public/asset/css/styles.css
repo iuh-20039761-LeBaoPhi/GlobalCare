@@ -87,6 +87,10 @@ body {
   align-items: center;
   gap: 10px;
 }
+.nav-container .logo img {
+  width: 80px;
+  height: 60px;
+}
 
 .nav-menu {
   display: flex;
@@ -572,6 +576,12 @@ section {
 .pricing-icon svg {
   color: #fff100;
 }
+.pricing-card .pricing-price .price-amount {
+  background: linear-gradient(to right, #f97316, #dc2626);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
 .pricing-card h3 {
   font-size: 1.75rem;
   font-weight: 900;
@@ -991,6 +1001,26 @@ footer {
   padding: 5px;
   border-radius: unset;
 }
+.commitment {
+  margin-top: 60px;
+  background: linear-gradient(135deg, #3b82f6, #8b5cf6);
+  border-radius: 30px;
+  padding: 60px 40px;
+  text-align: center;
+  color: white;
+}
+.commitment h3 {
+  font-size: 2rem;
+  font-weight: 900;
+  margin-bottom: 20px;
+}
+.commitment p {
+  font-size: 1.125rem;
+  line-height: 1.8;
+  max-width: 800px;
+  margin: 0 auto;
+  color: #dbeafe;
+}
 /* Responsive */
 @media (max-width: 768px) {
   .menu-toggle {
@@ -1121,8 +1151,11 @@ footer {
     height: auto;
     object-fit: cover;
   }
-  .contact-form {
+  .modal-body .contact-form {
     padding: 0px;
+  }
+  #contact .contact-form {
+    padding: 40px 20px;
   }
   #pricing .modal-header h4 {
     font-size: 1rem;
@@ -1148,6 +1181,31 @@ footer {
   }
   .about-content .about-flex .text-content p {
     font-size: 1rem;
+  }
+  .commitment h3 {
+    font-size: 1.5rem;
+  }
+  .commitment p {
+    font-size: 1rem;
+  }
+  .pricing-detail-table h3 {
+    text-align: center;
+  }
+  .pricing-card h3 {
+    font-size: 1.5rem;
+  }
+  .price-amount {
+    font-size: 1.3rem;
+  }
+  .nav-container .logo img {
+    width: 60px;
+    height: 40px;
+  }
+  .nav-container .logo span {
+    font-size: 1.3rem;
+  }
+  .footer-about h3 {
+    font-size: 1.5rem;
   }
 }
 
