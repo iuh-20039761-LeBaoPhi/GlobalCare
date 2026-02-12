@@ -11,7 +11,7 @@ renderHeader('Dịch Vụ - MamaCore');
                     <h1 class="display-3 fw-bold mb-3">Chăm Sóc Toàn Diện <br> Cho <span class="text-danger" style="font-family: 'Pacifico', cursive; ">Mẹ và Bé</span></h1>
                     <p class="lead text-muted mb-4">Dịch vụ y tế chuyên nghiệp, tận tâm và chất lượng cao cho sức khỏe của gia đình bạn.</p>
                     <button class="btn text-white rounded-pill btn-lg px-5 py-3" style="background-color:#F06292;" onmouseover="this.style.backgroundColor='#d84374'; this.style.transform='scale(1.05)';"
-                            onmouseout="this.style.backgroundColor='#F06292'; this.style.transform='scale(1)';" onclick="window.location.href='customer/contact.php'">Bắt đầu ngay</button>
+                            onmouseout="this.style.backgroundColor='#F06292'; this.style.transform='scale(1)';" onclick="window.location.href='contact.php'">Bắt đầu ngay</button>
                 </div>
                 <div class="col-lg-6 text-center">
                     <img src="https://babybrezza.vn/wp-content/uploads/2021/01/kawaii-spa-dia-chi-spa-cho-me-va-be-uy-tin-o-sai-gon.jpg" 
