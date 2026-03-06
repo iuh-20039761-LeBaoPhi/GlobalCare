@@ -616,7 +616,7 @@ $(document).ready(async function () {
   // Load services from JSON file
   let SERVICES = [];
   try {
-    const response = await fetch('js/services.json');
+    const response = await fetch('/JS/services.json');
     SERVICES = await response.json();
   } catch (error) {
     console.error('Error loading services.json:', error);

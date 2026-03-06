@@ -78,14 +78,14 @@
                 <a href="../index.html" class="logo">
                   <img
                     style="width: 80px; height: 60px"
-                    src="assets/logo.png"
+                    src="/assets/logo.png"
                     alt=""
                   />
                 </a>
               </li>
             <li class="nav-item ms-lg-3">
               <a
-                href="html/contact.html"
+                href="/html/contact.html"
                 class="btn text-white rounded-pill px-4 py-2 shadow-sm"
                 style="background-color: #007bff"
                 onmouseover="
@@ -617,7 +617,7 @@ $(document).ready(async function () {
   // Load services from JSON file
   let SERVICES = [];
   try {
-    const response = await fetch('js/services.json');
+    const response = await fetch('/JS/services.json');
     SERVICES = await response.json();
   } catch (error) {
     console.error('Error loading services.json:', error);
