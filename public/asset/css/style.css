@@ -235,6 +235,7 @@ body {
 .card-title {
   font-weight: 700;
   margin-bottom: 0.75rem;
+  color: #06b6d4;
   transition: color 0.3s;
 }
 
