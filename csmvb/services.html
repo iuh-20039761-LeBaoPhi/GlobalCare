@@ -414,14 +414,23 @@
     <!-- jQuery -->
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
 
-    <script src="js/services.js"></script>
     <script>
-$(document).ready(function () {
+$(document).ready(async function () {
 
   const SCRIPT_URL =
     "https://script.google.com/macros/s/AKfycbwEtPaKAx9AJdxdEl6WGGE4RS5-52x3MUoF6TJjSBYJ8ex0yXnTGHbOeAN4uGenkPay/exec";
 
   const container = $("#servicesContainer");
+
+  // Load services from JSON file
+  let SERVICES = [];
+  try {
+    const response = await fetch('js/services.json');
+    SERVICES = await response.json();
+  } catch (error) {
+    console.error('Error loading services.json:', error);
+    return;
+  }
 
   // Render services
   SERVICES.forEach((service, index) => {
