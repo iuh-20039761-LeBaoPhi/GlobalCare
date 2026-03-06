@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <meta name="description" content="Dịch vụ chăm sóc bệnh nhân tại nhà an toàn và chuyên nghiệp: theo dõi y tế, hỗ trợ sinh hoạt, chăm sóc sau phẫu thuật và phục hồi sức khỏe toàn diện.">
     <meta name="keywords" content="chăm sóc bệnh nhân, chăm sóc bệnh nhân tại nhà, điều dưỡng tại nhà, chăm sóc sau phẫu thuật, chăm sóc người bệnh dài ngày">
-    <title>Liên Hệ - MediCare</title>
+    <title>Liên Hệ - Chăm Sóc Bệnh Nhân</title>
 
     <!-- Bootstrap 5 CSS -->
     <link
@@ -35,7 +35,7 @@
           style="color: #007bff"
         >
           <i class="fas fa-heart"></i>
-          <span>MediCare</span>
+          <span>Chăm Sóc Bệnh Nhân</span>
         </a>
 
         <button
@@ -59,7 +59,12 @@
               <a class="nav-link fw-bold px-3" href="about.html">Giới Thiệu</a>
             </li>
             <li class="nav-item">
-              <a class="nav-link fw-bold px-3" href="services.html">Dịch Vụ</a>
+              <a class="nav-link fw-bold px-3" href="../services.html">Dịch Vụ</a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link fw-bold px-3" href="terms.html"
+                  >Điều Khoản</a
+                >
             </li>
             <li class="nav-item">
               <a
@@ -70,10 +75,14 @@
               >
             </li>
             <li class="nav-item">
-              <a class="nav-link fw-bold px-3" href="../../index.html"
-                >GlobalCare</a
-              >
-            </li>
+                <a href="../../index.html" class="logo">
+                  <img
+                    style="width: 80px; height: 60px"
+                    src="../assets/logo.png"
+                    alt=""
+                  />
+                </a>
+              </li>
             <li class="nav-item ms-lg-3">
               <a
                 href="contact.html"
@@ -111,7 +120,7 @@
           Liên Hệ Với Chúng Tôi
           <span
             style="color: #007bff; font-family: &quot;Pacifico&quot;, cursive"
-            >MediCare</span
+            >Chăm Sóc Bệnh Nhân</span
           >
         </h1>
         <p class="lead text-muted mb-4">
@@ -542,362 +551,12 @@
       </div>
     </section>
 
-    <!-- FAQ Section -->
-    <section class="py-5">
-      <div class="container py-5">
-        <h2 class="text-center fw-bold display-5 mb-5">Câu Hỏi Thường Gặp</h2>
-        <div style="display: grid; gap: 20px">
-          <div
-            style="
-              background-color: #f3fbff;
-              border-radius: 10px;
-              overflow: hidden;
-              box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
-            "
-          >
-            <div
-              class="faq-question"
-              onclick="toggleFAQ(this)"
-              style="
-                padding: 20px;
-                display: flex;
-                justify-content: space-between;
-                align-items: center;
-                cursor: pointer;
-                transition: 0.3s;
-                user-select: none;
-              "
-              onmouseover="
-                this.style.backgroundColor = 'rgba(240, 98, 146, 0.1)'
-              "
-              onmouseout="this.style.backgroundColor = ''"
-            >
-              <h4 class="mb-0" style="font-weight: 600; color: #333; flex: 1">
-                Làm sao để đặt lịch khám?
-              </h4>
-              <span
-                class="faq-icon"
-                style="
-                  font-size: 1.5rem;
-                  color: #007bff;
-                  transition: 0.3s;
-                  margin-left: 15px;
-                "
-                ><i class="fas fa-chevron-down"></i
-              ></span>
-            </div>
-            <div
-              class="faq-answer"
-              style="
-                max-height: 0;
-                overflow: hidden;
-                transition: max-height 0.3s ease;
-                background-color: white;
-              "
-            >
-              <p
-                style="padding: 20px; margin: 0; color: #666; line-height: 1.6"
-              >
-                Bạn có thể đặt lịch khám thông qua điện thoại (1900-1234), email
-                (info@mamacore.vn) hoặc trực tiếp tại phòng khám của chúng tôi.
-              </p>
-            </div>
-          </div>
-
-          <div
-            style="
-              background-color: #f3fbff;
-              border-radius: 10px;
-              overflow: hidden;
-              box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
-            "
-          >
-            <div
-              class="faq-question"
-              onclick="toggleFAQ(this)"
-              style="
-                padding: 20px;
-                display: flex;
-                justify-content: space-between;
-                align-items: center;
-                cursor: pointer;
-                transition: 0.3s;
-                user-select: none;
-              "
-              onmouseover="
-                this.style.backgroundColor = 'rgba(240, 98, 146, 0.1)'
-              "
-              onmouseout="this.style.backgroundColor = ''"
-            >
-              <h4 class="mb-0" style="font-weight: 600; color: #333; flex: 1">
-                Giá khám là bao nhiêu?
-              </h4>
-              <span
-                class="faq-icon"
-                style="
-                  font-size: 1.5rem;
-                  color: #007bff;
-                  transition: 0.3s;
-                  margin-left: 15px;
-                "
-                ><i class="fas fa-chevron-down"></i
-              ></span>
-            </div>
-            <div
-              class="faq-answer"
-              style="
-                max-height: 0;
-                overflow: hidden;
-                transition: max-height 0.3s ease;
-                background-color: white;
-              "
-            >
-              <p
-                style="padding: 20px; margin: 0; color: #666; line-height: 1.6"
-              >
-                Giá khám tùy thuộc vào loại dịch vụ. Vui lòng xem trang Dịch Vụ
-                để biết giá chi tiết hoặc liên hệ với chúng tôi để được tư vấn.
-              </p>
-            </div>
-          </div>
-
-          <div
-            style="
-              background-color: #f3fbff;
-              border-radius: 10px;
-              overflow: hidden;
-              box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
-            "
-          >
-            <div
-              class="faq-question"
-              onclick="toggleFAQ(this)"
-              style="
-                padding: 20px;
-                display: flex;
-                justify-content: space-between;
-                align-items: center;
-                cursor: pointer;
-                transition: 0.3s;
-                user-select: none;
-              "
-              onmouseover="
-                this.style.backgroundColor = 'rgba(240, 98, 146, 0.1)'
-              "
-              onmouseout="this.style.backgroundColor = ''"
-            >
-              <h4 class="mb-0" style="font-weight: 600; color: #333; flex: 1">
-                Có bảo hiểm y tế không?
-              </h4>
-              <span
-                class="faq-icon"
-                style="
-                  font-size: 1.5rem;
-                  color: #007bff;
-                  transition: 0.3s;
-                  margin-left: 15px;
-                "
-                ><i class="fas fa-chevron-down"></i
-              ></span>
-            </div>
-            <div
-              class="faq-answer"
-              style="
-                max-height: 0;
-                overflow: hidden;
-                transition: max-height 0.3s ease;
-                background-color: white;
-              "
-            >
-              <p
-                style="padding: 20px; margin: 0; color: #666; line-height: 1.6"
-              >
-                Có, chúng tôi chấp nhận bảo hiểm y tế. Hãy mang theo thẻ bảo
-                hiểm y tế khi đến khám.
-              </p>
-            </div>
-          </div>
-
-          <div
-            style="
-              background-color: #f3fbff;
-              border-radius: 10px;
-              overflow: hidden;
-              box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
-            "
-          >
-            <div
-              class="faq-question"
-              onclick="toggleFAQ(this)"
-              style="
-                padding: 20px;
-                display: flex;
-                justify-content: space-between;
-                align-items: center;
-                cursor: pointer;
-                transition: 0.3s;
-                user-select: none;
-              "
-              onmouseover="
-                this.style.backgroundColor = 'rgba(240, 98, 146, 0.1)'
-              "
-              onmouseout="this.style.backgroundColor = ''"
-            >
-              <h4 class="mb-0" style="font-weight: 600; color: #333; flex: 1">
-                Thời gian chờ khám thường là bao lâu?
-              </h4>
-              <span
-                class="faq-icon"
-                style="
-                  font-size: 1.5rem;
-                  color: #007bff;
-                  transition: 0.3s;
-                  margin-left: 15px;
-                "
-                ><i class="fas fa-chevron-down"></i
-              ></span>
-            </div>
-            <div
-              class="faq-answer"
-              style="
-                max-height: 0;
-                overflow: hidden;
-                transition: max-height 0.3s ease;
-                background-color: white;
-              "
-            >
-              <p
-                style="padding: 20px; margin: 0; color: #666; line-height: 1.6"
-              >
-                Thời gian chờ tùy thuộc vào số lượng bệnh nhân. Thông thường,
-                bệnh nhân được khám trong vòng 15-30 phút sau khi đến.
-              </p>
-            </div>
-          </div>
-
-          <div
-            style="
-              background-color: #f3fbff;
-              border-radius: 10px;
-              overflow: hidden;
-              box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
-            "
-          >
-            <div
-              class="faq-question"
-              onclick="toggleFAQ(this)"
-              style="
-                padding: 20px;
-                display: flex;
-                justify-content: space-between;
-                align-items: center;
-                cursor: pointer;
-                transition: 0.3s;
-                user-select: none;
-              "
-              onmouseover="
-                this.style.backgroundColor = 'rgba(240, 98, 146, 0.1)'
-              "
-              onmouseout="this.style.backgroundColor = ''"
-            >
-              <h4 class="mb-0" style="font-weight: 600; color: #333; flex: 1">
-                Có dịch vụ tư vấn trực tuyến không?
-              </h4>
-              <span
-                class="faq-icon"
-                style="
-                  font-size: 1.5rem;
-                  color: #007bff;
-                  transition: 0.3s;
-                  margin-left: 15px;
-                "
-                ><i class="fas fa-chevron-down"></i
-              ></span>
-            </div>
-            <div
-              class="faq-answer"
-              style="
-                max-height: 0;
-                overflow: hidden;
-                transition: max-height 0.3s ease;
-                background-color: white;
-              "
-            >
-              <p
-                style="padding: 20px; margin: 0; color: #666; line-height: 1.6"
-              >
-                Có, chúng tôi cung cấp dịch vụ tư vấn trực tuyến 24/7 qua video
-                call, chat hoặc điện thoại.
-              </p>
-            </div>
-          </div>
-
-          <div
-            style="
-              background-color: #f3fbff;
-              border-radius: 10px;
-              overflow: hidden;
-              box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
-            "
-          >
-            <div
-              class="faq-question"
-              onclick="toggleFAQ(this)"
-              style="
-                padding: 20px;
-                display: flex;
-                justify-content: space-between;
-                align-items: center;
-                cursor: pointer;
-                transition: 0.3s;
-                user-select: none;
-              "
-              onmouseover="
-                this.style.backgroundColor = 'rgba(240, 98, 146, 0.1)'
-              "
-              onmouseout="this.style.backgroundColor = ''"
-            >
-              <h4 class="mb-0" style="font-weight: 600; color: #333; flex: 1">
-                Bác sĩ của bạn có kinh nghiệm bao nhiêu?
-              </h4>
-              <span
-                class="faq-icon"
-                style="
-                  font-size: 1.5rem;
-                  color: #007bff;
-                  transition: 0.3s;
-                  margin-left: 15px;
-                "
-                ><i class="fas fa-chevron-down"></i
-              ></span>
-            </div>
-            <div
-              class="faq-answer"
-              style="
-                max-height: 0;
-                overflow: hidden;
-                transition: max-height 0.3s ease;
-                background-color: white;
-              "
-            >
-              <p
-                style="padding: 20px; margin: 0; color: #666; line-height: 1.6"
-              >
-                Đội ngũ bác sĩ của chúng tôi có từ 7-20+ năm kinh nghiệm trong
-                lĩnh vực sản phụ khoa và nhi khoa.
-              </p>
-            </div>
-          </div>
-        </div>
-      </div>
-    </section>
-
     <!-- Footer -->
     <footer class="bg-dark text-white pt-5 pb-3">
       <div class="container">
         <div class="row g-4 mb-4">
           <div class="col-lg-4">
-            <h3 class="h4 fw-bold mb-3" style="color: #007bff">MediCare</h3>
+            <h3 class="h4 fw-bold mb-3" style="color: #007bff">Chăm Sóc Bệnh Nhân</h3>
             <p class="opacity-75">
               Hệ thống cung ứng nhân sự chăm sóc bệnh nhân chuyên nghiệp hàng
               đầu tại Việt Nam.
@@ -1019,7 +678,7 @@
         </div>
         <hr class="opacity-25" />
         <p class="text-center small opacity-50">
-          &copy; 2026 MediCare. Đồng hành cùng sức khỏe Việt.
+          &copy; 2026 Chăm Sóc Bệnh Nhân. Đồng hành cùng sức khỏe Việt.
         </p>
       </div>
     </footer>
