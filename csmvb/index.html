@@ -456,7 +456,7 @@
         // Load services from JSON and display 4 services on homepage
         async function loadHomeServices() {
             try {
-                const response = await fetch('js/services.json');
+                const response = await fetch('services.json');
                 const services = await response.json();
                 const servicesGrid = document.getElementById("services-grid");
 
