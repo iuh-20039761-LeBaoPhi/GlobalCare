@@ -8,7 +8,8 @@ const API = {
                 if (!res.ok) throw new Error();
                 return await res.json();
             } catch {
-                return { success: true, data: STATIC_DATA.cars.slice(0, 6) };
+                const sd = await STATIC_DATA_PROMISE;
+                return { success: true, data: sd.cars.slice(0, 6) };
             }
         },
         getAll: async () => {
@@ -17,7 +18,8 @@ const API = {
                 if (!res.ok) throw new Error();
                 return await res.json();
             } catch {
-                return { success: true, data: STATIC_DATA.cars };
+                const sd = await STATIC_DATA_PROMISE;
+                return { success: true, data: sd.cars };
             }
         },
         getById: async (id) => {
@@ -26,7 +28,8 @@ const API = {
                 if (!res.ok) throw new Error();
                 return await res.json();
             } catch {
-                const car = STATIC_DATA.cars.find(c => c.id === parseInt(id));
+                const sd = await STATIC_DATA_PROMISE;
+                const car = sd.cars.find(c => c.id === parseInt(id));
                 return car
                     ? { success: true, data: { car, images: [] } }
                     : { success: false, message: 'Không tìm thấy xe' };
@@ -39,7 +42,8 @@ const API = {
                 if (!res.ok) throw new Error();
                 return await res.json();
             } catch {
-                let cars = [...STATIC_DATA.cars];
+                const sd = await STATIC_DATA_PROMISE;
+                let cars = [...sd.cars];
                 if (params.brand) cars = cars.filter(c => c.brand === params.brand);
                 if (params.seats) cars = cars.filter(c => c.seats === parseInt(params.seats));
                 if (params.price) {
@@ -59,7 +63,8 @@ const API = {
                 if (!res.ok) throw new Error();
                 return await res.json();
             } catch {
-                return { success: true, ...STATIC_DATA.filterOptions };
+                const sd = await STATIC_DATA_PROMISE;
+                return { success: true, ...sd.filterOptions };
             }
         }
     },
@@ -71,7 +76,8 @@ const API = {
                 if (!res.ok) throw new Error();
                 return await res.json();
             } catch {
-                return { success: true, data: STATIC_DATA.services };
+                const sd = await STATIC_DATA_PROMISE;
+                return { success: true, data: sd.services };
             }
         }
     },

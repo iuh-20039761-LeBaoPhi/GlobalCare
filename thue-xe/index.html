@@ -491,6 +491,7 @@
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 <script src="assets/js/static-data.js"></script>
 <script>
+STATIC_DATA_PROMISE.then(STATIC_DATA => {
 const fmt = n => new Intl.NumberFormat('vi-VN').format(n);
 
 // ===== Render cars =====
@@ -586,6 +587,7 @@ document.getElementById('showAllBtn').addEventListener('click', () => {
 // Init
 renderCars(STATIC_DATA.cars.slice(0, 6));
 renderServices(STATIC_DATA.services);
+}); // end STATIC_DATA_PROMISE.then
 </script>
 </body>
 </html>

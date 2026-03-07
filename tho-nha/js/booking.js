@@ -1,71 +1,7 @@
 /**
  * Booking JavaScript - Xử lý đặt lịch dịch vụ
- * Sử dụng dữ liệu tĩnh, không cần API server
+ * Dữ liệu dịch vụ load từ data/services.json
  */
-
-// ==================== STATIC DATA ====================
-const STATIC_SERVICES = [
-    {
-        id: 1, name: 'Sửa máy lạnh',
-        items: [
-            { name: 'Vệ sinh máy lạnh (1-2 HP)', price: 150000 },
-            { name: 'Nạp gas R410A', price: 250000 },
-            { name: 'Nạp gas R32', price: 280000 },
-            { name: 'Sửa chữa máy lạnh', price: 350000 },
-            { name: 'Thay bo mạch máy lạnh', price: 500000 },
-        ]
-    },
-    {
-        id: 2, name: 'Sửa máy giặt',
-        items: [
-            { name: 'Vệ sinh máy giặt', price: 200000 },
-            { name: 'Sửa máy giặt không vắt', price: 250000 },
-            { name: 'Sửa máy giặt không lên nguồn', price: 300000 },
-            { name: 'Thay motor máy giặt', price: 450000 },
-            { name: 'Thay board mạch', price: 500000 },
-        ]
-    },
-    {
-        id: 3, name: 'Nhà vệ sinh',
-        items: [
-            { name: 'Thông tắc bồn cầu', price: 150000 },
-            { name: 'Sửa rò rỉ nước', price: 200000 },
-            { name: 'Thay vòi nước', price: 150000 },
-            { name: 'Chống thấm nhà vệ sinh', price: 800000 },
-            { name: 'Thay bồn cầu mới', price: 600000 },
-        ]
-    },
-    {
-        id: 4, name: 'Điện nước',
-        items: [
-            { name: 'Sửa chập điện, mất điện', price: 200000 },
-            { name: 'Thay ổ cắm, công tắc', price: 100000 },
-            { name: 'Lắp đặt đèn, thiết bị điện', price: 150000 },
-            { name: 'Sửa rò rỉ đường ống nước', price: 250000 },
-            { name: 'Lắp đặt đường ống nước', price: 400000 },
-        ]
-    },
-    {
-        id: 5, name: 'Đồ gia dụng',
-        items: [
-            { name: 'Sửa tủ lạnh', price: 300000 },
-            { name: 'Sửa tivi các hãng', price: 350000 },
-            { name: 'Sửa bếp từ / bếp gas', price: 250000 },
-            { name: 'Sửa lò vi sóng', price: 200000 },
-            { name: 'Sửa máy hút mùi', price: 300000 },
-        ]
-    },
-    {
-        id: 6, name: 'Cải tạo nhà',
-        items: [
-            { name: 'Sơn nhà (giá/m²)', price: 50000 },
-            { name: 'Làm trần thạch cao', price: 200000 },
-            { name: 'Lát nền gạch (giá/m²)', price: 150000 },
-            { name: 'Ốp tường gạch (giá/m²)', price: 200000 },
-            { name: 'Cải tạo phòng bếp', price: 5000000 },
-        ]
-    }
-];
 
 // ==================== MODAL ELEMENTS ====================
 const bookingModal = new bootstrap.Modal(document.getElementById('bookingModal'));
@@ -73,13 +9,27 @@ const mainService  = document.getElementById('mainService');
 const subService   = document.getElementById('subService');
 const servicePrice = document.getElementById('servicePrice');
 
-// Populate categories
-STATIC_SERVICES.forEach(cat => {
-    const opt = document.createElement('option');
-    opt.value       = cat.id;
-    opt.textContent = cat.name;
-    mainService.appendChild(opt);
-});
+// ==================== LOAD DATA & INIT MODAL ====================
+let STATIC_SERVICES = [];
+
+fetch('data/services.json')
+    .then(r => r.json())
+    .then(data => {
+        STATIC_SERVICES = data.map(s => ({
+            id:    s.id,
+            name:  s.name,
+            items: s.items.map(item => ({ name: item.name, price: item.price }))
+        }));
+
+        // Populate categories
+        STATIC_SERVICES.forEach(cat => {
+            const opt = document.createElement('option');
+            opt.value       = cat.id;
+            opt.textContent = cat.name;
+            mainService.appendChild(opt);
+        });
+    })
+    .catch(() => console.warn('Không thể tải data/services.json'));
 
 // When category changes → populate sub-services
 mainService.addEventListener('change', () => {
