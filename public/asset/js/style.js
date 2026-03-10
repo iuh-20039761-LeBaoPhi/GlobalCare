@@ -14,3 +14,17 @@ window.addEventListener("scroll", () => {
 document.querySelectorAll(".service-card").forEach((card) => {
   card.addEventListener("mouseenter", () => {});
 });
+
+document.addEventListener("DOMContentLoaded", function () {
+  const navLinks = document.querySelectorAll("#navbarNav .nav-link");
+  const navbarCollapse = document.getElementById("navbarNav");
+
+  navLinks.forEach(function (link) {
+    link.addEventListener("click", function () {
+      const bsCollapse = new bootstrap.Collapse(navbarCollapse, {
+        toggle: false,
+      });
+      bsCollapse.hide();
+    });
+  });
+});
