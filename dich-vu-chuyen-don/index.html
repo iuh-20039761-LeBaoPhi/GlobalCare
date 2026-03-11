@@ -1,0 +1,635 @@
+<!doctype html>
+<html lang="vi">
+  <head>
+    <link
+      rel="icon"
+      type="image/x-icon"
+      href="public/assets/images/favicon.ico"
+    />
+    <meta charset="UTF-8" />
+    <title>
+      Dịch vụ Chuyển Dọn - Chuyển nhà, văn phòng & kho bãi chuyên nghiệp tại
+      TP.HCM
+    </title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta
+      name="description"
+      content="Dịch vụ Chuyển Dọn chuyên nghiệp tại TP.HCM. Chúng tôi cung cấp giải pháp chuyển nhà, chuyển văn phòng và chuyển kho bãi trọn gói với quy trình chuẩn hóa. Hỗ trợ 24/7."
+    />
+    <meta
+      name="keywords"
+      content="dịch vụ chuyển dọn, chuyển nhà, chuyển văn phòng, chuyển kho bãi, chuyển nhà trọn gói, TP.HCM"
+    />
+    <link rel="stylesheet" href="public/assets/css/styles.css" />
+    <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+    <script>
+      tailwind.config = {
+        theme: {
+          extend: {
+            colors: {
+              primary: "#1B4332",
+              secondary: {
+                light: "#2D6A4F",
+                dark: "#1B4332",
+              },
+              accent: "#FFB703",
+              bgLight: "#F8F9FA",
+            },
+            borderRadius: {
+              twelve: "12px",
+            },
+            fontFamily: {
+              sans: ["Poppins", "Inter", "sans-serif"],
+            },
+            spacing: {
+              section: "80px",
+            },
+          },
+        },
+        corePlugins: {
+          preflight: false,
+        },
+      };
+    </script>
+    <!-- Thêm SwiperJS CSS -->
+    <link
+      rel="stylesheet"
+      href="https://cdn.jsdelivr.net/npm/swiper@11/swiper-bundle.min.css"
+    />
+  </head>
+
+  <body>
+    <div id="site-header">
+      <header id="header">
+        <nav class="navbar">
+          <div class="logo">
+            <h1 style="margin: 0">
+              <a
+                data-layout-link="brand"
+                href="index.html"
+                class="logo-link"
+                style="display: flex; align-items: center"
+              >
+                <img
+                  src="public/assets/images/favicon.ico"
+                  alt="Logo Dịch vụ Chuyển Dọn"
+                  style="width: 40px; height: 40px; margin-right: 10px"
+                />
+                Dịch vụ Chuyển Dọn</a
+              >
+            </h1>
+          </div>
+        </nav>
+      </header>
+    </div>
+
+    <!-- HERO SECTION -->
+    <section id="hero" class="hero-section">
+      <div class="container hero-container">
+        <div class="hero-content">
+          <h1
+            class="animate-top text-4xl font-bold leading-tight text-white sm:text-5xl lg:text-6xl"
+          >
+            Dịch vụ Chuyển Dọn <br />Trọn Gói & Chuyên Nghiệp
+          </h1>
+          <p
+            class="animate-bottom mt-4 max-w-2xl text-lg text-white/90 sm:mt-6"
+          >
+            Giải pháp chuyển nhà &mdash; văn phòng &mdash; kho bãi trọn gói với
+            quy trình chuẩn hóa, khảo sát miễn phí và đội ngũ bốc xếp tận tâm.
+          </p>
+          <div
+            class="hero-btns animate-bottom mt-8 flex flex-wrap items-center gap-4"
+          >
+            <a
+              href="#"
+              data-open-booking="moving_house"
+              class="btn-primary shadow-lg hover:shadow-xl transform hover:-translate-y-1 transition-all duration-300 bg-accent text-primary border-none"
+              style="
+                background-color: #ffb703;
+                color: #1b4332;
+                font-weight: 700;
+              "
+              >Nhận tư vấn ngay</a
+            >
+            <a
+              href="#services"
+              class="btn-secondary transition-all hover:bg-white/10 text-white border-white/30"
+              style="border: 1px solid rgba(255, 255, 255, 0.3); color: white"
+              >Khám phá dịch vụ</a
+            >
+          </div>
+
+          <!-- APP DOWNLOAD BUTTONS -->
+          <div class="app-btns animate-bottom mt-12">
+            <div class="flex items-center gap-4">
+              <a
+                href="#"
+                class="btn-store group"
+                title="Sắp ra mắt trên App Store"
+              >
+                <span class="store-icon group-hover:text-accent">
+                  <svg viewBox="0 0 384 512">
+                    <path
+                      d="M318.7 268.7c-.2-36.7 16.4-64.4 50-84.8-18.8-26.9-47.2-41.7-84.7-44.6-35.5-2.8-74.3 20.7-88.5 20.7-15 0-49.4-19.7-76.4-19.7C63.3 141.2 4 184.8 4 273.5q0 39.3 14.4 79.9c14.2 40.8 32.2 77.7 57.6 77.7 24.4 0 32.4-16.7 61.1-16.7 28.5 0 33.8 16.7 61.1 16.7 25.2 0 46.8-34.9 61.1-76.5 8.7-24.3 14.9-50.6 14.9-50.6s-35.6-11.4-35.4-55.3zM263 103.5c16.1-21.3 26.9-50.6 23.9-81.6-23.1 1.4-51.3 15.2-67.7 36.9-14.5 19-26.8 49.7-23.2 79.3 25.8 2.1 52.2-12.5 67-34.6z"
+                    />
+                  </svg>
+                </span>
+                <div class="store-text">
+                  <span class="store-subtitle group-hover:text-gray-800"
+                    >Download on the</span
+                  >
+                  <span class="store-title group-hover:text-black"
+                    >App Store</span
+                  >
+                </div>
+              </a>
+              <a
+                href="#"
+                class="btn-store group"
+                title="Sắp ra mắt trên Google Play"
+              >
+                <span class="store-icon group-hover:text-accent">
+                  <svg viewBox="0 0 512 512">
+                    <path
+                      d="M325.3 234.3L104.6 13l280.8 161.2-60.1 60.1zM47 0C34 6.8 25.3 19.2 25.3 35.3v441.3c0 16.1 8.7 28.5 21.7 35.3l256.6-256L47 0zm425.2 225.6l-58.9-34.1-37.5 37.5 37.5 37.5 58.9-34.1c13.7-7.5 13.7-20.5 0-28zM104.6 499l220.7-221.3-58.7-58.9L47 512z"
+                    />
+                  </svg>
+                </span>
+                <div class="store-text">
+                  <span class="store-subtitle group-hover:text-gray-800"
+                    >GET IT ON</span
+                  >
+                  <span class="store-title group-hover:text-black"
+                    >Google Play</span
+                  >
+                </div>
+              </a>
+            </div>
+          </div>
+        </div>
+        <div class="hero-image animate-right">
+          <img
+            src="public/assets/images/hero.png"
+            alt="Đội ngũ nhân viên Dịch vụ Chuyển Dọn chuyên nghiệp tại TP.HCM"
+          />
+          <p class="hero-image-caption">
+            Ảnh: Đội ngũ nhân viên chuyển dọn trọn gói &amp; chuyên nghiệp tại
+            TP.HCM.
+          </p>
+        </div>
+      </div>
+    </section>
+
+    <!-- PROCESS -->
+    <section id="process" class="process-section">
+      <div class="container">
+        <h2 class="section-title">
+          Quy trình chuyển dọn chuyên nghiệp — 3 bước
+        </h2>
+        <p class="section-subtitle">
+          Khảo sát kỹ lưỡng — Đóng gói cẩn thận — Vận chuyển an toàn
+        </p>
+        <div class="process-container">
+          <div class="process-item animate-up">
+            <img
+              src="public/assets/images/order.png"
+              alt="Bước 1: Khảo sát thực tế và báo giá"
+              class="process-img"
+            />
+            <h3>Khảo sát &amp; Báo giá</h3>
+            <p>
+              Chuyên gia của chúng tôi sẽ đến khảo sát khối lượng đồ đạc và địa
+              hình thực tế để báo giá trọn gói minh bạch.
+            </p>
+          </div>
+          <div class="process-arrow">➔</div>
+          <div class="process-item animate-up process-delay-2">
+            <img
+              src="public/assets/images/package.png"
+              alt="Bước 2: Đóng gói và bọc lót chuyên nghiệp"
+              class="process-img"
+            />
+            <h3>Đóng gói &amp; Bọc lót</h3>
+            <p>
+              Mọi đồ đạc được tháo lắp, bọc lót nhiều lớp bằng vật liệu chuyên
+              dụng (màng PE, xốp nổ, thùng carton 5 lớp).
+            </p>
+          </div>
+          <div class="process-arrow">➔</div>
+          <div class="process-item animate-up process-delay-4">
+            <img
+              src="public/assets/images/hero-shipper.png"
+              alt="Bước 3: Vận chuyển và lắp đặt tại nơi mới"
+              class="process-img"
+            />
+            <h3>Vận chuyển &amp; Lắp đặt</h3>
+            <p>
+              Đội ngũ bốc xếp và xe tải chuyên dụng vận chuyển an toàn, sau đó
+              lắp đặt đồ đạc đúng vị trí tại nơi ở/văn phòng mới.
+            </p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- SERVICES -->
+    <section id="services">
+      <div class="container">
+        <h2 class="section-title">Các dịch vụ Chuyển Dọn</h2>
+        <p class="section-desc">
+          Giải pháp di dời toàn diện &mdash; từ căn hộ, văn phòng đến kho bãi
+          quy mô lớn.
+        </p>
+
+        <div class="moving-service-grid">
+          <article class="moving-card">
+            <div class="moving-card-head">
+              <div class="moving-card-icon">🏠</div>
+              <h3>Chuyển Nhà Trọn Gói</h3>
+            </div>
+            <p class="moving-card-slogan">
+              "Thay bạn nâng niu từng món đồ trong tổ ấm mới."
+            </p>
+            <ul class="moving-card-details">
+              <li>
+                <strong>Giải pháp:</strong> Tháo lắp nội thất, bọc lót xốp nổ,
+                đóng thùng carton 5 lớp.
+              </li>
+              <li>
+                <strong>Phạm vi:</strong> Căn hộ, nhà phố, phòng trọ tại TP.HCM
+                và liên tỉnh.
+              </li>
+              <li>
+                <strong>Cam kết:</strong> Bồi thường 100% giá trị nếu xảy ra hư
+                hỏng, mất mát.
+              </li>
+            </ul>
+            <div class="service-card-actions">
+              <a
+                href="#"
+                data-open-booking="moving_house"
+                class="service-action-btn service-action-dark"
+                >Liên hệ tư vấn</a
+              >
+              <a
+                href="./public/chuyen-nha.html"
+                class="service-action-btn service-action-outline"
+                >Xem chi tiết →</a
+              >
+            </div>
+          </article>
+
+          <article class="moving-card">
+            <div class="moving-card-head">
+              <div class="moving-card-icon">🏢</div>
+              <h3>Chuyển Văn Phòng</h3>
+            </div>
+            <p class="moving-card-slogan">
+              "Di dời nhanh gọn — Hạn chế tối đa gián đoạn vận hành."
+            </p>
+            <ul class="moving-card-details">
+              <li>
+                <strong>Chuyên nghiệp:</strong> Di dời thiết bị IT, server, hồ
+                sơ tài liệu bảo mật.
+              </li>
+              <li>
+                <strong>Linh hoạt:</strong> Triển khai ngoài giờ hành chính
+                (đêm/cuối tuần).
+              </li>
+              <li>
+                <strong>Quy trình:</strong> Kiểm soát bằng checklist cho từng
+                phòng ban, vị trí.
+              </li>
+            </ul>
+            <div class="service-card-actions">
+              <a
+                href="#"
+                data-open-booking="moving_office"
+                class="service-action-btn service-action-dark"
+                >Liên hệ tư vấn</a
+              >
+              <a
+                href="./public/chuyen-van-phong.html"
+                class="service-action-btn service-action-outline"
+                >Xem chi tiết →</a
+              >
+            </div>
+          </article>
+
+          <article class="moving-card">
+            <div class="moving-card-head">
+              <div class="moving-card-icon">🏭</div>
+              <h3>Chuyển Kho Bãi</h3>
+            </div>
+            <p class="moving-card-slogan">
+              "Giải pháp di dời kho bãi &amp; nhà xưởng quy mô lớn."
+            </p>
+            <ul class="moving-card-details">
+              <li>
+                <strong>Năng lực:</strong> Xe nâng, xe cẩu, xe tải nặng xử lý
+                hàng pallet, máy móc.
+              </li>
+              <li>
+                <strong>An toàn:</strong> Gia cố kiện hàng, chống rung lắc, bốc
+                xếp đúng kỹ thuật.
+              </li>
+              <li>
+                <strong>Đối soát:</strong> Kiểm kê số lượng nghiêm ngặt trước và
+                sau khi di dời.
+              </li>
+            </ul>
+            <div class="service-card-actions">
+              <a
+                href="#"
+                data-open-booking="moving_warehouse"
+                class="service-action-btn service-action-dark"
+                >Liên hệ tư vấn</a
+              >
+              <a
+                href="./public/chuyen-kho-bai.html"
+                class="service-action-btn service-action-outline"
+                >Xem chi tiết →</a
+              >
+            </div>
+          </article>
+        </div>
+      </div>
+    </section>
+
+    <!-- FEATURES -->
+    <section id="features">
+      <h2 class="section-title">Vì sao khách hàng chọn Dịch vụ Chuyển Dọn?</h2>
+      <div class="feature-list">
+        <div class="feature-item">
+          <span class="feature-icon">🚀</span>
+          <h3>An tâm &amp; đúng giờ</h3>
+          <p>
+            Cam kết đúng lịch hẹn khảo sát và vận chuyển, đảm bảo tiến độ di dời
+            theo kế hoạch của khách hàng.
+          </p>
+        </div>
+        <div class="feature-item">
+          <span class="feature-icon">📦</span>
+          <h3>Bọc lót 5 lớp</h3>
+          <p>
+            Tài sản được bảo vệ tuyệt đối với quy trình bọc lót nhiều lớp bằng
+            vật liệu chuyên dụng.
+          </p>
+        </div>
+        <div class="feature-item">
+          <span class="feature-icon">👨‍✈️</span>
+          <h3>Đội ngũ tận tâm</h3>
+          <p>
+            Nhân viên tháo lắp và bóc xếp chuyên nghiệp, có tay nghề cao và
+            trung thực.
+          </p>
+        </div>
+        <div class="feature-item">
+          <span class="feature-icon">🔍</span>
+          <h3>Khảo sát miễn phí</h3>
+          <p>
+            Chuyên gia khảo sát tận nơi và tư vấn phương án vận chuyển tối ưu,
+            hoàn toàn không mất phí.
+          </p>
+        </div>
+        <div class="feature-item">
+          <span class="feature-icon">💰</span>
+          <h3>Giá cước trọn gói</h3>
+          <p>
+            Báo giá minh bạch sau khi khảo sát, cam kết không phát sinh phụ phí
+            ngoài hợp đồng.
+          </p>
+        </div>
+        <div class="feature-item">
+          <span class="feature-icon">🛡️</span>
+          <h3>Cam kết bồi thường</h3>
+          <p>
+            Đền bù 100% giá trị tài sản nếu xảy ra hư hỏng hoặc thất thoát trong
+            quá trình di chuyển.
+          </p>
+        </div>
+      </div>
+    </section>
+
+    <!-- CONTACT -->
+    <section id="contact">
+      <h2 class="section-title">Sẵn sàng để di dời ngay hôm nay?</h2>
+      <p class="section-desc">
+        Để lại thông tin hoặc gọi hotline để đặt lịch khảo sát miễn phí:
+        <br />
+        <strong>0775 472 347</strong> |
+        <strong>dichvuquanhta.vn@gmail.com</strong>
+      </p>
+      <div
+        class="contact-form-wrapper"
+        style="
+          max-width: 600px;
+          margin: 40px auto 0;
+          background: rgba(255, 255, 255, 0.05);
+          padding: 30px;
+          border-radius: 15px;
+          border: 1px solid rgba(255, 255, 255, 0.1);
+        "
+      >
+        <form
+          id="quick-contact-form"
+          class="quick-form"
+          style="
+            display: grid;
+            grid-template-columns: 1fr 1fr auto;
+            gap: 15px;
+            align-items: flex-end;
+          "
+        >
+          <div style="text-align: left">
+            <label
+              style="
+                display: block;
+                margin-bottom: 8px;
+                font-size: 14px;
+                color: #d0d8f0;
+              "
+              >Họ và tên</label
+            >
+            <input
+              type="text"
+              name="name"
+              placeholder="Nhập tên của bạn"
+              required
+              style="
+                width: 100%;
+                padding: 12px;
+                border-radius: 8px;
+                border: 1px solid rgba(255, 255, 255, 0.2);
+                background: rgba(255, 255, 255, 0.1);
+                color: white;
+              "
+            />
+          </div>
+          <div style="text-align: left">
+            <label
+              style="
+                display: block;
+                margin-bottom: 8px;
+                font-size: 14px;
+                color: #d0d8f0;
+              "
+              >Số điện thoại</label
+            >
+            <input
+              type="tel"
+              name="phone"
+              placeholder="09xx xxx xxx"
+              required
+              style="
+                width: 100%;
+                padding: 12px;
+                border-radius: 8px;
+                border: 1px solid rgba(255, 255, 255, 0.2);
+                background: rgba(255, 255, 255, 0.1);
+                color: white;
+              "
+            />
+          </div>
+          <button
+            type="submit"
+            class="btn-primary"
+            style="
+              background-color: var(--accent-color);
+              color: var(--primary-color);
+              font-weight: 700;
+              border: none;
+              padding: 12px 25px;
+              border-radius: 8px;
+              cursor: pointer;
+              height: 46px;
+            "
+          >
+            Gửi yêu cầu
+          </button>
+        </form>
+        <p style="margin-top: 15px; font-size: 13px; color: #d0d8f0">
+          Hoặc nhấn
+          <a
+            href="#"
+            data-open-booking="moving_house"
+            onclick="
+              if (window.openBookingModal) {
+                window.openBookingModal('moving_house');
+                return false;
+              }
+            "
+            style="
+              color: var(--accent-color);
+              text-decoration: underline;
+              font-weight: 600;
+            "
+            >vào đây</a
+          >
+          để đặt lịch khảo sát chi tiết.
+        </p>
+      </div>
+    </section>
+
+    <!-- TESTIMONIALS (Static) -->
+    <section id="testimonials">
+      <h2 class="section-title">Khách hàng nói gì về Dịch vụ Chuyển Dọn?</h2>
+      <p class="section-desc">
+        Sự hài lòng của khách hàng là thước đo giá trị dịch vụ của chúng tôi.
+      </p>
+      <div class="swiper testimonial-slider">
+        <div class="swiper-wrapper" id="testimonials-wrapper">
+          <div class="swiper-slide">
+            <div class="testimonial-item">
+              <div class="stars">⭐⭐⭐⭐⭐</div>
+              <p class="feedback">
+                "Dịch vụ chuyển nhà cực kỳ chuyên nghiệp. Các bạn bọc lót tủ
+                lạnh và tivi rất kỹ, không một vết trầy xước khi sang nhà mới."
+              </p>
+              <div class="customer-info">
+                <strong>Nguyễn Thu Hà</strong>
+                <span>- Chuyển nhà chung cư</span>
+              </div>
+            </div>
+          </div>
+          <div class="swiper-slide">
+            <div class="testimonial-item">
+              <div class="stars">⭐⭐⭐⭐⭐</div>
+              <p class="feedback">
+                "Công ty tôi chuyển văn phòng quy mô 50 nhân sự chỉ trong 1 ngày
+                cuối tuần. Quy trình nhanh gọn, không ảnh hưởng tới giờ làm
+                việc."
+              </p>
+              <div class="customer-info">
+                <strong>Trần Minh Tuấn</strong>
+                <span>- Giám đốc Hành chính</span>
+              </div>
+            </div>
+          </div>
+          <div class="swiper-slide">
+            <div class="testimonial-item">
+              <div class="stars">⭐⭐⭐⭐</div>
+              <p class="feedback">
+                "Khảo sát báo giá rất nhanh và minh bạch. Đội ngũ nhân viên bốc
+                xếp khỏe mạnh, lễ phép. Rất hài lòng!"
+              </p>
+              <div class="customer-info">
+                <strong>Lê Bảo Ngọc</strong>
+                <span>- Kinh doanh tự do</span>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="swiper-pagination"></div>
+      </div>
+    </section>
+
+    <!-- FAQ (Static) -->
+    <section id="faq">
+      <h2 class="section-title">FAQs / Hỗ trợ</h2>
+      <div class="faq-list" id="faq-list">
+        <div class="faq-item">
+          <h3 class="faq-question">
+            Chi phí chuyển nhà trọn gói được tính như thế nào?
+          </h3>
+          <p class="faq-answer">
+            Chi phí được tính dựa trên: Khối lượng đồ đạc, quãng đường di
+            chuyển, số tầng (thang bộ/thang máy) và các yêu cầu tháo lắp thiết
+            bị đặc thù.
+          </p>
+        </div>
+        <div class="faq-item">
+          <h3 class="faq-question">Việc khảo sát có mất phí không?</h3>
+          <p class="faq-answer">
+            Hoàn toàn miễn phí. Chúng tôi khuyến khích khách hàng đăng ký khảo
+            sát trực tiếp để có báo giá chính xác nhất và phương án thi công tối
+            ưu.
+          </p>
+        </div>
+        <div class="faq-item">
+          <h3 class="faq-question">
+            Công ty có bồi thường khi làm hỏng đồ không?
+          </h3>
+          <p class="faq-answer">
+            Có. Chúng tôi cam kết bồi hoàn 100% giá trị tài sản theo giá thị
+            trường nếu xảy ra hư hỏng hoặc thất thoát trong quá trình vận
+            chuyển.
+          </p>
+        </div>
+      </div>
+    </section>
+
+    \n
+    <div id="site-footer"></div>
+
+    <!-- Thêm SwiperJS JS -->
+    <script
+      src="https://cdn.jsdelivr.net/npm/swiper@11/swiper-bundle.min.js"
+      defer
+    ></script>
+    <script src="public/assets/js/shared-layout.js"></script>
+
+    <script src="public/assets/js/main.js" defer></script>
+  </body>
+</html>

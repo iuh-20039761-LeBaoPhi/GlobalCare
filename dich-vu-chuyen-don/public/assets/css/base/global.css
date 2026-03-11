@@ -1,0 +1,98 @@
+:root {
+  --primary-color: #1b4332;
+  --accent-color: #ffb703;
+  --bg-light: #f8f9fa;
+  --text-dark: #2d3436;
+  --text-gray: #636e72;
+}
+
+/* CONTAINER */
+.container {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 0 20px;
+}
+
+/* MARGIN UTILITIES */
+.mt-4 {
+  margin-top: 1rem;
+}
+.mt-6 {
+  margin-top: 1.5rem;
+}
+.mt-8 {
+  margin-top: 2rem;
+}
+.mt-12 {
+  margin-top: 3rem;
+}
+
+/* COLOR UTILITIES */
+.text-primary {
+  color: var(--primary-color);
+}
+.text-accent {
+  color: var(--accent-color);
+}
+.text-gray-600 {
+  color: var(--text-gray);
+}
+
+/* SPACING & TYPOGRAPHY HELPERS */
+.tracking-tight {
+  letter-spacing: -0.025em;
+}
+.font-extrabold {
+  font-weight: 800;
+}
+.text-lg {
+  font-size: 1.125rem;
+  line-height: 1.75rem;
+}
+.text-4xl {
+  font-size: 2.25rem;
+  line-height: 2.5rem;
+}
+
+/* ===== SPINNER STYLES (Loading) ===== */
+.spinner {
+  width: 40px;
+  height: 40px;
+  border: 4px solid #f3f3f3;
+  border-top: 4px solid var(--accent-color); /* Sử dụng màu accent mới */
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+  margin: 0 auto;
+}
+
+@keyframes spin {
+  0% {
+    transform: rotate(0deg);
+  }
+  100% {
+    transform: rotate(360deg);
+  }
+}
+
+/* ===== FORM VALIDATION STYLES ===== */
+.input-error {
+  border-color: #dc3545 !important; /* Màu đỏ bootstrap */
+  background-color: #fff8f8 !important;
+}
+
+.field-error-msg {
+  color: #dc3545;
+  font-size: 13px;
+  margin-top: 5px;
+  display: block;
+  animation: fadeIn 0.3s ease;
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
