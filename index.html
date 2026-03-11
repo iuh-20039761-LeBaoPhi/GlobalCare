@@ -728,16 +728,44 @@
                     />
                   </div>
                 </div>
-                <div class="mb-3">
+                <div class="mb-3 position-relative">
                   <label class="form-label small fw-bold text-muted"
                     >Dịch Vụ Quan Tâm</label
                   >
-                  <select class="form-select">
+                  <!-- input that triggers dropdown -->
+                  <input
+                    type="text"
+                    id="serviceInput"
+                    class="form-control"
+                    placeholder="Chọn dịch vụ..."
+                    readonly
+                  />
+                  <!-- hidden multi‑select positioned under input -->
+                  <select
+                    class="form-select"
+                    id="serviceSelect"
+                    multiple
+                    style="
+                      position: absolute;
+                      top: 100%;
+                      left: 0;
+                      width: 100%;
+                      display: none;
+                      z-index: 1000;
+                      max-height: 200px;
+                      overflow: auto;
+                    "
+                  >
                     <option>Lau dọn vệ sinh</option>
-                    <option>Chăm sóc mẹ và bé</option>
-                    <option>Chăm sóc vườn nhà</option>
+                    <option>Chăm sóc mẹ & bé</option>
+                    <option>Chăm Sóc Vườn & Rẫy</option>
                     <option>Giặt ủi cao cấp</option>
-                    <option>Thợ sửa chữa</option>
+                    <option>Thợ Nhà & Sửa Chữa</option>
+                    <option>Chăm Sóc Người Già</option>
+                    <option>Chăm Sóc Bệnh Nhân</option>
+                    <option>Giao Hàng và Vận Chuyển</option>
+                    <option>Thuê Xe</option>
+                    <option>Sửa xe lưu động</option>
                   </select>
                 </div>
                 <div class="mb-4">

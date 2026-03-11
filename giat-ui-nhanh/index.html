@@ -577,6 +577,7 @@
 
                   filteredServices.forEach(function (service, index) {
                     const icon = icons[index % icons.length];
+                    const unit = service.price_unit === "kg" ? "Kg" : "Đôi";
 
                     html += `
             <div class="service-card">
@@ -590,7 +591,7 @@
 
               <p>
                 <b>Giá từ:</b> 
-                ${service.min_price.toLocaleString("vi-VN")} VNĐ
+                ${service.min_price.toLocaleString("vi-VN")} VNĐ / ${unit}
               </p>
 
               <a class="btn btn-info choose-service" href="#contact">
