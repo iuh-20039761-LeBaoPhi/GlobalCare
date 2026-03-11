@@ -14,24 +14,22 @@
     ],
     "pricing": [
       {
-        "label": "Theo giờ (130.000đ/giờ)",
-        "value": 130000,
-        "hours": 1
+        "label": "Ca sáng (6h - 18h)",
+        "value": 700000,
+        "hours": 12,
+        "type": "day_morning"
       },
       {
-        "label": "Theo ca 4 giờ (480.000đ)",
-        "value": 480000,
-        "hours": 4
+        "label": "Ca đêm (18h - 6h)",
+        "value": 750000,
+        "hours": 12,
+        "type": "day_night"
       },
       {
-        "label": "Ca 8 giờ (900.000đ)",
-        "value": 900000,
-        "hours": 8
-      },
-      {
-        "label": "Theo ngày 24h (1.600.000đ)",
-        "value": 1600000,
-        "hours": 24
+        "label": "Cả ngày 24h",
+        "value": 1400000,
+        "hours": 24,
+        "type": "day_full"
       }
     ]
   },
@@ -51,19 +49,22 @@
     ],
     "pricing": [
       {
-        "label": "Theo giờ (150.000đ/giờ)",
-        "value": 150000,
-        "hours": 1
+        "label": "Ca sáng (6h - 18h)",
+        "value": 700000,
+        "hours": 12,
+        "type": "day_morning"
       },
       {
-        "label": "Ca 8 giờ (1.100.000đ)",
-        "value": 1100000,
-        "hours": 8
+        "label": "Ca đêm (18h - 6h)",
+        "value": 750000,
+        "hours": 12,
+        "type": "day_night"
       },
       {
-        "label": "Theo ngày 24h (1.900.000đ)",
-        "value": 1900000,
-        "hours": 24
+        "label": "Cả ngày 24h",
+        "value": 1400000,
+        "hours": 24,
+        "type": "day_full"
       }
     ]
   },
@@ -83,14 +84,22 @@
     ],
     "pricing": [
       {
-        "label": "Ca 8 giờ (1.300.000đ)",
-        "value": 1300000,
-        "hours": 8
+        "label": "Ca sáng (6h - 18h)",
+        "value": 700000,
+        "hours": 12,
+        "type": "day_morning"
       },
       {
-        "label": "Theo ngày 24h (2.300.000đ)",
-        "value": 2300000,
-        "hours": 24
+        "label": "Ca đêm (18h - 6h)",
+        "value": 750000,
+        "hours": 12,
+        "type": "day_night"
+      },
+      {
+        "label": "Cả ngày 24h",
+        "value": 1400000,
+        "hours": 24,
+        "type": "day_full"
       }
     ]
   },
@@ -109,19 +118,22 @@
     ],
     "pricing": [
       {
-        "label": "Ca tối 4 giờ (500.000đ)",
-        "value": 500000,
-        "hours": 4
+        "label": "Ca sáng (6h - 18h)",
+        "value": 700000,
+        "hours": 12,
+        "type": "day_morning"
       },
       {
-        "label": "Ca đêm 8 giờ (750.000đ)",
+        "label": "Ca đêm (18h - 6h)",
         "value": 750000,
-        "hours": 8
+        "hours": 12,
+        "type": "day_night"
       },
       {
-        "label": "Ca đêm dài 12 giờ (1.200.000đ)",
-        "value": 1200000,
-        "hours": 12
+        "label": "Cả ngày 24h",
+        "value": 1400000,
+        "hours": 24,
+        "type": "day_full"
       }
     ]
   },
@@ -140,19 +152,22 @@
     ],
     "pricing": [
       {
-        "label": "Theo giờ (110.000đ/giờ)",
-        "value": 110000,
-        "hours": 1
-      },
-      {
-        "label": "Ca 4 giờ (360.000đ)",
-        "value": 360000,
-        "hours": 4
-      },
-      {
-        "label": "Ca 8 giờ (700.000đ)",
+        "label": "Ca sáng (6h - 18h)",
         "value": 700000,
-        "hours": 8
+        "hours": 12,
+        "type": "day_morning"
+      },
+      {
+        "label": "Ca đêm (18h - 6h)",
+        "value": 750000,
+        "hours": 12,
+        "type": "day_night"
+      },
+      {
+        "label": "Cả ngày 24h",
+        "value": 1400000,
+        "hours": 24,
+        "type": "day_full"
       }
     ]
   },
@@ -171,19 +186,22 @@
     ],
     "pricing": [
       {
-        "label": "Theo giờ (95.000đ/giờ)",
-        "value": 95000,
-        "hours": 1
-      },
-      {
-        "label": "Ca 4 giờ (360.000đ)",
-        "value": 360000,
-        "hours": 4
-      },
-      {
-        "label": "Ca 8 giờ (700.000đ)",
+        "label": "Ca sáng (6h - 18h)",
         "value": 700000,
-        "hours": 8
+        "hours": 12,
+        "type": "day_morning"
+      },
+      {
+        "label": "Ca đêm (18h - 6h)",
+        "value": 750000,
+        "hours": 12,
+        "type": "day_night"
+      },
+      {
+        "label": "Cả ngày 24h",
+        "value": 1400000,
+        "hours": 24,
+        "type": "day_full"
       }
     ]
   }
