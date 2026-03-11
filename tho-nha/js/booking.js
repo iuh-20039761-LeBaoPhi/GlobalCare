@@ -4,10 +4,12 @@
  */
 
 // ==================== MODAL ELEMENTS ====================
-const bookingModal = new bootstrap.Modal(document.getElementById('bookingModal'));
-const mainService  = document.getElementById('mainService');
-const subService   = document.getElementById('subService');
-const servicePrice = document.getElementById('servicePrice');
+const bookingModal       = new bootstrap.Modal(document.getElementById('bookingModal'));
+const mainService        = document.getElementById('mainService');
+const subService         = document.getElementById('subService');
+const servicePrice       = document.getElementById('servicePrice');
+const brandSelectorWrap  = document.getElementById('brandSelectorWrap');
+const brandOptionsContainer = document.getElementById('brandOptionsContainer');
 
 // ==================== LOAD DATA & INIT MODAL ====================
 let STATIC_SERVICES = [];
@@ -18,7 +20,11 @@ fetch('data/services.json')
         STATIC_SERVICES = data.map(s => ({
             id:    s.id,
             name:  s.name,
-            items: s.items.map(item => ({ name: item.name, price: item.price }))
+            items: s.items.map(item => ({
+                name:        item.name,
+                price:       item.price,
+                brandPrices: item.brandPrices || null
+            }))
         }));
 
         // Populate categories
@@ -36,6 +42,7 @@ mainService.addEventListener('change', () => {
     subService.innerHTML  = '<option value="">-- Chọn dịch vụ chi tiết --</option>';
     subService.disabled   = true;
     servicePrice.value    = '';
+    hideBrandSelector();
     if (!mainService.value) return;
 
     const cat = STATIC_SERVICES.find(c => c.id == mainService.value);
@@ -51,20 +58,58 @@ mainService.addEventListener('change', () => {
     subService.disabled = false;
 });
 
-// Show price when sub-service selected
+// Show price and brand selector when sub-service selected
 subService.addEventListener('change', function () {
-    const price = this.options[this.selectedIndex].dataset.price;
-    servicePrice.value = price ? Number(price).toLocaleString('vi-VN') + ' VNĐ' : '';
+    const cat  = STATIC_SERVICES.find(c => c.id == mainService.value);
+    const item = cat ? cat.items.find(i => i.name === this.value) : null;
+
+    if (item && item.brandPrices && item.brandPrices.length > 1) {
+        showBrandSelector(item.brandPrices);
+        // Chọn hãng đầu tiên làm mặc định
+        const firstPrice = item.brandPrices[0].price;
+        servicePrice.value = Number(firstPrice).toLocaleString('vi-VN') + ' VNĐ';
+    } else {
+        hideBrandSelector();
+        const price = this.options[this.selectedIndex].dataset.price;
+        servicePrice.value = price ? Number(price).toLocaleString('vi-VN') + ' VNĐ' : '';
+    }
 });
+
+function showBrandSelector(brandPrices) {
+    brandOptionsContainer.innerHTML = '';
+    brandPrices.forEach((bp, i) => {
+        const btn = document.createElement('button');
+        btn.type             = 'button';
+        btn.className        = 'brand-option' + (i === 0 ? ' active' : '');
+        btn.textContent      = bp.name;
+        btn.dataset.brand    = bp.name;
+        btn.dataset.price    = bp.price;
+        btn.addEventListener('click', function () {
+            brandOptionsContainer.querySelectorAll('.brand-option').forEach(b => b.classList.remove('active'));
+            this.classList.add('active');
+            servicePrice.value = Number(this.dataset.price).toLocaleString('vi-VN') + ' VNĐ';
+        });
+        brandOptionsContainer.appendChild(btn);
+    });
+    brandSelectorWrap.style.display = '';
+}
+
+function hideBrandSelector() {
+    brandSelectorWrap.style.display = 'none';
+    brandOptionsContainer.innerHTML = '';
+}
 
 // ==================== BOOKING SUBMIT ====================
 document.getElementById('bookingForm').addEventListener('submit', function (e) {
     e.preventDefault();
 
+    const activeBrand = brandOptionsContainer.querySelector('.brand-option.active');
+    const serviceName = subService.value + (activeBrand ? ` (${activeBrand.dataset.brand})` : '');
+
     const data = {
         name:       document.getElementById('name').value.trim(),
         phone:      document.getElementById('phone').value.trim(),
-        service_id: document.getElementById('subService').value,
+        service_id: serviceName,
         address:    document.getElementById('address').value.trim(),
         note:       document.getElementById('note').value.trim()
     };
@@ -98,6 +143,7 @@ document.getElementById('bookingForm').addEventListener('submit', function (e) {
         this.reset();
         subService.disabled = true;
         servicePrice.value  = '';
+        hideBrandSelector();
         resetBtn();
     };
 
@@ -121,6 +167,7 @@ document.getElementById('bookingForm').addEventListener('submit', function (e) {
         this.reset();
         subService.disabled = true;
         servicePrice.value  = '';
+        hideBrandSelector();
         resetBtn();
     });
 });
@@ -151,5 +198,6 @@ document.addEventListener('click', function (e) {
 
     subService.selectedIndex = 0;
     servicePrice.value = '';
+    hideBrandSelector();
     bookingModal.show();
 });
