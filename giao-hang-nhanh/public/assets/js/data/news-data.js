@@ -4,7 +4,8 @@ window.newsData = [
     title: "Hướng dẫn đóng gói hàng dễ vỡ an toàn tuyệt đối",
     date: "12/03/2026",
     image: "assets/images/hero.png", // Thay bằng ảnh phù hợp
-    description: "Hàng dễ vỡ cần quy trình đóng gói đặc biệt với xốp nổ và thùng carton 3 lớp. Xem ngay hướng dẫn chi tiết...",
+    description:
+      "Hàng dễ vỡ cần quy trình đóng gói đặc biệt với xốp nổ và thùng carton 3 lớp. Xem ngay hướng dẫn chi tiết...",
     author: "Giao Hàng Nhanh",
     category: "Hướng dẫn",
     content: `
@@ -78,14 +79,15 @@ window.newsData = [
       <h2>Kết luận</h2>
       <p>Đóng gói hàng dễ vỡ đúng chuẩn là khoản đầu tư nhỏ nhưng mang lại lợi ích lớn về uy tín và chi phí. Hãy áp dụng các bước trên, kiểm tra lại trước khi gửi và duy trì checklist vật liệu để giảm tối đa rủi ro trong vận chuyển.</p>
       <p><strong>CTA:</strong> Bạn muốn chuẩn hóa quy trình giao hàng và giảm vỡ hỏng? Hãy tạo đơn ngay tại <a href="order.php">trang đặt đơn</a> hoặc liên hệ đội ngũ Giao Hàng Nhanh để được tư vấn giải pháp đóng gói hàng dễ vỡ phù hợp cho shop của bạn.</p>
-    `
+    `,
   },
   {
     id: 2,
     title: "5 Lưu ý quan trọng khi gửi hàng thu hộ (COD)",
     date: "10/03/2026",
     image: "assets/images/package.png", // Thay bằng ảnh phù hợp
-    description: "Dịch vụ COD giúp tăng tỷ lệ chốt đơn nhưng cũng tiềm ẩn rủi ro. Nắm vững 5 lưu ý sau để việc kinh doanh của bạn luôn suôn sẻ.",
+    description:
+      "Dịch vụ COD giúp tăng tỷ lệ chốt đơn nhưng cũng tiềm ẩn rủi ro. Nắm vững 5 lưu ý sau để việc kinh doanh của bạn luôn suôn sẻ.",
     author: "Giao Hàng Nhanh",
     category: "Kinh nghiệm",
     content: `
@@ -150,7 +152,161 @@ window.newsData = [
       <h2>Kết luận</h2>
       <p>Gửi hàng thu hộ (COD) hiệu quả đòi hỏi quy trình rõ ràng, kiểm soát thông tin và đối soát tiền thu kịp thời. Khi làm đúng, COD không chỉ giúp tăng doanh thu mà còn tạo trải nghiệm mua hàng đáng tin cậy.</p>
       <p><strong>CTA:</strong> Muốn tối ưu COD và theo dõi dòng tiền dễ dàng? Hãy tạo đơn ngay tại <a href="login.php">trang đặt đơn</a> hoặc liên hệ Giao Hàng Nhanh để được tư vấn giải pháp gửi hàng thu hộ (COD) phù hợp.</p>
-    `
-  }
+    `,
+  },
+  {
+    id: 3,
+    title: "Hướng dẫn đóng gói hàng dễ vỡ an toàn khi vận chuyển",
+    date: "12/03/2026",
+    image: "assets/images/package.png",
+    description:
+      "Hàng dễ vỡ như gốm sứ, thủy tinh hay thiết bị điện tử cần được đóng gói đúng cách để tránh hư hỏng. Xem ngay hướng dẫn chi tiết để đảm bảo an toàn khi vận chuyển.",
+    author: "Giao Hàng Nhanh",
+    category: "Hướng dẫn",
+    content: `
+  <p><strong>Hàng dễ vỡ như gốm sứ, thủy tinh, đồ điện tử hoặc đồ trang trí luôn tiềm ẩn nguy cơ hư hỏng trong quá trình vận chuyển.</strong> Nếu đóng gói không đúng cách, sản phẩm có thể bị va đập, nứt vỡ hoặc trầy xước khi giao đến tay khách hàng. Vì vậy, việc đóng gói hàng dễ vỡ đúng quy trình là bước quan trọng giúp bảo vệ sản phẩm và giảm thiểu chi phí đổi trả.</p>
+
+  <h2>Tại sao cần đóng gói hàng dễ vỡ đúng cách?</h2>
+  <p>Trong quá trình vận chuyển, kiện hàng thường phải trải qua nhiều công đoạn như bốc xếp, di chuyển trên xe tải hoặc lưu kho trung chuyển. Những rung lắc hoặc va chạm nhẹ cũng có thể khiến sản phẩm dễ vỡ bị hỏng nếu không được bảo vệ tốt.</p>
+
+  <p>Đóng gói đúng chuẩn giúp:</p>
+  <ul>
+  <li>Bảo vệ sản phẩm khỏi va đập và rung lắc.</li>
+  <li>Giảm tỷ lệ hoàn hàng do hư hỏng.</li>
+  <li>Tăng uy tín cho shop khi giao hàng.</li>
+  <li>Giúp đơn vị vận chuyển xử lý kiện hàng cẩn thận hơn.</li>
+  </ul>
+
+  <img src="assets/images/items-deliver.png" alt="Đóng gói hàng dễ vỡ an toàn trước khi vận chuyển" loading="lazy" />
+
+  <h2>Chuẩn bị vật liệu đóng gói</h2>
+  <p>Trước khi bắt đầu đóng gói hàng dễ vỡ, bạn cần chuẩn bị đầy đủ các vật liệu sau:</p>
+
+  <ul>
+  <li><strong>Xốp nổ (bubble wrap):</strong> lớp chống sốc chính giúp giảm lực va đập.</li>
+  <li><strong>Thùng carton 3 hoặc 5 lớp:</strong> đảm bảo độ cứng và khả năng chịu lực.</li>
+  <li><strong>Giấy kraft hoặc mút xốp:</strong> dùng để chèn khoảng trống.</li>
+  <li><strong>Băng keo chịu lực:</strong> cố định và niêm phong thùng.</li>
+  <li><strong>Tem cảnh báo:</strong> “Hàng dễ vỡ” hoặc “Fragile”.</li>
+  </ul>
+
+  <h2>Quy trình đóng gói hàng dễ vỡ</h2>
+
+  <h3>1. Kiểm tra sản phẩm trước khi đóng gói</h3>
+  <p>Đảm bảo sản phẩm không bị nứt hoặc hư hỏng trước khi gửi. Nếu có nhiều chi tiết rời, hãy tháo riêng từng phần để đóng gói cẩn thận.</p>
+
+  <h3>2. Bọc lớp chống sốc</h3>
+  <p>Dùng xốp nổ quấn quanh sản phẩm ít nhất 2 – 3 lớp. Đối với các góc cạnh hoặc phần dễ vỡ, nên bọc thêm một lớp bảo vệ để tăng độ an toàn.</p>
+
+  <h3>3. Đặt sản phẩm vào hộp phụ</h3>
+  <p>Nếu sản phẩm nhỏ, hãy đặt vào hộp nhỏ trước rồi mới cho vào thùng carton lớn. Điều này giúp tăng thêm một lớp bảo vệ.</p>
+
+  <h3>4. Chèn kín khoảng trống</h3>
+  <p>Sử dụng giấy kraft, mút xốp hoặc hạt xốp để lấp đầy khoảng trống trong thùng. Khi lắc nhẹ thùng không nên nghe tiếng sản phẩm di chuyển.</p>
+
+  <h3>5. Niêm phong thùng</h3>
+  <p>Dán băng keo theo hình chữ H ở đáy và nắp thùng để tăng độ chắc chắn.</p>
+
+  <h3>6. Dán nhãn cảnh báo</h3>
+  <p>Dán nhãn “Hàng dễ vỡ” ở ít nhất hai mặt của thùng để nhân viên vận chuyển nhận biết và xử lý cẩn thận.</p>
+
+  <img src="assets/images/package.png" alt="Quy trình đóng gói hàng dễ vỡ bằng xốp nổ và thùng carton" loading="lazy" />
+
+  <h2>Một số lưu ý quan trọng</h2>
+  <ul>
+  <li>Không nên dùng thùng carton quá lớn so với sản phẩm.</li>
+  <li>Luôn bọc sản phẩm bằng nhiều lớp chống sốc.</li>
+  <li>Không đặt nhiều vật dễ vỡ chung một thùng nếu không có vách ngăn.</li>
+  <li>Kiểm tra thùng trước khi gửi để đảm bảo không có khoảng trống.</li>
+  </ul>
+
+  <h2>Khi nào nên dùng dịch vụ đóng gói chuyên nghiệp?</h2>
+  <p>Nếu bạn thường xuyên gửi các sản phẩm giá trị cao hoặc kích thước lớn, việc sử dụng dịch vụ đóng gói chuyên nghiệp sẽ giúp đảm bảo an toàn tốt hơn. Các đơn vị vận chuyển chuyên nghiệp thường có vật liệu đóng gói tiêu chuẩn và quy trình xử lý hàng dễ vỡ riêng.</p>
+
+  <p>Bạn có thể xem thêm <a href="huong-dan-dat-hang.html">hướng dẫn đặt hàng</a> hoặc tra cứu trạng thái vận chuyển tại <a href="../index.html">trang tra cứu vận đơn</a>.</p>
+
+  <h2>Kết luận</h2>
+  <p>Đóng gói hàng dễ vỡ đúng cách là bước quan trọng giúp bảo vệ sản phẩm trong suốt quá trình vận chuyển. Chỉ cần chuẩn bị đúng vật liệu và thực hiện theo các bước trên, bạn có thể giảm đáng kể nguy cơ hư hỏng khi giao hàng.</p>
+
+  <p><strong>CTA:</strong> Bạn cần vận chuyển hàng hóa an toàn và nhanh chóng? Hãy tạo đơn ngay tại <a href="login.php">trang đặt đơn</a> để được hỗ trợ giao hàng nhanh và chuyên nghiệp.</p>
+  `,
+  },
+  {
+    id: 4,
+    title: "Cách đóng gói hàng điện tử tránh hư hỏng khi giao xa",
+    date: "12/03/2026",
+    image: "assets/images/items-deliver.png",
+    description:
+      "Thiết bị điện tử như điện thoại, laptop hay phụ kiện công nghệ cần được đóng gói đúng cách để tránh hư hỏng khi vận chuyển xa. Xem ngay hướng dẫn chi tiết.",
+    author: "Giao Hàng Nhanh",
+    category: "Hướng dẫn",
+    content: `
+  <p><strong>Thiết bị điện tử như điện thoại, laptop, tai nghe hay linh kiện máy tính đều là những sản phẩm có giá trị và dễ hư hỏng nếu bị va đập.</strong> Khi vận chuyển đường dài, rung lắc trong quá trình di chuyển có thể làm hỏng màn hình, nứt vỏ hoặc ảnh hưởng đến linh kiện bên trong. Vì vậy, việc đóng gói hàng điện tử đúng cách là yếu tố rất quan trọng để đảm bảo sản phẩm đến tay khách hàng an toàn.</p>
+
+  <h2>Vì sao hàng điện tử cần đóng gói cẩn thận?</h2>
+  <p>Khác với nhiều loại hàng hóa khác, thiết bị điện tử có cấu trúc linh kiện tinh vi và nhạy cảm với lực tác động. Chỉ cần một va chạm mạnh hoặc áp lực lớn cũng có thể gây hỏng hóc.</p>
+
+  <p>Đóng gói đúng chuẩn giúp:</p>
+  <ul>
+    <li>Bảo vệ thiết bị khỏi va đập trong quá trình vận chuyển.</li>
+    <li>Hạn chế rủi ro hư hỏng linh kiện bên trong.</li>
+    <li>Tăng độ tin cậy khi giao hàng cho khách.</li>
+    <li>Giảm chi phí bảo hành và đổi trả sản phẩm.</li>
+  </ul>
+
+  <img src="assets/images/dong-goi-phu-kien-dien-tu.png" alt="Đóng gói thiết bị điện tử trước khi vận chuyển" loading="lazy" />
+
+  <h2>Chuẩn bị vật liệu đóng gói</h2>
+  <p>Trước khi đóng gói hàng điện tử, hãy chuẩn bị đầy đủ các vật liệu sau:</p>
+
+  <ul>
+    <li><strong>Hộp sản phẩm gốc:</strong> nếu còn giữ hộp ban đầu của nhà sản xuất thì nên sử dụng.</li>
+    <li><strong>Xốp nổ (bubble wrap):</strong> giúp chống sốc và giảm lực va đập.</li>
+    <li><strong>Mút xốp hoặc foam:</strong> cố định thiết bị trong thùng.</li>
+    <li><strong>Thùng carton cứng:</strong> nên chọn loại 3 hoặc 5 lớp.</li>
+    <li><strong>Băng keo chịu lực:</strong> dùng để niêm phong chắc chắn.</li>
+  </ul>
+
+  <h2>Các bước đóng gói hàng điện tử an toàn</h2>
+
+  <h3>1. Tắt nguồn và tháo phụ kiện</h3>
+  <p>Trước khi đóng gói, hãy tắt nguồn thiết bị và tháo rời các phụ kiện như dây sạc, pin rời hoặc thẻ nhớ. Điều này giúp tránh hư hỏng khi vận chuyển.</p>
+
+  <h3>2. Bọc chống sốc cho thiết bị</h3>
+  <p>Dùng xốp nổ quấn quanh thiết bị ít nhất 2 – 3 lớp. Với các thiết bị có màn hình như điện thoại hoặc laptop, nên bọc thêm lớp bảo vệ ở mặt trước để tránh nứt vỡ.</p>
+
+  <h3>3. Cố định thiết bị trong hộp</h3>
+  <p>Đặt thiết bị vào hộp và sử dụng mút xốp hoặc giấy chèn để cố định. Thiết bị không nên di chuyển khi lắc nhẹ hộp.</p>
+
+  <h3>4. Đặt hộp vào thùng carton</h3>
+  <p>Sau khi đóng gói trong hộp nhỏ, hãy đặt hộp vào thùng carton lớn hơn. Chèn thêm vật liệu chống sốc xung quanh để tăng độ an toàn.</p>
+
+  <h3>5. Niêm phong thùng</h3>
+  <p>Dán băng keo chắc chắn ở các mép thùng. Nên dán theo hình chữ H để tăng độ bền khi vận chuyển.</p>
+
+  <h3>6. Dán nhãn cảnh báo</h3>
+  <p>Dán nhãn “Hàng dễ vỡ” hoặc “Thiết bị điện tử” để nhân viên vận chuyển nhận biết và xử lý cẩn thận hơn.</p>
+
+  <img src="assets/images/dong-goi-chong-xoc-it" alt="Đóng gói thiết bị điện tử bằng xốp chống sốc" loading="lazy" />
+
+  <h2>Một số lưu ý khi gửi hàng điện tử</h2>
+  <ul>
+    <li>Không để thiết bị tiếp xúc trực tiếp với thành thùng carton.</li>
+    <li>Không để khoảng trống lớn trong thùng.</li>
+    <li>Tránh sử dụng thùng carton đã quá cũ hoặc mềm.</li>
+    <li>Luôn kiểm tra gói hàng trước khi gửi.</li>
+  </ul>
+
+  <h2>Nên chọn đơn vị vận chuyển nào?</h2>
+  <p>Đối với thiết bị điện tử có giá trị cao, bạn nên lựa chọn đơn vị vận chuyển uy tín có quy trình xử lý hàng dễ vỡ rõ ràng. Điều này giúp hạn chế rủi ro trong quá trình giao hàng.</p>
+
+  <p>Bạn cũng có thể xem thêm <a href="bai-viet-chi-tiet.html?id=1">hướng dẫn đóng gói hàng dễ vỡ</a> để áp dụng cho nhiều loại sản phẩm khác.</p>
+
+  <h2>Kết luận</h2>
+  <p>Đóng gói hàng điện tử đúng cách giúp bảo vệ thiết bị khỏi hư hỏng và đảm bảo trải nghiệm tốt cho khách hàng. Chỉ cần thực hiện đúng các bước trên, bạn có thể giảm đáng kể rủi ro khi vận chuyển đường dài.</p>
+
+  <p><strong>CTA:</strong> Bạn cần vận chuyển thiết bị điện tử nhanh và an toàn? Hãy tạo đơn ngay tại <a href="login.php">trang đặt đơn</a> để được hỗ trợ giao hàng chuyên nghiệp.</p>
+  `,
+  },
   // Để thêm bài viết mới, hãy copy một khối {...} như trên và dán vào đây.
 ];
