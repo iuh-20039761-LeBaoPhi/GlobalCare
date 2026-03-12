@@ -45,19 +45,15 @@
     return host;
   }
 
-
   function buildLinkMap() {
-    // Xác định tiền tố đường dẫn tương đối để trỏ đến các dịch vụ khác (nằm ngoài project này)
-    const externalServicePrefix = inPublicDir ? "../../" : "../";
-
     // Mặc định cho Giao Hàng Nhanh: mục tính giá nằm ở #quick-quote trên index.html
     const pricingLink = `${rootPath}index.html#quick-quote`;
 
     return {
       // Các đường dẫn chính trỏ về trang chủ GlobalCare
-      brand: `${externalServicePrefix}index.html`,
-      brandLogo: `${externalServicePrefix}public/assets/images/favicon.png`,
-      
+      brand: `${rootPath}index.html`,
+      brandLogo: `${rootPath}public/assets/images/favicon.png`,
+
       // Các đường dẫn nội bộ trong project Giao Hàng Nhanh
       home: `${rootPath}index.html#hero`,
       about: `${rootPath}index.html#hero`,
