@@ -47,23 +47,18 @@
 
 
   function buildLinkMap() {
+    // Xác định tiền tố đường dẫn tương đối để trỏ đến các dịch vụ khác (nằm ngoài project này)
     const externalServicePrefix = inPublicDir ? "../../" : "../";
 
-    // Chỉ các trang dịch vụ chi tiết mới có mục #bao-gia.
-    // Các trang khác sẽ link về mục dịch vụ ở trang chủ.
-    const hasPricingSection = [
-      "chuyen-nha.html",
-      "chuyen-kho-bai.html",
-      "chuyen-van-phong.html",
-    ].includes(currentPage);
-    
-    // Giao Hàng Nhanh sử dụng #quick-quote cho mục tính giá trên index.html
-    const pricingLink = hasPricingSection ? "#bao-gia" : `${rootPath}index.html#quick-quote`;
+    // Mặc định cho Giao Hàng Nhanh: mục tính giá nằm ở #quick-quote trên index.html
+    const pricingLink = `${rootPath}index.html#quick-quote`;
 
     return {
-      // Các đường dẫn chính trong project
-      brand: `${rootPath}index.html`,
-      brandLogo: `${rootPath}public/assets/images/favicon.png`,
+      // Các đường dẫn chính trỏ về trang chủ GlobalCare
+      brand: `${externalServicePrefix}index.html`,
+      brandLogo: `${externalServicePrefix}public/assets/images/favicon.png`,
+      
+      // Các đường dẫn nội bộ trong project Giao Hàng Nhanh
       home: `${rootPath}index.html#hero`,
       about: `${rootPath}index.html#hero`,
       services: `${rootPath}index.html#services`,
@@ -92,7 +87,7 @@
       "svc-thue-xe": `${externalServicePrefix}thue-xe/`,
       "svc-sua-xe": `${externalServicePrefix}sua-xe-luu-dong/`,
 
-      // Tương thích ngược cho các link cũ (nếu cần)
+      // Tương thích ngược cho các link cũ (nếu layout cũ vẫn dùng)
       "service-giao-hang-nhanh": `${externalServicePrefix}giao-hang-nhanh/`,
       "service-chuyen-don": `${externalServicePrefix}dich-vu-chuyen-don/`,
       "service-lau-don": `${externalServicePrefix}dich-vu-don-ve-sinh/demo/`,
@@ -111,7 +106,11 @@
     root.querySelectorAll("[data-layout-link]").forEach((element) => {
       const key = element.getAttribute("data-layout-link");
       if (key && linkMap[key]) {
-        element.setAttribute("href", linkMap[key]);
+        if (element.tagName.toLowerCase() === "img") {
+          element.setAttribute("src", linkMap[key]);
+        } else {
+          element.setAttribute("href", linkMap[key]);
+        }
       }
     });
 
