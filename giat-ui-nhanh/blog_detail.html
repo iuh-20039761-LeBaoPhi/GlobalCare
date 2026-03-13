@@ -116,13 +116,20 @@
     <section class="article-section">
       <div class="container">
         <div class="row">
-          <aside class="col-md-3 d-none d-md-block">
+          <aside class="col-md-3 d-md-block order-2 order-md-1 sidebar-blog">
             <nav class="toc">
               <h3>Mục Lục</h3>
               <ul id="tocList"></ul>
             </nav>
+            <div class="related-sidebar">
+              <h3>Bài viết liên quan</h3>
+              <div id="relatedContainer" class="news-grid"></div>
+            </div>
           </aside>
-          <div class="col-md-9 article-content" id="articleContent"></div>
+          <div
+            class="col-md-9 article-content order-1 order-md-2"
+            id="articleContent"
+          ></div>
         </div>
       </div>
     </section>
@@ -347,15 +354,30 @@
 
             const container = document.getElementById("articleContent");
 
+            const tagsHtml = article.tags
+              ? Array.isArray(article.tags)
+                ? article.tags
+                    .map((tag) => `<a href="#" class="tag-button">${tag}</a>`)
+                    .join(" ")
+                : article.tags
+                    .split(",")
+                    .map(
+                      (tag) =>
+                        `<a href="#" class="tag-button">${tag.trim()}</a>`,
+                    )
+                    .join(" ")
+              : "";
+
             container.innerHTML = `
             <h1>${article.title}</h1>
-            <p class="text-muted mb-3"><i class='far fa-clock'></i> ${article.date}</p> 
+            <p class="text-muted mb-3"><i class='far fa-clock'></i> ${article.date} &nbsp; &nbsp;|&nbsp; &nbsp; <i class='fas fa-tag'></i> ${article.category}</p> 
             <img src="${article.img}" class="img-fluid mb-4" alt="${article.title}">
             ${article.content}
-            <p class="text-muted mb-3"><b>Từ khóa: </b>${article.summary}<p>
+            <p class="text-muted mb-3"><b>Từ khóa: </b>${tagsHtml}<p>
         `;
 
             buildToc();
+            loadRelatedArticles(article.category, article.slug);
           })
           .catch((err) => {
             console.error("Lỗi load bài viết:", err);
@@ -384,6 +406,37 @@
           li.appendChild(a);
           tocList.appendChild(li);
         });
+      }
+
+      function loadRelatedArticles(category, currentSlug) {
+        fetch("public/news.json")
+          .then((res) => res.json())
+          .then((articles) => {
+            const related = articles
+              .filter((a) => a.category === category && a.slug !== currentSlug)
+              .slice(0, 4);
+            const container = document.getElementById("relatedContainer");
+            container.innerHTML = `
+              <ul class="related-list">
+                ${related
+                  .map(
+                    (a) => `
+                  <li class="related-item">
+                    <a href="blog_detail.html?slug=${a.slug}">
+                      <img src="${a.img}" alt="${a.title}" loading="lazy">
+                      <div class="related-text">
+                        <span class="related-title">${a.title}</span>
+                        <small class="related-date"><i class='far fa-clock'></i> ${a.date}</small>
+                      </div>
+                    </a>
+                  </li>
+                `,
+                  )
+                  .join("")}
+              </ul>
+            `;
+          })
+          .catch((err) => console.error("Lỗi load bài viết liên quan:", err));
       }
 
       window.addEventListener("DOMContentLoaded", function () {
