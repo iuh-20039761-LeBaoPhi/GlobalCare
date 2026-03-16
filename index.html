@@ -18,6 +18,120 @@
       rel="stylesheet"
     />
     <link rel="stylesheet" href="public/asset/css/style.css" />
+    <style>
+      /* ===== Welcome Popup ===== */
+
+      .modal-backdrop.show {
+        backdrop-filter: blur(6px);
+      }
+
+      .welcome-modal {
+        background: linear-gradient(135deg, #0f172a, #1e293b, #0f172a);
+        border-radius: 20px;
+        color: white;
+        animation: popupZoom 0.6s ease;
+      }
+
+      @keyframes popupZoom {
+        from {
+          transform: scale(0.7);
+          opacity: 0;
+        }
+        to {
+          transform: scale(1);
+          opacity: 1;
+        }
+      }
+
+      /* chữ lớn */
+      .welcome-title {
+        font-size: 42px;
+        font-weight: 800;
+        letter-spacing: 3px;
+        margin-bottom: 25px;
+
+        background: linear-gradient(90deg, #22d3ee, #38bdf8, #22c55e);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+
+        animation: glow 2s infinite alternate;
+      }
+
+      @keyframes glow {
+        from {
+          text-shadow: 0 0 10px rgba(56, 189, 248, 0.5);
+        }
+        to {
+          text-shadow: 0 0 25px rgba(34, 211, 238, 0.9);
+        }
+      }
+
+      /* chữ nhỏ */
+      .welcome-sub {
+        font-size: 20px;
+        opacity: 0;
+      }
+
+      /* dòng 1 */
+      .sub1 {
+        animation: slideUp 1s ease forwards;
+        animation-delay: 0.8s;
+      }
+
+      /* dòng 2 */
+      .sub2 {
+        animation: slideUp 1s ease forwards;
+        animation-delay: 1.6s;
+      }
+
+      @keyframes slideUp {
+        from {
+          transform: translateY(40px);
+          opacity: 0;
+        }
+        to {
+          transform: translateY(0);
+          opacity: 1;
+        }
+      }
+      /* fix backdrop mobile */
+      .modal-backdrop {
+        position: fixed !important;
+        inset: 0 !important;
+        width: 100vw;
+        height: 100vh;
+      }
+      html,
+      body {
+        width: 100%;
+        overflow-x: hidden;
+      }
+      .modal-backdrop.show {
+        backdrop-filter: blur(6px);
+        background: rgba(0, 0, 0, 0.6);
+      }
+      /* ===== Mobile ===== */
+      @media (max-width: 768px) {
+        .welcome-modal {
+          padding: 30px 20px !important;
+          border-radius: 16px;
+        }
+
+        .welcome-title {
+          font-size: 26px;
+          letter-spacing: 1.5px;
+          line-height: 1.3;
+        }
+
+        .welcome-sub {
+          font-size: 15px;
+        }
+
+        .btn-close {
+          transform: scale(0.8);
+        }
+      }
+    </style>
   </head>
   <body>
     <!-- Navbar -->
@@ -89,8 +203,8 @@
 
         <p class="lead text-light mb-5 mx-auto" style="max-width: 700px">
           Chúng tôi cung cấp giải pháp toàn diện từ chăm sóc mẹ & bé, vệ sinh
-          nhà cửa đến bảo trì sân vườn,... Với đội ngũ chuyên gia được đào tạo
-          bài bản.
+          nhà cửa đến bảo trì sân vườn,... Với những người thợ lành nghề, tận
+          tâm, tân tình trong công việc.
         </p>
 
         <div
@@ -128,37 +242,6 @@
         </div>
 
         <div class="row g-4">
-          <!-- Cleaning Service -->
-          <div class="col-md-6 col-lg-4">
-            <div class="service-card">
-              <div class="card-img-wrapper">
-                <div class="card-overlay"></div>
-                <img
-                  src="public/asset/image/20260226_1902_Image Generation_simple_compose_01kjcx7kywezab36q2jnn8eg3w.png"
-                  alt="Cleaning"
-                />
-                <div class="icon-box text-primary">
-                  <i data-lucide="sparkles"></i>
-                </div>
-              </div>
-              <div class="card-body">
-                <h3 class="h5 card-title">Lau Dọn Vệ Sinh</h3>
-                <p class="text-muted small mb-4 flex-grow-1">
-                  Vệ sinh nhà ở, văn phòng chuyên nghiệp với quy trình chuẩn
-                  quốc tế, thiết bị hiện đại.
-                </p>
-                <a
-                  href="dich-vu-don-ve-sinh/demo"
-                  class="text-decoration-none fw-bold d-flex align-items-center gap-2"
-                >
-                  Xem Chi Tiết
-                  <i data-lucide="arrow-right" style="width: 16px"></i>
-                </a>
-              </div>
-              <div class="card-bottom-border bg-grad-primary"></div>
-            </div>
-          </div>
-
           <!-- Mom & Baby Service -->
           <div class="col-md-6 col-lg-4">
             <div class="service-card">
@@ -203,117 +286,6 @@
             </div>
           </div>
 
-          <!-- Gardening Service -->
-          <div class="col-md-6 col-lg-4">
-            <div class="service-card">
-              <div class="card-img-wrapper">
-                <div class="card-overlay"></div>
-                <img
-                  src="public/asset/image/20260226_1905_Dịch Vụ Vườn Rẫy_simple_compose_01kjcxd5zkfajv61251bmnyaqx.png"
-                  alt="Garden"
-                />
-                <div class="icon-box text-success">
-                  <i data-lucide="shovel"></i>
-                </div>
-              </div>
-              <div class="card-body" style="background:#e6f1eb;">
-               <h3 class="h5 card-title" style="color:#349b62;">Chăm Sóc Vườn & Rẫy</h3>
-               <p class="text-muted small mb-4 flex-grow-1">
-                  Cắt tỉa cây cảnh, chăm sóc sân vườn, thiết kế cảnh quan xanh
-                  mát cho ngôi nhà.
-                </p>
-                <a
-                  href="cham-soc-vuon-nha/indexs.html"
-                  class="text-decoration-none fw-bold d-flex align-items-center gap-2 text-success"
-                >
-                  Xem Chi Tiết
-                  <i data-lucide="arrow-right" style="width: 16px"></i>
-                </a>
-              </div>
-              <div class="card-bottom-border bg-grad-success"></div>
-            </div>
-          </div>
-
-          <!-- Laundry Service -->
-          <div class="col-md-6 col-lg-4">
-            <div class="service-card">
-              <div class="card-img-wrapper">
-                <div class="card-overlay"></div>
-                <img
-                  src="public/asset/image/20260226_1910_Image Generation_simple_compose_01kjcxnr9wea8rq50hcjsfcf1r.png"
-                  alt="Laundry"
-                />
-                <div class="icon-box text-primary">
-                  <i data-lucide="shirt"></i>
-                </div>
-              </div>
-              <div
-                class="card-body"
-                style="background: linear-gradient(to bottom, #eff6ff, white)"
-              >
-                <h3 class="h5 card-title text-primary">Giặt Ủi Cao Cấp</h3>
-                <p class="text-muted small mb-4 flex-grow-1">
-                  Công nghệ giặt là tiên tiến, xử lý vết bẩn hiệu quả, giao nhận
-                  tận nơi nhanh chóng.
-                </p>
-                <a
-                  href="giat-ui-nhanh/"
-                  class="text-decoration-none fw-bold d-flex align-items-center gap-2 text-primary"
-                >
-                  Xem Chi Tiết
-                  <i data-lucide="arrow-right" style="width: 16px"></i>
-                </a>
-              </div>
-              <div class="card-bottom-border bg-grad-primary"></div>
-            </div>
-          </div>
-
-          <!-- Handyman Service -->
-          <div class="col-md-6 col-lg-4">
-            <div class="service-card">
-              <div class="card-img-wrapper">
-                <div class="card-overlay"></div>
-                <img
-                  src="public/asset/image/20260226_1912_Image Generation_simple_compose_01kjcxts09f30v4xbk71h7r1br.png"
-                  alt="Handyman"
-                />
-                <div class="icon-box" style="color: #11998e">
-                  <i data-lucide="hammer"></i>
-                </div>
-              </div>
-              <div
-                class="card-body"
-                style="
-                  background: linear-gradient(
-                    135deg,
-                    #e6f7f5 0%,
-                    #ffffff 50%,
-                    #e8fef3 100%
-                  );
-                "
-              >
-                <h3 class="h5 card-title" style="color: #11998e">
-                  Thợ Nhà & Sửa Chữa
-                </h3>
-                <p class="text-muted small mb-4 flex-grow-1">
-                  Sửa chữa điện nước, lắp đặt thiết bị, bảo trì nội thất với đội
-                  ngũ kỹ thuật viên lành nghề.
-                </p>
-                <a
-                  href="tho-nha/"
-                  class="text-decoration-none fw-bold d-flex align-items-center gap-2"
-                  style="color: #11998e"
-                >
-                  Xem Chi Tiết
-                  <i data-lucide="arrow-right" style="width: 16px"></i>
-                </a>
-              </div>
-              <div
-                class="card-bottom-border"
-                style="background: linear-gradient(90deg, #11998e, #38ef7d)"
-              ></div>
-            </div>
-          </div>
           <!-- Elderly Care Service -->
           <div class="col-md-6 col-lg-4">
             <div class="service-card">
@@ -382,7 +354,9 @@
                   );
                 "
               >
-                <h3 class="h5 card-title" style="color: #007bff">Chăm Sóc Bệnh Nhân</h3>
+                <h3 class="h5 card-title" style="color: #007bff">
+                  Chăm Sóc Bệnh Nhân
+                </h3>
                 <p class="text-muted small mb-4 flex-grow-1">
                   Hỗ trợ y tế tại nhà, theo dõi sức khỏe và phục hồi chức năng
                   bởi đội ngũ điều dưỡng chuyên nghiệp.
@@ -390,7 +364,7 @@
                 <a
                   href="cham-soc-nguoi-benh/index.html"
                   class="text-decoration-none fw-bold d-flex align-items-center gap-2"
-                  style="color: 007bff;"
+                  style="color: 007bff"
                 >
                   Xem Chi Tiết
                   <i data-lucide="arrow-right" style="width: 16px"></i>
@@ -399,6 +373,105 @@
               <div class="card-bottom-border bg-grad-primary"></div>
             </div>
           </div>
+
+          <!-- Cleaning Service -->
+          <div class="col-md-6 col-lg-4">
+            <div class="service-card">
+              <div class="card-img-wrapper">
+                <div class="card-overlay"></div>
+                <img
+                  src="public/asset/image/20260226_1902_Image Generation_simple_compose_01kjcx7kywezab36q2jnn8eg3w.png"
+                  alt="Cleaning"
+                />
+                <div class="icon-box text-primary">
+                  <i data-lucide="sparkles"></i>
+                </div>
+              </div>
+              <div class="card-body">
+                <h3 class="h5 card-title">Lau Dọn Vệ Sinh</h3>
+                <p class="text-muted small mb-4 flex-grow-1">
+                  Vệ sinh nhà ở, văn phòng chuyên nghiệp với quy trình chuẩn
+                  quốc tế, thiết bị hiện đại.
+                </p>
+                <a
+                  href="dich-vu-don-ve-sinh/demo"
+                  class="text-decoration-none fw-bold d-flex align-items-center gap-2"
+                >
+                  Xem Chi Tiết
+                  <i data-lucide="arrow-right" style="width: 16px"></i>
+                </a>
+              </div>
+              <div class="card-bottom-border bg-grad-primary"></div>
+            </div>
+          </div>
+
+          <!-- Gardening Service -->
+          <div class="col-md-6 col-lg-4">
+            <div class="service-card">
+              <div class="card-img-wrapper">
+                <div class="card-overlay"></div>
+                <img
+                  src="public/asset/image/20260226_1905_Dịch Vụ Vườn Rẫy_simple_compose_01kjcxd5zkfajv61251bmnyaqx.png"
+                  alt="Garden"
+                />
+                <div class="icon-box text-success">
+                  <i data-lucide="shovel"></i>
+                </div>
+              </div>
+              <div class="card-body" style="background: #e6f1eb">
+                <h3 class="h5 card-title" style="color: #349b62">
+                  Chăm Sóc Vườn & Rẫy
+                </h3>
+                <p class="text-muted small mb-4 flex-grow-1">
+                  Cắt tỉa cây cảnh, chăm sóc sân vườn, thiết kế cảnh quan xanh
+                  mát cho ngôi nhà.
+                </p>
+                <a
+                  href="cham-soc-vuon-nha/indexs.html"
+                  class="text-decoration-none fw-bold d-flex align-items-center gap-2 text-success"
+                >
+                  Xem Chi Tiết
+                  <i data-lucide="arrow-right" style="width: 16px"></i>
+                </a>
+              </div>
+              <div class="card-bottom-border bg-grad-success"></div>
+            </div>
+          </div>
+
+          <!-- Laundry Service -->
+          <div class="col-md-6 col-lg-4">
+            <div class="service-card">
+              <div class="card-img-wrapper">
+                <div class="card-overlay"></div>
+                <img
+                  src="public/asset/image/20260226_1910_Image Generation_simple_compose_01kjcxnr9wea8rq50hcjsfcf1r.png"
+                  alt="Laundry"
+                />
+                <div class="icon-box text-primary">
+                  <i data-lucide="shirt"></i>
+                </div>
+              </div>
+              <div
+                class="card-body"
+                style="background: linear-gradient(to bottom, #eff6ff, white)"
+              >
+                <h3 class="h5 card-title text-primary">Giặt Ủi Cao Cấp</h3>
+                <p class="text-muted small mb-4 flex-grow-1">
+                  Công nghệ giặt là tiên tiến, xử lý vết bẩn hiệu quả, giao nhận
+                  tận nơi nhanh chóng.
+                </p>
+                <a
+                  href="giat-ui-nhanh/"
+                  class="text-decoration-none fw-bold d-flex align-items-center gap-2 text-primary"
+                >
+                  Xem Chi Tiết
+                  <i data-lucide="arrow-right" style="width: 16px"></i>
+                </a>
+              </div>
+              <div class="card-bottom-border bg-grad-primary"></div>
+            </div>
+          </div>
+
           <!-- Delivery Service -->
           <div class="col-md-6 col-lg-4">
             <div class="service-card">
@@ -408,13 +481,13 @@
                   src="public/asset/image/giao-hang-nhanh.png"
                   alt="Delivery Service"
                 />
-                <div class="icon-box" style="color: #0A2A66">
+                <div class="icon-box" style="color: #0a2a66">
                   <i data-lucide="truck"></i>
                 </div>
               </div>
-              <div 
-              class="card-body"
-              style="
+              <div
+                class="card-body"
+                style="
                   background: linear-gradient(
                     135deg,
                     #eaf2ff 0%,
@@ -423,7 +496,9 @@
                   );
                 "
               >
-                <h3 class="h5 card-title" style="color: #0A2A66">Giao Hàng Nhanh</h3>
+                <h3 class="h5 card-title" style="color: #0a2a66">
+                  Giao Hàng Nhanh
+                </h3>
                 <p class="text-muted small mb-4 flex-grow-1">
                   Dịch vụ giao nhận hàng hóa siêu tốc, đảm bảo an toàn, uy tín
                   với chi phí hợp lý.
@@ -431,15 +506,16 @@
                 <a
                   href="giao-hang-nhanh/"
                   class="text-decoration-none fw-bold d-flex align-items-center gap-2"
-                  style="color: #FF7A00"
-                  >
+                  style="color: #ff7a00"
+                >
                   Xem Chi Tiết
                   <i data-lucide="arrow-right" style="width: 16px"></i>
                 </a>
               </div>
-              <div 
-              class="card-bottom-border" 
-              style="background: linear-gradient(90deg, #0A2A66, #FF7A00)"></div>
+              <div
+                class="card-bottom-border"
+                style="background: linear-gradient(90deg, #0a2a66, #ff7a00)"
+              ></div>
             </div>
           </div>
           <!-- Car Rental Service -->
@@ -486,6 +562,99 @@
             </div>
           </div>
 
+          <div class="col-md-6 col-lg-4">
+            <div class="service-card">
+              <div class="card-img-wrapper">
+                <div class="card-overlay"></div>
+                <img
+                  src="public/asset/image/dich-vu-chuyen-don.png"
+                  alt="Chuyển dọn trọn gói"
+                />
+                <div class="icon-box" style="color: #1b4332">
+                  <i data-lucide="truck"></i>
+                </div>
+              </div>
+              <div
+                class="card-body"
+                style="
+                  background: linear-gradient(
+                    135deg,
+                    #f0fdf4 0%,
+                    #ffffff 50%,
+                    #fefce8 100%
+                  );
+                "
+              >
+                <h3 class="h5 card-title" style="color: #1b4332">
+                  Dịch Vụ Chuyển Dọn
+                </h3>
+                <p class="text-muted small mb-4 flex-grow-1">
+                  Dịch vụ chuyển nhà, văn phòng, kho bãi chuyên nghiệp. Hỗ trợ
+                  tháo lắp IT, đóng gói bảo mật và vận chuyển an toàn.
+                </p>
+                <a
+                  href="dich-vu-chuyen-don/"
+                  class="text-decoration-none fw-bold d-flex align-items-center gap-2"
+                  style="color: #1b4332"
+                >
+                  Xem Chi Tiết
+                  <i data-lucide="arrow-right" style="width: 16px"></i>
+                </a>
+              </div>
+              <div
+                class="card-bottom-border"
+                style="background: linear-gradient(90deg, #1b4332, #ffb703)"
+              ></div>
+            </div>
+          </div>
+
+          <!-- Handyman Service -->
+          <div class="col-md-6 col-lg-4">
+            <div class="service-card">
+              <div class="card-img-wrapper">
+                <div class="card-overlay"></div>
+                <img
+                  src="public/asset/image/20260226_1912_Image Generation_simple_compose_01kjcxts09f30v4xbk71h7r1br.png"
+                  alt="Handyman"
+                />
+                <div class="icon-box" style="color: #11998e">
+                  <i data-lucide="hammer"></i>
+                </div>
+              </div>
+              <div
+                class="card-body"
+                style="
+                  background: linear-gradient(
+                    135deg,
+                    #e6f7f5 0%,
+                    #ffffff 50%,
+                    #e8fef3 100%
+                  );
+                "
+              >
+                <h3 class="h5 card-title" style="color: #11998e">
+                  Thợ Nhà & Sửa Chữa
+                </h3>
+                <p class="text-muted small mb-4 flex-grow-1">
+                  Sửa chữa điện nước, lắp đặt thiết bị, bảo trì nội thất với đội
+                  ngũ kỹ thuật viên lành nghề.
+                </p>
+                <a
+                  href="tho-nha/"
+                  class="text-decoration-none fw-bold d-flex align-items-center gap-2"
+                  style="color: #11998e"
+                >
+                  Xem Chi Tiết
+                  <i data-lucide="arrow-right" style="width: 16px"></i>
+                </a>
+              </div>
+              <div
+                class="card-bottom-border"
+                style="background: linear-gradient(90deg, #11998e, #38ef7d)"
+              ></div>
+            </div>
+          </div>
+
           <!-- Mobile Car Repair Service -->
           <div class="col-md-6 col-lg-4">
             <div class="service-card">
@@ -517,50 +686,6 @@
                 </a>
               </div>
               <div class="card-bottom-border bg-grad-orange"></div>
-            </div>
-          </div>
-          <div class="col-md-6 col-lg-4">
-            <div class="service-card">
-              <div class="card-img-wrapper">
-                <div class="card-overlay"></div>
-                <img
-                  src="public/asset/image/dich-vu-chuyen-don.png" 
-                  alt="Chuyển dọn trọn gói"
-                />
-                <div class="icon-box" style="color: #1B4332">
-                  <i data-lucide="truck"></i>
-                </div>
-              </div>
-              <div
-                class="card-body"
-                style="
-                  background: linear-gradient(
-                    135deg,
-                    #f0fdf4 0%,
-                    #ffffff 50%,
-                    #fefce8 100%
-                  );
-                "
-              >
-                <h3 class="h5 card-title" style="color: #1B4332">
-                  Dịch Vụ Chuyển Dọn
-                </h3>
-                <p class="text-muted small mb-4 flex-grow-1">
-                  Dịch vụ chuyển nhà, văn phòng, kho bãi chuyên nghiệp. Hỗ trợ tháo lắp IT, đóng gói bảo mật và vận chuyển an toàn.
-                </p>
-                <a
-                  href="dich-vu-chuyen-don/"
-                  class="text-decoration-none fw-bold d-flex align-items-center gap-2"
-                  style="color: #1B4332"
-                >
-                  Xem Chi Tiết
-                  <i data-lucide="arrow-right" style="width: 16px"></i>
-                </a>
-              </div>
-              <div 
-                class="card-bottom-border" 
-                style="background: linear-gradient(90deg, #1B4332, #FFB703)"
-              ></div>
             </div>
           </div>
           <!-- Custom Request -->
@@ -644,6 +769,21 @@
                 <div
                   class="d-flex align-items-start p-3 rounded-3 bg-light bg-opacity-50"
                 >
+                  <div class="feature-icon-wrapper bg-grad-purple">
+                    <i data-lucide="zap"></i>
+                  </div>
+                  <div>
+                    <h5 class="fw-bold mb-1">Nhanh chóng</h5>
+                    <p class="text-muted small mb-0">
+                      Có mặt ngay khi bạn cần.
+                    </p>
+                  </div>
+                </div>
+              </div>
+              <div class="col-sm-6">
+                <div
+                  class="d-flex align-items-start p-3 rounded-3 bg-light bg-opacity-50"
+                >
                   <div class="feature-icon-wrapper bg-grad-orange">
                     <i data-lucide="clock"></i>
                   </div>
@@ -707,7 +847,9 @@
             <h2 class="display-5 fw-bold mt-2 mb-4">Bạn Cần Tư Vấn Ngay?</h2>
             <p class="lead text-light opacity-75 mb-5">
               Để lại thông tin, đội ngũ tư vấn viên của Dịch Vụ Quanh Ta sẽ liên
-              hệ với bạn trong vòng 15 phút.
+              hệ với bạn trong vòng 15 phút. <br />
+              CÔNG TY TNHH DỊCH VỤ QUANH TA KERI. <br />
+              MST: 0315609853
             </p>
 
             <div class="d-flex align-items-center mb-4">
@@ -745,7 +887,9 @@
               <div>
                 <div class="small text-light opacity-75">Địa chỉ</div>
                 <div class="h5 fw-bold mb-0">
-                  123 Đường ABC, Quận 1, TP. Hồ Chí Minh
+                  Tòa Nhà Sbi, Lô 6b, Đường Số 3, Công Viên Phần Mềm Quang
+                  Trung, Phường Tân Chánh Hiệp, Quận 12, Thành Phố Hồ Chí Minh,
+                  Việt Nam
                 </div>
               </div>
             </div>
@@ -941,9 +1085,7 @@
               <li><a href="cham-soc-nguoi-gia/">Chăm Sóc Người Già</a></li>
               <li><a href="cham-soc-nguoi-benh/">Chăm Sóc Bệnh Nhân</a></li>
               <li>
-                <a href="giao-hang-nhanh/"
-                  >Giao Hàng Nhanh</a
-                >
+                <a href="giao-hang-nhanh/">Giao Hàng Nhanh</a>
               </li>
               <li>
                 <a href="thue-xe/">Thuê Xe</a>
@@ -978,6 +1120,38 @@
       </div>
     </footer>
 
+    <!-- Welcome Popup -->
+    <div class="modal fade" id="welcomeModal" tabindex="-1">
+      <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content welcome-modal text-center p-5 border-0">
+          <button
+            type="button"
+            class="btn-close btn-close-white position-absolute top-0 end-0 m-3"
+            data-bs-dismiss="modal"
+          ></button>
+
+          <h1 class="welcome-title">LAO ĐỘNG LÀ VINH QUANG</h1>
+
+          <p class="welcome-sub sub1">Ai cũng có việc làm</p>
+          <p class="welcome-sub sub2">Ai cũng được phục vụ giá rẻ</p>
+        </div>
+      </div>
+    </div>
+    <script>
+      window.addEventListener("load", function () {
+        setTimeout(function () {
+          const modal = new bootstrap.Modal(
+            document.getElementById("welcomeModal"),
+          );
+          modal.show();
+
+          // tự đóng sau 6 giây
+          // setTimeout(() => {
+          //   modal.hide();
+          // }, 6000);
+        }, 1000);
+      });
+    </script>
     <!-- Bootstrap JS Bundle with Popper -->
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
     <script src="https://unpkg.com/lucide@latest"></script>

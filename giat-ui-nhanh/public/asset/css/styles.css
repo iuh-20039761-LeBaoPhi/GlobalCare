@@ -825,9 +825,9 @@ footer {
   margin-bottom: 40px;
 }
 
-.footer-about {
+/* .footer-about {
   grid-column: span 2;
-}
+} */
 
 .footer-about h3 {
   font-size: 2rem;
@@ -1058,6 +1058,10 @@ footer {
   max-width: 800px;
   margin: 0 auto;
   color: #dbeafe;
+}
+
+.footer-about {
+  grid-column: span 2;
 }
 /* Responsive */
 @media (max-width: 768px) {
