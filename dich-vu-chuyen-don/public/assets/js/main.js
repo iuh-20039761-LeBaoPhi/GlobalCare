@@ -11,8 +11,8 @@
     "modules/main-navigation.js",
     "modules/main-order.js",
     "modules/main-landing.js",
-    "data/news-data.js",
     "modules/main-news.js",
+    "modules/main-pricing.js",
   ];
 
   const current = document.currentScript;

@@ -34,10 +34,10 @@
       .then((res) => res.json())
       .then((data) => {
         if (data.status === "success") {
-          alert("Đã hủy đơn hàng thành công!");
-          location.reload();
+          core.showToast("Đã hủy đơn hàng thành công!", "success");
+          setTimeout(() => location.reload(), 1500);
         } else {
-          alert("Lỗi: " + data.message);
+          core.showToast("Lỗi: " + data.message, "error");
           if (btn) {
             btn.innerText = "Xác nhận hủy đơn";
             btn.disabled = false;
@@ -47,7 +47,7 @@
       })
       .catch((err) => {
         console.error(err);
-        alert("Lỗi kết nối server.");
+        core.showToast("Lỗi kết nối server.", "error");
         if (btn) {
           btn.innerText = "Xác nhận hủy đơn";
           btn.disabled = false;
@@ -209,14 +209,14 @@
     if (reason === "other") {
       const otherVal = document.getElementById("other-reason-input").value.trim();
       if (!otherVal) {
-        alert("Vui lòng nhập lý do cụ thể.");
+        core.showToast("Vui lòng nhập lý do cụ thể.", "warning");
         return;
       }
       reason = otherVal;
     }
 
     if (!reason) {
-      alert("Vui lòng chọn lý do hủy đơn.");
+      core.showToast("Vui lòng chọn lý do hủy đơn.", "warning");
       return;
     }
 

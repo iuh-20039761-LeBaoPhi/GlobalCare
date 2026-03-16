@@ -184,6 +184,12 @@ if (empty($todo_items)) {
     <?php include __DIR__ . '/../includes/header_user.php'; ?>
 
     <main class="container customer-dashboard">
+        <?php if (isset($_SESSION['success_order'])): ?>
+            <div class="alert alert-success" style="background: #d4edda; color: #155724; padding: 15px; border-radius: 8px; margin-bottom: 20px; border: 1px solid #c3e6cb;">
+                <strong>Thành công!</strong> <?php echo htmlspecialchars($_SESSION['success_order']); ?>
+                <?php unset($_SESSION['success_order']); ?>
+            </div>
+        <?php endif; ?>
         <section class="dashboard-hero">
             <div>
                 <p class="dashboard-eyebrow">Bảng điều khiển khách hàng cá nhân</p>
