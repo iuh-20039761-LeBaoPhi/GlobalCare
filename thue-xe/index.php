@@ -8,12 +8,14 @@ $validPages = ['home', 'search', 'car-detail', 'about', 'services', 'guide', 'co
 
 if (!in_array($page, $validPages)) $page = 'home';
 
-// Các trang dùng file HTML đầy đủ ở root (dùng chung với web tĩnh GitHub Pages)
-// 'home' trỏ về index.html để tránh trùng lặp nội dung với views/pages/home.html
-$rootPages = ['terms', 'home'];
+// Các trang dùng file HTML ở root (dùng chung với web tĩnh GitHub Pages)
+$rootPageMap = [
+    'home'  => 'index.html',  // trang chủ là index.html, không phải home.html
+    'terms' => 'terms.html',
+];
 
-if (in_array($page, $rootPages)) {
-    $viewFile = BASE_PATH . '/' . $page . '.html';
+if (isset($rootPageMap[$page])) {
+    $viewFile = BASE_PATH . '/' . $rootPageMap[$page];
 } else {
     $viewFile = BASE_PATH . '/views/pages/' . $page . '.html';
 }

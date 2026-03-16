@@ -16,20 +16,20 @@ $conn = $db->getConnection();
 switch ($action) {
     case 'list':
         $status = $_GET['status'] ?? '';
-        $sql = "SELECT b.*, c.name as car_name FROM bookings b LEFT JOIN cars c ON b.car_id = c.id";
+        $sql = "SELECT * FROM bookings";
         $params = [];
         if ($status) {
-            $sql .= " WHERE b.status = ?";
+            $sql .= " WHERE status = ?";
             $params[] = $status;
         }
-        $sql .= " ORDER BY b.created_at DESC";
+        $sql .= " ORDER BY created_at DESC";
         $stmt = $conn->prepare($sql);
         $stmt->execute($params);
         echo json_encode(['success' => true, 'data' => $stmt->fetchAll()]);
         break;
 
     case 'recent':
-        $stmt = $conn->query("SELECT b.*, c.name as car_name FROM bookings b LEFT JOIN cars c ON b.car_id = c.id ORDER BY b.created_at DESC LIMIT 10");
+        $stmt = $conn->query("SELECT * FROM bookings ORDER BY created_at DESC LIMIT 10");
         echo json_encode(['success' => true, 'data' => $stmt->fetchAll()]);
         break;
 

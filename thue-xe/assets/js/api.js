@@ -1,3 +1,6 @@
+// true khi chạy trên localhost/XAMPP, false khi chạy web tĩnh
+const IS_LOCAL = ['localhost', '127.0.0.1', ''].includes(window.location.hostname);
+
 const API = {
     baseURL: 'controllers/',
 
@@ -90,9 +93,12 @@ const API = {
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify(data)
                 });
-                if (!res.ok) throw new Error();
+                if (!res.ok) throw new Error('HTTP ' + res.status);
                 return await res.json();
-            } catch {
+            } catch (err) {
+                // Local: throw để caller hiện lỗi thật
+                // Static: trả về demo success
+                if (IS_LOCAL) throw err;
                 return { success: false, demo: true };
             }
         },
