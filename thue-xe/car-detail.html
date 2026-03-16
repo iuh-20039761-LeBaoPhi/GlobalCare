@@ -86,13 +86,14 @@
 
 <!-- ===== HEADER ===== -->
     <header class="header-gradient sticky-top">
-        <nav class="navbar navbar-expand-lg navbar-dark">
+        <nav class="navbar navbar-expand-lg navbar-light">
             <div class="container">
                 <div class="d-flex align-items-center gap-2">
                     <a href="../index.html">
-                        <img src="assets/images/logo.png" alt="Logo" style="height:56px;object-fit:contain;mix-blend-mode:multiply;">
+                        <img src="../public/asset/image/logo.png" alt="Dịch Vụ Quanh Ta" style="height:56px;object-fit:contain;">
                     </a>
-                    <a class="navbar-brand fw-bold mb-0 text-white" href="index.html" style="font-size:1.3rem;letter-spacing:1px;">Thuê Xe</a>
+                    <a class="navbar-brand fw-bold mb-0" href="index.html" style="font-size:1.3rem;letter-spacing:1px;color:#1E40AF;">Thuê Xe</a>
+                    <a href="index.html"><img src="assets/images/logo.png" alt="Thuê Xe" style="height:84px;object-fit:contain;"></a>
                 </div>
                 <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
                     <span class="navbar-toggler-icon"></span>
@@ -675,8 +676,6 @@ function renderCar(car) {
         btn.disabled = true;
         btn.innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span>Đang xử lý...';
 
-        await new Promise(r => setTimeout(r, 600));
-
         const days = Math.max(1, Math.round((new Date(ret.value) - new Date(pickup.value)) / 86400000));
         const addonServices = [...document.querySelectorAll('input[name="addon_services"]:checked')].map(cb => cb.value);
         const addonTotal = addonServices.reduce((sum, name) => {
@@ -689,14 +688,60 @@ function renderCar(car) {
             ? `<br><strong>Dịch vụ đi kèm:</strong> ${addonServices.join(', ')}`
             : '';
 
-        showAlert(`
-            <i class="fas fa-check-circle me-2"></i>
-            <strong>Đặt xe thành công! (Demo)</strong><br>
-            Cảm ơn bạn đã quan tâm đến <strong>${car.name}</strong>.
-            ${addonLines}
-            <br><strong>Tổng tiền ước tính: ${fmt(totalPrice)}đ</strong><br>
-            Để hoàn tất, vui lòng gọi hotline <strong>0775 472 347</strong> – hỗ trợ 24/7.
-        `, 'success');
+        const IS_LOCAL = ['localhost', '127.0.0.1', ''].includes(window.location.hostname);
+
+        if (IS_LOCAL) {
+            // Real API call on localhost/XAMPP
+            const form = e.target;
+            const bookingData = {
+                car_id:           car.id,
+                customer_name:    form.querySelector('[name="customer_name"]').value.trim(),
+                customer_phone:   form.querySelector('[name="customer_phone"]').value.trim(),
+                customer_email:   form.querySelector('[name="customer_email"]').value.trim(),
+                id_number:        form.querySelector('[name="id_number"]').value.trim(),
+                pickup_date:      pickup.value,
+                return_date:      ret.value,
+                pickup_location:  form.querySelector('[name="pickup_location"]').value.trim(),
+                notes:            form.querySelector('[name="notes"]') ? form.querySelector('[name="notes"]').value.trim() : '',
+                addon_services:   addonServices,
+                addon_total:      addonTotal,
+                price_per_day:    car.price_per_day
+            };
+            try {
+                const res = await fetch('controllers/booking-controller.php?action=create', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(bookingData)
+                });
+                const result = await res.json();
+                if (result.success) {
+                    showAlert(`
+                        <i class="fas fa-check-circle me-2"></i>
+                        <strong>Đặt xe thành công!</strong><br>
+                        Mã đơn: <strong>#${result.booking_id}</strong> – Xe: <strong>${car.name}</strong>.
+                        ${addonLines}
+                        <br><strong>Tổng tiền: ${fmt(totalPrice)}đ</strong><br>
+                        Chúng tôi sẽ liên hệ xác nhận trong thời gian sớm nhất.
+                    `, 'success');
+                    e.target.reset();
+                } else {
+                    showAlert(`<i class="fas fa-times-circle me-2"></i><strong>Lỗi:</strong> ${result.message || 'Gửi đặt xe thất bại. Vui lòng thử lại!'}`, 'danger');
+                }
+            } catch (err) {
+                showAlert('<i class="fas fa-times-circle me-2"></i>Không thể kết nối đến server! Vui lòng kiểm tra XAMPP đang chạy và thử lại.', 'danger');
+            }
+        } else {
+            // Demo behavior for static/GitHub Pages
+            await new Promise(r => setTimeout(r, 600));
+            showAlert(`
+                <i class="fas fa-check-circle me-2"></i>
+                <strong>Đặt xe thành công! (Demo)</strong><br>
+                Cảm ơn bạn đã quan tâm đến <strong>${car.name}</strong>.
+                ${addonLines}
+                <br><strong>Tổng tiền ước tính: ${fmt(totalPrice)}đ</strong><br>
+                Để hoàn tất, vui lòng gọi hotline <strong>0775 472 347</strong> – hỗ trợ 24/7.
+            `, 'success');
+        }
 
         btn.disabled = false;
         btn.innerHTML = orig;

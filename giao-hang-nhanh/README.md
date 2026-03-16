@@ -8,6 +8,7 @@ Giao Hàng Nhanh là nền tảng logistics và giao nhận hàng hóa (Shipper)
 - Xử lý nghiệp vụ: Đặt tại thư mục `public/*.php` (Authentication, Xử lý đơn, Thống kê).
 - Quản lý trạng thái và UI: Framework JS thuần tối ưu đặt tại `public/assets/js`. Modular hóa mạnh mẽ.
 - Pop-up thông minh: Mọi thao tác chọn dịch vụ mở modal trung tâm `public/assets/partials/shared-modals.html`.
+- **Hệ thống Tin tức & Hướng dẫn**: Module bài viết tĩnh (`news-data.json`) hỗ trợ SEO, tìm kiếm, lọc theo Tags và gợi ý bài viết liên quan.
 
 ## Trải nghiệm người dùng cải tiến
 
@@ -59,6 +60,8 @@ Giao Hàng Nhanh là nền tảng logistics và giao nhận hàng hóa (Shipper)
 ```text
 Web shipper/
 ├── index.html
+├── public/bai-viet.html            # Trang danh sách tin tức
+├── public/bai-viet-chi-tiet.html   # Trang chi tiết bài viết
 ├── README.md
 ├── config/
 │   ├── db.php
@@ -72,6 +75,7 @@ Web shipper/
     ├── assets/
     │   ├── css/          # Các tệp phong cách theo module (landing, dashboard, modal, ...)
     │   ├── js/           # Các script nghiệp vụ (Core logic, Order, Tracking, Chart)
+    │   ├── data/news-data.json # Dữ liệu bài viết & hướng dẫn
     │   ├── images/
     │   └── partials/shared-modals.html
     ├── \*.php             # (login, register, order, profile...)
@@ -84,5 +88,7 @@ Web shipper/
 - `public/login_ajax.php` / `public/register_ajax.php`: Xác thực JWT / Session.
 - `public/tracking_ajax.php`: Trả về mốc thời gian hành trình kiện hàng.
 - `public/order.php`: Bóc tách payload tính phí, lưu vào cơ sở dữ liệu và Push Notification đến shipper.
+- `public/cancel_order_ajax.php`: Xử lý hủy đơn hàng từ phía người dùng (chỉ đơn pending).
+- `public/webhook_payment.php`: Cổng Webhook nhận thông báo thanh toán tự động từ ngân hàng/cổng thanh toán.
 
 _Lưu ý: Sau khi thực hiện chiến lược tái cấu trúc (Refactoring), toàn bộ Module liên quan đến Mảng kinh doanh "Chuyển nhà/Văn phòng" đã được bóc tách hoàn toàn sang một dự án Landing Page độc lập khác nhằm giữ cho kiến trúc hệ thống Core Giao Hàng đạt hiệu suất cao nhất._

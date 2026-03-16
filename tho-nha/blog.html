@@ -150,8 +150,8 @@
             display: flex;
             gap: 8px;
         }
-        .btn-check-all, .btn-uncheck-all {
-            flex: 1;
+        .btn-uncheck-all {
+            width: 100%;
             padding: 7px;
             border-radius: 8px;
             font-size: 0.8rem;
@@ -159,10 +159,9 @@
             border: none;
             cursor: pointer;
             transition: all 0.2s;
+            background: #f0faf5;
+            color: var(--text-medium);
         }
-        .btn-check-all { background: var(--gradient); color: #fff; }
-        .btn-uncheck-all { background: #f0faf5; color: var(--text-medium); }
-        .btn-check-all:hover { opacity: 0.9; }
         .btn-uncheck-all:hover { background: #e2f5ef; }
 
         /* Selected count badge */
@@ -356,9 +355,40 @@
             box-shadow: 0 0 0 2px #fff;
         }
 
+        /* Sidebar toggle button – chỉ hiện trên mobile */
+        .sidebar-toggle-btn {
+            display: none;
+            background: none;
+            border: none;
+            color: #fff;
+            font-size: 1rem;
+            cursor: pointer;
+            padding: 0;
+            line-height: 1;
+            transition: transform 0.3s ease;
+            flex-shrink: 0;
+        }
+        .sidebar-header {
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+        .sidebar-header h3 { margin: 0; pointer-events: none; }
+
+        /* Collapsible body */
+        .sidebar-body { overflow: hidden; }
+
         /* Responsive */
         @media (max-width: 991px) {
             .blog-sidebar { position: static; margin-bottom: 30px; }
+            .sidebar-toggle-btn { display: block; }
+            .sidebar-body {
+                max-height: 0;
+                transition: max-height 0.35s ease;
+            }
+            .sidebar-body.open { max-height: 900px; }
+            .sidebar-toggle-btn.open { transform: rotate(180deg); }
         }
         @media (max-width: 576px) {
             .blog-hero h1 { font-size: 1.8rem; }
@@ -402,47 +432,52 @@
             <!-- SIDEBAR -->
             <div class="col-lg-3">
                 <div class="blog-sidebar">
-                    <!-- Header -->
-                    <div class="sidebar-header">
+                    <!-- Header (click để toggle trên mobile) -->
+                    <div class="sidebar-header" onclick="toggleSidebar()">
                         <h3><i class="fas fa-list-ul me-2"></i>Danh Sách Bài Viết
                             <span class="selected-badge" id="selectedCount">0 đã chọn</span>
                         </h3>
+                        <button class="sidebar-toggle-btn" id="sidebarToggleBtn" aria-label="Mở/đóng danh sách">
+                            <i class="fas fa-chevron-down"></i>
+                        </button>
                     </div>
 
-                    <!-- Search -->
-                    <div class="sidebar-search">
-                        <div class="search-wrap">
-                            <i class="fas fa-search"></i>
-                            <input type="text" id="sidebarSearch" placeholder="Tìm trong danh sách..." oninput="filterSidebar(this.value)">
+                    <!-- Collapsible body -->
+                    <div class="sidebar-body" id="sidebarBody">
+                        <!-- Search -->
+                        <div class="sidebar-search">
+                            <div class="search-wrap">
+                                <i class="fas fa-search"></i>
+                                <input type="text" id="sidebarSearch" placeholder="Tìm trong danh sách..." oninput="filterSidebar(this.value)">
+                            </div>
                         </div>
-                    </div>
 
-                    <!-- Category Filter -->
-                    <div class="sidebar-cats">
-                        <h5>Chủ Đề</h5>
-                        <div id="catBtns">
-                            <span class="cat-btn active" onclick="filterCat('all', this)">Tất cả</span>
-                            <span class="cat-btn" onclick="filterCat('may-lanh', this)">Máy Lạnh</span>
-                            <span class="cat-btn" onclick="filterCat('may-giat', this)">Máy Giặt</span>
-                            <span class="cat-btn" onclick="filterCat('nha-ve-sinh', this)">Nhà Vệ Sinh</span>
-                            <span class="cat-btn" onclick="filterCat('dien-nuoc', this)">Điện - Nước</span>
-                            <span class="cat-btn" onclick="filterCat('tu-lanh', this)">Tủ Lạnh</span>
-                            <span class="cat-btn" onclick="filterCat('thiet-bi-dien', this)">Thiết Bị Điện</span>
-                            <span class="cat-btn" onclick="filterCat('cai-tao-nha', this)">Cải Tạo Nhà</span>
-                            <span class="cat-btn" onclick="filterCat('kinh-nghiem', this)">Kinh Nghiệm</span>
+                        <!-- Category Filter -->
+                        <div class="sidebar-cats">
+                            <h5>Chủ Đề</h5>
+                            <div id="catBtns">
+                                <span class="cat-btn active" onclick="filterCat('all', this)">Tất cả</span>
+                                <span class="cat-btn" onclick="filterCat('may-lanh', this)">Máy Lạnh</span>
+                                <span class="cat-btn" onclick="filterCat('may-giat', this)">Máy Giặt</span>
+                                <span class="cat-btn" onclick="filterCat('nha-ve-sinh', this)">Nhà Vệ Sinh</span>
+                                <span class="cat-btn" onclick="filterCat('dien-nuoc', this)">Điện - Nước</span>
+                                <span class="cat-btn" onclick="filterCat('tu-lanh', this)">Tủ Lạnh</span>
+                                <span class="cat-btn" onclick="filterCat('thiet-bi-dien', this)">Thiết Bị Điện</span>
+                                <span class="cat-btn" onclick="filterCat('cai-tao-nha', this)">Cải Tạo Nhà</span>
+                                <span class="cat-btn" onclick="filterCat('kinh-nghiem', this)">Kinh Nghiệm</span>
+                            </div>
                         </div>
-                    </div>
 
-                    <!-- Article Checklist -->
-                    <div class="sidebar-checklist">
-                        <h5>Tích Chọn Bài Viết</h5>
-                        <div id="checklistItems"></div>
-                    </div>
+                        <!-- Article Checklist -->
+                        <div class="sidebar-checklist">
+                            <h5>Tích Chọn Bài Viết</h5>
+                            <div id="checklistItems"></div>
+                        </div>
 
-                    <!-- Actions -->
-                    <div class="sidebar-actions">
-                        <button class="btn-check-all" onclick="checkAll()"><i class="fas fa-check-double me-1"></i>Chọn Tất Cả</button>
-                        <button class="btn-uncheck-all" onclick="uncheckAll()"><i class="fas fa-times me-1"></i>Bỏ Chọn</button>
+                        <!-- Actions -->
+                        <div class="sidebar-actions">
+                            <button class="btn-uncheck-all" onclick="uncheckAll()"><i class="fas fa-times me-1"></i>Bỏ Chọn</button>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -630,13 +665,6 @@ function toggleCheck(id, checked) {
     renderArticles();
 }
 
-function checkAll() {
-    const visible = getVisibleIds();
-    visible.forEach(id => state.checkedIds.add(id));
-    renderChecklist();
-    renderArticles();
-}
-
 function uncheckAll() {
     state.checkedIds.clear();
     renderChecklist();
@@ -809,6 +837,15 @@ function goPage(p) {
     state.page = p;
     renderArticles();
     window.scrollTo({ top: document.querySelector('.blog-layout').offsetTop - 80, behavior: 'smooth' });
+}
+
+// ===== MOBILE SIDEBAR TOGGLE =====
+function toggleSidebar() {
+    if (window.innerWidth >= 992) return;
+    const body = document.getElementById('sidebarBody');
+    const btn  = document.getElementById('sidebarToggleBtn');
+    body.classList.toggle('open');
+    btn.classList.toggle('open');
 }
 </script>
 

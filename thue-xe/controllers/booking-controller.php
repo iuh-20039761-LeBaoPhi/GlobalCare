@@ -27,15 +27,16 @@ class BookingController {
             $addon_total    = (float)($data['addon_total'] ?? 0);
             $total_price    = $total_days * $data['price_per_day'] + $addon_total;
 
-            $sql = "INSERT INTO bookings (car_id, customer_name, customer_email, customer_phone,
+            $sql = "INSERT INTO bookings (car_id, car_name, customer_name, customer_email, customer_phone,
                     customer_address, id_number, pickup_date, return_date, pickup_location,
                     notes, total_days, total_price, addon_services, addon_total, status)
-                    VALUES (:car_id, :name, :email, :phone, :address, :id_number, :pickup, :return,
+                    VALUES (:car_id, :car_name, :name, :email, :phone, :address, :id_number, :pickup, :return,
                     :location, :notes, :days, :price, :addon_services, :addon_total, 'pending')";
 
             $stmt = $this->conn->prepare($sql);
             $stmt->execute([
                 ':car_id'         => $data['car_id'],
+                ':car_name'       => $data['car_name'] ?? '',
                 ':name'           => $data['customer_name'],
                 ':email'          => $data['customer_email'],
                 ':phone'          => $data['customer_phone'],
@@ -64,11 +65,7 @@ class BookingController {
                 echo json_encode(['success' => false, 'message' => 'Vui lòng nhập số điện thoại']);
                 return;
             }
-            $sql = "SELECT b.*, c.name as car_name, c.brand, c.model, c.main_image
-                    FROM bookings b
-                    LEFT JOIN cars c ON b.car_id = c.id
-                    WHERE b.customer_phone = :phone
-                    ORDER BY b.created_at DESC";
+            $sql = "SELECT * FROM bookings WHERE customer_phone = :phone ORDER BY created_at DESC";
             $stmt = $this->conn->prepare($sql);
             $stmt->execute([':phone' => $phone]);
             $bookings = $stmt->fetchAll();
@@ -85,7 +82,7 @@ class BookingController {
                 echo json_encode(['success' => false, 'message' => 'ID không hợp lệ']);
                 return;
             }
-            $sql = "SELECT b.*, c.name as car_name FROM bookings b LEFT JOIN cars c ON b.car_id = c.id WHERE b.id = :id";
+            $sql = "SELECT * FROM bookings WHERE id = :id";
             $stmt = $this->conn->prepare($sql);
             $stmt->execute([':id' => $id]);
             $booking = $stmt->fetch();

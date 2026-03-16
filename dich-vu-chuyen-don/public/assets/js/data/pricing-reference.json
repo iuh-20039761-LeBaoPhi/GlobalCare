@@ -1,0 +1,164 @@
+[
+  {
+    "id": "moving_house",
+    "service_name": "Chuyển Nhà Trọn Gói",
+    "pricing_items": [
+      {
+        "name": "Xe tải vận chuyển",
+        "price_range": "300.000 – 800.000",
+        "unit": "chuyến",
+        "note": "Xe từ 500kg – 2 tấn",
+        "image": "assets/images/hero-chuyen-nha.png",
+        "icon_d": "M8 17a2 2 0 100 4 2 2 0 000-4zm8 0a2 2 0 100 4 2 2 0 000-4zm-9-2h10l2-5H9m-2 5L5 7H3m4 8l1.5-7H19"
+      },
+      {
+        "name": "Nhân công bốc xếp",
+        "price_range": "200.000 – 400.000",
+        "unit": "người",
+        "note": "Tùy khối lượng đồ",
+        "image": "assets/images/staff-deliver.png",
+        "icon_d": "M17 20a4 4 0 00-8 0m12 0a6 6 0 00-12 0m12 0H5m12-9a3 3 0 11-6 0 3 3 0 016 0zm-9 0a3 3 0 11-6 0 3 3 0 016 0z"
+      },
+      {
+        "name": "Đóng gói đồ đạc",
+        "price_range": "100.000 – 300.000",
+        "unit": "gói",
+        "note": "Thùng carton, màng PE",
+        "image": "assets/images/items-deliver.png",
+        "icon_d": "M20 7L12 3 4 7m16 0v10l-8 4m8-14l-8 4m0 10L4 17V7m8 4v10"
+      },
+      {
+        "name": "Tháo lắp nội thất",
+        "price_range": "150.000 – 350.000",
+        "unit": "món",
+        "note": "Giường, tủ, bàn ghế",
+        "image": "assets/images/feature-relocation-staff.png",
+        "icon_d": "M4 12h16M4 7h16M4 17h10m6-7v10"
+      },
+      {
+        "name": "Hỗ trợ tháo lắp kỹ thuật",
+        "price_range": "150.000 – 350.000",
+        "unit": "bộ",
+        "note": "Tùy độ khó (Máy lạnh, TV...)",
+        "image": "assets/images/home-tech.png",
+        "icon_d": "M12 3v6m0 0a4 4 0 100 8 4 4 0 000-8zm0 0h6m-6 0H6m12 10.5a2.5 2.5 0 11-5 0 2.5 2.5 0 015 0zm-7 0a2.5 2.5 0 11-5 0 2.5 2.5 0 015 0z"
+      },
+      {
+        "name": "Sắp xếp tại nhà mới",
+        "price_range": "Miễn phí / hỗ trợ",
+        "unit": "dịch vụ",
+        "note": "Khi sử dụng gói trọn gói",
+        "image": "assets/images/new-home-setup.png",
+        "icon_d": "M3 10l9-5 9 5-9 5-9-5zm0 4l9 5 9-5"
+      }
+    ]
+  },
+  {
+    "id": "moving_office",
+    "service_name": "Chuyển Văn Phòng",
+    "pricing_items": [
+      {
+        "name": "Cung cấp xe tải",
+        "price_range": "500.000 – 1.500.000",
+        "unit": "chuyến",
+        "note": "Xe từ 1 tấn – 5 tấn",
+        "image": "assets/images/hero-van-phong.png",
+        "icon_d": "M8 17a2 2 0 100 4 2 2 0 000-4zm8 0a2 2 0 100 4 2 2 0 000-4zm-9-2h10l2-5H9m-2 5L5 7H3m4 8l1.5-7H19"
+      },
+      {
+        "name": "Đóng gói hồ sơ, tài liệu",
+        "price_range": "150.000 – 400.000",
+        "unit": "thùng",
+        "note": "Bao gồm vật tư",
+        "image": "assets/images/dong-goi-tai-lieu.png",
+        "icon_d": "M17 20a4 4 0 00-8 0m12 0a6 6 0 00-12 0m12 0H5m12-9a3 3 0 11-6 0 3 3 0 016 0zm-9 0a3 3 0 11-6 0 3 3 0 016 0z"
+      },
+      {
+        "name": "Bảo vệ thiết bị IT",
+        "price_range": "250.000 – 500.000",
+        "unit": "bộ máy",
+        "note": "Bao gồm vật tư chống sốc",
+        "image": "assets/images/boc-lot-it.png",
+        "icon_d": "M20 7L12 3 4 7m16 0v10l-8 4m8-14l-8 4m0 10L4 17V7m8 4v10"
+      },
+      {
+        "name": "Tháo lắp nội thất văn phòng",
+        "price_range": "150.000 – 350.000",
+        "unit": "món",
+        "note": "Bàn, ghế, tủ, kệ",
+        "image": "assets/images/thao-lap-van-phong.png",
+        "icon_d": "M4 12h16M4 7h16M4 17h10m6-7v10"
+      },
+      {
+        "name": "Vận chuyển thiết bị nặng",
+        "price_range": "500.000 – 2.000.000",
+        "unit": "thiết bị",
+        "note": "Két sắt, máy photocopy...",
+        "image": "assets/images/van-chuyen-thiet-bi-nang.png",
+        "icon_d": "M12 3v6m0 0a4 4 0 100 8 4 4 0 000-8zm0 0h6m-6 0H6m12 10.5a2.5 2.5 0 11-5 0 2.5 2.5 0 015 0zm-7 0a2.5 2.5 0 11-5 0 2.5 2.5 0 015 0z"
+      },
+      {
+        "name": "Lắp đặt tại văn phòng mới",
+        "price_range": "Miễn phí / hỗ trợ",
+        "unit": "dịch vụ",
+        "note": "Khi sử dụng gói trọn gói",
+        "image": "assets/images/lap-dat-van-phong-moi.png",
+        "icon_d": "M3 10l9-5 9 5-9 5-9-5zm0 4l9 5 9-5"
+      }
+    ]
+  },
+  {
+    "id": "moving_warehouse",
+    "service_name": "Chuyển Kho Bãi",
+    "pricing_items": [
+      {
+        "name": "Xe tải và xe thùng kín",
+        "price_range": "800.000 – 2.500.000",
+        "unit": "chuyến",
+        "note": "Xe từ 1 tấn – 10 tấn",
+        "image": "assets/images/hero-kho-bai.png",
+        "icon_d": "M8 11V5a4 4 0 118 0v6M3 11h18M7 13l1 8h8l1-8"
+      },
+      {
+        "name": "Luân chuyển hàng pallet",
+        "price_range": "150.000 – 300.000",
+        "unit": "pallet",
+        "note": "Bốc xếp & cố định",
+        "image": "assets/images/feature-pallet.png",
+        "icon_d": "M20 7L12 3 4 7m16 0v10l-8 4m0-10L4 7m8 4v10"
+      },
+      {
+        "name": "Thuê xe nâng - xe cẩu",
+        "price_range": "1.500.000 – 3.500.000",
+        "unit": "ca",
+        "note": "Xe nâng, xe cẩu chuyên dụng",
+        "image": "assets/images/feature-heavy-cargo.png",
+        "icon_d": "M7 16V4m0 0L3 8m4-4l4 4m6 8V8m0 0l-4 4m4-4l4 4"
+      },
+      {
+        "name": "Nhân công bốc xếp nặng",
+        "price_range": "300.000 – 600.000",
+        "unit": "người",
+        "note": "Hàng cồng kềnh, máy móc",
+        "image": "assets/images/nhan-cong-boc-xep.png",
+        "icon_d": "M17 20H7m10 0a2 2 0 002-2v-1a4 4 0 00-4-4H9a4 4 0 00-4 4v1a2 2 0 002 2m10 0V8a2 2 0 00-2-2H9a2 2 0 00-2 2v12"
+      },
+      {
+        "name": "Gia cố và đóng gói",
+        "price_range": "200.000 – 500.000",
+        "unit": "đơn vị",
+        "note": "Gia cố đồ máy móc nặng",
+        "image": "assets/images/dong-goi-va-gia-co.png",
+        "icon_d": "M3 10l9-5 9 5-9 5-9-5zm0 4l9 5 9-5"
+      },
+      {
+        "name": "Kiểm kê và bàn giao",
+        "price_range": "Miễn phí",
+        "unit": "dịch vụ",
+        "note": "Kiểm kê 100% tài sản",
+        "image": "assets/images/kiem-ke-va-ban-giao.png",
+        "icon_d": "M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4"
+      }
+    ]
+  }
+]

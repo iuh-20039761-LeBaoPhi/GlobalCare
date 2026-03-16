@@ -4,6 +4,8 @@
 
 let currentCar = null;
 let currentImages = [];
+let bookingModalSetup = false;
+let bookingModalSetupPromise = null;
 
 // Sẽ được nạp từ API.services.getAll() khi khởi động
 let ADDON_SERVICES = [];
@@ -311,7 +313,7 @@ function displayBookingForm(car) {
                         </div>
                     </div>
                     
-                    <button type="button" class="btn btn-gradient w-100" data-bs-toggle="modal" data-bs-target="#bookingModal">
+                    <button type="button" class="btn btn-gradient w-100" onclick="openBookingModal()">
                         <i class="fas fa-calendar-check me-2"></i>Đặt xe ngay
                     </button>
                 </form>
@@ -331,8 +333,14 @@ function displayBookingForm(car) {
     // Setup date change listeners
     setupDateCalculation(car.price_per_day);
     
-    // Setup booking modal
-    setupBookingModal(car);
+    // Preload modal in background
+    bookingModalSetupPromise = setupBookingModal(car);
+}
+
+async function openBookingModal() {
+    // Đảm bảo modal đã load xong trước khi mở
+    if (bookingModalSetupPromise) await bookingModalSetupPromise;
+    bootstrap.Modal.getOrCreateInstance(document.getElementById('bookingModal')).show();
 }
 
 function setupDateCalculation(pricePerDay) {
@@ -357,47 +365,20 @@ function setupDateCalculation(pricePerDay) {
     returnInput.addEventListener('change', calculate);
 }
 
-function setupBookingModal(car) {
-    // Create modal if not exists
-    if(!document.getElementById('bookingModal')) {
-        const modal = createBookingModal();
-        document.body.insertAdjacentHTML('beforeend', modal);
+async function loadBookingModal() {
+    if (document.getElementById('bookingModal')) return;
+    try {
+        const res = await fetch('views/partials/booking-modal.html');
+        if (!res.ok) throw new Error();
+        const html = await res.text();
+        document.body.insertAdjacentHTML('beforeend', html);
+    } catch {
+        // Fallback: inject modal trực tiếp nếu fetch thất bại
+        document.body.insertAdjacentHTML('beforeend', buildBookingModalHTML());
     }
-    
-    // Setup addon price recalculation on checkbox change or date change
-    document.querySelectorAll('input[name="addon_services"]').forEach(cb => {
-        cb.addEventListener('change', () => recalcAddonSummary(car.price_per_day));
-    });
-    document.getElementById('bookingModal').addEventListener('show.bs.modal', () => {
-        recalcAddonSummary(car.price_per_day);
-    });
-
-    // Setup form submission
-    document.getElementById('bookingFormFull').addEventListener('submit', async (e) => {
-        e.preventDefault();
-        await submitBooking(car);
-    });
 }
 
-function renderAddonCheckboxes() {
-    if (!ADDON_SERVICES.length) return '<p class="text-muted small py-2">Không có dịch vụ đi kèm</p>';
-    const UNIT_LABELS = { 'ngày': '/ngày', 'chuyến': '/chuyến' };
-    return ADDON_SERVICES.map(svc => `
-        <div class="col-md-6">
-            <div class="form-check border rounded p-2 h-100">
-                <input class="form-check-input" type="checkbox" name="addon_services"
-                       value="${svc.name}" id="svc_${svc.id}">
-                <label class="form-check-label w-100" for="svc_${svc.id}">
-                    <i class="fas fa-${svc.icon} text-primary me-1"></i> ${svc.name}
-                    <span class="float-end text-primary fw-semibold">+${Utils.formatPrice(svc.price)}đ${UNIT_LABELS[svc.unit] || ''}</span>
-                    <small class="d-block text-muted">${svc.description || ''}</small>
-                </label>
-            </div>
-        </div>
-    `).join('');
-}
-
-function createBookingModal() {
+function buildBookingModalHTML() {
     return `
         <div class="modal fade" id="bookingModal" tabindex="-1">
             <div class="modal-dialog modal-lg">
@@ -408,7 +389,6 @@ function createBookingModal() {
                     </div>
                     <div class="modal-body">
                         <div id="bookingAlert"></div>
-                        
                         <form id="bookingFormFull">
                             <div class="row g-3">
                                 <div class="col-md-6">
@@ -418,23 +398,18 @@ function createBookingModal() {
                                 <div class="col-md-6">
                                     <label class="form-label">Số điện thoại *</label>
                                     <input type="tel" class="form-control" name="customer_phone" required
-                                           pattern="^0[3-9][0-9]{8}$"
-                                           title="Số điện thoại VN hợp lệ gồm 10 chữ số"
-                                           placeholder="0901234567">
+                                           pattern="^0[3-9][0-9]{8}$" placeholder="0901234567">
                                     <div class="invalid-feedback">Số điện thoại phải gồm 10 chữ số, bắt đầu bằng 03x / 05x / 07x / 08x / 09x</div>
                                 </div>
                                 <div class="col-md-6">
                                     <label class="form-label">Email *</label>
-                                    <input type="email" class="form-control" name="customer_email" required
-                                           placeholder="example@email.com">
+                                    <input type="email" class="form-control" name="customer_email" required placeholder="example@email.com">
                                     <div class="invalid-feedback">Email không hợp lệ</div>
                                 </div>
                                 <div class="col-md-6">
                                     <label class="form-label">CMND/CCCD</label>
                                     <input type="text" class="form-control" name="id_number"
-                                           pattern="^[0-9]{9}$|^[0-9]{12}$"
-                                           title="CMND gồm 9 số hoặc CCCD gồm 12 số"
-                                           placeholder="9 hoặc 12 chữ số" maxlength="12">
+                                           pattern="^[0-9]{9}$|^[0-9]{12}$" placeholder="9 hoặc 12 chữ số" maxlength="12">
                                     <div class="invalid-feedback">CMND gồm 9 số hoặc CCCD gồm 12 số</div>
                                 </div>
                                 <div class="col-md-12">
@@ -475,12 +450,9 @@ function createBookingModal() {
                                 </div>
                                 <div class="col-12">
                                     <label class="form-label fw-semibold">Dịch vụ đi kèm <span class="text-muted fw-normal">(không bắt buộc)</span></label>
-                                    <div class="row g-2" id="addonServiceList">
-                                        ${renderAddonCheckboxes()}
-                                    </div>
+                                    <div class="row g-2" id="addonServiceList"></div>
                                 </div>
                             </div>
-
                             <div id="addonSummary" class="mt-3 p-3 bg-light rounded" style="display:none;">
                                 <div class="d-flex justify-content-between mb-1">
                                     <span class="text-muted">Tiền xe:</span>
@@ -494,7 +466,6 @@ function createBookingModal() {
                                 </div>
                                 <small class="text-muted">* Giá có thể thay đổi tuỳ thực tế</small>
                             </div>
-
                             <div class="mt-3">
                                 <button type="submit" class="btn btn-gradient w-100">
                                     <i class="fas fa-check me-2"></i>Xác nhận đặt xe
@@ -504,9 +475,48 @@ function createBookingModal() {
                     </div>
                 </div>
             </div>
-        </div>
-    `;
+        </div>`;
 }
+
+async function setupBookingModal(car) {
+    await loadBookingModal();
+
+    // Inject addon checkboxes động
+    document.getElementById('addonServiceList').innerHTML = renderAddonCheckboxes();
+
+    // Setup addon price recalculation on checkbox change
+    document.querySelectorAll('input[name="addon_services"]').forEach(cb => {
+        cb.addEventListener('change', () => recalcAddonSummary(car.price_per_day));
+    });
+    document.getElementById('bookingModal').addEventListener('show.bs.modal', () => {
+        recalcAddonSummary(car.price_per_day);
+    });
+
+    // Setup form submission
+    document.getElementById('bookingFormFull').addEventListener('submit', async (e) => {
+        e.preventDefault();
+        await submitBooking(car);
+    });
+}
+
+function renderAddonCheckboxes() {
+    if (!ADDON_SERVICES.length) return '<p class="text-muted small py-2">Không có dịch vụ đi kèm</p>';
+    const UNIT_LABELS = { 'ngày': '/ngày', 'chuyến': '/chuyến' };
+    return ADDON_SERVICES.map(svc => `
+        <div class="col-md-6">
+            <div class="form-check border rounded p-2 h-100">
+                <input class="form-check-input" type="checkbox" name="addon_services"
+                       value="${svc.name}" id="svc_${svc.id}">
+                <label class="form-check-label w-100" for="svc_${svc.id}">
+                    <i class="fas fa-${svc.icon} text-primary me-1"></i> ${svc.name}
+                    <span class="float-end text-primary fw-semibold">+${Utils.formatPrice(svc.price)}đ${UNIT_LABELS[svc.unit] || ''}</span>
+                    <small class="d-block text-muted">${svc.description || ''}</small>
+                </label>
+            </div>
+        </div>
+    `).join('');
+}
+
 
 async function submitBooking(car) {
     const form = document.getElementById('bookingFormFull');
@@ -555,6 +565,7 @@ async function submitBooking(car) {
     // Prepare data
     const bookingData = {
         car_id: car.id,
+        car_name: car.name,
         customer_name: formData.get('customer_name'),
         customer_email: formData.get('customer_email'),
         customer_phone: formData.get('customer_phone'),
@@ -662,3 +673,4 @@ function getTodayDate() {
 
 // Export functions
 window.changeMainImage = changeMainImage;
+window.openBookingModal = openBookingModal;

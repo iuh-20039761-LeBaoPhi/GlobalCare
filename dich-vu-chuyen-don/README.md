@@ -42,7 +42,7 @@ Vanchuyen/
         │   ├── shared-modals.js        # Modal đặt dịch vụ & tra cứu đơn
         │   ├── main.js                 # Khởi tạo chung, load modules
         │   ├── data/
-        │   │   └── news-data.js        # Dữ liệu cho trang tin tức
+        │   │   └── news-data.json      # Dữ liệu cho trang tin tức
         │   └── modules/                # Các module chức năng
         │       ├── main-landing.js     # Logic trang chủ
         │       ├── main-navigation.js  # Navigation & scroll behavior

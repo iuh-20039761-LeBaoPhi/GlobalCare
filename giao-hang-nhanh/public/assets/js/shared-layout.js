@@ -48,10 +48,13 @@
   function buildLinkMap() {
     // Mặc định cho Giao Hàng Nhanh: mục tính giá nằm ở #quick-quote trên index.html
     const pricingLink = `${rootPath}index.html#quick-quote`;
+    const externalServicePrefix = inPublicDir ? '../../' : '../';
 
     return {
       // Các đường dẫn chính trỏ về trang chủ GlobalCare
+      mainSite: `${externalServicePrefix}index.html`,
       brand: `${rootPath}index.html`,
+      mainLogo: `${externalServicePrefix}public/asset/image/logo.png`,
       brandLogo: `${rootPath}public/assets/images/favicon.png`,
 
       // Các đường dẫn nội bộ trong project Giao Hàng Nhanh
@@ -75,7 +78,7 @@
       "svc-dich-vu-chuyen-don": `${externalServicePrefix}dich-vu-chuyen-don/`,
       "svc-lau-don-ve-sinh": `${externalServicePrefix}dich-vu-don-ve-sinh/demo/`,
       "svc-cham-soc-me-be": `${externalServicePrefix}cham-soc-me-va-be/`,
-      "svc-cham-soc-vuon": `${externalServicePrefix}web-cham-soc-vuon-nha/`,
+      "svc-cham-soc-vuon": `${externalServicePrefix}cham-soc-vuon-nha/`,
       "svc-giat-ui": `${externalServicePrefix}giat-ui-nhanh/`,
       "svc-tho-nha": `${externalServicePrefix}tho-nha/`,
       "svc-cham-soc-nguoi-gia": `${externalServicePrefix}cham-soc-nguoi-gia/`,
@@ -88,7 +91,7 @@
       "service-chuyen-don": `${externalServicePrefix}dich-vu-chuyen-don/`,
       "service-lau-don": `${externalServicePrefix}dich-vu-don-ve-sinh/demo/`,
       "service-me-be": `${externalServicePrefix}cham-soc-me-va-be/`,
-      "service-vuon-ray": `${externalServicePrefix}web-cham-soc-vuon-nha/`,
+      "service-vuon-ray": `${externalServicePrefix}cham-soc-vuon-nha/`,
       "service-giat-ui": `${externalServicePrefix}giat-ui-nhanh/`,
       "service-tho-nha": `${externalServicePrefix}tho-nha/`,
       "service-nguoi-gia": `${externalServicePrefix}cham-soc-nguoi-gia/`,

@@ -60,7 +60,9 @@
 
     // Sử dụng rootPath để tạo các đường dẫn chính xác, bất kể dự án được đặt ở đâu.
     return {
+      mainSite: `${externalServicePrefix}index.html`,
       brand: `${rootPath}index.html`,
+      mainLogo: `${externalServicePrefix}public/asset/image/logo.png`,
       home: `${rootPath}index.html#hero`,
       about: `${rootPath}index.html#hero`, // Giả sử 'about' trỏ về mục hero ở trang chủ
       services: `${rootPath}index.html#services`,
@@ -79,7 +81,7 @@
       "svc-dich-vu-chuyen-don": `${externalServicePrefix}dich-vu-chuyen-don/`,
       "svc-lau-don-ve-sinh": `${externalServicePrefix}dich-vu-don-ve-sinh/demo/`,
       "svc-cham-soc-me-be": `${externalServicePrefix}cham-soc-me-va-be/`,
-      "svc-cham-soc-vuon": `${externalServicePrefix}web-cham-soc-vuon-nha/`,
+      "svc-cham-soc-vuon": `${externalServicePrefix}cham-soc-vuon-nha/`,
       "svc-giat-ui": `${externalServicePrefix}giat-ui-nhanh/`,
       "svc-tho-nha": `${externalServicePrefix}tho-nha/`,
       "svc-cham-soc-nguoi-gia": `${externalServicePrefix}cham-soc-nguoi-gia/`,

@@ -912,8 +912,9 @@
         const hasExisting = form.querySelector("img[src*='uploads/']");
         if (podInput.files.length === 0 && !hasExisting) {
           e.preventDefault();
-          alert(
+          core.showToast(
             "⚠️ Bắt buộc: Vui lòng chụp/tải lên ảnh bằng chứng giao hàng (POD) để hoàn tất đơn hàng.",
+            "warning"
           );
           podInput.focus();
           podInput.classList.add("input-error");
