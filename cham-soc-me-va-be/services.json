@@ -107,13 +107,13 @@
 
   {
     "id": 4,
-    "name": "Chăm sóc bé ban đêm",
+    "name": "Chăm sóc bé và hỗ trợ mẹ mọi lúc",
     "image": "assets/4.png",
-    "description": "Hỗ trợ gia đình chăm sóc bé suốt đêm để mẹ được nghỉ ngơi.",
+    "description": "Hỗ trợ gia đình chăm sóc bé và mẹ được nghỉ ngơi.",
     "includes": [
       "Theo dõi giấc ngủ của bé",
       "Pha sữa và cho bé bú",
-      "Thay tã ban đêm",
+      "Thay tã ",
       "Ru bé ngủ lại",
       "Theo dõi nhiệt độ cơ thể bé"
     ],

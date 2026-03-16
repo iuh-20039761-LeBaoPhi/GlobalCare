@@ -106,15 +106,15 @@
 
   {
     "id": 204,
-    "name": "Chăm sóc người bệnh ban đêm",
+    "name": "Chăm sóc người bệnh",
     "image": "assets/4.png",
-    "description": "Hỗ trợ trực và theo dõi người bệnh trong khung giờ ban đêm.",
+    "description": "Hỗ trợ trực và theo dõi người bệnh trong mọi khung giờ .",
     "includes": [
-      "Trực đêm tại nhà",
+      "Thức trực mọi lúc",
       "Hỗ trợ đi vệ sinh",
       "Theo dõi tình trạng sức khỏe",
       "Hỗ trợ khi mất ngủ",
-      "Nhắc thuốc ban đêm"
+      "Nhắc uống thuốc "
     ],
     "pricing": [
       {

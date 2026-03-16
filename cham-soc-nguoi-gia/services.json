@@ -106,15 +106,15 @@
 
   {
     "id": 4,
-    "name": "Chăm sóc người già ban đêm",
+    "name": "Chăm sóc người già mọi lúc",
     "image": "assets/4.png",
-    "description": "Hỗ trợ trực và theo dõi người cao tuổi trong khung giờ ban đêm.",
+    "description": "Hỗ trợ trực và theo dõi người cao tuổi trong mọi khung giờ .",
     "includes": [
-      "Thức trực ban đêm",
+      "Thức trực mọi lúc",
       "Hỗ trợ đi vệ sinh",
       "Theo dõi tình trạng sức khỏe",
       "Hỗ trợ khi mất ngủ",
-      "Nhắc uống thuốc ban đêm"
+      "Nhắc uống thuốc "
     ],
     "pricing": [
       {
