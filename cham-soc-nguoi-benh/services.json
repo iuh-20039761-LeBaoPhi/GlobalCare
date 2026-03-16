@@ -1,16 +1,16 @@
 [
   {
     "id": 201,
-    "name": "Chăm sóc người bệnh tại nhà (cơ bản)",
+    "name": "Gói Phục hồi & Trị liệu cơ bản",
     "image": "assets/1.png",
-    "description": "Hỗ trợ sinh hoạt và theo dõi sức khỏe hằng ngày cho người bệnh tại nhà.",
+    "description": "Tập trung vào việc vận động và phục hồi chức năng vật lý cho người bệnh.",
     "includes": [
-      "Theo dõi tình trạng sức khỏe hằng ngày",
-      "Nhắc uống thuốc đúng giờ",
-      "Hỗ trợ ăn uống",
-      "Hỗ trợ vệ sinh cá nhân",
-      "Ghi chép tình trạng sức khỏe",
-      "Báo gia đình khi có dấu hiệu bất thường"
+      "Trọng tâm: Hỗ trợ tập vật lý trị liệu và vận động theo chỉ định",
+      "Xoa bóp, massage giảm đau mỏi cơ thể",
+      "Hỗ trợ di chuyển, đi lại trong nhà hoặc khuôn viên",
+      "Hướng dẫn các bài tập hít thở và thư giãn",
+      "Theo dõi tiến độ phục hồi vận động hàng ngày",
+      "Hỗ trợ thay đổi tư thế nằm/ngồi để tránh mỏi"
     ],
     "pricing": [
       {
@@ -36,16 +36,16 @@
 
   {
     "id": 202,
-    "name": "Chăm sóc người bệnh sau phẫu thuật",
+    "name": "Gói Theo dõi Y tế & Thuốc men",
     "image": "assets/2.png",
-    "description": "Hỗ trợ phục hồi và theo dõi sức khỏe cho người bệnh sau phẫu thuật tại nhà.",
+    "description": "Đảm bảo tính chính xác trong việc dùng thuốc và theo dõi chỉ số sinh tồn.",
     "includes": [
-      "Theo dõi vết mổ theo hướng dẫn bác sĩ",
-      "Hỗ trợ thay băng (không thực hiện kỹ thuật y tế phức tạp)",
-      "Hỗ trợ vận động nhẹ, tập phục hồi",
-      "Hỗ trợ ăn uống theo chế độ",
-      "Theo dõi huyết áp, nhiệt độ",
-      "Nhắc thuốc đúng giờ"
+      "Trọng tâm: Quản lý và nhắc nhở uống thuốc đúng liều, đúng giờ",
+      "Kiểm tra huyết áp, thân nhiệt, nhịp tim định kỳ",
+      "Theo dõi đường huyết (nếu có thiết bị gia đình)",
+      "Vệ sinh vết thương nhẹ hoặc vết mổ khô",
+      "Ghi chép nhật ký sức khỏe chi tiết hàng ngày",
+      "Thông báo ngay cho người thân các dấu hiệu bất thường"
     ],
     "pricing": [
       {
@@ -71,16 +71,16 @@
 
   {
     "id": 203,
-    "name": "Chăm sóc người bệnh nặng / nằm một chỗ",
+    "name": "Gói Dinh dưỡng & Chế độ ăn uống",
     "image": "assets/3.png",
-    "description": "Chăm sóc toàn diện cho người bệnh mất khả năng tự phục vụ.",
+    "description": "Chăm sóc chuyên sâu về khẩu phần ăn phù hợp với bệnh lý.",
     "includes": [
-      "Hỗ trợ ăn uống, đút ăn",
-      "Thay tã, vệ sinh tại giường",
-      "Lật trở chống loét",
-      "Tắm rửa tại giường",
-      "Theo dõi tình trạng liên tục",
-      "Hỗ trợ di chuyển bằng xe lăn"
+      "Trọng tâm: Chế biến thực đơn dinh dưỡng theo bệnh lý",
+      "Đi chợ lựa chọn thực phẩm tươi sạch cho người bệnh",
+      "Hỗ trợ đút ăn hoặc chuẩn bị dụng cụ hỗ trợ ăn uống",
+      "Theo dõi lượng nước uống và khẩu phần ăn mỗi bữa",
+      "Vệ sinh khu vực bếp và dụng cụ ăn uống của người bệnh",
+      "Tư vấn thay đổi món ăn để kích thích vị giác"
     ],
     "pricing": [
       {
@@ -106,15 +106,16 @@
 
   {
     "id": 204,
-    "name": "Chăm sóc người bệnh",
+    "name": "Gói Vệ sinh & Tiện ích cá nhân",
     "image": "assets/4.png",
-    "description": "Hỗ trợ trực và theo dõi người bệnh trong mọi khung giờ .",
+    "description": "Giữ gìn vệ sinh thân thể và không gian sống sạch sẽ cho người bệnh.",
     "includes": [
-      "Thức trực mọi lúc",
-      "Hỗ trợ đi vệ sinh",
-      "Theo dõi tình trạng sức khỏe",
-      "Hỗ trợ khi mất ngủ",
-      "Nhắc uống thuốc "
+      "Trọng tâm: Tắm rửa, vệ sinh cá nhân và thay tã (nếu cần)",
+      "Hỗ trợ đi vệ sinh hoặc sử dụng bô tại giường",
+      "Thay ga giường, chăn gối và quần áo hàng ngày",
+      "Cắt móng tay, móng chân, chăm sóc da tránh lở loét",
+      "Dọn dẹp, khử khuẩn phòng của người bệnh",
+      "Giặt giũ đồ dùng cá nhân của người bệnh"
     ],
     "pricing": [
       {
@@ -140,15 +141,16 @@
 
   {
     "id": 205,
-    "name": "Nấu ăn dinh dưỡng cho người bệnh",
+    "name": "Gói Đồng hành & Chăm sóc Tinh thần",
     "image": "assets/5.png",
-    "description": "Chuẩn bị bữa ăn khoa học phù hợp với tình trạng bệnh lý.",
+    "description": "Giúp người bệnh có tâm lý thoải mái để nhanh chóng hồi phục.",
     "includes": [
-      "Lên thực đơn phù hợp bệnh lý",
-      "Đi chợ (gia đình thanh toán tiền chợ)",
-      "Nấu 2–3 bữa/ngày",
-      "Dọn dẹp bếp",
-      "Tư vấn chế độ ăn uống"
+      "Trọng tâm: Trò chuyện, đọc báo, nghe nhạc cùng người bệnh",
+      "Hỗ trợ liên lạc video với người thân khi có yêu cầu",
+      "Đọc sách hoặc kể chuyện giúp người bệnh thư giãn",
+      "Đưa người bệnh đi dạo bằng xe lăn hoặc đi bộ nhẹ",
+      "Quan sát và hỗ trợ các nhu cầu nảy sinh tức thời",
+      "Khích lệ tinh thần và hỗ trợ các sở thích nhẹ nhàng"
     ],
     "pricing": [
       {
@@ -174,15 +176,16 @@
 
   {
     "id": 206,
-    "name": "Hỗ trợ việc nhà khi có người bệnh",
+    "name": "Gói Chăm sóc Toàn Diện",
     "image": "assets/6.png",
-    "description": "Giúp gia đình duy trì không gian sạch sẽ, hỗ trợ chăm sóc người bệnh tốt hơn.",
+    "description": "Giải pháp tối ưu kết hợp tất cả các dịch vụ trọng yếu nhất.",
     "includes": [
-      "Giặt đồ",
-      "Dọn phòng bệnh",
-      "Lau dọn khu vực sinh hoạt",
-      "Rửa chén",
-      "Vệ sinh nhà cửa"
+      "Hỗ trợ tập vận động và phục hồi chức năng (Gói 1)",
+      "Theo dõi y tế và quản lý thuốc nghiêm ngặt (Gói 2)",
+      "Chế biến và hỗ trợ ăn uống dinh dưỡng (Gói 3)",
+      "Vệ sinh thân thể và làm sạch không gian sống (Gói 4)",
+      "Chăm sóc tinh thần và đồng hành cùng người bệnh (Gói 5)",
+      "Báo cáo tổng hợp tình trạng sức khỏe định kỳ cho gia đình"
     ],
     "pricing": [
       {

@@ -1,16 +1,16 @@
 [
   {
     "id": 1,
-    "name": "Chăm sóc mẹ sau sinh tại nhà",
+    "name": "Gói Phục hồi Sức khỏe Mẹ sau sinh",
     "image": "assets/1.png",
-    "description": "Theo dõi và hỗ trợ mẹ phục hồi sau sinh một cách khoa học và an toàn.",
+    "description": "Tập trung chuyên sâu vào việc hồi phục thể chất và tinh thần cho mẹ.",
     "includes": [
-      "Theo dõi tình trạng sức khỏe mẹ",
-      "Hỗ trợ vệ sinh cá nhân",
-      "Hướng dẫn cho bé bú đúng cách",
-      "Massage thư giãn nhẹ",
-      "Hỗ trợ ăn uống, nghỉ ngơi",
-      "Tư vấn chăm sóc vết mổ/vết khâu"
+      "Trọng tâm: Chăm sóc vết mổ/vết khâu và vệ sinh y tế",
+      "Theo dõi huyết áp và dấu hiệu sinh tồn",
+      "Massage thảo dược giúp co hồi tử cung",
+      "Xông tắm thảo dược tại chỗ cho mẹ",
+      "Hướng dẫn bài tập vận động nhẹ nhàng",
+      "Hỗ trợ mẹ vệ sinh cá nhân và nghỉ ngơi"
     ],
     "pricing": [
       {
@@ -37,16 +37,16 @@
 
   {
     "id": 2,
-    "name": "Chăm sóc trẻ sơ sinh (0–6 tháng)",
+    "name": "Gói Chuyên gia Chăm sóc Bé sơ sinh",
     "image": "assets/2.png",
-    "description": "Chăm sóc bé sơ sinh toàn diện, đảm bảo an toàn và phát triển khỏe mạnh.",
+    "description": "Dành riêng cho việc chăm sóc và theo dõi sự phát triển của bé.",
     "includes": [
-      "Tắm bé và vệ sinh rốn",
-      "Pha sữa, cho bé bú",
-      "Thay tã, giặt đồ bé",
-      "Theo dõi nhiệt độ cơ thể",
-      "Ru ngủ và theo dõi giấc ngủ",
-      "Ghi chép tình trạng bé mỗi ngày"
+      "Trọng tâm: Tắm bé chuẩn y khoa và vệ sinh rốn/mắt/mũi",
+      "Massage giúp bé ngủ ngon và tránh đầy hơi",
+      "Theo dõi lịch trình bú và bài tiết của bé",
+      "Vệ sinh bình sữa và các dụng cụ của bé",
+      "Tương tác sớm qua trò chơi/hình ảnh",
+      "Hỗ trợ mẹ rèn luyện nếp sinh hoạt cho bé"
     ],
     "pricing": [
       {
@@ -72,16 +72,16 @@
 
   {
     "id": 3,
-    "name": "Chăm sóc mẹ và bé trọn gói",
+    "name": "Gói Dinh dưỡng & Ẩm thực tại gia",
     "image": "assets/3.png",
-    "description": "Dịch vụ trọn gói giúp mẹ và bé được chăm sóc toàn diện sau sinh.",
+    "description": "Đảm bảo nguồn sữa dồi dào và dinh dưỡng phục hồi cho mẹ.",
     "includes": [
-      "Chăm sóc sức khỏe mẹ sau sinh",
-      "Chăm sóc bé sơ sinh",
-      "Massage thư giãn cho mẹ",
-      "Nấu ăn dinh dưỡng cho mẹ",
-      "Giặt đồ mẹ và bé",
-      "Dọn dẹp phòng mẹ và bé"
+      "Trọng tâm: Chế biến 3 bữa chính & 1 bữa phụ lợi sữa",
+      "Lên thực đơn theo tình trạng sức khỏe của mẹ",
+      "Đi chợ lựa chọn thực phẩm tươi sạch",
+      "Nấu các loại nước uống thảo mộc/ngũ cốc",
+      "Tư vấn chế độ ăn kiêng khoa học",
+      "Dọn dẹp sạch sẽ khu vực bếp sau khi nấu"
     ],
     "pricing": [
       {
@@ -107,15 +107,16 @@
 
   {
     "id": 4,
-    "name": "Chăm sóc bé và hỗ trợ mẹ mọi lúc",
+    "name": "Gói Hỗ trợ Tiện ích Gia đình",
     "image": "assets/4.png",
-    "description": "Hỗ trợ gia đình chăm sóc bé và mẹ được nghỉ ngơi.",
+    "description": "Giúp mẹ giải phóng hoàn toàn việc nhà để tập trung cho bé.",
     "includes": [
-      "Theo dõi giấc ngủ của bé",
-      "Pha sữa và cho bé bú",
-      "Thay tã ",
-      "Ru bé ngủ lại",
-      "Theo dõi nhiệt độ cơ thể bé"
+      "Trọng tâm: Giặt ủi và phân loại đồ dùng mẹ & bé",
+      "Vệ sinh và khử khuẩn phòng ngủ hàng ngày",
+      "Dọn dẹp nhà cửa và khu vực sinh hoạt chung",
+      "Hỗ trợ chuẩn bị nguyên liệu nấu ăn",
+      "Trông bé để mẹ có thời gian tắm rửa/nghỉ ngơi",
+      "Quản lý kho tã bỉm và đồ dùng cần thiết"
     ],
     "pricing": [
       {
@@ -141,15 +142,16 @@
 
   {
     "id": 5,
-    "name": "Nấu ăn dinh dưỡng cho mẹ sau sinh",
+    "name": "Gói Tư vấn & Kỹ năng nuôi con",
     "image": "assets/5.png",
-    "description": "Chuẩn bị bữa ăn dinh dưỡng khoa học giúp mẹ phục hồi nhanh.",
+    "description": "Dành cho những người lần đầu làm mẹ cần sự hướng dẫn chuyên môn.",
     "includes": [
-      "Lên thực đơn dinh dưỡng",
-      "Đi chợ mua thực phẩm",
-      "Nấu 2–3 bữa/ngày",
-      "Chuẩn bị món ăn lợi sữa",
-      "Dọn dẹp bếp sau khi nấu"
+      "Trọng tâm: Hướng dẫn mẹ cho bé bú và xử lý tắc tia sữa",
+      "Tư vấn tâm lý và phòng ngừa trầm cảm sau sinh",
+      "Dạy mẹ kỹ năng bế, quấn và vỗ ợ hơi cho bé",
+      "Hướng dẫn xử lý các tình huống khẩn cấp ở trẻ",
+      "Lập sổ theo dõi tăng trưởng hàng tuần cho bé",
+      "Tư vấn mua sắm đồ dùng cần thiết tiết kiệm"
     ],
     "pricing": [
       {
@@ -175,15 +177,16 @@
 
   {
     "id": 6,
-    "name": "Hỗ trợ việc nhà khi có mẹ và bé",
+    "name": "Gói Chăm sóc Toàn diện Mẹ & Bé",
     "image": "assets/6.png",
-    "description": "Giúp gia đình giữ không gian sạch sẽ khi có mẹ và bé.",
+    "description": "Giải pháp trọn gói kết hợp tinh hoa của tất cả các dịch vụ.",
     "includes": [
-      "Giặt đồ mẹ và bé",
-      "Dọn phòng ngủ",
-      "Rửa bình sữa",
-      "Vệ sinh khu vực sinh hoạt",
-      "Dọn dẹp nhà cửa nhẹ"
+      "Chăm sóc vết thương và sức khỏe cho mẹ (Gói 1)",
+      "Tắm bé và vệ sinh y tế chuẩn chuyên gia (Gói 2)",
+      "Nấu ăn dinh dưỡng và lợi sữa (Gói 3)",
+      "Giặt đồ và dọn dẹp không gian của mẹ & bé (Gói 4)",
+      "Hỗ trợ kỹ năng nuôi con và kích sữa (Gói 5)",
+      "Lên kế hoạch nghỉ ngơi tối ưu cho cả gia đình"
     ],
     "pricing": [
       {
