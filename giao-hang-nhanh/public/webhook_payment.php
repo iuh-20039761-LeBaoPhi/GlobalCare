@@ -81,8 +81,11 @@ if ((int) $amount_paid !== (int) $order['shipping_fee']) {
     http_response_code(400); // Bad Request
     error_log("Webhook Error: Amount mismatch for order '$order_code'. Expected: {$order['shipping_fee']}, Paid: {$amount_paid}.");
     // Ghi chú lại cho admin về việc thanh toán sai số tiền
-    $note = "Webhook: Nhận được thanh toán sai lệch " . number_format($amount_paid) . "đ. Mong đợi " . number_format($order['shipping_fee']) . "đ. Mã GD: $transaction_id";
-    $conn->query("UPDATE orders SET admin_note = CONCAT(IFNULL(admin_note, ''), '\n', '$note') WHERE id = {$order['id']}");
+    $note_content = "Webhook: Nhận được thanh toán sai lệch " . number_format($amount_paid) . "đ. Mong đợi " . number_format($order['shipping_fee']) . "đ. Mã GD: $transaction_id";
+    $update_stmt = $conn->prepare("UPDATE orders SET admin_note = CONCAT(IFNULL(admin_note, ''), '\n', ?) WHERE id = ?");
+    $update_stmt->bind_param("si", $note_content, $order['id']);
+    $update_stmt->execute();
+    $update_stmt->close();
     exit('Amount mismatch.');
 }
 
@@ -100,6 +103,7 @@ try {
         $msg = "Thanh toán cho đơn hàng #{$order_code} đã được xác nhận thành công.";
         $link = "customer_order_detail.php?id={$order['id']}";
         $conn->query("INSERT INTO notifications (user_id, order_id, message, link) VALUES ({$order['user_id']}, {$order['id']}, '$msg', '$link')");
+        // Cân nhắc sử dụng prepared statement ở đây nếu có thể
     }
 
     $conn->commit();

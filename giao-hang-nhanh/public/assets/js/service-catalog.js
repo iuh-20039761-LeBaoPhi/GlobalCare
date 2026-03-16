@@ -3,29 +3,29 @@
     mainGroups: [
       {
         key: "delivery",
-        label: "Giao hang",
+        label: "Giao hàng",
         rank: 1,
-        notes: "Nhom giao hang cho khach le",
+        notes: "Nhóm giao hàng cho khách lẻ",
         serviceTypes: ["slow", "standard", "fast", "express"],
         matrix: [
           {
             area: "inner_city",
-            areaLabel: "Noi thanh",
+            areaLabel: "Nội thành",
             packages: ["slow", "standard", "fast", "express"],
           },
           {
             area: "outer_city",
-            areaLabel: "Ngoai thanh",
+            areaLabel: "Ngoại thành",
             packages: ["slow", "standard", "fast", "express"],
           },
           {
             area: "inter_province",
-            areaLabel: "Lien tinh",
+            areaLabel: "Liên tỉnh",
             packages: ["slow", "standard", "fast", "express"],
           },
           {
             area: "international",
-            areaLabel: "Quoc te",
+            areaLabel: "Quốc tế",
             packages: ["intl_economy", "intl_express"],
           },
         ],
@@ -35,24 +35,24 @@
       {
         key: "cod",
         label: "COD",
-        notes: "Thu ho tien khi giao hang",
+        notes: "Thu hộ tiền khi giao hàng",
         appliesToMainGroups: ["delivery"],
       },
       {
         key: "insurance",
-        label: "Bao hiem hang hoa",
-        notes: "Bao ve don hang gia tri cao",
+        label: "Bảo hiểm hàng hóa",
+        notes: "Bảo vệ đơn hàng giá trị cao",
         appliesToMainGroups: ["delivery"],
       },
     ],
     serviceTypes: {
       slow: {
-        label: "Giao cham",
+        label: "Giao chậm",
         mainGroup: "delivery",
         speed: "slow",
       },
       standard: {
-        label: "Giao tieu chuan",
+        label: "Giao tiêu chuẩn",
         mainGroup: "delivery",
         speed: "standard",
       },
@@ -62,7 +62,7 @@
         speed: "fast",
       },
       express: {
-        label: "Giao hoa toc",
+        label: "Giao hỏa tốc",
         mainGroup: "delivery",
         speed: "express",
       },

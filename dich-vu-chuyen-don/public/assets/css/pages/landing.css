@@ -1,11 +1,17 @@
 /* ===== LANDING PAGE STYLES ===== */
 
 .hero-section {
-  padding: 100px 0;
+  padding: 40px 0; /* Giảm mạnh từ 60px */
   background: linear-gradient(135deg, #1b4332 0%, #2d6a4f 100%);
   position: relative;
   overflow: hidden;
   color: #ffffff;
+}
+
+@media (min-width: 1024px) {
+  .hero-section {
+    padding: 50px 0; /* Giảm từ 80px */
+  }
 }
 
 .hero-container {
@@ -15,13 +21,10 @@
   gap: 60px;
 }
 
-.hero-content {
-  flex: 1.2;
-}
-
 .hero-content h1 {
-  line-height: 1.2;
-  margin-bottom: 24px;
+  line-height: 1.1;
+  margin-top: 0; /* Xóa margin top để sát menu hơn */
+  margin-bottom: 20px;
   color: #ffffff;
 }
 
@@ -38,7 +41,7 @@
 
 .hero-image img {
   width: 100%;
-  max-width: 550px;
+  max-width: 500px; /* Thu nhỏ ảnh lại để banner mỏng hơn */
   height: auto;
   border-radius: 20px;
   box-shadow: 0 20px 40px rgba(27, 67, 50, 0.15);

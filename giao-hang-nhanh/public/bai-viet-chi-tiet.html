@@ -8,6 +8,8 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <link rel="icon" type="image/x-icon" href="assets/images/favicon.ico" />
     <link rel="stylesheet" href="assets/css/styles.css" />
+    <!-- FontAwesome 6.4.0 -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
       /* CSS cho trang chi tiết bài viết */
       .article-header {
@@ -123,6 +125,28 @@
       .related-card-title a:hover {
         color: #ff7a00;
       }
+      /* CSS cho Tags */
+      .article-tags {
+        margin-top: 30px;
+        margin-bottom: 20px;
+        padding-top: 20px;
+        border-top: 1px solid #eee;
+      }
+      .tag-item {
+        display: inline-block;
+        background: #f1f5f9;
+        color: #475569;
+        padding: 6px 14px;
+        border-radius: 16px;
+        font-size: 14px;
+        margin-right: 8px;
+        margin-bottom: 8px;
+        text-decoration: none;
+      }
+      .tag-item:hover {
+        background: #e2e8f0;
+        color: #1e293b;
+      }
       .related-date {
         font-size: 0.85em;
         color: #888;
@@ -157,21 +181,29 @@
 
     <div id="site-footer"></div>
     <script src="assets/js/shared-layout.js"></script>
-    <script src="assets/js/data/news-data.js"></script>
     <script>
       document.addEventListener("DOMContentLoaded", function () {
         const urlParams = new URLSearchParams(window.location.search);
         const articleId = parseInt(urlParams.get("id"), 10);
 
-        if (!articleId || !window.newsData) {
+        if (!articleId) {
           document.getElementById("article-content-host").innerHTML =
             '<h2>Bài viết không tồn tại.</h2><a href="bai-viet.html" class="back-to-news">← Quay lại trang bài viết</a>';
           return;
         }
 
-        const article = window.newsData.find((p) => p.id === articleId);
+        fetch("assets/js/data/news-data.json")
+          .then(function(res) { return res.json(); })
+          .then(function(newsData) { renderArticle(newsData); })
+          .catch(function() {
+            document.getElementById("article-content-host").innerHTML =
+              '<h2>Không thể tải bài viết.</h2><a href="bai-viet.html" class="back-to-news">← Quay lại</a>';
+          });
 
-        if (article) {
+        function renderArticle(newsData) {
+          const article = newsData.find((p) => p.id === articleId);
+
+          if (article) {
           document.title = `${article.title} | Giao Hàng Nhanh`;
 
           const headerHost = document.getElementById("article-header-host");
@@ -179,19 +211,28 @@
             <h1 class="article-title">${article.title}</h1>
             <div class="article-meta">
               <span>Ngày đăng: ${article.date}</span> |
-              <span>Tác giả: ${article.author}</span> |
               <span>Chuyên mục: ${article.category}</span>
             </div>
           `;
 
           const imageHost = document.getElementById("article-image-host");
-          imageHost.src = article.image;
+          imageHost.src = article.img;
           imageHost.alt = article.title;
           imageHost.style.display = "block";
+
+          // Xử lý hiển thị Tags
+          let tagsHtml = "";
+          if (article.tags && article.tags.length > 0) {
+            tagsHtml = `<div class="article-tags">
+              <strong>Thẻ:</strong> 
+              ${article.tags.map((tag) => `<span class="tag-item">#${tag}</span>`).join(" ")}
+            </div>`;
+          }
 
           const contentHost = document.getElementById("article-content-host");
           contentHost.innerHTML =
             article.content +
+            tagsHtml +
             '<a href="bai-viet.html" class="back-to-news">← Quay lại trang bài viết</a>';
 
           // --- LOGIC BÀI VIẾT LIÊN QUAN NÂNG CAO (SCORING SYSTEM) ---
@@ -208,32 +249,36 @@
           const currentKeywords = getKeywords(article.title);
 
           // Tính điểm cho từng bài viết
-          const scoredArticles = window.newsData
+          const scoredArticles = newsData
             .filter((item) => item.id !== article.id) // Trừ bài hiện tại
             .map((item) => {
               let score = 0;
 
-              // Tiêu chí 1: Cùng chuyên mục (Quan trọng nhất)
-              if (item.category === article.category) score += 10;
+              // Tiêu chí 1: Cùng chuyên mục
+              if (item.category === article.category) score += 3;
 
               // Tiêu chí 2: Trùng từ khóa trong tiêu đề
               const itemTitleWords = getKeywords(item.title);
               const matchedWords = itemTitleWords.filter((w) =>
                 currentKeywords.includes(w),
               );
-              score += matchedWords.length * 2; // Mỗi từ trùng +2 điểm
+              score += matchedWords.length * 1;
 
-              // Tiêu chí 3: Trùng tags (Nếu dữ liệu của bạn sau này có thêm trường tags: ['tag1', 'tag2'])
+              // Tiêu chí 3: Trùng tags (Ưu tiên cao nhất)
               if (
                 article.tags &&
                 item.tags &&
                 Array.isArray(article.tags) &&
                 Array.isArray(item.tags)
               ) {
-                const sharedTags = item.tags.filter((t) =>
-                  article.tags.includes(t),
+                // Chuẩn hóa về chữ thường để so sánh chính xác
+                const currentTags = article.tags.map((t) => t.toLowerCase());
+                const checkTags = item.tags.map((t) => t.toLowerCase());
+
+                const sharedTags = checkTags.filter((t) =>
+                  currentTags.includes(t),
                 );
-                score += sharedTags.length * 5;
+                score += sharedTags.length * 10; // Tăng điểm mạnh cho bài có chung tag
               }
 
               return { item, score };
@@ -252,7 +297,7 @@
                 (item) => `
                 <div class="related-card">
                     <a href="bai-viet-chi-tiet.html?id=${item.id}">
-                        <img src="${item.image}" alt="${item.title}" class="related-img" />
+                        <img src="${item.img}" alt="${item.title}" class="related-img" />
                     </a>
                     <div class="related-body">
                         <div class="related-date">${item.date}</div>
@@ -272,10 +317,11 @@
             // Chèn vào cuối thẻ <article>
             document.querySelector("article").appendChild(relatedSection);
           }
-        } else {
-          document.getElementById("article-content-host").innerHTML =
-            '<h2>Bài viết không tồn tại.</h2><a href="bai-viet.html" class="back-to-news">← Quay lại trang bài viết</a>';
-        }
+          } else {
+            document.getElementById("article-content-host").innerHTML =
+              '<h2>Bài viết không tồn tại.</h2><a href="bai-viet.html" class="back-to-news">← Quay lại trang bài viết</a>';
+          }
+        } // end renderArticle
       });
     </script>
   </body>

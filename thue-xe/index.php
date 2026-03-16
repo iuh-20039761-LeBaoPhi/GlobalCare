@@ -1,21 +1,23 @@
 <?php
 session_start();
 define('BASE_PATH', __DIR__);
-define('BASE_URL', 'http://localhost/carrental_test');
+define('BASE_URL', (isset($_SERVER['HTTPS']) && $_SERVER['HTTPS'] === 'on' ? 'https' : 'http') . '://' . $_SERVER['HTTP_HOST'] . rtrim(dirname($_SERVER['SCRIPT_NAME']), '/\\'));
 
 $page = $_GET['page'] ?? 'home';
-$validPages = ['home', 'search', 'car-detail', 'about', 'services', 'guide', 'contact', 'booking_success', 'track_order', 'terms'];
+$validPages = ['home', 'search', 'car-detail', 'about', 'services', 'guide', 'contact', 'booking-success', 'track-order', 'terms'];
 
 if (!in_array($page, $validPages)) $page = 'home';
 
-// Các trang dùng file HTML đầy đủ ở root (dùng chung với web tĩnh GitHub Pages)
-// 'home' trỏ về index.html để tránh trùng lặp nội dung với views/pages/home.html
-$rootPages = ['terms', 'home'];
+// Các trang dùng file HTML ở root (dùng chung với web tĩnh GitHub Pages)
+$rootPageMap = [
+    'home'  => 'index.html',  // trang chủ là index.html, không phải home.html
+    'terms' => 'terms.html',
+];
 
-if (in_array($page, $rootPages)) {
-    $viewFile = BASE_PATH . '/' . $page . '.html';
+if (isset($rootPageMap[$page])) {
+    $viewFile = BASE_PATH . '/' . $rootPageMap[$page];
 } else {
-    $viewFile = BASE_PATH . '/views/pages/' . str_replace('-', '_', $page) . '.html';
+    $viewFile = BASE_PATH . '/views/pages/' . $page . '.html';
 }
 
 if (file_exists($viewFile)) {

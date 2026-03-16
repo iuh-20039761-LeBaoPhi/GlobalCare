@@ -7,7 +7,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <!-- Meta Description Placeholder -->
     <meta name="description" content="Đang tải nội dung chi tiết bài viết..." />
-    
+
     <!-- Open Graph Placeholders (Để JS cập nhật) -->
     <meta property="og:type" content="article" />
     <meta property="og:title" content="Đang tải bài viết..." />
@@ -18,8 +18,7 @@
     <link rel="canonical" href="" />
 
     <link rel="stylesheet" href="assets/css/styles.css" />
-    <!-- Nếu bạn chưa import news.css vào styles.css thì bỏ comment dòng dưới -->
-    <!-- <link rel="stylesheet" href="assets/css/pages/news.css" /> -->
+    <link rel="stylesheet" href="assets/css/pages/news.css" />
 
     <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
     <script>
@@ -39,18 +38,23 @@
       };
     </script>
   </head>
-  <body>
+  <body class="bg-slate-50">
     <!-- Header Placeholder -->
     <div id="site-header"></div>
 
-    <main style="padding-top: 40px; padding-bottom: 80px; background-color: #fff; min-height: 60vh;">
+    <main class="py-10 pb-20 min-h-[60vh]">
       <!-- JS sẽ render nội dung chi tiết bài viết vào đây -->
-      <div id="news-detail-container" class="article-container max-w-[800px] mx-auto px-6">
-         <!-- State loading mặc định trước khi JS chạy -->
-         <div class="text-center py-10">
-            <div class="inline-block animate-spin rounded-full h-8 w-8 border-t-2 border-b-2 border-primary"></div>
-            <p class="mt-2 text-slate-500">Đang tải nội dung...</p>
-         </div>
+      <div
+        id="news-detail-container"
+        class="article-container max-w-[1240px] mx-auto px-4 md:px-6"
+      >
+        <!-- State loading mặc định trước khi JS chạy -->
+        <div class="text-center py-10">
+          <div
+            class="inline-block animate-spin rounded-full h-8 w-8 border-t-2 border-b-2 border-primary"
+          ></div>
+          <p class="mt-2 text-slate-500">Đang tải nội dung...</p>
+        </div>
       </div>
     </main>
 
@@ -58,6 +62,7 @@
     <div id="site-footer"></div>
 
     <script src="assets/js/shared-layout.js"></script>
+    <script src="assets/js/modules/main-news.js"></script>
     <script src="assets/js/main.js" defer></script>
 
     <!-- Schema.org Article Placeholder -->

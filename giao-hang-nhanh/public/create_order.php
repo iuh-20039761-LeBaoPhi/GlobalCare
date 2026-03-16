@@ -20,7 +20,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $upload_dir = __DIR__ . "/../public/uploads/order_attachments/" . $order_code . "/";
 
     if (!is_dir($upload_dir)) {
-        mkdir($upload_dir, 0777, true);
+        if (!mkdir($upload_dir, 0777, true)) {
+             // Handle error if needed
+        }
     }
 
     $uploaded_files = [];
@@ -28,10 +30,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     // upload ảnh hàng hóa
     if (!empty($_FILES['goods_images']['name'][0])) {
         foreach ($_FILES['goods_images']['tmp_name'] as $key => $tmp_name) {
-
             $filename = basename($_FILES['goods_images']['name'][$key]);
             $target = $upload_dir . $filename;
-
             if (move_uploaded_file($tmp_name, $target)) {
                 $uploaded_files[] = $filename;
             }
@@ -41,15 +41,43 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     // upload chứng từ
     if (!empty($_FILES['intl_documents']['name'][0])) {
         foreach ($_FILES['intl_documents']['tmp_name'] as $key => $tmp_name) {
-
             $filename = basename($_FILES['intl_documents']['name'][$key]);
             $target = $upload_dir . $filename;
-
             if (move_uploaded_file($tmp_name, $target)) {
                 $uploaded_files[] = $filename;
             }
         }
     }
+
+    // lấy dữ liệu từ POST
+    $user_id = $_SESSION['user_id'];
+    $pickup_address = $_POST['pickup'] ?? '';
+    $name = $_POST['name'] ?? '';
+    $phone = $_POST['phone'] ?? '';
+    $receiver_name = $_POST['receiver_name'] ?? '';
+    $receiver_phone = $_POST['receiver_phone'] ?? '';
+    $delivery_address = $_POST['delivery'] ?? '';
+    
+    $is_corporate = isset($_POST['is_corporate']) ? 1 : 0;
+    $company_name = $_POST['company_name'] ?? '';
+    $company_email = $_POST['company_email'] ?? '';
+    $company_tax_code = $_POST['company_tax_code'] ?? '';
+    $company_address = $_POST['company_address'] ?? '';
+    $company_bank_info = $_POST['company_bank_info'] ?? '';
+    
+    $service_type = $_POST['service_type'] ?? '';
+    $weight = floatval($_POST['weight'] ?? 0);
+    
+    // Xử lý cod_amount (loại bỏ dấu chấm phân cách hàng nghìn nếu có)
+    $cod_raw = $_POST['cod_amount'] ?? '0';
+    $cod_amount = floatval(preg_replace('/[^\d]/', '', $cod_raw));
+    
+    $shipping_fee = floatval($_POST['shipping_fee'] ?? 0);
+    $pickup_time = $_POST['pickup_time'] ?? null;
+    if (empty($pickup_time)) $pickup_time = null;
+    
+    $payment_method = $_POST['payment_method'] ?? 'cod';
+    $package_type = $_POST['package_type'] ?? 'other';
 
     // lấy ghi chú
     $note = $_POST['note'] ?? '';
@@ -59,6 +87,37 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $note .= "\nTệp đính kèm: " . implode(', ', $uploaded_files);
     }
 
+    // Thực hiện INSERT
+    $sql = "INSERT INTO orders (
+                order_code, user_id, pickup_address, name, phone, 
+                receiver_name, receiver_phone, delivery_address, 
+                is_corporate, company_name, company_email, company_tax_code, 
+                company_address, company_bank_info, service_type, package_type,
+                weight, cod_amount, shipping_fee, pickup_time, note, 
+                payment_method, status, created_at
+            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'pending', NOW())";
+
+    $stmt = $conn->prepare($sql);
+    // 22 tham số: sissssssisssssssdddsss
+    // 1(s), 1(i), 6(s), 1(i), 7(s), 3(d), 3(s)
+    $stmt->bind_param("sissssssisssssssdddsss", 
+        $order_code, $user_id, $pickup_address, $name, $phone,
+        $receiver_name, $receiver_phone, $delivery_address,
+        $is_corporate, $company_name, $company_email, $company_tax_code,
+        $company_address, $company_bank_info, $service_type, $package_type,
+        $weight, $cod_amount, $shipping_fee, $pickup_time, $note,
+        $payment_method
+    );
+
+    if ($stmt->execute()) {
+        $success_msg = "Đã tạo đơn hàng " . $order_code . " thành công!";
+        $_SESSION['success_order'] = $success_msg;
+        header("Location: dashboard.php");
+        exit;
+    } else {
+        $error_msg = "Lỗi khi tạo đơn hàng: " . $stmt->error;
+    }
+    $stmt->close();
 }
 
 // Lấy thông tin user để auto-fill
@@ -223,6 +282,12 @@ $default_route_type = (strpos($selected_service_type, 'intl_') === 0) ? 'interna
             <h2 class="section-title">Tạo đơn hàng mới</h2>
             <a href="dashboard.php" class="dashboard-btn-outline">← Quay lại Dashboard</a>
         </div>
+
+        <?php if (isset($error_msg)): ?>
+            <div class="alert alert-danger" style="background: #f8d7da; color: #721c24; padding: 15px; border-radius: 8px; margin-bottom: 20px; border: 1px solid #f5c6cb;">
+                <strong>Lỗi!</strong> <?php echo htmlspecialchars($error_msg); ?>
+            </div>
+        <?php endif; ?>
 
         <form id="create-order-form" class="order-form-container" method="POST" enctype="multipart/form-data">
             <div class="form-section">
@@ -463,10 +528,33 @@ $default_route_type = (strpos($selected_service_type, 'intl_') === 0) ? 'interna
                         <input type="file" id="intl-docs" name="intl_documents[]"
                             accept=".pdf,.jpg,.jpeg,.png,.webp,.doc,.docx,.xls,.xlsx" multiple>
                     </div>
-                    <div class="form-group form-group-span-2" id="schedule-order-group">
+                    <div class="form-group form-group-span-2">
+                        <label>Gói dịch vụ đề xuất</label>
+                        <p class="order-route-hint service-picker-hint">Hệ thống sẽ hiển thị các gói cước ngay khi bạn nhập đủ thông tin hàng hóa. Bạn chọn 1 gói để khóa phí và thời gian.</p>
+                        <div id="order-service-suggestion" class="order-service-suggestion">
+                            Vui lòng nhập đủ thông tin hành trình và hàng hóa để xem gói dịch vụ.
+                        </div>
+                        <div id="order-service-packages" class="quote-package-list order-service-package-list"></div>
+                        <select id="order-service-type" name="service_type" class="order-service-native-select">
+                            <option value="" data-route="all">-- Chọn gói dịch vụ --</option>
+                            <?php foreach ($service_options as $service_option): ?>
+                                <?php
+                                $service_key = $service_option['key'];
+                                if (!isset($service_name_map[$service_key])) {
+                                    continue;
+                                }
+                                ?>
+                                <option value="<?php echo htmlspecialchars($service_key); ?>"
+                                    data-route="<?php echo htmlspecialchars($service_option['route']); ?>" <?php echo ($reorder_data['service_type'] === $service_key) ? 'selected' : ''; ?>>
+                                    <?php echo htmlspecialchars($service_name_map[$service_key]); ?>
+                                </option>
+                            <?php endforeach; ?>
+                        </select>
+                    </div>
+
+                    <div class="form-group form-group-span-2" id="schedule-order-group" style="display: none;">
                         <label>Đặt lịch lấy và giao hàng</label>
-                        <p class="order-route-hint">Chọn lịch mong muốn trước. Hệ thống sẽ dùng lịch này để lọc gói
-                            đáp ứng thời gian lấy/giao.</p>
+                        <p class="order-route-hint">Dựa trên gói dịch vụ bạn chọn, hệ thống gợi ý lịch sớm nhất có thể.</p>
                         <div class="form-grid">
                             <div class="form-group">
                                 <label for="pickup-date-control">Ngày lấy hàng</label>
@@ -480,45 +568,19 @@ $default_route_type = (strpos($selected_service_type, 'intl_') === 0) ? 'interna
                             </div>
                             <div class="form-group">
                                 <label for="delivery-date-control">Ngày giao dự kiến</label>
-                                <input type="date" id="delivery-date-control" required>
+                                <input type="date" id="delivery-date-control" readonly style="background: #f8f9fa;">
                             </div>
                             <div class="form-group">
                                 <label for="delivery-slot-control">Khung giờ giao dự kiến</label>
-                                <select id="delivery-slot-control" required>
+                                <select id="delivery-slot-control" disabled style="background: #f8f9fa;">
                                     <option value="">Chọn khung giờ giao hàng</option>
                                 </select>
                             </div>
                         </div>
-                        <div class="schedule-estimate" id="schedule-estimate-note">Chọn lịch mong muốn để hệ thống
-                            lọc gói dịch vụ phù hợp.</div>
+                        <div class="schedule-estimate" id="schedule-estimate-note"></div>
                         <input type="hidden" name="pickup_time" id="pickup-time-hidden" value="">
                         <input type="hidden" name="delivery_time" id="delivery-time-hidden" value="">
                     </div>
-                </div>
-                <div class="form-group form-group-span-2">
-                    <label>Gói dịch vụ đề xuất</label>
-                    <p class="order-route-hint service-picker-hint">Hệ thống sẽ hiển thị các gói cước sau khi bạn nhập
-                        đủ thông tin cần thiết và lịch mong muốn. Bạn chọn 1 gói để khóa phí.</p>
-                    <div id="order-service-suggestion" class="order-service-suggestion">
-                        Vui lòng nhập đủ thông tin hành trình, hàng hóa và lịch để xem gói dịch vụ.
-                    </div>
-                    <div id="order-service-packages" class="quote-package-list order-service-package-list"></div>
-                    <select id="order-service-type" name="service_type" class="order-service-native-select">
-                        <option value="" data-route="all">-- Chọn gói dịch vụ --</option>
-                        <?php foreach ($service_options as $service_option): ?>
-                            <?php
-                            $service_key = $service_option['key'];
-                            if (!isset($service_name_map[$service_key])) {
-                                continue;
-                            }
-                            ?>
-                            <option value="<?php echo htmlspecialchars($service_key); ?>"
-                                data-route="<?php echo htmlspecialchars($service_option['route']); ?>" <?php echo ($reorder_data['service_type'] === $service_key) ? 'selected' : ''; ?>>
-                                <?php echo htmlspecialchars($service_name_map[$service_key]); ?>
-                            </option>
-                        <?php endforeach; ?>
-                    </select>
-                </div>
             </div>
 
             <div class="order-section-row order-section-row-bottom">
@@ -527,9 +589,9 @@ $default_route_type = (strpos($selected_service_type, 'intl_') === 0) ? 'interna
                     <div class="form-grid">
                         <div class="form-group" id="cod-field-group">
                             <label for="cod_amount">Phí COD (giá trị thu hộ, VNĐ)</label>
-                            <input type="number" id="cod_amount" name="cod_amount"
-                                value="<?php echo htmlspecialchars($reorder_data['cod_amount']); ?>" min="0"
-                                placeholder="Để trống nếu không có">
+                            <input type="text" id="cod_amount" name="cod_amount"
+                                value="<?php echo htmlspecialchars($reorder_data['cod_amount']); ?>"
+                                inputmode="numeric" placeholder="Để trống nếu không có">
                         </div>
                         <div class="form-group" id="cod-fee-payer-group">
                             <label>Người trả cước</label>
@@ -596,7 +658,7 @@ $default_route_type = (strpos($selected_service_type, 'intl_') === 0) ? 'interna
             </div>
 
             <div id="price-preview" style="display: none;">
-                Phí vận chuyển dự kiến: <strong id="shipping-fee-display">0</strong>đ
+                Phí vận chuyển dự kiến: <strong id="shipping-fee-display">0đ</strong>
                 <input type="hidden" name="shipping_fee" id="shipping-fee-input" value="0">
             </div>
             <div id="form-message-delivery" style="display: none; margin-top: 20px;"></div>
@@ -646,6 +708,7 @@ $default_route_type = (strpos($selected_service_type, 'intl_') === 0) ? 'interna
 
     <script>
         document.addEventListener('DOMContentLoaded', function () {
+            window.__giaoHangNhanhOrderInitDone = true;
             let ALL_COUNTRIES_LIST = [];
             const form = document.getElementById('create-order-form');
             if (!form) return;
@@ -1013,6 +1076,13 @@ $default_route_type = (strpos($selected_service_type, 'intl_') === 0) ? 'interna
                 if (insuranceValueInput) insuranceValueInput.value = String(Math.round(totalDeclaredValue));
                 if (packageTypeInput) packageTypeInput.value = PACKAGE_TYPE_BY_ITEM_TYPE[selectedType] || 'other';
                 if (goodsDescriptionInput) goodsDescriptionInput.value = descriptionLines.join(' | ');
+
+                // Trigger changes on hidden fields so the schedule estimate note can refresh
+                [itemTypeInput, itemNameInput, quantityInput, weightInput, insuranceValueInput].forEach(inp => {
+                    if (inp) inp.dispatchEvent(new Event('change', {
+                        bubbles: true
+                    }));
+                });
             }
 
             function updateGoodsRemoveButtonsState() {
@@ -1204,9 +1274,23 @@ $default_route_type = (strpos($selected_service_type, 'intl_') === 0) ? 'interna
                     const districts = normalizeLocationList((cityMap && cityMap[city]) ? cityMap[city] : []);
                     setSelectOptions(districtSelect, districts, districtPlaceholder);
                     districtSelect.disabled = districts.length === 0;
+
+                    // Trigger refresh handlers
+                    refreshSchedule();
+                    refreshServiceRecommendations();
+                    if (typeof calculateOrderShipping === 'function') {
+                        calculateOrderShipping();
+                    }
                 };
 
                 citySelect.addEventListener('change', applyDistricts);
+                districtSelect.addEventListener('change', function () {
+                    refreshSchedule();
+                    refreshServiceRecommendations();
+                    if (typeof calculateOrderShipping === 'function') {
+                        calculateOrderShipping();
+                    }
+                });
                 applyDistricts();
             }
 
@@ -1249,9 +1333,23 @@ $default_route_type = (strpos($selected_service_type, 'intl_') === 0) ? 'interna
                     }
                     setSelectOptions(intlProvinceSelect, regions, 'Chọn tỉnh/thành phố nhận');
                     intlProvinceSelect.disabled = regions.length === 0;
+
+                    // Trigger refresh handlers
+                    refreshSchedule();
+                    refreshServiceRecommendations();
+                    if (typeof calculateOrderShipping === 'function') {
+                        calculateOrderShipping();
+                    }
                 };
 
                 intlCountrySelect.addEventListener('change', applyIntlRegions);
+                intlProvinceSelect.addEventListener('change', function () {
+                    refreshSchedule();
+                    refreshServiceRecommendations();
+                    if (typeof calculateOrderShipping === 'function') {
+                        calculateOrderShipping();
+                    }
+                });
                 applyIntlRegions();
             }
 
@@ -1374,7 +1472,11 @@ $default_route_type = (strpos($selected_service_type, 'intl_') === 0) ? 'interna
             function getChargeableWeight(routeType) {
                 const actualWeight = toPositiveNumber(form.querySelector('[name="weight"]')?.value || 0, 0);
                 const volumetricWeight = getVolumetricWeight(routeType);
-                return Math.max(actualWeight, volumetricWeight);
+                const quantity = Math.max(1, toPositiveInteger(form.querySelector('[name="quantity"]')?.value || 1, 1));
+                // actualWeight ở đây là cân nặng THỰC của 1 kiện hay tổng đơn? 
+                // Thường user nhập weight là của 1 sản phẩm.
+                const totalActualWeight = actualWeight * quantity;
+                return Math.max(totalActualWeight, volumetricWeight);
             }
 
             function getTransitHoursFromQuote(serviceType) {
@@ -1430,8 +1532,8 @@ $default_route_type = (strpos($selected_service_type, 'intl_') === 0) ? 'interna
 
                 const quantity = Math.max(1, toPositiveInteger(form.querySelector('[name="quantity"]')?.value || 1,
                     1));
-                if (quantity > 1) {
-                    leadHours += Math.min(10, Math.ceil((quantity - 1) / 2));
+                if (quantity > 10) {
+                    leadHours += 1; // Chỉ cộng nhẹ cho số lượng lớn
                 }
 
                 const chargeableWeight = getChargeableWeight(routeType);
@@ -1463,13 +1565,13 @@ $default_route_type = (strpos($selected_service_type, 'intl_') === 0) ? 'interna
 
                 const quantity = Math.max(1, toPositiveInteger(form.querySelector('[name="quantity"]')?.value || 1,
                     1));
-                if (quantity > 1) {
-                    transitHours += Math.min(24, Math.ceil((quantity - 1) / 2));
+                if (quantity > 10) {
+                    transitHours += 2; // Chỉ cộng nhẹ cho số lượng lớn
                 }
 
                 const chargeableWeight = getChargeableWeight(routeType);
-                if (chargeableWeight > 10) transitHours += 4;
-                if (chargeableWeight > 30) transitHours += 10;
+                if (chargeableWeight > 20) transitHours += 2;
+                if (chargeableWeight > 50) transitHours += 5;
 
                 const itemType = String(form.querySelector('[name="item_type"]')?.value || '').trim().toLowerCase();
                 if (itemType === 'de-vo' || itemType === 'gia-tri-cao') transitHours += 4;
@@ -1528,6 +1630,8 @@ $default_route_type = (strpos($selected_service_type, 'intl_') === 0) ? 'interna
                         message: 'Nhập khối lượng hoặc đủ kích thước (dài/rộng/cao) để tính cước.'
                     };
                 }
+                // Bỏ qua kiểm tra lịch ở giai đoạn đề xuất gói
+                /*
                 if (!pickupDateControl?.value || !pickupSlotControl?.value) {
                     return {
                         valid: false,
@@ -1540,6 +1644,7 @@ $default_route_type = (strpos($selected_service_type, 'intl_') === 0) ? 'interna
                         message: 'Chọn lịch giao dự kiến để hệ thống lọc gói phù hợp.'
                     };
                 }
+                */
 
                 const desiredPickup = buildSlotDateTime(pickupDateControl.value, pickupSlotControl.value);
                 const desiredDelivery = buildSlotDateTime(deliveryDateControl.value, deliverySlotControl.value);
@@ -1624,7 +1729,7 @@ $default_route_type = (strpos($selected_service_type, 'intl_') === 0) ? 'interna
                     fromDistrict: pickupDistrictSelect?.value || '',
                     toCity: deliveryCitySelect?.value || '',
                     toDistrict: deliveryDistrictSelect?.value || '',
-                    codValue: codInput?.disabled ? 0 : toPositiveNumber(codInput?.value || 0, 0)
+                    codValue: codInput?.disabled ? 0 : parseVndInput(codInput?.value || 0, 0)
                 });
             }
 
@@ -1685,6 +1790,14 @@ $default_route_type = (strpos($selected_service_type, 'intl_') === 0) ? 'interna
                 const matched = Array.from(serviceSelect.options).find(function (opt) {
                     return String(opt.value || '').trim().toLowerCase() === normalized && !opt.disabled;
                 });
+
+                const scheduleGroup = document.getElementById('schedule-order-group');
+                if (matched) {
+                    if (scheduleGroup) scheduleGroup.style.display = 'block';
+                } else {
+                    // if (scheduleGroup) scheduleGroup.style.display = 'none';
+                }
+
                 if (!matched) {
                     serviceSelect.value = '';
                     return;
@@ -1771,12 +1884,12 @@ $default_route_type = (strpos($selected_service_type, 'intl_') === 0) ? 'interna
                 const evaluatedServices = services.map(function (service) {
                     const serviceType = String(service?.serviceType || '').trim().toLowerCase();
                     const schedule = getServiceScheduleSnapshot(routeType, serviceType, desiredPickup);
-                    const pickupCompatible = desiredPickup instanceof Date &&
+                    const pickupCompatible = !desiredPickup || (desiredPickup instanceof Date &&
                         !Number.isNaN(desiredPickup.getTime()) &&
-                        desiredPickup.getTime() >= schedule.earliestPickup.getTime();
-                    const deliveryCompatible = desiredDelivery instanceof Date &&
+                        desiredPickup.getTime() >= schedule.earliestPickup.getTime());
+                    const deliveryCompatible = !desiredDelivery || (desiredDelivery instanceof Date &&
                         !Number.isNaN(desiredDelivery.getTime()) &&
-                        desiredDelivery.getTime() >= schedule.earliestDelivery.getTime();
+                        desiredDelivery.getTime() >= schedule.earliestDelivery.getTime());
                     return {
                         service: service,
                         serviceType: serviceType,
@@ -1838,12 +1951,10 @@ $default_route_type = (strpos($selected_service_type, 'intl_') === 0) ? 'interna
                         '</div>' +
                         '<p class="quote-service-eta">Thời gian dự kiến: <strong>' + escapeHtml(service
                             .estimate || 'Đang cập nhật') + '</strong></p>' +
-                        '<p class="quote-service-eta">Lấy sớm nhất: <strong>' + escapeHtml(
-                            formatDateForHumans(schedule.earliestPickup)) + '</strong></p>' +
-                        '<p class="quote-service-eta">Giao dự kiến theo lịch chọn: <strong>' + escapeHtml(
+                        '<p class="quote-service-eta">Nếu gửi ngay, dự kiến giao: <strong>' + escapeHtml(
                             formatDateForHumans(schedule.earliestDelivery)) + '</strong></p>' +
                         '<p class="quote-service-eta ' + (isAvailable ? '' : 'is-error') +
-                        '">Trạng thái theo lịch: <strong>' + (isAvailable ? 'Đáp ứng' : 'Không đáp ứng') +
+                        '">Trạng thái theo lịch: <strong>' + (isAvailable ? (desiredPickup ? 'Khả dụng' : 'Khả dụng (Gợi ý)') : 'Quá gấp') +
                         '</strong></p>' +
                         '<details class="order-service-breakdown">' +
                         '<summary>Xem chi tiết phí</summary>' +
@@ -1864,6 +1975,7 @@ $default_route_type = (strpos($selected_service_type, 'intl_') === 0) ? 'interna
                             e.stopPropagation();
                         });
                     });
+                    const scheduleGroup = document.getElementById('schedule-order-group');
                     servicePackages.querySelectorAll('[data-service-type]').forEach(function (card) {
                         card.addEventListener('click', function () {
                             const serviceType = String(card.getAttribute('data-service-type') || '')
@@ -1873,6 +1985,9 @@ $default_route_type = (strpos($selected_service_type, 'intl_') === 0) ? 'interna
                             if (!serviceType) return;
                             if (!scheduleCompatible) return;
                             setSelectedServiceType(serviceType, true);
+                            if (scheduleGroup && scheduleGroup.style.display !== 'none') {
+                                scheduleGroup.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+                            }
                         });
                     });
                 }
@@ -1944,13 +2059,24 @@ $default_route_type = (strpos($selected_service_type, 'intl_') === 0) ? 'interna
 
             function updateScheduleEstimateNote(minPickupDateTime, minDeliveryDateTime, transitHours, routeType) {
                 if (!scheduleEstimateNote) return;
-                const pickupText = formatDateForHumans(minPickupDateTime);
-                const deliveryText = formatDateForHumans(minDeliveryDateTime);
+                
+                const baselinePickupText = formatDateForHumans(minPickupDateTime);
+                const baselineDeliveryText = formatDateForHumans(minDeliveryDateTime);
                 const routeText = routeType === 'international' ? 'quốc tế' : 'trong nước';
-                scheduleEstimateNote.textContent = 'Tuyến ' + routeText + ': lấy sớm nhất ' + pickupText +
-                    ', giao sớm nhất ' + deliveryText + '. Mốc này tính theo gói nhanh nhất (~ ' + formatHoursLabel(
-                        transitHours) +
-                    ') và sẽ dùng để lọc gói đáp ứng lịch bạn chọn.';
+                
+                let note = 'Tuyến ' + routeText + ': Sớm nhất lấy ' + baselinePickupText + ', giao ' + baselineDeliveryText + '.';
+                
+                // If user has selected a date/time, show the specific estimate for that selection
+                if (pickupDateControl.value && pickupSlotControl.value) {
+                    const selectedPickup = buildSlotDateTime(pickupDateControl.value, pickupSlotControl.value);
+                    if (selectedPickup) {
+                        const estDelivery = new Date(selectedPickup.getTime() + transitHours * 60 * 60 * 1000);
+                        note += ' Với lịch bạn chọn, dự kiến giao xong trước ' + formatDateForHumans(estDelivery) + '.';
+                    }
+                }
+
+                note += ' Mốc này tính theo gói nhanh nhất (~ ' + formatHoursLabel(transitHours) + ') và sẽ dùng để lọc gói phù hợp.';
+                scheduleEstimateNote.textContent = note;
             }
 
             function refreshSchedule() {
@@ -2295,6 +2421,7 @@ $default_route_type = (strpos($selected_service_type, 'intl_') === 0) ? 'interna
 
             initGoodsRows();
             initLocationOptions();
+            bindVndCurrencyInput(codInput);
             applyRouteMode(getCurrentRoute());
             refreshSchedule();
             refreshServiceRecommendations();

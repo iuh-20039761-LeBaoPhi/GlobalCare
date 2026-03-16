@@ -22,16 +22,16 @@
 
     <style>
         :root {
-            --p: #0ea5e9;
-            --p2: #06b6d4;
-            --grad: linear-gradient(135deg, #0ea5e9 0%, #06b6d4 100%);
-            --bg: #f0f9ff;
-            --border: #e0f2fe;
-            --text: #0f172a;
+            --p: #3B82F6;
+            --p2: #1E40AF;
+            --grad: linear-gradient(135deg, #3B82F6 0%, #1E40AF 100%);
+            --bg: #EFF6FF;
+            --border: #DBEAFE;
+            --text: #1F2937;
             --muted: #475569;
             --light: #94a3b8;
-            --shadow: 0 2px 10px rgba(14,165,233,.1);
-            --shadow-lg: 0 10px 30px rgba(14,165,233,.18);
+            --shadow: 0 2px 10px rgba(59,130,246,.1);
+            --shadow-lg: 0 10px 30px rgba(59,130,246,.18);
             --r: 14px;
             --tr: all .3s cubic-bezier(.4,0,.2,1);
         }
@@ -148,7 +148,7 @@
         .art-content h3 {
             font-size: 1.05rem;
             font-weight: 700;
-            color: #0284c7;
+            color: #2563EB;
             margin: 22px 0 8px;
         }
         .art-content p { margin-bottom: 14px; }
@@ -350,7 +350,7 @@
                         <i class="fas fa-car-crash"></i>
                         <h4>Bài viết không tồn tại</h4>
                         <p class="text-muted">Bài viết bạn tìm kiếm không tồn tại hoặc đã được xóa.</p>
-                        <a href="blog.html" style="background:linear-gradient(135deg,#0ea5e9,#06b6d4);color:#fff;padding:10px 22px;border-radius:10px;text-decoration:none;font-weight:600;" class="d-inline-block mt-3">
+                        <a href="blog.html" style="background:linear-gradient(135deg,#3B82F6,#1E40AF);color:#fff;padding:10px 22px;border-radius:10px;text-decoration:none;font-weight:600;" class="d-inline-block mt-3">
                             <i class="fas fa-arrow-left me-2"></i>Xem Tất Cả Bài Viết
                         </a>
                     </div>
@@ -403,8 +403,7 @@
 
 <!-- Bootstrap JS -->
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
-<script src="assets/js/blog-data.js"></script>
-<script src="assets/js/load_template.js"></script>
+<script src="assets/js/load-template.js"></script>
 <script>
 // Progress bar
 window.addEventListener('scroll', function() {
@@ -413,9 +412,20 @@ window.addEventListener('scroll', function() {
 });
 
 // Load
-document.addEventListener('DOMContentLoaded', function() {
+document.addEventListener('DOMContentLoaded', async function() {
     const slug = new URLSearchParams(window.location.search).get('slug');
-    if (!slug || !window.BLOG_DATA) { showNotFound(); return; }
+    if (!slug) { showNotFound(); return; }
+
+    try {
+        const res = await fetch('assets/data/blog-data.json', { cache: 'no-store' });
+        if (!res.ok) throw new Error('HTTP ' + res.status);
+        window.BLOG_DATA = await res.json();
+    } catch (e) {
+        console.error('Không tải được dữ liệu bài viết:', e);
+        showNotFound();
+        return;
+    }
+
     const art = window.BLOG_DATA.find(a => a.slug === slug);
     if (!art) { showNotFound(); return; }
     loadArticle(art);

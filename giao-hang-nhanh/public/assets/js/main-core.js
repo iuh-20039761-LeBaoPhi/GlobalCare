@@ -51,6 +51,61 @@
     return `${apiBasePath}${path}`;
   }
 
+  function showToast(message, type = "info") {
+    let container = document.getElementById("ghn-toast-container");
+    if (!container) {
+      container = document.createElement("div");
+      container.id = "ghn-toast-container";
+      container.style.cssText =
+        "position:fixed; top:20px; right:20px; z-index:9999; display:flex; flex-direction:column; gap:10px;";
+      document.body.appendChild(container);
+    }
+
+    const toast = document.createElement("div");
+    const colors = {
+      success: { bg: "#d4edda", border: "#c3e6cb", color: "#155724" },
+      error: { bg: "#f8d7da", border: "#f5c6cb", color: "#721c24" },
+      info: { bg: "#d1ecf1", border: "#bee5eb", color: "#0c5460" },
+      warning: { bg: "#fff3cd", border: "#ffeeba", color: "#856404" },
+    };
+    const style = colors[type] || colors.info;
+
+    toast.style.cssText = `
+      background: ${style.bg};
+      color: ${style.color};
+      border: 1px solid ${style.border};
+      padding: 12px 20px;
+      border-radius: 8px;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+      min-width: 250px;
+      max-width: 400px;
+      animation: ghnFadeIn 0.3s ease-out;
+      font-weight: 500;
+      font-family: inherit;
+    `;
+    toast.innerHTML = message;
+
+    if (!document.getElementById("ghn-toast-style")) {
+      const styleTag = document.createElement("style");
+      styleTag.id = "ghn-toast-style";
+      styleTag.innerHTML = `
+        @keyframes ghnFadeIn { from { opacity:0; transform: translateX(20px); } to { opacity:1; transform: translateX(0); } }
+        @keyframes ghnFadeOut { from { opacity:1; transform: translateX(0); } to { opacity:0; transform: translateX(20px); } }
+      `;
+      document.head.appendChild(styleTag);
+    }
+
+    container.appendChild(toast);
+
+    setTimeout(() => {
+      toast.style.animation = "ghnFadeOut 0.3s ease-in forwards";
+      setTimeout(() => {
+        toast.remove();
+        if (container.children.length === 0) container.remove();
+      }, 300);
+    }, 4000);
+  }
+
   function checkDistrict(address, group) {
     if (!address) return false;
     return group.some((d) => address.toLowerCase().includes(d.toLowerCase()));
@@ -318,9 +373,10 @@
         serviceName = "Chuyển phát nhanh quốc tế";
     }
 
-    if (isContactPrice) {
-      return { isContactPrice: true, serviceName };
-    }
+    // Bỏ qua việc trả về "Liên hệ" sớm nếu base_price = 0, để logic quote từ JSON (calculateDomesticQuote) có cơ hội chạy.
+    // if (isContactPrice) {
+    //   return { isContactPrice: true, serviceName };
+    // }
 
     const quoteMatch = getServiceQuoteFromDomesticCalculator(
       normalizedServiceType,
@@ -442,7 +498,7 @@
       total,
       vehicle,
       serviceName,
-      isContactPrice: false,
+      isContactPrice: isContactPrice && total === 0,
       pricingSource: "legacy",
       quantity,
     };
@@ -477,9 +533,11 @@
     }
     const weightInput = document.getElementById("weight");
     const codInput = document.getElementById("cod_amount");
-    const weight = weightInput ? weightInput.value || 0 : 0;
-    const codAmount = codInput ? codInput.value || 0 : 0;
-    const deliveryForm = document.getElementById("create-order-form");
+      const weight = weightInput ? weightInput.value || 0 : 0;
+      const codRaw = codInput ? codInput.value || "" : "";
+      // Sử dụngRegex để lấy chỉ số, hỗ trợ format VND (200.000 -> 200000)
+      const codAmount = parseInt(String(codRaw).replace(/[^\d]/g, "")) || 0;
+      const deliveryForm = document.getElementById("create-order-form");
     const quantity =
       deliveryForm?.querySelector("[name='quantity']")?.value || "1";
     const length =
@@ -536,6 +594,19 @@
         },
       );
 
+      // Nếu đã có gói được chọn (Card), lấy giá trực tiếp từ Card để đảm bảo đồng nhất
+      const selectedCard = document.querySelector('.order-service-package.is-selected');
+      if (selectedCard) {
+        const cardTotalText = selectedCard.querySelector('.quote-service-total strong')?.innerText || '';
+        const cardTotal = parseInt(cardTotalText.replace(/[^0-9]/g, '')) || 0;
+        if (cardTotal > 0) {
+            pricePreview.style.display = "block";
+            feeDisplay.innerText = cardTotal.toLocaleString("vi-VN") + "đ";
+            feeInput.value = cardTotal;
+            return;
+        }
+      }
+
       if (feeDetails.isContactPrice) {
         pricePreview.style.display = "block";
         feeDisplay.innerText = "Liên hệ";
@@ -544,7 +615,7 @@
       }
 
       pricePreview.style.display = "block";
-      feeDisplay.innerText = feeDetails.total.toLocaleString();
+      feeDisplay.innerText = feeDetails.total.toLocaleString("vi-VN") + "đ";
       feeInput.value = feeDetails.total;
     } else {
       pricePreview.style.display = "none";
@@ -615,6 +686,7 @@
     showFieldError,
     clearFieldError,
     escapeHtml,
+    showToast,
     getShippingFeeDetails,
     calculateOrderShipping,
     bindOrderShippingInputs,

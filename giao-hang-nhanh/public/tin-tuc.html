@@ -80,15 +80,19 @@
 
     <div id="site-footer"></div>
     <script src="assets/js/shared-layout.js"></script>
-    <script src="assets/js/data/news-data.js"></script>
     <script>
-      document.addEventListener("DOMContentLoaded", function() {
+      document.addEventListener("DOMContentLoaded", function () {
         const newsGrid = document.querySelector(".news-grid");
-        if (!newsGrid || !window.newsData) return;
+        if (!newsGrid) return;
 
-        const articlesHtml = window.newsData.map(article => `
+        fetch("assets/js/data/news-data.json")
+          .then((res) => res.json())
+          .then((newsData) => {
+            const articlesHtml = newsData
+              .map(
+                (article) => `
           <article class="news-card">
-            <img src="${article.image}" alt="${article.title}" class="news-img" />
+            <img src="${article.img}" alt="${article.title}" class="news-img" />
             <div class="news-content">
               <span class="news-date">${article.date}</span>
               <h3 class="news-title">${article.title}</h3>
@@ -98,9 +102,13 @@
               <a href="bai-viet-chi-tiet.html?id=${article.id}" class="news-link">Xem chi tiết →</a>
             </div>
           </article>
-        `).join('');
+        `,
+              )
+              .join("");
 
-        newsGrid.innerHTML = articlesHtml;
+            newsGrid.innerHTML = articlesHtml;
+          })
+          .catch((err) => console.error("Không thể tải tin tức:", err));
       });
     </script>
   </body>
