@@ -32,7 +32,6 @@
 .history-table {
   width: 100%;
   border-collapse: collapse;
-  min-width: 800px;
 }
 
 .history-table th {

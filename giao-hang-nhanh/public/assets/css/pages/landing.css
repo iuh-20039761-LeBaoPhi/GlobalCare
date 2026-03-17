@@ -21,6 +21,9 @@
 .hero-content h1 {
   font-size: 42px;
   margin-bottom: 20px;
+  font-weight: 700; /* vừa đủ đậm, không bị thô */
+  letter-spacing: 0.5px; /* giãn chữ nhẹ */
+  line-height: 1.2; /* thoáng hơn */
 }
 
 .hero-content p {

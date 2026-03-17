@@ -7,19 +7,24 @@
 
   const hamburgerBtn = document.getElementById("hamburger-btn");
   const navMenu = document.getElementById("nav-menu");
+
   const closeAllDropdowns = () => {
-    document.querySelectorAll(".dropdown").forEach((dropdown) => {
-      dropdown.classList.remove("open");
-      const trigger = dropdown.querySelector(":scope > a");
-      if (trigger) trigger.setAttribute("aria-expanded", "false");
+    // Legacy support & Submenus
+    document.querySelectorAll(".has-submenu").forEach((item) => {
+      item.classList.remove("open");
+    });
+    
+    // Header actions
+    document.querySelectorAll(".profile-dropdown-wrapper, .notification-wrapper").forEach((item) => {
+        item.classList.remove("open");
     });
 
-    document.querySelectorAll(".dropdown-menu").forEach((menu) => {
-      menu.classList.remove("active");
-      menu.style.display = "";
+    document.querySelectorAll(".header-dropdown, .profile-menu").forEach((menu) => {
+        menu.classList.remove("open");
     });
   };
 
+  // Hamburger Toggle
   if (hamburgerBtn && navMenu) {
     hamburgerBtn.addEventListener("click", function (e) {
       e.stopPropagation();
@@ -28,142 +33,86 @@
     });
   }
 
-  document
-    .querySelectorAll(".submenu-toggle, .has-submenu > a")
-    .forEach((toggle) => {
-      toggle.addEventListener("click", function (e) {
+  // Submenu Toggle (Mobile & Desktop Click)
+  document.querySelectorAll(".submenu-toggle, .has-submenu > a").forEach((toggle) => {
+    toggle.addEventListener("click", function (e) {
+      const isMobile = window.innerWidth <= 1024;
+      const parentLi = this.closest(".has-submenu");
+      if (!parentLi) return;
+
+      // Trên mobile hoặc nếu thẻ a có href='#' thì ngăn chặn chuyển trang
+      if (isMobile || this.getAttribute('href') === '#') {
         e.preventDefault();
         e.stopPropagation();
 
-        const parentLi = this.closest(".has-submenu");
-        if (!parentLi) return;
+        const isOpen = parentLi.classList.contains("open");
+        
+        // Close other submenus/dropdowns
+        if (!isOpen) closeAllDropdowns();
 
-        const wasOpen = parentLi.classList.contains("open");
-        document.querySelectorAll(".has-submenu").forEach((item) => {
-          if (item !== parentLi) {
-            item.classList.remove("open");
-          }
-        });
-
-        if (wasOpen) {
-          parentLi.classList.remove("open");
-        } else {
-          parentLi.classList.add("open");
-        }
-      });
-    });
-
-  document.querySelectorAll(".dropdown > a").forEach((link) => {
-    link.addEventListener("click", function (e) {
-      e.preventDefault();
-      e.stopPropagation();
-
-      const parent = this.closest(".dropdown");
-      const dropdownMenu = this.nextElementSibling;
-      if (!parent || !dropdownMenu) return;
-
-      const isOpen = parent.classList.contains("open");
-      closeAllDropdowns();
-
-      if (!isOpen) {
-        parent.classList.add("open");
-        this.setAttribute("aria-expanded", "true");
-        dropdownMenu.classList.add("active");
+        parentLi.classList.toggle("open");
       }
     });
   });
 
-  document
-    .querySelectorAll(".nav-menu > li > a:not(.submenu-toggle)")
-    .forEach((link) => {
-      link.addEventListener("click", function () {
-        if (
-          window.innerWidth <= 768 &&
-          !this.parentElement.classList.contains("dropdown")
-        ) {
-          if (hamburgerBtn) hamburgerBtn.classList.remove("active");
-          if (navMenu) navMenu.classList.remove("active");
-
-          document.querySelectorAll(".dropdown-menu").forEach((menu) => {
-            menu.classList.remove("active");
-            menu.style.display = "none";
-          });
-        }
-      });
-    });
-
-  document.querySelectorAll(".dropdown-menu a").forEach((link) => {
-    link.addEventListener("click", function () {
-      if (window.innerWidth <= 768) {
-        if (hamburgerBtn) hamburgerBtn.classList.remove("active");
-        if (navMenu) navMenu.classList.remove("active");
-
+  // Profile Dropdown
+  const profileToggle = document.getElementById("profile-toggle");
+  const profileWrapper = document.querySelector(".profile-dropdown-wrapper");
+  const profileMenu = document.querySelector(".profile-menu");
+  
+  if (profileToggle && profileMenu && profileWrapper) {
+    profileToggle.addEventListener("click", function(e) {
+        e.preventDefault();
+        e.stopPropagation();
+        const isOpen = profileWrapper.classList.contains("open");
         closeAllDropdowns();
-      }
+        if (!isOpen) {
+            profileWrapper.classList.add("open");
+            profileMenu.classList.add("open");
+        }
     });
-  });
+  }
 
-  document.querySelectorAll(".submenu a").forEach((link) => {
-    link.addEventListener("click", function () {
-      if (window.innerWidth <= 768) {
-        if (hamburgerBtn) hamburgerBtn.classList.remove("active");
-        if (navMenu) navMenu.classList.remove("active");
-
-        document.querySelectorAll(".has-submenu").forEach((item) => {
-          item.classList.remove("open");
-        });
-      }
+  // Admin Notification Bell
+  const adminNotifyBell = document.getElementById("admin-notification-bell");
+  const adminNotifyWrapper = document.querySelector(".notification-wrapper");
+  const adminNotifyDropdown = document.getElementById("admin-notification-dropdown");
+  
+  if (adminNotifyBell && adminNotifyDropdown && adminNotifyWrapper) {
+    adminNotifyBell.addEventListener("click", function(e) {
+        e.preventDefault();
+        e.stopPropagation();
+        const isOpen = adminNotifyWrapper.classList.contains("open");
+        closeAllDropdowns();
+        
+        if (!isOpen) {
+            adminNotifyWrapper.classList.add("open");
+            adminNotifyDropdown.classList.add("open");
+            
+            const dropdownBody = adminNotifyDropdown.querySelector(".dropdown-body");
+            if (dropdownBody && dropdownBody.querySelector(".empty-state")) {
+                 fetch(core.toApiUrl("get_notifications_ajax.php"))
+                  .then((res) => res.text())
+                  .then((html) => {
+                    if (html.trim()) dropdownBody.innerHTML = html;
+                  })
+                  .catch(() => {});
+            }
+        }
     });
-  });
+  }
 
+  // Global click to close
   document.addEventListener("click", function (e) {
-    const isInsideMenu = navMenu && navMenu.contains(e.target);
-    const isInsideHamburger = hamburgerBtn && hamburgerBtn.contains(e.target);
-
-    if (!isInsideMenu && !isInsideHamburger) {
-      if (hamburgerBtn) hamburgerBtn.classList.remove("active");
-      if (navMenu) navMenu.classList.remove("active");
-
-      document.querySelectorAll(".has-submenu").forEach((item) => {
-        item.classList.remove("open");
-      });
-      closeAllDropdowns();
+    if (!e.target.closest(".has-submenu") && !e.target.closest(".profile-dropdown-wrapper") && !e.target.closest(".notification-wrapper")) {
+        closeAllDropdowns();
+    }
+    
+    // Close mobile menu if clicked outside
+    if (navMenu && !navMenu.contains(e.target) && !hamburgerBtn.contains(e.target)) {
+        hamburgerBtn.classList.remove("active");
+        navMenu.classList.remove("active");
     }
   });
 
-  const notificationBell = document.getElementById("notification-bell");
-  const notificationDropdown = document.getElementById("notification-dropdown");
-  const notificationList = document.getElementById("notification-list");
-
-  if (notificationBell && notificationDropdown && notificationList) {
-    notificationBell.addEventListener("click", function (e) {
-      e.preventDefault();
-      e.stopPropagation();
-
-      if (notificationDropdown.style.display === "block") {
-        notificationDropdown.style.display = "none";
-      } else {
-        notificationDropdown.style.display = "block";
-
-        fetch(core.toApiUrl("get_notifications_ajax.php"))
-          .then((res) => res.text())
-          .then((html) => {
-            notificationList.innerHTML = html;
-          })
-          .catch(() => {
-            notificationList.innerHTML =
-              '<div class="notification-item" style="text-align: center; color: #999; padding: 20px;">Không thể tải thông báo</div>';
-          });
-      }
-    });
-
-    document.addEventListener("click", function (e) {
-      if (
-        !notificationBell.contains(e.target) &&
-        !notificationDropdown.contains(e.target)
-      ) {
-        notificationDropdown.style.display = "none";
-      }
-    });
-  }
 })(window, document);

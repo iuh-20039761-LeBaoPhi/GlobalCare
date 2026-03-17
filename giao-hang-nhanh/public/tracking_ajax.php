@@ -81,10 +81,10 @@ try {
 
     // Lấy log trạng thái, nếu lỗi thì bỏ qua để vẫn trả được kết quả tra cứu.
     $log_stmt = $conn->prepare(
-        "SELECT new_status, changed_at
+        "SELECT new_status, created_at
          FROM order_logs
          WHERE order_id = ?
-         ORDER BY changed_at ASC"
+         ORDER BY created_at ASC"
     );
     if ($log_stmt) {
         $orderId = (int) $order['id'];
@@ -99,7 +99,7 @@ try {
 
                 $timeline[] = [
                     'text' => 'Trạng thái: ' . $s_info['text'],
-                    'time' => date('H:i d/m/Y', strtotime((string) $log['changed_at'])),
+                    'time' => date('H:i d/m/Y', strtotime((string) $log['created_at'])),
                     'icon' => $s_info['icon'],
                 ];
             }

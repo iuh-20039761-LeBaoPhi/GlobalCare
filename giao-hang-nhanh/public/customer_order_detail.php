@@ -22,8 +22,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['submit_rating'])) {
     $msg = "Cảm ơn bạn đã đánh giá!";
 }
 
-// Lấy thông tin đơn hàng (Chỉ lấy nếu đúng user_id)
-$stmt = $conn->prepare("SELECT * FROM orders WHERE id = ? AND user_id = ?");
+// Lấy thông tin đơn hàng (JOIN lấy thông tin Shipper)
+$stmt = $conn->prepare("SELECT o.*, u.fullname as shipper_name, u.phone as shipper_phone 
+                        FROM orders o 
+                        LEFT JOIN users u ON o.shipper_id = u.id 
+                        WHERE o.id = ? AND o.user_id = ?");
 $stmt->bind_param("ii", $id, $user_id);
 $stmt->execute();
 $order = $stmt->get_result()->fetch_assoc();
@@ -34,10 +37,14 @@ if (!$order) {
 
 // Lấy lịch sử trạng thái
 $logs = [];
-$log_res = $conn->query("SELECT old_status, new_status, changed_at FROM order_logs WHERE order_id = $id ORDER BY changed_at ASC");
+$stmt_log = $conn->prepare("SELECT old_status, new_status, created_at FROM order_logs WHERE order_id = ? ORDER BY created_at ASC");
+$stmt_log->bind_param("i", $id);
+$stmt_log->execute();
+$log_res = $stmt_log->get_result();
 if ($log_res)
     while ($r = $log_res->fetch_assoc())
         $logs[] = $r;
+$stmt_log->close();
 
 $pkg_map = ['document' => 'Tài liệu', 'food' => 'Đồ ăn', 'clothes' => 'Quần áo', 'electronic' => 'Điện tử', 'other' => 'Khác'];
 $svc_map = [
@@ -89,7 +96,7 @@ $status_map = [
                 <?php echo $msg; ?>
             </div><?php endif; ?>
 
-        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 20px;">
+        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 20px; margin-bottom: 20px;">
             <!-- Cột 1: Thông tin vận chuyển -->
             <div class="detail-box">
                 <h3 style="color:#0a2a66; border-bottom:2px solid #ff7a00; padding-bottom:10px; margin-bottom:15px;">
@@ -99,47 +106,278 @@ $status_map = [
                 </div>
                 <div class="info-row"><span class="info-label">Địa chỉ lấy:</span> <span
                         class="info-val"><?php echo htmlspecialchars($order['pickup_address']); ?></span></div>
+                <?php if ($order['client_order_code']): ?>
+                <div class="info-row"><span class="info-label">Mã đơn khách:</span> <span
+                        class="info-val" style="font-family:monospace; color:#0a2a66; font-weight:700;"><?php echo htmlspecialchars($order['client_order_code']); ?></span></div>
+                <?php endif; ?>
+                <?php if ($order['pickup_time']): ?>
+                <div class="info-row"><span class="info-label">Hẹn lấy hàng:</span> <span
+                        class="info-val" style="color:#d97706; font-weight:600;"><i class="fa-regular fa-calendar-check"></i> <?php echo date('d/m/Y', strtotime($order['pickup_time'])); ?></span></div>
+                <?php endif; ?>
+
                 <div class="info-row"><span class="info-label">Người nhận:</span> <span
                         class="info-val"><?php echo htmlspecialchars($order['receiver_name']); ?><br><small><?php echo $order['receiver_phone']; ?></small></span>
                 </div>
                 <div class="info-row"><span class="info-label">Địa chỉ giao:</span> <span
-                        class="info-val"><?php echo htmlspecialchars($order['delivery_address']); ?></span></div>
+                        class="info-val">
+                        <?php echo htmlspecialchars($order['delivery_address']); ?>
+                        <?php if (!empty($order['intl_province']) || !empty($order['intl_country'])): ?>
+                            <br><strong><?php echo htmlspecialchars($order['intl_province']); ?>, <?php echo htmlspecialchars($order['intl_country']); ?></strong>
+                        <?php endif; ?>
+                        <?php if (!empty($order['intl_postal_code'])): ?>
+                            <br>Postal Code: <?php echo htmlspecialchars($order['intl_postal_code']); ?>
+                        <?php endif; ?>
+                    </span></div>
+
+                <!-- Thẻ Thông tin Shipper (Nếu đã có tài xế) -->
+                <?php if ($order['shipper_id']): ?>
+                <div class="shipper-info-card" style="margin-top:20px; padding:15px; background:#fff8f1; border:1px solid #ffd8a8; border-radius:8px; display:flex; align-items:center; gap:15px; flex-wrap: wrap;">
+                    <div style="width:50px; height:50px; background:#ff7a00; color:white; border-radius:50%; display:flex; justify-content:center; align-items:center; font-size:20px; flex-shrink: 0;">
+                        <i class="fa-solid fa-user-ninja"></i>
+                    </div>
+                    <div style="flex: 1; min-width: 200px;">
+                        <div style="font-size:12px; color:#c67605; text-transform:uppercase; font-weight:700;">Tài xế phụ trách</div>
+                        <div style="font-weight:700; color:#0a2a66; font-size:16px;"><?php echo htmlspecialchars($order['shipper_name']); ?></div>
+                        <a href="tel:<?php echo $order['shipper_phone']; ?>" style="color:#ff7a00; text-decoration:none; font-size:14px; font-weight:600;">
+                            <i class="fa-solid fa-phone"></i> <?php echo $order['shipper_phone']; ?>
+                        </a>
+                    </div>
+                </div>
+                <?php endif; ?>
             </div>
 
             <!-- Cột 2: Chi tiết & Thanh toán -->
             <div class="detail-box">
-                <h3 style="color:#0a2a66; border-bottom:2px solid #ff7a00; padding-bottom:10px; margin-bottom:15px;">Chi
-                    tiết & Thanh toán</h3>
-                <div class="info-row"><span class="info-label">Dịch vụ:</span> <span
-                        class="info-val"><?php echo $svc_map[$order['service_type']] ?? $order['service_type']; ?></span>
+                <h3 style="color:#0a2a66; border-bottom:2px solid #ff7a00; padding-bottom:10px; margin-bottom:15px;">Thanh toán & Chi phí</h3>
+                
+                <!-- Bóc tách Phí Dịch vụ -->
+                <div style="background: #f8f9fa; padding: 12px; border-radius: 8px; margin-bottom: 15px; border-left: 4px solid #0a2a66;">
+                    <div style="font-size: 12px; color: #64748b; text-transform: uppercase; font-weight: 700; margin-bottom: 8px;">Cước phí dịch vụ</div>
+                    
+                    <div class="info-row" style="margin-bottom: 5px;">
+                        <span class="info-label">Phí vận chuyển (<?php echo $svc_map[$order['service_type']] ?? $order['service_type']; ?>):</span> 
+                        <span class="info-val" style="font-weight:700;"><?php echo number_format($order['shipping_fee']); ?>đ</span>
+                    </div>
+
+                    <?php 
+                    $insurance_fee = 0;
+                    if (preg_match('/💎 Bảo hiểm hàng hóa: ([\d\.,]+)/', $order['note'], $matches)) {
+                        $insurance_fee = (float)str_replace(['.', ','], '', $matches[1]);
+                    ?>
+                    <div class="info-row" style="margin-bottom: 5px; color: #d97706;">
+                        <span class="info-label"><i class="fa-solid fa-shield-halved"></i> Phí bảo hiểm:</span> 
+                        <span class="info-val" style="font-weight:700;"><?php echo number_format($insurance_fee); ?>đ</span>
+                    </div>
+                    <?php } ?>
+
+                    <div class="info-row" style="margin-top: 8px; border-top: 1px dashed #ced4da; padding-top: 8px;">
+                        <span class="info-label" style="font-weight: 700;">Người trả cước:</span> 
+                        <span class="info-val" style="font-weight:700; color: #0a2a66;">
+                            <?php 
+                            if (preg_match('/Người trả cước: (.*)/', $order['note'], $matches)) {
+                                echo $matches[1];
+                            } else {
+                                echo 'Người gửi (Mặc định)';
+                            }
+                            ?>
+                        </span>
+                    </div>
                 </div>
-                <div class="info-row"><span class="info-label">Loại hàng:</span> <span
-                        class="info-val"><?php echo $pkg_map[$order['package_type']] ?? $order['package_type']; ?>
-                        (<?php echo $order['weight']; ?>kg)</span></div>
-                <div class="info-row"><span class="info-label">Phương thức:</span> <span class="info-val"><?php echo $order['payment_method'] === 'bank_transfer' ? 'Chuyển khoản' : 'COD'; ?></span></div>
-                <div class="info-row"><span class="info-label">Phí vận chuyển:</span> <span class="info-val"
-                        style="color:#d9534f"><?php echo number_format($order['shipping_fee']); ?>đ</span></div>
-                <div class="info-row"><span class="info-label">Thu hộ (COD):</span> <span
-                        class="info-val"><?php echo number_format($order['cod_amount']); ?>đ</span></div>
-                <div class="info-row">
-                    <span class="info-label">Tổng thanh toán:</span> 
-                    <span class="info-val" style="font-size:18px; color:#0a2a66"><?php echo number_format($order['shipping_fee'] + $order['cod_amount']); ?>đ</span>
-                    <?php if ($order['payment_method'] === 'bank_transfer'): ?>
-                        <?php if ($order['payment_status'] === 'paid'): ?>
-                            <span style="display:inline-block; margin-left:10px; padding:4px 12px; background:#28a745; color:white; border-radius:12px; font-size:12px; font-weight:600;">✓ Đã thanh toán</span>
-                        <?php else: ?>
-                            <span style="display:inline-block; margin-left:10px; padding:4px 12px; background:#dc3545; color:white; border-radius:12px; font-size:12px; font-weight:600;">⚠ Chưa thanh toán</span>
+
+                <!-- Bóc tách Tiền hàng (COD) -->
+                <div style="background: #fff8f1; padding: 12px; border-radius: 8px; margin-bottom: 15px; border-left: 4px solid #ff7a00;">
+                    <div style="font-size: 12px; color: #c67605; text-transform: uppercase; font-weight: 700; margin-bottom: 8px;">Tiền thu hộ (COD)</div>
+                    <div class="info-row">
+                        <span class="info-label">Tổng tiền hàng:</span> 
+                        <span class="info-val" style="font-weight:800; color:#d9534f; font-size: 18px;"><?php echo number_format($order['cod_amount']); ?>đ</span>
+                    </div>
+                    <div style="font-size: 11px; color: #a16207; font-style: italic; margin-top: 4px;">* Số tiền Shipper sẽ thu của người nhận hàng.</div>
+                </div>
+
+                <div class="info-row" style="background:rgba(10,42,102,0.1); padding:15px; border-radius:8px; display: flex; justify-content: space-between; align-items: center;">
+                    <div>
+                        <span class="info-label" style="font-weight:800; display: block; font-size: 12px; color: #475569;">TỔNG GIÁ TRỊ ĐƠN HÀNG:</span>
+                        <span class="info-val" style="font-size:24px; font-weight:800; color:#0a2a66"><?php echo number_format($order['shipping_fee'] + $insurance_fee + $order['cod_amount']); ?>đ</span>
+                    </div>
+                    <div style="text-align: right;">
+                        <div class="info-val" style="font-size: 13px; font-weight: 600; color: #475569;"><?php echo $order['payment_method'] === 'bank_transfer' ? 'Thanh toán: Chuyển khoản' : 'Thanh toán: Tiền mặt'; ?></div>
+                        <?php if ($order['payment_method'] === 'bank_transfer'): ?>
+                            <?php if ($order['payment_status'] === 'paid'): ?>
+                                <span style="display:inline-block; padding:4px 12px; background:#28a745; color:white; border-radius:12px; font-size:12px; font-weight:600;">✓ Đã thanh toán</span>
+                            <?php else: ?>
+                                <span style="display:inline-block; padding:4px 12px; background:#dc3545; color:white; border-radius:12px; font-size:12px; font-weight:600;">⚠ Chưa thanh toán</span>
+                            <?php endif; ?>
                         <?php endif; ?>
-                    <?php endif; ?>
+                    </div>
                 </div>
+
                 <?php if ($order['payment_method'] === 'bank_transfer' && $order['payment_status'] === 'unpaid' && $order['status'] !== 'cancelled'): ?>
-                    <div style="margin-top:15px; padding-top:15px; border-top:1px solid #eee;">
-                        <button onclick="openPaymentModal('<?php echo $order['order_code']; ?>', <?php echo $order['shipping_fee']; ?>)" 
-                            class="btn-primary" style="width:100%; padding:12px; font-size:16px;">💳 Thanh toán ngay</button>
+                    <div style="margin-top:15px;">
+                        <button onclick="openPaymentModal('<?php echo $order['order_code']; ?>', <?php echo $order['shipping_fee'] + $insurance_fee; ?>)" 
+                            class="btn-primary" style="width:100%; padding:14px; font-size:16px; font-weight:bold; letter-spacing:0.5px; box-shadow: 0 4px 10px rgba(255,122,0,0.3);">💳 Thanh toán cước phí ngay</button>
                     </div>
                 <?php endif; ?>
             </div>
         </div>
+
+        <?php if ($order['is_corporate']): ?>
+        <div class="detail-box" style="margin-bottom: 25px; border-left: 5px solid #28a745; background: #f0fff4;">
+            <h3 style="color:#28a745; border-bottom:2px solid #28a745; padding-bottom:10px; margin-bottom:15px; font-weight: 800;">
+                <i class="fa-solid fa-file-invoice-dollar"></i> THÔNG TIN HÓA ĐƠN CÔNG TY</h3>
+            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 20px;">
+                <div>
+                    <div class="info-row"><span class="info-label" style="text-transform:uppercase; font-size:12px; color:#155724;">Tên công ty:</span> <span class="info-val" style="font-weight:700; color:#0a2a66;"><?php echo htmlspecialchars($order['company_name']); ?></span></div>
+                    <div class="info-row"><span class="info-label" style="text-transform:uppercase; font-size:12px; color:#155724;">Mã số thuế:</span> <span class="info-val" style="font-weight:700; color:#0a2a66;"><?php echo htmlspecialchars($order['company_tax_code']); ?></span></div>
+                </div>
+                <div>
+                    <div class="info-row"><span class="info-label" style="text-transform:uppercase; font-size:12px; color:#155724;">Email nhận HĐ:</span> <span class="info-val" style="font-weight:600;"><?php echo htmlspecialchars($order['company_email']); ?></span></div>
+                    <div class="info-row"><span class="info-label" style="text-transform:uppercase; font-size:12px; color:#155724;">Địa chỉ:</span> <span class="info-val" style="font-size:13px;"><?php echo htmlspecialchars($order['company_address']); ?></span></div>
+                </div>
+            </div>
+            <?php if (!empty($order['company_bank_info'])): ?>
+                <div class="info-row" style="margin-top: 15px; border-top: 1px dashed #c3e6cb; padding-top:10px;">
+                    <span class="info-label" style="text-transform:uppercase; font-size:12px; color:#155724;">Tài khoản ngân hàng:</span> 
+                    <span class="info-val" style="font-family:monospace;"><?php echo nl2br(htmlspecialchars($order['company_bank_info'])); ?></span>
+                </div>
+            <?php endif; ?>
+        </div>
+        <?php endif; ?>
+
+        <?php if (strpos($order['service_type'], 'intl_') === 0): ?>
+        <div class="detail-box" style="margin-bottom: 25px; border-left: 5px solid #3b82f6; background: #eff6ff;">
+            <h3 style="color:#3b82f6; border-bottom:2px solid #3b82f6; padding-bottom:10px; margin-bottom:15px; font-weight: 800;">
+                <i class="fa-solid fa-earth-americas"></i> THÔNG TIN VẬN CHUYỂN QUỐC TẾ</h3>
+            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 20px;">
+                <div>
+                    <div class="info-row"><span class="info-label" style="text-transform:uppercase; font-size:12px; color:#1e40af;">Số CCCD/HC Người nhận:</span> <span class="info-val" style="font-weight:700; color:#0a2a66;"><?php echo htmlspecialchars($order['receiver_id_number'] ?: 'Chưa cung cấp'); ?></span></div>
+                    <div class="info-row"><span class="info-label" style="text-transform:uppercase; font-size:12px; color:#1e40af;">Mã bưu chính (Postal Code):</span> <span class="info-val" style="font-weight:700; color:#0a2a66;"><?php echo htmlspecialchars($order['intl_postal_code'] ?: 'N/A'); ?></span></div>
+                </div>
+                <div>
+                    <div class="info-row"><span class="info-label" style="text-transform:uppercase; font-size:12px; color:#1e40af;">Mục đích gửi hàng:</span> <span class="info-val" style="font-weight:600; text-transform:capitalize;"><?php echo htmlspecialchars($order['intl_purpose'] ?? 'N/A'); ?></span></div>
+                    <div class="info-row"><span class="info-label" style="text-transform:uppercase; font-size:12px; color:#1e40af;">Mã HS Code:</span> <span class="info-val" style="font-weight:600;"><?php echo htmlspecialchars($order['intl_hs_code'] ?? 'N/A'); ?></span></div>
+                </div>
+            </div>
+        </div>
+        <?php endif; ?>
+
+        <!-- Lý do hủy (Nếu đơn đã hủy) -->
+        <?php if ($order['status'] === 'cancelled' && !empty($order['cancel_reason'])): ?>
+        <div class="detail-box" style="margin-bottom: 25px; border-left: 5px solid #d9534f; background: #fff5f5;">
+            <h3 style="color:#d9534f; border-bottom:2px solid #d9534f; padding-bottom:10px; margin-bottom:15px; font-weight: 800;">
+                <i class="fa-solid fa-circle-xmark"></i> THÔNG TIN HỦY ĐƠN</h3>
+            <div class="info-row"><span class="info-label" style="color:#d9534f; font-weight:700;">Lý do hủy:</span> <span class="info-val" style="color:#d9534f; font-weight:600;"><?php echo htmlspecialchars($order['cancel_reason']); ?></span></div>
+        </div>
+        <?php endif; ?>
+
+        <!-- Ghi chú & Chi tiết hàng hóa -->
+        <div class="detail-box" style="margin-bottom: 25px;">
+            <h3 style="color:#0a2a66; border-bottom:2px solid #ff7a00; padding-bottom:10px; margin-bottom:15px; font-weight: 800;">DANH SÁCH MÓN HÀNG CHI TIẾT</h3>
+            <div class="table-responsive" style="margin-bottom: 20px;">
+                <table class="order-table" style="width: 100%; border-collapse: collapse; font-size: 14px;">
+                    <thead>
+                        <tr style="background: #f1f5f9; text-align: left;">
+                            <th style="padding: 12px; border: 1px solid #e2e8f0; font-weight: 800;">Tên món hàng</th>
+                            <th style="padding: 12px; border: 1px solid #e2e8f0; text-align: center; font-weight: 800;">SL</th>
+                            <th style="padding: 12px; border: 1px solid #e2e8f0; text-align: center; font-weight: 800;">Khối lượng</th>
+                            <th style="padding: 12px; border: 1px solid #e2e8f0; text-align: center; font-weight: 800;">Kích thước (DxRxC)</th>
+                            <th style="padding: 12px; border: 1px solid #e2e8f0; text-align: right; font-weight: 800;">Khai giá</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <?php 
+                        $stmt_items = $conn->prepare("SELECT * FROM order_items WHERE order_id = ?");
+                        $stmt_items->bind_param("i", $order['id']);
+                        $stmt_items->execute();
+                        $items_res = $stmt_items->get_result();
+                        if ($items_res && $items_res->num_rows > 0):
+                            while ($item = $items_res->fetch_assoc()):
+                        ?>
+                            <tr>
+                                <td style="padding: 12px; border: 1px solid #e2e8f0;"><?php echo htmlspecialchars($item['item_name']); ?></td>
+                                <td style="padding: 12px; border: 1px solid #e2e8f0; text-align: center;"><?php echo $item['quantity']; ?></td>
+                                <td style="padding: 12px; border: 1px solid #e2e8f0; text-align: center;"><?php echo $item['weight']; ?> kg</td>
+                                <td style="padding: 12px; border: 1px solid #e2e8f0; text-align: center;">
+                                    <?php echo ($item['length'] > 0 || $item['width'] > 0 || $item['height'] > 0) ? "{$item['length']}x{$item['width']}x{$item['height']} cm" : 'N/A'; ?>
+                                </td>
+                                <td style="padding: 12px; border: 1px solid #e2e8f0; text-align: right;"><?php echo number_format($item['declared_value']); ?>đ</td>
+                            </tr>
+                        <?php 
+                            endwhile;
+                        else:
+                            // Fallback cho đơn hàng cũ hoặc dùng Regex nếu cần (tạm thời chỉ báo trống nếu không có trong order_items)
+                            echo '<tr><td colspan="5" style="padding: 20px; text-align: center; color: #64748b;">Dữ liệu món hàng chi tiết chưa được chuyển đổi hoặc không có.</td></tr>';
+                        endif;
+                        ?>
+                    </tbody>
+                </table>
+            </div>
+
+            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 20px;">
+                <!-- Ghi chú của khách -->
+                <div>
+                    <h3 style="color:#0a2a66; border-bottom:1px solid #eee; padding-bottom:5px; margin-bottom:10px; font-size: 16px;">Ghi chú & Lời nhắn thêm</h3>
+                    <div style="background: #f8f9fa; padding: 15px; border-radius: 10px; font-style: italic; color: #475569; border: 1px solid #edf2f7; min-height:60px;">
+                        <?php 
+                        $clean_note = $order['note'];
+                        // Loai bo cac thong tin trung lap da hien thi o tren
+                        $clean_note = preg_replace('/--- CHI TIẾT HÀNG HÓA ---\n(.*?)(?=\n---|\n💎|\n Người trả cước|$)/s', '', $clean_note);
+                        $clean_note = preg_replace('/💎 Bảo hiểm hàng hóa: .*/', '', $clean_note);
+                        $clean_note = preg_replace('/Người trả cước: .*/', '', $clean_note);
+                        $clean_note = preg_replace('/Tệp đính kèm: .*/', '', $clean_note);
+                        $clean_note = str_replace(['--- CHI TIẾT HÀNG HÓA ---', '---'], '', $clean_note);
+                        
+                        echo !empty(trim($clean_note)) ? nl2br(htmlspecialchars(trim($clean_note))) : 'Không có ghi chú thêm.'; 
+                        ?>
+                    </div>
+                </div>
+
+                <!-- Ghi chú từ Shipper -->
+                <?php if (!empty($order['shipper_note'])): ?>
+                <div>
+                    <h3 style="color:#ff7a00; border-bottom:1px solid #eee; padding-bottom:5px; margin-bottom:10px; font-size: 16px;"><i class="fa-solid fa-comment-dots"></i> Phản hồi từ tài xế</h3>
+                    <div style="background: #fff8f1; padding: 15px; border-radius: 10px; font-weight: 600; color: #9a5200; border: 1px solid #ffd8a8; min-height:60px;">
+                        <?php echo nl2br(htmlspecialchars($order['shipper_note'])); ?>
+                    </div>
+                </div>
+                <?php endif; ?>
+            </div>
+        </div>
+
+        <!-- Section: Hình ảnh & Tài liệu đính kèm -->
+        <?php 
+        $attachment_dir = "uploads/order_attachments/" . $order['order_code'] . "/";
+        $files = [];
+        if (is_dir($attachment_dir)) {
+            $files = array_diff(scandir($attachment_dir), array('.', '..'));
+        }
+        
+        if (!empty($files)):
+        ?>
+        <div class="detail-box" style="margin-bottom: 25px;">
+            <h3 style="color:#0a2a66; border-bottom:2px solid #ff7a00; padding-bottom:10px; margin-bottom:15px; font-weight: 800;">
+                <i class="fa-solid fa-paperclip"></i> HÌNH ẢNH & TÀI LIỆU ĐÍNH KÈM</h3>
+            <div style="display: flex; flex-wrap: wrap; gap: 15px;">
+                <?php foreach ($files as $file): 
+                    $file_ext = strtolower(pathinfo($file, PATHINFO_EXTENSION));
+                    $is_img = in_array($file_ext, ['jpg', 'jpeg', 'png', 'gif', 'webp']);
+                    $file_path = $attachment_dir . $file;
+                ?>
+                    <div style="width: 120px; text-align: center;">
+                        <?php if ($is_img): ?>
+                            <a href="<?php echo $file_path; ?>" target="_blank">
+                                <img src="<?php echo $file_path; ?>" style="width: 120px; height: 120px; object-fit: cover; border-radius: 8px; border: 1px solid #eee; box-shadow: 0 2px 5px rgba(0,0,0,0.1);">
+                            </a>
+                        <?php else: ?>
+                            <a href="<?php echo $file_path; ?>" target="_blank" style="display: block; width: 120px; height: 120px; background: #f1f5f9; border-radius: 8px; display: flex; flex-direction: column; justify-content: center; align-items: center; text-decoration: none; color: #475569; border: 1px dashed #cbd5e1;">
+                                <i class="fa-solid <?php echo strpos($file_ext, 'pdf') !== false ? 'fa-file-pdf' : 'fa-file-lines'; ?>" style="font-size: 30px; margin-bottom: 5px;"></i>
+                                <span style="font-size: 10px; padding: 0 5px; word-break: break-all;"><?php echo htmlspecialchars($file); ?></span>
+                            </a>
+                        <?php endif; ?>
+                    </div>
+                <?php endforeach; ?>
+            </div>
+        </div>
+        <?php endif; ?>
 
         <!-- Bằng chứng giao hàng -->
         <?php if (!empty($order['pod_image'])): ?>
@@ -187,7 +425,7 @@ $status_map = [
                 }
 
                 $timeline_data[] = [
-                    'time' => $log['changed_at'],
+                    'time' => $log['created_at'],
                     'status' => $status_text,
                     'desc' => $desc,
                     'code' => $st_key

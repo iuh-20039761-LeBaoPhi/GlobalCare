@@ -24,6 +24,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['update_status'])) {
     $order_id = intval($_POST['order_id']);
     $new_status = $_POST['update_status']; // Lấy giá trị từ nút bấm
     $shipper_note = trim($_POST['shipper_note'] ?? '');
+    $cancel_reason = trim($_POST['cancel_reason'] ?? '');
     $pod_image = null;
 
     // Lấy trạng thái cũ trước khi update
@@ -33,30 +34,50 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['update_status'])) {
         $old_status = $row_st['status'];
     }
 
-    // Xử lý upload ảnh nếu hoàn tất đơn
-    if ($new_status === 'completed' && isset($_FILES['pod_image']) && $_FILES['pod_image']['error'] == 0) {
-        $target_dir = "uploads/";
-        if (!file_exists($target_dir))
-            mkdir($target_dir, 0777, true);
-
-        $ext = pathinfo($_FILES['pod_image']['name'], PATHINFO_EXTENSION);
-        $filename = "pod_{$order_id}_" . time() . ".{$ext}";
-
-        if (move_uploaded_file($_FILES['pod_image']['tmp_name'], $target_dir . $filename)) {
-            $pod_image = $filename;
+    if ($new_status === 'decline') {
+        // Trả đơn: set shipper_id = NULL, status quay về pending
+        $sql = "UPDATE orders SET status = 'pending', shipper_id = NULL, shipper_note = ? WHERE id = ? AND shipper_id = ?";
+        $stmt = $conn->prepare($sql);
+        $decline_note = "[Từ chối bởi Shipper] " . $shipper_note;
+        $stmt->bind_param("sii", $decline_note, $order_id, $shipper_id);
+        
+        if ($stmt->execute()) {
+            $msg = "Đã từ chối đơn hàng #$order_id. Đã được chuyển về danh sách chờ phân công.";
+            $conn->query("INSERT INTO order_logs (order_id, user_id, old_status, new_status, note) VALUES ($order_id, $shipper_id, '$old_status', 'pending', 'Shipper từ chối nhận đơn: $shipper_note')");
+        } else {
+            $msg = "Lỗi: " . $conn->error;
         }
-    }
-
-    $sql = "UPDATE orders SET status = ?, shipper_note = ?" . ($pod_image ? ", pod_image = '$pod_image'" : "") . " WHERE id = ? AND shipper_id = ?";
-    $stmt = $conn->prepare($sql);
-    $stmt->bind_param("ssii", $new_status, $shipper_note, $order_id, $shipper_id);
-
-    if ($stmt->execute()) {
-        $msg = "Đã cập nhật trạng thái đơn hàng #$order_id";
-        // Ghi log (Optional)
-        $conn->query("INSERT INTO order_logs (order_id, user_id, old_status, new_status) VALUES ($order_id, $shipper_id, '$old_status', '$new_status')");
     } else {
-        $msg = "Lỗi: " . $conn->error;
+        // Xử lý upload ảnh nếu hoàn tất đơn
+        if ($new_status === 'completed' && isset($_FILES['pod_image']) && $_FILES['pod_image']['error'] == 0) {
+            $target_dir = "uploads/";
+            if (!file_exists($target_dir))
+                mkdir($target_dir, 0777, true);
+
+            $ext = pathinfo($_FILES['pod_image']['name'], PATHINFO_EXTENSION);
+            $filename = "pod_{$order_id}_" . time() . ".{$ext}";
+
+            if (move_uploaded_file($_FILES['pod_image']['tmp_name'], $target_dir . $filename)) {
+                $pod_image = $filename;
+            }
+        }
+
+        $sql = "UPDATE orders SET status = ?, shipper_note = ?" . ($pod_image ? ", pod_image = '$pod_image'" : "") . ($new_status === 'cancelled' ? ", cancel_reason = ?" : "") . " WHERE id = ? AND shipper_id = ?";
+        $stmt = $conn->prepare($sql);
+        
+        if ($new_status === 'cancelled') {
+            $stmt->bind_param("sssii", $new_status, $shipper_note, $cancel_reason, $order_id, $shipper_id);
+        } else {
+            $stmt->bind_param("ssii", $new_status, $shipper_note, $order_id, $shipper_id);
+        }
+
+        if ($stmt->execute()) {
+            $msg = "Đã cập nhật trạng thái đơn hàng #$order_id";
+            $log_note = ($new_status === 'cancelled') ? "Lý do: " . $cancel_reason : "";
+            $conn->query("INSERT INTO order_logs (order_id, user_id, old_status, new_status, note) VALUES ($order_id, $shipper_id, '$old_status', '$new_status', '$log_note')");
+        } else {
+            $msg = "Lỗi: " . $conn->error;
+        }
     }
 }
 
@@ -70,12 +91,12 @@ $stmt_notify_new->close();
 
 // 2. Lấy thông báo từ Admin (Log thay đổi trạng thái trong 3 ngày gần nhất)
 $admin_logs = [];
-$sql_notify_admin = "SELECT l.old_status, l.new_status, l.changed_at, o.order_code, u.fullname as admin_name 
+$sql_notify_admin = "SELECT l.old_status, l.new_status, l.created_at, o.order_code, u.fullname as admin_name 
                      FROM order_logs l 
                      JOIN orders o ON l.order_id = o.id 
                      JOIN users u ON l.user_id = u.id 
-                     WHERE o.shipper_id = ? AND u.role = 'admin' AND l.changed_at >= DATE_SUB(NOW(), INTERVAL 3 DAY) 
-                     ORDER BY l.changed_at DESC LIMIT 5";
+                     WHERE o.shipper_id = ? AND u.role = 'admin' AND l.created_at >= DATE_SUB(NOW(), INTERVAL 3 DAY) 
+                     ORDER BY l.created_at DESC LIMIT 5";
 $stmt_notify_admin = $conn->prepare($sql_notify_admin);
 $stmt_notify_admin->bind_param("i", $shipper_id);
 $stmt_notify_admin->execute();
@@ -84,6 +105,20 @@ while ($row = $res_notify->fetch_assoc()) {
     $admin_logs[] = $row;
 }
 $stmt_notify_admin->close();
+
+// 3. Tổng kết ngày hôm nay
+$today = date('Y-m-d');
+$stmt_today = $conn->prepare("SELECT 
+    COUNT(*) as total,
+    SUM(CASE WHEN status = 'completed' THEN 1 ELSE 0 END) as completed,
+    SUM(CASE WHEN status = 'cancelled' THEN 1 ELSE 0 END) as cancelled,
+    SUM(CASE WHEN status = 'completed' THEN shipping_fee ELSE 0 END) as revenue
+    FROM orders 
+    WHERE shipper_id = ? AND DATE(created_at) = ?"); // Simplified for now since orders are usually same day
+$stmt_today->bind_param("is", $shipper_id, $today);
+$stmt_today->execute();
+$day_stats = $stmt_today->get_result()->fetch_assoc();
+$stmt_today->close();
 // ---------------------------
 
 // Xử lý bộ lọc trạng thái
@@ -172,8 +207,7 @@ $pkg_map = [
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <link rel="stylesheet" href="assets/css/styles.css?v=<?php echo time(); ?>">
     <link rel="stylesheet" href="assets/css/admin.css?v=<?php echo time(); ?>">
-    <link rel="stylesheet" href="assets/css/admin-pages.css?v=<?php echo time(); ?>">
-    <link rel="stylesheet" href="assets/css/admin_styles.css?v=<?php echo time(); ?>">
+    <link rel="stylesheet" href="assets/css/shipper.css?v=<?php echo time(); ?>">
 </head>
 
 <body>
@@ -191,25 +225,19 @@ $pkg_map = [
 
         <!-- Khu vực Thông báo -->
         <?php if ($new_orders_count > 0 || !empty($admin_logs)): ?>
-            <div
-                style="background: #fff; padding: 15px; border-radius: 8px; margin-bottom: 20px; border-left: 4px solid #ff7a00; box-shadow: 0 2px 5px rgba(0,0,0,0.05);">
-                <h3 style="margin-top: 0; margin-bottom: 10px; color: #0a2a66; font-size: 16px;">🔔 Thông báo mới</h3>
-
+            <div class="shipper-notification-box">
+                <h3>🔔 Thông báo mới</h3>
                 <?php if ($new_orders_count > 0): ?>
-                    <div
-                        style="margin-bottom: 10px; color: #856404; background-color: #fff3cd; border: 1px solid #ffeeba; padding: 10px; border-radius: 4px;">
+                    <div class="new-orders-alert">
                         <strong>📦 Bạn có <?php echo $new_orders_count; ?> đơn hàng mới cần lấy!</strong>
-                        <a href="?status=pending" style="color: #856404; text-decoration: underline; margin-left: 5px;">Xem
-                            ngay</a>
+                        <a href="?status=pending" style="color: #856404; text-decoration: underline; margin-left: 5px;">Xem ngay</a>
                     </div>
                 <?php endif; ?>
-
                 <?php if (!empty($admin_logs)): ?>
-                    <ul style="list-style: none; padding: 0; margin: 0;">
+                    <ul class="admin-log-list">
                         <?php foreach ($admin_logs as $log): ?>
-                            <li style="padding: 8px 0; border-bottom: 1px dashed #eee; font-size: 14px;">
-                                <span
-                                    style="color: #666; font-size: 12px;">[<?php echo date('d/m H:i', strtotime($log['changed_at'])); ?>]</span>
+                            <li>
+                                <span style="color: #666; font-size: 12px;">[<?php echo date('d/m H:i', strtotime($log['created_at'])); ?>]</span>
                                 <strong>Admin <?php echo htmlspecialchars($log['admin_name']); ?></strong>
                                 đã cập nhật đơn <strong>#<?php echo $log['order_code']; ?></strong>:
                                 <span style="color: #d9534f;"><?php echo $log['old_status']; ?></span> ➔
@@ -220,6 +248,28 @@ $pkg_map = [
                 <?php endif; ?>
             </div>
         <?php endif; ?>
+
+        <!-- Widget Tổng kết ngày -->
+        <div class="shipper-card" style="margin-bottom: 25px; border-left: 5px solid #28a745; background: #f0fff4;">
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:15px;">
+                <h3 style="margin:0; font-size:18px; color:#1b4332;"><i class="fa-solid fa-chart-line"></i> Tổng kết hôm nay (<?php echo date('d/m'); ?>)</h3>
+                <a href="shipper_profile.php" style="font-size:13px; color:#2d6a4f; text-decoration:none; font-weight:600;">Xem chi tiết &rarr;</a>
+            </div>
+            <div style="display:grid; grid-template-columns: repeat(3, 1fr); gap:10px; text-align:center;">
+                <div style="background:white; padding:10px; border-radius:8px; box-shadow:0 2px 5px rgba(0,0,0,0.05);">
+                    <div style="font-size:12px; color:#666;">Đơn nhận</div>
+                    <div style="font-size:18px; font-weight:700; color:#0a2a66;"><?php echo $day_stats['total']; ?></div>
+                </div>
+                <div style="background:white; padding:10px; border-radius:8px; box-shadow:0 2px 5px rgba(0,0,0,0.05);">
+                    <div style="font-size:12px; color:#666;">Thành công</div>
+                    <div style="font-size:18px; font-weight:700; color:#28a745;"><?php echo $day_stats['completed']; ?></div>
+                </div>
+                <div style="background:white; padding:10px; border-radius:8px; box-shadow:0 2px 5px rgba(0,0,0,0.05);">
+                    <div style="font-size:12px; color:#666;">Tiền ship</div>
+                    <div style="font-size:18px; font-weight:700; color:#ff7a00;"><?php echo number_format($day_stats['revenue']); ?>đ</div>
+                </div>
+            </div>
+        </div>
 
         <!-- Bộ lọc trạng thái -->
         <div class="filter-tabs">
@@ -237,28 +287,13 @@ $pkg_map = [
         </div>
 
         <!-- Form Tìm kiếm & Lọc -->
-        <form method="GET" action=""
-            style="background: #fff; padding: 15px; border-radius: 8px; margin-bottom: 20px; box-shadow: 0 2px 5px rgba(0,0,0,0.05); display: flex; gap: 10px; flex-wrap: wrap; align-items: center;">
+        <form method="GET" action="" class="shipper-search-form">
             <input type="hidden" name="status" value="<?php echo htmlspecialchars($status_filter); ?>">
-
-            <div style="flex: 1; min-width: 200px;">
-                <input type="text" name="search" value="<?php echo htmlspecialchars($search); ?>"
-                    placeholder="🔍 Tìm mã đơn, tên người gửi/nhận..."
-                    style="width: 100%; padding: 8px 12px; border: 1px solid #ddd; border-radius: 4px;">
-            </div>
-
-            <div>
-                <input type="date" name="date" value="<?php echo htmlspecialchars($date_filter); ?>"
-                    style="padding: 8px 12px; border: 1px solid #ddd; border-radius: 4px;"
-                    title="Lọc theo ngày nhận đơn">
-            </div>
-
-            <button type="submit" class="btn-action-sm"
-                style="background: #0a2a66; border: none; padding: 9px 20px; font-size: 14px;">Lọc</button>
-
+            <input type="text" name="search" value="<?php echo htmlspecialchars($search); ?>" placeholder="🔍 Tìm mã đơn, tên người gửi/nhận...">
+            <input type="date" name="date" value="<?php echo htmlspecialchars($date_filter); ?>" title="Lọc theo ngày nhận đơn">
+            <button type="submit" class="btn-action-sm" style="background: #0a2a66;">Lọc</button>
             <?php if (!empty($search) || !empty($date_filter)): ?>
-                <a href="shipper_dashboard.php?status=<?php echo $status_filter; ?>"
-                    style="color: #d9534f; text-decoration: none; font-size: 14px; margin-left: 5px;">❌ Xóa lọc</a>
+                <a href="shipper_dashboard.php?status=<?php echo $status_filter; ?>" style="color: #d9534f; text-decoration: none; font-size: 14px;">❌ Xóa lọc</a>
             <?php endif; ?>
         </form>
 
@@ -273,7 +308,12 @@ $pkg_map = [
                 <?php while ($row = $result->fetch_assoc()): ?>
                     <div class="shipper-card <?php echo $row['status']; ?>">
                         <div class="card-header">
-                            <span style="color:#0a2a66">#<?php echo $row['order_code']; ?></span>
+                            <div style="display:flex; flex-direction:column;">
+                                <span style="color:#0a2a66; font-weight:bold;">#<?php echo $row['order_code']; ?></span>
+                                <?php if ($row['client_order_code']): ?>
+                                    <span style="font-size:11px; color:#28a745;">Ref: <?php echo htmlspecialchars($row['client_order_code']); ?></span>
+                                <?php endif; ?>
+                            </div>
                             <span class="status-badge status-<?php echo $row['status']; ?>">
                                 <?php
                                 $st_label = [
@@ -287,15 +327,28 @@ $pkg_map = [
                             </span>
                         </div>
                         <div class="card-body">
-                            <p><strong>📤 Người gửi:</strong> <?php echo htmlspecialchars($row['name']); ?> - <a
-                                    href="tel:<?php echo $row['phone']; ?>"><?php echo $row['phone']; ?></a></p>
+                            <p><strong>📤 Người gửi:</strong> <?php echo htmlspecialchars($row['name']); ?> 
+                                <a href="tel:<?php echo $row['phone']; ?>" class="call-btn" style="display:inline-flex; vertical-align:middle; margin-left:5px;"><i class="fa-solid fa-phone"></i></a>
+                            </p>
                             <p><strong>📍 Địa chỉ lấy:</strong> <?php echo htmlspecialchars($row['pickup_address']); ?>
                                 <a href="https://www.google.com/maps/search/?api=1&query=<?php echo urlencode($row['pickup_address']); ?>"
                                     target="_blank" style="color:#ff7a00; font-weight:bold;">[Bản đồ]</a>
                             </p>
+                            <div style="background:#f0f7ff; padding:8px; border-radius:4px; margin:5px 0; border:1px solid #cce5ff;">
+                                <p style="margin:0; font-size:14px; color:#004085;">
+                                    <strong>🕒 Lịch lấy hàng:</strong> 
+                                    <span style="color:#d9534f; font-weight:bold;"><?php echo $row['pickup_time'] ? date('d/m/Y', strtotime($row['pickup_time'])) : 'Sớm nhất có thể'; ?></span>
+                                </p>
+                                <?php if ($row['vehicle_type']): ?>
+                                    <p style="margin:5px 0 0 0; font-size:14px; color:#004085;">
+                                        <strong>🛵 Yêu cầu xe:</strong> 
+                                        <span class="quote-vehicle-badge" style="background:#ff7a00; color:white; padding:1px 6px; border-radius:4px; font-size:12px;"><?php echo htmlspecialchars($row['vehicle_type']); ?></span>
+                                    </p>
+                                <?php endif; ?>
+                            </div>
                             <hr style="border:0; border-top:1px dashed #eee; margin:8px 0;">
-                            <p><strong>📥 Người nhận:</strong> <?php echo htmlspecialchars($row['receiver_name']); ?> - <a
-                                    href="tel:<?php echo $row['receiver_phone']; ?>"><?php echo $row['receiver_phone']; ?></a>
+                            <p><strong>📥 Người nhận:</strong> <?php echo htmlspecialchars($row['receiver_name']); ?>
+                                <a href="tel:<?php echo $row['receiver_phone']; ?>" class="call-btn" style="display:inline-flex; vertical-align:middle; margin-left:5px;"><i class="fa-solid fa-phone"></i></a>
                             </p>
                             <p><strong>🏁 Giao:</strong> <?php echo htmlspecialchars($row['delivery_address']); ?>
                                 <a href="https://www.google.com/maps/search/?api=1&query=<?php echo urlencode($row['delivery_address']); ?>"
@@ -337,10 +390,16 @@ $pkg_map = [
                                 <?php if ($row['status'] == 'pending'): ?>
                                     <textarea name="shipper_note" class="shipper-note-input"
                                         placeholder="Ghi chú (VD: Đã gọi khách, hẹn 10h lấy...)"><?php echo htmlspecialchars($row['shipper_note']); ?></textarea>
-                                    <button type="submit" name="update_status" value="shipping" class="btn-action-sm"
-                                        style="background:#17a2b8; flex:1;">
-                                        🚀 Đã lấy hàng / Bắt đầu giao
-                                    </button>
+                                    <div style="display:flex; gap:10px;">
+                                        <button type="submit" name="update_status" value="shipping" class="btn-action-sm"
+                                            style="background:#17a2b8; flex:1;">
+                                            🚀 Đã lấy hàng / Bắt đầu giao
+                                        </button>
+                                        <button type="submit" name="update_status" value="decline" class="btn-action-sm"
+                                            style="background:#6c757d;" onclick="return confirm('Bạn muốn từ chối (trả lại) đơn hàng này? Đơn sẽ quay về danh sách chờ phân công.')">
+                                            ✖ Từ chối đơn
+                                        </button>
+                                    </div>
                                 <?php elseif ($row['status'] == 'shipping'): ?>
                                     <textarea name="shipper_note" class="shipper-note-input"
                                         placeholder="Ghi chú (VD: Khách hẹn chiều giao, địa chỉ khó tìm...)"><?php echo htmlspecialchars($row['shipper_note']); ?></textarea>
@@ -355,9 +414,11 @@ $pkg_map = [
                                             onclick="return confirmComplete('<?php echo $row['payment_method']; ?>', '<?php echo $row['payment_status']; ?>');">
                                             ✅ Đã giao thành công
                                         </button>
+                                        
+                                        <input type="hidden" name="cancel_reason" id="cancel_reason_<?php echo $row['id']; ?>">
                                         <button type="submit" name="update_status" value="cancelled" class="btn-action-sm"
                                             style="background:#dc3545;"
-                                            onclick="return confirm('Xác nhận hủy đơn này (khách không nhận/bom hàng)?');">
+                                            onclick="return confirmCancel(<?php echo $row['id']; ?>);">
                                             ❌ Không giao được / Hủy
                                         </button>
                                     </div>
@@ -379,28 +440,21 @@ $pkg_map = [
 
         <!-- Phân trang -->
         <?php if ($total_pages > 1): ?>
-            <div style="margin-top: 20px; display: flex; justify-content: center; gap: 5px;">
+            <div class="shipper-pagination">
                 <?php
                 $qs = "&status=" . urlencode($status_filter) . "&search=" . urlencode($search) . "&date=" . urlencode($date_filter);
                 ?>
                 <?php if ($page > 1): ?>
-                    <a href="?page=<?php echo $page - 1; ?><?php echo $qs; ?>" class="btn-action-sm"
-                        style="background:#6c757d; text-decoration:none;">&laquo; Trước</a>
+                    <a href="?page=<?php echo $page - 1; ?><?php echo $qs; ?>" class="btn-action-sm" style="background:#6c757d; text-decoration:none;">&laquo; Trước</a>
                 <?php endif; ?>
-
                 <?php for ($i = 1; $i <= $total_pages; $i++): ?>
-                    <a href="?page=<?php echo $i; ?><?php echo $qs; ?>" class="btn-action-sm"
-                        style="text-decoration:none; <?php echo ($i == $page) ? 'background:#0a2a66;' : 'background:#ccc; color:#333;'; ?>"><?php echo $i; ?></a>
+                    <a href="?page=<?php echo $i; ?><?php echo $qs; ?>" class="btn-action-sm" style="text-decoration:none; <?php echo ($i == $page) ? 'background:#0a2a66;' : 'background:#ccc; color:#333;'; ?>"><?php echo $i; ?></a>
                 <?php endfor; ?>
-
                 <?php if ($page < $total_pages): ?>
-                    <a href="?page=<?php echo $page + 1; ?><?php echo $qs; ?>" class="btn-action-sm"
-                        style="background:#6c757d; text-decoration:none;">Sau &raquo;</a>
+                    <a href="?page=<?php echo $page + 1; ?><?php echo $qs; ?>" class="btn-action-sm" style="background:#6c757d; text-decoration:none;">Sau &raquo;</a>
                 <?php endif; ?>
             </div>
-            <p style="text-align: center; margin-top: 10px; font-size: 14px; color: #666;">Trang
-                <?php echo $page; ?>/<?php echo $total_pages; ?>
-            </p>
+            <p style="text-align: center; margin-top: 10px; font-size: 14px; color: #666;">Trang <?php echo $page; ?>/<?php echo $total_pages; ?></p>
         <?php endif; ?>
     </main>
 
@@ -412,6 +466,17 @@ $pkg_map = [
                 return confirm('⚠️ CẢNH BÁO: Đơn hàng này thanh toán CHUYỂN KHOẢN nhưng hệ thống ghi nhận CHƯA THANH TOÁN.\n\nBạn có chắc chắn muốn hoàn tất đơn hàng này không? (Hãy đảm bảo khách đã thanh toán hoặc bạn đã thu tiền mặt thay thế)');
             }
             return confirm('Xác nhận đã giao hàng thành công và thu đủ tiền?');
+        }
+
+        function confirmCancel(orderId) {
+            let reason = prompt('Vui lòng nhập lý do hủy đơn (Vd: Khách không nghe máy, Khách đổi ý, Sai địa chỉ...):');
+            if (reason === null) return false; // Nhấn Cancel
+            if (reason.trim() === '') {
+                alert('Bạn phải nhập lý do hủy đơn!');
+                return false;
+            }
+            document.getElementById('cancel_reason_' + orderId).value = reason;
+            return confirm('Xác nhận hủy đơn hàng này với lý do: ' + reason + '?');
         }
     </script>
 </body>

@@ -74,42 +74,94 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     
     $shipping_fee = floatval($_POST['shipping_fee'] ?? 0);
     $pickup_time = $_POST['pickup_time'] ?? null;
-    if (empty($pickup_time)) $pickup_time = null;
+    if (empty($pickup_time)) {
+        $pickup_time = null;
+    } else {
+        $pickup_time = substr($pickup_time, 0, 10);
+    }
+
+    $delivery_time = $_POST['delivery_time'] ?? null;
+    if (empty($delivery_time)) {
+        $delivery_time = null;
+    } else {
+        $delivery_time = substr($delivery_time, 0, 10);
+    }
     
     $payment_method = $_POST['payment_method'] ?? 'cod';
     $package_type = $_POST['package_type'] ?? 'other';
+    $client_order_code = $_POST['client_order_code'] ?? null;
+    if (empty($client_order_code)) $client_order_code = null;
+    $vehicle_type = $_POST['vehicle_type'] ?? null;
+    if (empty($vehicle_type)) $vehicle_type = null;
 
-    // lấy ghi chú
+    $intl_country = $_POST['intl_country'] ?? null;
+    $intl_province = $_POST['intl_province'] ?? null;
+    $intl_postal_code = $_POST['intl_postal_code'] ?? null;
+    $receiver_id_number = $_POST['receiver_id_number'] ?? null;
+    $intl_purpose = $_POST['intl_purpose'] ?? null;
+    $intl_hs_code = $_POST['intl_hs_code'] ?? null;
+
+    // lấy ghi chú gốc (chỉ lấy phần lời nhắn, tệp đính kèm sẽ được đính vào sau)
     $note = $_POST['note'] ?? '';
 
     // đính tên file vào ghi chú
     if (!empty($uploaded_files)) {
-        $note .= "\nTệp đính kèm: " . implode(', ', $uploaded_files);
+        $note = trim((string) $note);
+        $attachments_text = "Tệp đính kèm: " . implode(', ', $uploaded_files);
+        $note = $note === '' ? $attachments_text : ($note . "\n" . $attachments_text);
     }
 
-    // Thực hiện INSERT
+    // Thực hiện INSERT vào bảng orders
     $sql = "INSERT INTO orders (
-                order_code, user_id, pickup_address, name, phone, 
+                order_code, client_order_code, user_id, pickup_address, name, phone, 
                 receiver_name, receiver_phone, delivery_address, 
+                intl_country, intl_province, intl_postal_code, receiver_id_number,
                 is_corporate, company_name, company_email, company_tax_code, 
-                company_address, company_bank_info, service_type, package_type,
+                company_address, company_bank_info, service_type, vehicle_type, package_type,
+                intl_purpose, intl_hs_code,
                 weight, cod_amount, shipping_fee, pickup_time, note, 
                 payment_method, status, created_at
-            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'pending', NOW())";
+            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'pending', NOW())";
 
     $stmt = $conn->prepare($sql);
-    // 22 tham số: sissssssisssssssdddsss
-    // 1(s), 1(i), 6(s), 1(i), 7(s), 3(d), 3(s)
-    $stmt->bind_param("sissssssisssssssdddsss", 
-        $order_code, $user_id, $pickup_address, $name, $phone,
+    // 30 tham số: ssissssssssssisssssssssdddsss
+    $stmt->bind_param("ssisssssssssisssssssssdddsss", 
+        $order_code, $client_order_code, $user_id, $pickup_address, $name, $phone,
         $receiver_name, $receiver_phone, $delivery_address,
+        $intl_country, $intl_province, $intl_postal_code, $receiver_id_number,
         $is_corporate, $company_name, $company_email, $company_tax_code,
-        $company_address, $company_bank_info, $service_type, $package_type,
+        $company_address, $company_bank_info, $service_type, $vehicle_type, $package_type,
+        $intl_purpose, $intl_hs_code,
         $weight, $cod_amount, $shipping_fee, $pickup_time, $note,
         $payment_method
     );
 
     if ($stmt->execute()) {
+        $new_order_id = $conn->insert_id;
+
+        // XỬ LÝ LƯU CHI TIẾT MÓN HÀNG VÀO BẢNG order_items
+        if (isset($_POST['goods_item_name']) && is_array($_POST['goods_item_name'])) {
+            $item_stmt = $conn->prepare("INSERT INTO order_items (order_id, item_name, quantity, weight, length, width, height, declared_value) VALUES (?, ?, ?, ?, ?, ?, ?, ?)");
+            
+            foreach ($_POST['goods_item_name'] as $key => $item_name) {
+                if (empty($item_name)) continue;
+
+                $qty = intval($_POST['goods_item_quantity'][$key] ?? 1);
+                $w = floatval($_POST['goods_item_weight'][$key] ?? 0);
+                $l = floatval($_POST['goods_item_length'][$key] ?? 0);
+                $wd = floatval($_POST['goods_item_width'][$key] ?? 0);
+                $h = floatval($_POST['goods_item_height'][$key] ?? 0);
+                
+                // Xử lý giá khai báo (loại bỏ dấu chấm phân cách)
+                $decl_raw = $_POST['goods_item_declared'][$key] ?? '0';
+                $decl = floatval(preg_replace('/[^\d]/', '', $decl_raw));
+
+                $item_stmt->bind_param("isiddddd", $new_order_id, $item_name, $qty, $w, $l, $wd, $h, $decl);
+                $item_stmt->execute();
+            }
+            $item_stmt->close();
+        }
+
         $success_msg = "Đã tạo đơn hàng " . $order_code . " thành công!";
         $_SESSION['success_order'] = $success_msg;
         header("Location: dashboard.php");
@@ -528,6 +580,43 @@ $default_route_type = (strpos($selected_service_type, 'intl_') === 0) ? 'interna
                         <input type="file" id="intl-docs" name="intl_documents[]"
                             accept=".pdf,.jpg,.jpeg,.png,.webp,.doc,.docx,.xls,.xlsx" multiple>
                     </div>
+                    <div class="form-group form-group-span-2" id="client-order-code-group">
+                        <label for="client_order_code">Mã đơn hàng riêng của bạn (tùy chọn)</label>
+                        <input type="text" id="client_order_code" name="client_order_code" 
+                            placeholder="VD: SHOP123, ORDER-456..." maxlength="100">
+                        <p class="order-route-hint">Dùng để bạn dễ dàng đối soát với hệ thống của mình (chỉ áp dụng đơn trong nước).</p>
+                    </div>
+
+                    <div class="form-group form-group-span-2" id="schedule-order-group" style="display: none;">
+                        <label>Đặt lịch lấy hàng</label>
+                        <p class="order-route-hint">Lịch lấy hàng phù hợp sẽ giúp hệ thống đề xuất các gói vận chuyển tối ưu.</p>
+                        <div class="form-grid">
+                            <div class="form-group">
+                                <label for="pickup-date-control">Ngày lấy hàng</label>
+                                <input type="date" id="pickup-date-control" required>
+                            </div>
+                            <div class="form-group">
+                                <label for="pickup-slot-control">Khung giờ lấy hàng</label>
+                                <select id="pickup-slot-control" required>
+                                    <option value="">Chọn khung giờ lấy hàng</option>
+                                </select>
+                            </div>
+                            <div class="form-group" style="display: none;">
+                                <label for="delivery-date-control">Ngày giao dự kiến</label>
+                                <input type="date" id="delivery-date-control" readonly style="background: #f8f9fa;">
+                            </div>
+                            <div class="form-group" style="display: none;">
+                                <label for="delivery-slot-control">Khung giờ giao dự kiến</label>
+                                <select id="delivery-slot-control" disabled style="background: #f8f9fa;">
+                                    <option value="">Chọn khung giờ giao hàng</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="schedule-estimate" id="schedule-estimate-note"></div>
+                        <input type="hidden" name="pickup_time" id="pickup-time-hidden" value="">
+                        <input type="hidden" name="delivery_time" id="delivery-time-hidden" value="">
+                    </div>
+
                     <div class="form-group form-group-span-2">
                         <label>Gói dịch vụ đề xuất</label>
                         <p class="order-route-hint service-picker-hint">Hệ thống sẽ hiển thị các gói cước ngay khi bạn nhập đủ thông tin hàng hóa. Bạn chọn 1 gói để khóa phí và thời gian.</p>
@@ -550,36 +639,6 @@ $default_route_type = (strpos($selected_service_type, 'intl_') === 0) ? 'interna
                                 </option>
                             <?php endforeach; ?>
                         </select>
-                    </div>
-
-                    <div class="form-group form-group-span-2" id="schedule-order-group" style="display: none;">
-                        <label>Đặt lịch lấy và giao hàng</label>
-                        <p class="order-route-hint">Dựa trên gói dịch vụ bạn chọn, hệ thống gợi ý lịch sớm nhất có thể.</p>
-                        <div class="form-grid">
-                            <div class="form-group">
-                                <label for="pickup-date-control">Ngày lấy hàng</label>
-                                <input type="date" id="pickup-date-control" required>
-                            </div>
-                            <div class="form-group">
-                                <label for="pickup-slot-control">Khung giờ lấy hàng</label>
-                                <select id="pickup-slot-control" required>
-                                    <option value="">Chọn khung giờ lấy hàng</option>
-                                </select>
-                            </div>
-                            <div class="form-group">
-                                <label for="delivery-date-control">Ngày giao dự kiến</label>
-                                <input type="date" id="delivery-date-control" readonly style="background: #f8f9fa;">
-                            </div>
-                            <div class="form-group">
-                                <label for="delivery-slot-control">Khung giờ giao dự kiến</label>
-                                <select id="delivery-slot-control" disabled style="background: #f8f9fa;">
-                                    <option value="">Chọn khung giờ giao hàng</option>
-                                </select>
-                            </div>
-                        </div>
-                        <div class="schedule-estimate" id="schedule-estimate-note"></div>
-                        <input type="hidden" name="pickup_time" id="pickup-time-hidden" value="">
-                        <input type="hidden" name="delivery_time" id="delivery-time-hidden" value="">
                     </div>
             </div>
 
@@ -714,6 +773,52 @@ $default_route_type = (strpos($selected_service_type, 'intl_') === 0) ? 'interna
             if (!form) return;
 
             const routeInput = document.getElementById('order-route-type');
+            function applyRouteMode(route) {
+                const isIntl = (route === 'international');
+                const domesticOnlyFields = [
+                    document.getElementById('pickup-domestic-city-group'),
+                    document.getElementById('pickup-domestic-district-group'),
+                    document.getElementById('delivery-domestic-city-group'),
+                    document.getElementById('delivery-domestic-district-group'),
+                    document.getElementById('cod-field-group'),
+                    document.getElementById('cod-fee-payer-group'),
+                    document.getElementById('client-order-code-group')
+                ];
+                const intlOnlyFields = [
+                    document.getElementById('delivery-intl-country-group'),
+                    document.getElementById('delivery-intl-province-group'),
+                    document.getElementById('intl-postal-code-group'),
+                    document.getElementById('receiver-id-number-group'),
+                    document.getElementById('intl-purpose-group'),
+                    document.getElementById('intl-hs-code-group'),
+                    document.getElementById('intl-goods-images-group'),
+                    document.getElementById('intl-docs-group')
+                ];
+
+                domesticOnlyFields.forEach(el => {
+                    if (el) el.style.display = isIntl ? 'none' : 'block';
+                });
+                intlOnlyFields.forEach(el => {
+                    if (el) el.style.display = isIntl ? 'block' : 'none';
+                });
+
+                // Update required status for international fields
+                if (intlCountrySelect) intlCountrySelect.required = isIntl;
+                if (intlProvinceSelect) intlProvinceSelect.required = isIntl;
+                if (receiverIdTypeSelect) receiverIdTypeSelect.required = isIntl;
+                if (receiverIdNumberInput) receiverIdNumberInput.required = isIntl;
+                if (intlPurposeSelect) intlPurposeSelect.required = isIntl;
+                if (intlHsCodeInput) intlHsCodeInput.required = isIntl;
+                if (intlGoodsImagesInput) intlGoodsImagesInput.required = isIntl;
+                if (intlDocsInput) intlDocsInput.required = isIntl;
+
+                // Update required status for domestic fields
+                if (pickupCitySelect) pickupCitySelect.required = !isIntl;
+                if (pickupDistrictSelect) pickupDistrictSelect.required = !isIntl;
+                if (deliveryCitySelect) deliveryCitySelect.required = !isIntl;
+                if (deliveryDistrictSelect) deliveryDistrictSelect.required = !isIntl;
+                if (codInput) codInput.required = false; // COD is optional
+            }
             const routeButtons = document.querySelectorAll('[data-order-route]');
             const serviceSelect = document.getElementById('order-service-type');
             const paymentMethodSelect = document.getElementById('payment_method_delivery');
@@ -753,6 +858,12 @@ $default_route_type = (strpos($selected_service_type, 'intl_') === 0) ? 'interna
             const scheduleEstimateNote = document.getElementById('schedule-estimate-note');
             const serviceSuggestion = document.getElementById('order-service-suggestion');
             const servicePackages = document.getElementById('order-service-packages');
+            const vehicleTypeInput = document.createElement('input');
+            vehicleTypeInput.type = 'hidden';
+            vehicleTypeInput.name = 'vehicle_type';
+            vehicleTypeInput.id = 'vehicle_type_hidden';
+            form.appendChild(vehicleTypeInput);
+
             const itemTypeInput = document.getElementById('item_type');
             const itemNameInput = document.getElementById('item_name');
             const weightInput = document.getElementById('weight');
@@ -766,6 +877,7 @@ $default_route_type = (strpos($selected_service_type, 'intl_') === 0) ? 'interna
             const addGoodsItemBtn = document.getElementById('add-goods-item');
             const goodsDescriptionInput = document.getElementById('goods_description');
             const codFeePayerGroup = document.getElementById('cod-fee-payer-group');
+            const clientOrderCodeGroup = document.getElementById('client-order-code-group');
             const feePayerInputs = Array.from(form.querySelectorAll('input[name="fee_payer"]'));
 
             const SLOT_CATALOG_DOMESTIC = [{
@@ -1604,82 +1716,36 @@ $default_route_type = (strpos($selected_service_type, 'intl_') === 0) ? 'interna
             function getServiceReadiness(routeType) {
                 const itemType = String(form.querySelector('[name="item_type"]')?.value || '').trim();
                 const itemName = String(form.querySelector('[name="item_name"]')?.value || '').trim();
-                const quantity = Math.max(1, toPositiveInteger(form.querySelector('[name="quantity"]')?.value || 1,
-                    1));
-                if (!itemType) {
+                const quantity = Math.max(1, toPositiveInteger(form.querySelector('[name="quantity"]')?.value || 1, 1));
+
+                if (!itemType || !itemName) {
                     return {
                         valid: false,
-                        message: 'Chọn loại hàng để hệ thống đề xuất gói dịch vụ.'
+                        message: 'Nhập thông tin hàng hóa để xem các gói dịch vụ.'
                     };
                 }
-                if (!itemName) {
-                    return {
-                        valid: false,
-                        message: 'Chọn tên hàng để hệ thống đề xuất gói dịch vụ.'
-                    };
-                }
-                if (quantity <= 0) {
-                    return {
-                        valid: false,
-                        message: 'Số lượng kiện chưa hợp lệ.'
-                    };
-                }
+                
                 if (!hasValidMeasurementInput()) {
                     return {
                         valid: false,
-                        message: 'Nhập khối lượng hoặc đủ kích thước (dài/rộng/cao) để tính cước.'
-                    };
-                }
-                // Bỏ qua kiểm tra lịch ở giai đoạn đề xuất gói
-                /*
-                if (!pickupDateControl?.value || !pickupSlotControl?.value) {
-                    return {
-                        valid: false,
-                        message: 'Chọn lịch lấy hàng để hệ thống lọc gói phù hợp.'
-                    };
-                }
-                if (!deliveryDateControl?.value || !deliverySlotControl?.value) {
-                    return {
-                        valid: false,
-                        message: 'Chọn lịch giao dự kiến để hệ thống lọc gói phù hợp.'
-                    };
-                }
-                */
-
-                const desiredPickup = buildSlotDateTime(pickupDateControl.value, pickupSlotControl.value);
-                const desiredDelivery = buildSlotDateTime(deliveryDateControl.value, deliverySlotControl.value);
-                if (!desiredPickup || !desiredDelivery || desiredDelivery.getTime() <= desiredPickup.getTime()) {
-                    return {
-                        valid: false,
-                        message: 'Lịch giao phải sau lịch lấy hàng.'
+                        message: 'Nhập khối lượng hoặc kích thước để tính cước.'
                     };
                 }
 
                 if (routeType === 'international') {
-                    if (!pickupCitySelect?.value || !pickupDistrictSelect?.value) {
+                    if (!pickupCitySelect?.value || !intlCountrySelect?.value) {
                         return {
                             valid: false,
-                            message: 'Chọn đủ Tỉnh/Thành và Quận/Huyện gửi để tính gói quốc tế.'
+                            message: 'Chọn địa điểm gửi và nhận để xem gói quốc tế.'
                         };
                     }
-                    if (!intlCountrySelect?.value || !intlProvinceSelect?.value) {
+                } else {
+                    if (!pickupCitySelect?.value || !deliveryCitySelect?.value) {
                         return {
                             valid: false,
-                            message: 'Chọn đủ Quốc gia và Tỉnh/Thành nhận để tính gói quốc tế.'
+                            message: 'Chọn đầy đủ địa điểm gửi và nhận để xem gói cước.'
                         };
                     }
-                    return {
-                        valid: true,
-                        message: ''
-                    };
-                }
-
-                if (!pickupCitySelect?.value || !pickupDistrictSelect?.value || !deliveryCitySelect?.value || !
-                    deliveryDistrictSelect?.value) {
-                    return {
-                        valid: false,
-                        message: 'Chọn đủ Tỉnh/Thành và Quận/Huyện gửi/nhận để tính gói trong nước.'
-                    };
                 }
 
                 return {
@@ -1793,9 +1859,8 @@ $default_route_type = (strpos($selected_service_type, 'intl_') === 0) ? 'interna
 
                 const scheduleGroup = document.getElementById('schedule-order-group');
                 if (matched) {
+                    // Always show if matched, but it's already shown by refreshServiceRecommendations since readiness is true
                     if (scheduleGroup) scheduleGroup.style.display = 'block';
-                } else {
-                    // if (scheduleGroup) scheduleGroup.style.display = 'none';
                 }
 
                 if (!matched) {
@@ -1853,18 +1918,19 @@ $default_route_type = (strpos($selected_service_type, 'intl_') === 0) ? 'interna
             function refreshServiceRecommendations() {
                 const routeType = getCurrentRoute();
                 const readiness = getServiceReadiness(routeType);
-
+                const scheduleGroup = document.getElementById('schedule-order-group');
                 if (!readiness.valid) {
                     clearServicePackageCards();
                     if (serviceSelect) serviceSelect.value = '';
+                    if (scheduleGroup) scheduleGroup.style.display = 'none';
                     setServiceSuggestionState(readiness.message, 'neutral');
                     return;
                 }
+                if (scheduleGroup) scheduleGroup.style.display = 'block';
 
                 const quoteResult = getServiceQuoteResult(routeType);
                 const allowedTypes = getAllowedServiceTypes(routeType);
-                const services = Array.isArray(quoteResult?.services) ? quoteResult.services.filter(function (
-                    service) {
+                const services = Array.isArray(quoteResult?.services) ? quoteResult.services.filter(function (service) {
                     const key = String(service?.serviceType || '').trim().toLowerCase();
                     return allowedTypes.includes(key);
                 }) : [];
@@ -1872,125 +1938,84 @@ $default_route_type = (strpos($selected_service_type, 'intl_') === 0) ? 'interna
                 if (!services.length) {
                     clearServicePackageCards();
                     if (serviceSelect) serviceSelect.value = '';
-                    setServiceSuggestionState(
-                        'Không tìm thấy gói phù hợp với thông tin đã nhập. Vui lòng kiểm tra lại dữ liệu.',
-                        'error');
+                    setServiceSuggestionState('Không có gói phù hợp.', 'error');
                     return;
                 }
 
                 const selectedSchedule = getSelectedScheduleDateTimes();
                 const desiredPickup = selectedSchedule.desiredPickup;
-                const desiredDelivery = selectedSchedule.desiredDelivery;
-                const evaluatedServices = services.map(function (service) {
+
+                const processedServices = services.map(function (service) {
                     const serviceType = String(service?.serviceType || '').trim().toLowerCase();
                     const schedule = getServiceScheduleSnapshot(routeType, serviceType, desiredPickup);
-                    const pickupCompatible = !desiredPickup || (desiredPickup instanceof Date &&
-                        !Number.isNaN(desiredPickup.getTime()) &&
-                        desiredPickup.getTime() >= schedule.earliestPickup.getTime());
-                    const deliveryCompatible = !desiredDelivery || (desiredDelivery instanceof Date &&
-                        !Number.isNaN(desiredDelivery.getTime()) &&
-                        desiredDelivery.getTime() >= schedule.earliestDelivery.getTime());
                     return {
                         service: service,
                         serviceType: serviceType,
-                        schedule: schedule,
-                        scheduleCompatible: pickupCompatible && deliveryCompatible,
-                        pickupCompatible: pickupCompatible,
-                        deliveryCompatible: deliveryCompatible,
+                        schedule: schedule
                     };
                 });
-                const compatibleServices = evaluatedServices.filter(function (item) {
-                    return item.scheduleCompatible;
-                });
-                const hasCompatible = compatibleServices.length > 0;
-                const displayServices = hasCompatible ? compatibleServices : evaluatedServices;
 
                 const currentType = String(serviceSelect?.value || '').trim().toLowerCase();
-                const selectedType = displayServices.some(function (item) {
-                    return item.serviceType === currentType && item.scheduleCompatible;
-                }) ? currentType : (hasCompatible ? String(displayServices[0].serviceType || '').trim()
-                    .toLowerCase() : '');
+                const selectedType = processedServices.some(s => s.serviceType === currentType) ? currentType : '';
 
-                setSelectedServiceType(selectedType, false);
-
-                if (!hasCompatible) {
-                    setServiceSuggestionState(
-                        'Lịch bạn chọn đang quá gấp: chưa có gói nào đáp ứng. Hãy dời lịch lấy/giao để hệ thống đề xuất gói khả dụng.',
-                        'error'
-                    );
-                } else {
-                    const selectedServiceInfo = displayServices.find(function (item) {
-                        return item.serviceType === selectedType;
-                    }) || displayServices[0];
-                    const selectedName = selectedServiceInfo?.service?.serviceName || 'gói dịch vụ';
-                    setServiceSuggestionState(
-                        'Có ' + compatibleServices.length + ' gói đáp ứng lịch bạn chọn. Gói đang chọn: ' +
-                        selectedName + '.',
-                        'ready'
-                    );
-                }
-
-                const cardsHtml = displayServices.map(function (serviceInfo, index) {
+                const cardsHtml = processedServices.map(function (serviceInfo, index) {
                     const service = serviceInfo.service;
                     const serviceType = serviceInfo.serviceType;
                     const isSelected = serviceType === selectedType;
-                    const isAvailable = serviceInfo.scheduleCompatible;
                     const schedule = serviceInfo.schedule;
-                    const feeLines = formatServiceBreakdown(service, routeType).map(function (line) {
-                        return '<li>' + line + '</li>';
-                    }).join('');
+                    const feeLines = formatServiceBreakdown(service, routeType).map(line => '<li>' + line + '</li>').join('');
 
-                    return '<article class="quote-card quote-package-item order-service-package ' + (
-                        isSelected ? 'is-selected' : '') + (!isAvailable ? ' is-unavailable' : '') +
-                        '" data-service-type="' + escapeHtml(serviceType) + '" data-schedule-compatible="' +
-                        (isAvailable ? '1' : '0') + '">' +
+                    const vehicle = service.vehicleSuggestion || '';
+                    const vehicleHtml = vehicle ? '<p class="quote-service-eta">Phương tiện: <span class="quote-vehicle-badge"><strong>' + escapeHtml(vehicle) + '</strong></span></p>' : '';
+
+                    return '<article class="quote-card quote-package-item order-service-package ' + (isSelected ? 'is-selected' : '') + 
+                        '" data-service-type="' + escapeHtml(serviceType) + '" data-vehicle-type="' + escapeHtml(vehicle) + '">' +
                         '<div class="quote-package-head">' +
                         '<h4>' + escapeHtml(service.serviceName || 'Gói cước') + '</h4>' +
-                        (hasCompatible && index === 0 ? '<span class="quote-badge">Giá tốt nhất</span>' :
-                            '') +
+                        (index === 0 ? '<span class="quote-badge">Giá tốt nhất</span>' : '') +
                         '</div>' +
-                        '<p class="quote-service-eta">Thời gian dự kiến: <strong>' + escapeHtml(service
-                            .estimate || 'Đang cập nhật') + '</strong></p>' +
-                        '<p class="quote-service-eta">Nếu gửi ngay, dự kiến giao: <strong>' + escapeHtml(
-                            formatDateForHumans(schedule.earliestDelivery)) + '</strong></p>' +
-                        '<p class="quote-service-eta ' + (isAvailable ? '' : 'is-error') +
-                        '">Trạng thái theo lịch: <strong>' + (isAvailable ? (desiredPickup ? 'Khả dụng' : 'Khả dụng (Gợi ý)') : 'Quá gấp') +
-                        '</strong></p>' +
+                        vehicleHtml +
+                        '<p class="quote-service-eta">Vận chuyển chặng: <strong>' + escapeHtml(service.estimate || '...') + '</strong></p>' +
+                        '<p class="quote-service-eta">Dự kiến giao: <strong>' + escapeHtml(formatDateForHumans(schedule.earliestDelivery)) + '</strong></p>' +
                         '<details class="order-service-breakdown">' +
-                        '<summary>Xem chi tiết phí</summary>' +
-                        '<ul class="quote-breakdown-list order-service-breakdown-list">' + feeLines +
-                        '</ul>' +
+                        '<summary>Chi tiết phí</summary>' +
+                        '<ul class="quote-breakdown-list order-service-breakdown-list">' + feeLines + '</ul>' +
                         '</details>' +
-                        '<p class="quote-service-total">Tổng cước: <strong>' + formatVnd(service.total ||
-                            0) + '</strong></p>' +
-                        '<span class="order-service-action">' + (isSelected ? 'Đã chọn' : (isAvailable ?
-                            'Chọn gói này' : 'Không khả dụng')) + '</span>' +
+                        '<p class="quote-service-total">Tổng phí: <strong>' + formatVnd(service.total || 0) + '</strong></p>' +
+                        '<span class="order-service-action">' + (isSelected ? 'Đã chọn' : 'Chọn gói này') + '</span>' +
                         '</article>';
                 }).join('');
 
                 if (servicePackages) {
                     servicePackages.innerHTML = cardsHtml;
-                    servicePackages.querySelectorAll('.order-service-breakdown').forEach(function (detailEl) {
-                        detailEl.addEventListener('click', function (e) {
-                            e.stopPropagation();
-                        });
+                    servicePackages.querySelectorAll('.order-service-breakdown').forEach(el => {
+                        el.addEventListener('click', e => e.stopPropagation());
                     });
-                    const scheduleGroup = document.getElementById('schedule-order-group');
-                    servicePackages.querySelectorAll('[data-service-type]').forEach(function (card) {
+
+                    servicePackages.querySelectorAll('[data-service-type]').forEach(card => {
                         card.addEventListener('click', function () {
-                            const serviceType = String(card.getAttribute('data-service-type') || '')
-                                .trim().toLowerCase();
-                            const scheduleCompatible = card.getAttribute(
-                                'data-schedule-compatible') === '1';
-                            if (!serviceType) return;
-                            if (!scheduleCompatible) return;
-                            setSelectedServiceType(serviceType, true);
-                            if (scheduleGroup && scheduleGroup.style.display !== 'none') {
-                                scheduleGroup.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+                            const type = String(card.getAttribute('data-service-type')).trim().toLowerCase();
+                            setSelectedServiceType(type, true);
+                            
+                            const vehicleType = card.dataset.vehicleType || '';
+                            const vehicleInput = document.getElementById('vehicle_type_hidden');
+                            if (vehicleInput) vehicleInput.value = vehicleType;
+                            
+                            // Auto-sync schedule
+                            const selectedInfo = processedServices.find(s => s.serviceType === type);
+                            if (selectedInfo) {
+                                const deliveryDate = toIsoDateLocal(selectedInfo.schedule.earliestDelivery);
+                                const deliveryH = String(selectedInfo.schedule.earliestDelivery.getHours()).padStart(2, '0') + ':00';
+                                
+                                if (deliveryDateControl) deliveryDateControl.value = deliveryDate;
+                                deliveryDateControl.dispatchEvent(new Event('change'));
+                                if (deliverySlotControl) deliverySlotControl.value = deliveryH;
                             }
                         });
                     });
                 }
+
+                setServiceSuggestionState('Tìm thấy ' + services.length + ' gói dịch vụ.', 'ready');
             }
 
             function getAvailableSlotsForDate(dateIso, minDateTime, slotCatalog) {
@@ -2064,19 +2089,14 @@ $default_route_type = (strpos($selected_service_type, 'intl_') === 0) ? 'interna
                 const baselineDeliveryText = formatDateForHumans(minDeliveryDateTime);
                 const routeText = routeType === 'international' ? 'quốc tế' : 'trong nước';
                 
-                let note = 'Tuyến ' + routeText + ': Sớm nhất lấy ' + baselinePickupText + ', giao ' + baselineDeliveryText + '.';
+                let note = 'Tuyến ' + routeText + ': Sớm nhất có thể lấy hàng từ <strong>' + baselinePickupText + '</strong>.';
                 
-                // If user has selected a date/time, show the specific estimate for that selection
+                // If user has selected a date/time, show specific pickup confirmation
                 if (pickupDateControl.value && pickupSlotControl.value) {
-                    const selectedPickup = buildSlotDateTime(pickupDateControl.value, pickupSlotControl.value);
-                    if (selectedPickup) {
-                        const estDelivery = new Date(selectedPickup.getTime() + transitHours * 60 * 60 * 1000);
-                        note += ' Với lịch bạn chọn, dự kiến giao xong trước ' + formatDateForHumans(estDelivery) + '.';
-                    }
+                    note += ' Hệ thống sẽ điều phối tài xế đến lấy hàng theo lịch bạn đã chọn.';
                 }
 
-                note += ' Mốc này tính theo gói nhanh nhất (~ ' + formatHoursLabel(transitHours) + ') và sẽ dùng để lọc gói phù hợp.';
-                scheduleEstimateNote.textContent = note;
+                scheduleEstimateNote.innerHTML = note;
             }
 
             function refreshSchedule() {
@@ -2279,6 +2299,7 @@ $default_route_type = (strpos($selected_service_type, 'intl_') === 0) ? 'interna
 
                 setRouteGroupVisibility(codFieldGroup, !isIntl);
                 setRouteGroupVisibility(codFeePayerGroup, !isIntl);
+                setRouteGroupVisibility(clientOrderCodeGroup, !isIntl);
                 syncServiceOptionsByRoute(normalizedRoute);
                 handlePaymentState();
                 syncGoodsAggregatesFromRows();

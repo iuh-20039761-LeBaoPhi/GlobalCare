@@ -77,6 +77,64 @@ $result = $stmt->get_result();
     <title>Lịch sử đơn hàng | Giao Hàng Nhanh</title>
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <link rel="stylesheet" href="assets/css/styles.css?v=<?php echo time(); ?>">
+    <style>
+        /* Force Filter Bar to 1 line on desktop */
+        .filter-bar {
+            display: flex !important;
+            flex-wrap: nowrap !important;
+            gap: 10px !important;
+            align-items: center !important;
+        }
+
+        .filter-bar input,
+        .filter-bar select,
+        .filter-bar button,
+        .filter-bar a.btn-filter {
+            width: auto !important;
+            margin-bottom: 0 !important;
+            flex: 1;
+        }
+
+        .filter-bar input[name="search"] {
+            flex: 2.5 !important;
+            min-width: 180px;
+        }
+
+        .filter-bar select[name="status"] {
+            flex: 1.2 !important;
+            min-width: 140px;
+        }
+
+        .filter-bar input[type="date"] {
+            flex: 1 !important;
+            min-width: 120px;
+        }
+
+        .filter-bar .btn-filter {
+            flex: 0 0 auto !important;
+            padding: 10px 20px !important;
+            line-height: 1.5;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        @media (max-width: 768px) {
+            .filter-bar {
+                flex-wrap: wrap !important;
+            }
+
+            .filter-bar input[type="text"],
+            .filter-bar select,
+            .filter-bar input[type="date"] {
+                flex: 1 1 calc(50% - 10px) !important;
+            }
+
+            .filter-bar .btn-filter {
+                flex: 1 1 auto !important;
+            }
+        }
+    </style>
 </head>
 
 <body>

@@ -36,6 +36,9 @@ if (isset($_SESSION['user_id']) && isset($conn)) {
     }
 }
 ?>
+<!-- FontAwesome 6.4.0 -->
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+<link rel="stylesheet" href="assets/css/admin.css?v=<?php echo time(); ?>">
 <header id="header">
     <nav class="navbar container">
         <div class="logo">
@@ -90,3 +93,6 @@ if (isset($_SESSION['user_id']) && isset($conn)) {
         <button class="hamburger-menu" id="hamburger-btn"><span></span><span></span><span></span></button>
     </nav>
 </header>
+<!-- Core & Navigation Scripts -->
+<script src="assets/js/main-core.js?v=<?php echo time(); ?>"></script>
+<script src="assets/js/modules/main-navigation.js?v=<?php echo time(); ?>"></script>
