@@ -143,17 +143,34 @@ $("#service").on("change", function () {
     $("#price").val("");
   }
 });
+
+// $(document).on("click", ".booking-service", function () {
+//   const card = $(this).closest(".service-card");
+
+//   // Lấy tên gói
+//   const serviceName = card.find("h3").text().trim();
+
+//   // chọn đúng option
+//   $("#serviceContact option").each(function () {
+//     if ($(this).text().trim() === serviceName) {
+//       $(this).prop("selected", true);
+//     }
+//   });
+
+//   // cập nhật select
+//   $("#serviceContact").trigger("change");
+// });
 // Update price based on selected service in contact form
-const serviceSelect = document.querySelector(".service-contact");
-const priceInput = document.getElementById("price-contact");
+// const serviceSelect = document.querySelector(".service-contact");
+// const priceInput = document.getElementById("price-contact");
 
-serviceSelect.addEventListener("change", function () {
-  const selectedOption = this.options[this.selectedIndex];
-  const price = selectedOption.getAttribute("data-price");
+// serviceSelect.addEventListener("change", function () {
+//   const selectedOption = this.options[this.selectedIndex];
+//   const price = selectedOption.getAttribute("data-price");
 
-  if (price) {
-    priceInput.value = price;
-  } else {
-    priceInput.value = "";
-  }
-});
+//   if (price) {
+//     priceInput.value = price;
+//   } else {
+//     priceInput.value = "";
+//   }
+// });

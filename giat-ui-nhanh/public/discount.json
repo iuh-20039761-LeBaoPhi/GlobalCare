@@ -1,0 +1,26 @@
+[
+  {
+    "service_id": 7,
+    "service_name": "Gói Gia Đình",
+    "discount_percent": 10,
+    "label": "Giảm 10%",
+    "start_date": "2026-03-01",
+    "end_date": "2026-03-31"
+  },
+  {
+    "service_id": 8,
+    "service_name": "Gói Cửa Hàng, SPA",
+    "discount_percent": 15,
+    "label": "Giảm 15%",
+    "start_date": "2026-03-10",
+    "end_date": "2026-04-10"
+  },
+  {
+    "service_id": 9,
+    "service_name": "Gói Khách Sạn",
+    "discount_percent": 20,
+    "label": "Giảm 20%",
+    "start_date": "2026-03-15",
+    "end_date": "2026-05-01"
+  }
+]

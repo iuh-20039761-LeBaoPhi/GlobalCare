@@ -20,6 +20,25 @@
     <link rel="stylesheet" href="public/asset/css/bootstrap.min.css" />
     <link rel="stylesheet" href="public/asset/css/styles.css" />
   </head>
+  <style>
+    .discount-badge {
+  position: absolute;
+  top: 48px;
+    right: 20px;
+  background: red;
+  color: white;
+  padding: 5px 10px;
+  font-size: 12px;
+  border-radius: 6px;
+  font-weight: bold;
+}
+
+.old-price {
+  text-decoration: line-through;
+  color: #999;
+  font-size: 14px;
+}
+  </style>
   <body>
     <!-- Navigation -->
     <nav class="navbar" id="navbar">
@@ -34,8 +53,8 @@
           <li><a href="#about" class="nav-link">Giới thiệu</a></li>
           <li><a href="#services" class="nav-link">Dịch vụ</a></li>
           <li><a href="#process" class="nav-link">Quy trình</a></li>
-          <li><a href="booking.html" class="nav-link">Đặt dịch vụ</a></li>
-          <li><a href="blog.html" class="nav-link">Bài viết</a></li>
+          <li><a class="nav-link" data-bs-toggle="modal"data-bs-target="#bookingModal">Đặt dịch vụ</a></li>
+          <li><a href="blog.html" class="nav-link" >Bài viết</a></li>
           <li>
             <a
               class="nav-link"
@@ -599,10 +618,7 @@
                 <b>Giá từ:</b> 
                 ${service.min_price.toLocaleString("vi-VN")} VNĐ / ${unit}
               </p>
-
-              <a class="btn btn-info choose-service" href="booking.html">
-                Đặt dịch vụ
-              </a>
+              
             </div>
             `;
                   });
@@ -785,178 +801,159 @@
           </h2>
           <p>Chọn gói phù hợp với nhu cầu của bạn.</p>
         </div>
-        <!-- <div style="margin: 60px 0">
-       
-            <div class="pricing-detail-image">
-              <div
-                style="
-                  border-radius: 20px;
-                  overflow: hidden;
-                  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.15);
-                "
-              >
-                <img
-                  src="public/asset/image/bang-gia.png"
-                  alt="Bảng giá dịch vụ"
-                />
-              </div>
-            </div>
-      
-            <div class="pricing-detail-table">
-              <h3>BẢNG GIÁ DỊCH VỤ</h3>
-              <div class="pricing-item">
-         
-                <div class="pricing-item-detail">
-                  <p>
-                    <b>Giặt</b> Tối đa 3-10 kg (Quần áo thông thường, vớ, chăn
-                    mỏng mềm, …) giá <b>4,000 - 40,000đ</b>/1 máy, giặt giày
-                    <b>40.000đ</b>/đôi.
-                  </p>
-                </div>
-               
-                <div class="pricing-item-detail">
-                  <p>
-                    <b>Giặt Sấy</b> Tối đa 3-10 kg (Quần áo thông thường, vớ,
-                    chăn mỏng mềm, …) giá dao động từ <b>35,000 - 85,000đ</b>/1
-                    máy.
-                  </p>
-                </div>
-           
-                <div class="pricing-item-detail">
-                  <p>
-                    <b>Dịch vụ tính thêm</b> sấy thêm <b>10.000đ</b> vắt thêm
-                    <b>10.000đ</b>.
-                  </p>
-                </div>
-              </div>
-            </div>
-        </div> -->
+
         <div class="pricing-grid" id="pricingGrid"></div>
 
         <script>
           document.addEventListener("DOMContentLoaded", function () {
             const pricingGrid = document.getElementById("pricingGrid");
 
-            fetch("public/services.json")
-              .then((res) => res.json())
-              .then((data) => {
-                // Lọc các service có price_unit = combo
-                const packageServices = data.filter(
-                  (service) => service.price_unit === "combo",
-                );
+            // Load cả services và discount cùng lúc
+            Promise.all([
+              fetch("public/services.json").then(res => res.json()),
+              fetch("public/discount.json").then(res => res.json())
+            ])
+            .then(([services, discounts]) => {
 
-                let html = "";
+              // Hàm check còn khuyến mãi không
+              function isDiscountActive(discount) {
+                const today = new Date();
+                const start = new Date(discount.start_date);
+                const end = new Date(discount.end_date);
+                return today >= start && today <= end;
+              }
 
-                const styleGradients = [
-                  {
-                    style:
-                      "background: linear-gradient(135deg, #f97316, #dc2626)",
-                  },
-                  {
-                    style:
-                      "background: linear-gradient(135deg, #3b82f6, #8b5cf6)",
-                  },
-                  {
-                    style:
-                      "background: linear-gradient(135deg, #10b981, #14b8a6)",
-                  },
-                ];
+              // Lấy discount theo service_id
+              function getDiscount(serviceId) {
+                return discounts.find(d => d.service_id === serviceId);
+              }
 
-                packageServices.forEach(function (service, index) {
-                  const styleGradient =
-                    styleGradients[index % styleGradients.length];
+              const packageServices = services.filter(
+                (service) => service.price_unit === "combo"
+              );
 
-                  // Lấy giá gói
-                  const price = service.sub_services[0].price;
+              let html = "";
 
-                  const popularBadge =
-                    index === 0
-                      ? `<div class="popular-badge">PHỔ BIẾN NHẤT</div>`
-                      : "";
+              const styleGradients = [
+                { style: "background: linear-gradient(135deg, #f97316, #dc2626)" },
+                { style: "background: linear-gradient(135deg, #3b82f6, #8b5cf6)" },
+                { style: "background: linear-gradient(135deg, #10b981, #14b8a6)" },
+              ];
 
-                  // Tách summary thành feature
-                  const features = service.summary.split("\n");
+              packageServices.forEach(function (service, index) {
 
-                  let featureHTML = "";
+                const styleGradient =
+                  styleGradients[index % styleGradients.length];
 
-                  features.forEach(function (item, i) {
-                    if (i !== 0) {
-                      featureHTML += `
-            <li>
-              <span class="check-icon" style="color:white">✓</span>
-              <span>${item}</span>
-            </li>
-            `;
-                    }
-                  });
+                const price = service.sub_services[0].price;
 
-                  html += `
-        <div class="pricing-card">
+                // 🔥 LẤY DISCOUNT
+                const discount = getDiscount(service.id);
+                let finalPrice = price;
+                let discountLabel = "";
 
-          ${popularBadge}
+                if (discount && isDiscountActive(discount)) {
+                  finalPrice = price - (price * discount.discount_percent / 100);
+                  discountLabel = `
+                    <div class="discount-badge">
+                      ${discount.label}
+                    </div>
+                  `;
+                }
 
-          <div class="pricing-header">
+                const popularBadge =
+                  index === 0
+                    ? `<div class="popular-badge">PHỔ BIẾN NHẤT</div>`
+                    : "";
 
-            <div class="pricing-icon" style="${styleGradient.style}">
-              <svg xmlns="http://www.w3.org/2000/svg"
-                width="30"
-                height="30"
-                fill="currentColor"
-                class="bi bi-star-fill"
-                viewBox="0 0 16 16">
-                <path d="M3.612 15.443c-.386.198-.824-.149-.746-.592l.83-4.73L.173 6.765c-.329-.314-.158-.888.283-.95l4.898-.696L7.538.792c.197-.39.73-.39.927 0l2.184 4.327 4.898.696c.441.062.612.636.282.95l-3.522 3.356.83 4.73c.078.443-.36.79-.746.592L8 13.187l-4.389 2.256z"/>
-              </svg>
-            </div>
+                const features = service.summary.split("\n");
 
-            <h3>${service.service_name}</h3>
+                let featureHTML = "";
 
-          </div>
-
-          <div class="pricing-price">
-
-            <div class="price-amount"
-              style="
-              background:linear-gradient(to right,#f97316,#dc2626);
-              -webkit-background-clip:text;
-              -webkit-text-fill-color:transparent;
-              ">
-              ${price.toLocaleString("vi-VN")} VNĐ
-            </div>
-
-            <input type="hidden"
-              class="price-combo"
-              data-price="${price}" />
-
-          </div>
-
-          <p class="description">${features[0]}</p>
-
-          <ul class="pricing-features">
-            ${featureHTML}
-          </ul>
-
-          <a class="btn btn-primary choose-service"
-            data-bs-toggle="modal"
-            data-bs-target="#myModal">
-            Chọn gói này
-          </a>
-
-        </div>
-        `;
+                features.forEach(function (item, i) {
+                  if (i !== 0) {
+                    featureHTML += `
+                    <li>
+                      <span class="check-icon" style="color:white">✓</span>
+                      <span>${item}</span>
+                    </li>
+                    `;
+                  }
                 });
 
-                pricingGrid.innerHTML = html;
-              })
-              .catch((err) => {
-                console.error(err);
+                html += `
+                <div class="pricing-card">
 
-                pricingGrid.innerHTML =
-                  "<p>Không thể tải dữ liệu gói dịch vụ.</p>";
+                  ${popularBadge}
+                  ${discountLabel}
+
+                  <div class="pricing-header">
+
+                    <div class="pricing-icon" style="${styleGradient.style}">
+                      <svg xmlns="http://www.w3.org/2000/svg"
+                        width="30"
+                        height="30"
+                        fill="currentColor"
+                        class="bi bi-star-fill"
+                        viewBox="0 0 16 16">
+                        <path d="M3.612 15.443c-.386.198-.824-.149-.746-.592l.83-4.73L.173 6.765c-.329-.314-.158-.888.283-.95l4.898-.696L7.538.792c.197-.39.73-.39.927 0l2.184 4.327 4.898.696c.441.062.612.636.282.95l-3.522 3.356.83 4.73c.078.443-.36.79-.746.592L8 13.187l-4.389 2.256z"/>
+                      </svg>
+                    </div>
+
+                    <h3>${service.service_name}</h3>
+
+                  </div>
+
+                  <div class="pricing-price">
+
+                    ${
+                      discount && isDiscountActive(discount)
+                        ? `<div class="old-price">${price.toLocaleString("vi-VN")} VNĐ</div>`
+                        : ""
+                    }
+
+                    <div class="price-amount"
+                      style="
+                      background:linear-gradient(to right,#f97316,#dc2626);
+                      -webkit-background-clip:text;
+                      -webkit-text-fill-color:transparent;
+                      ">
+                      ${Math.round(finalPrice).toLocaleString("vi-VN")} VNĐ
+                    </div>
+
+                    <input type="hidden"
+                      class="price-combo"
+                      data-price="${finalPrice}" />
+
+                  </div>
+
+                  <p class="description">${features[0]}</p>
+
+                  <ul class="pricing-features">
+                    ${featureHTML}
+                  </ul>
+
+                  <a class="btn btn-primary choose-service"
+                    data-bs-toggle="modal"
+                    data-bs-target="#myModal">
+                    Chọn gói này
+                  </a>
+
+                </div>
+                `;
               });
+
+              pricingGrid.innerHTML = html;
+            })
+            .catch((err) => {
+              console.error(err);
+              pricingGrid.innerHTML =
+                "<p>Không thể tải dữ liệu gói dịch vụ.</p>";
+            });
           });
         </script>
         <!-- The Modal -->
-        <div class="modal" id="myModal" tabindex="-1">
+        <div class="modal fade" id="myModal" tabindex="-1">
           <div class="modal-dialog">
             <div class="modal-content">
               <!-- Modal Header -->
@@ -998,45 +995,67 @@
                       <select id="service" name="service">
                         <option value="">Chọn gói dịch vụ</option>
 
-                        <script>
-                          document.addEventListener(
-                            "DOMContentLoaded",
-                            function () {
-                              const serviceSelect =
-                                document.getElementById("service");
+                    <script>
+                      document.addEventListener("DOMContentLoaded", function () {
+                        const serviceSelect = document.getElementById("service");
 
-                              fetch("public/services.json")
-                                .then((res) => {
-                                  if (!res.ok) {
-                                    throw new Error("Không thể load file JSON");
-                                  }
-                                  return res.json();
-                                })
-                                .then((data) => {
-                                  // Lọc các gói combo
-                                  const services = data.filter(
-                                    (service) => service.price_unit === "combo",
-                                  );
+                        Promise.all([
+                          fetch("public/services.json").then(res => res.json()),
+                          fetch("public/discount.json").then(res => res.json())
+                        ])
+                        .then(([servicesData, discounts]) => {
 
-                                  services.forEach((service) => {
-                                    const price = service.sub_services[0].price;
+                          function isDiscountActive(discount) {
+                            const today = new Date();
+                            const start = new Date(discount.start_date);
+                            const end = new Date(discount.end_date);
+                            return today >= start && today <= end;
+                          }
 
-                                    const option =
-                                      document.createElement("option");
+                          function getDiscount(serviceId) {
+                            return discounts.find(d => d.service_id === serviceId);
+                          }
 
-                                    option.value = service.id;
-                                    option.textContent = service.service_name;
-
-                                    option.dataset.price = price;
-                                    option.dataset.unit = service.price_unit;
-
-                                    serviceSelect.appendChild(option);
-                                  });
-                                })
-                                .catch((err) => console.log(err));
-                            },
+                          // Lọc combo
+                          const services = servicesData.filter(
+                            (service) => service.price_unit === "combo"
                           );
-                        </script>
+
+                          services.forEach((service) => {
+                            const price = service.sub_services[0].price;
+
+                            // 🔥 lấy discount
+                            const discount = getDiscount(service.id);
+
+                            let finalPrice = price;
+                            let label = "";
+
+                            if (discount && isDiscountActive(discount)) {
+                              finalPrice = price - (price * discount.discount_percent / 100);
+                              label = ` (${discount.label})`;
+                            }
+
+                            const option = document.createElement("option");
+
+                            option.value = service.id;
+
+                            // 👇 hiển thị luôn giá đã giảm
+                            option.textContent =
+                              service.service_name;
+
+                            // 👇 lưu giá đã giảm
+                            option.dataset.price = finalPrice;
+
+                            option.dataset.originalPrice = price; // nếu cần
+                            option.dataset.unit = service.price_unit;
+
+                            serviceSelect.appendChild(option);
+                          });
+
+                        })
+                        .catch((err) => console.log(err));
+                      });
+                    </script>
                       </select>
                     </div>
                     <div class="form-group">
@@ -1610,8 +1629,46 @@
             <ul class="footer-links">
               <li><a href="terms.html">Điều khoản sử dụng</a></li>
             </ul>
+            <h5 class="h6 my-3">Tải Ứng Dụng</h5>
+            <div class="d-flex gap-2">
+              <a
+                href="#"
+                class="btn btn-primary d-flex align-items-center p-2 rounded-3 text-decoration-none"
+                style="flex: 1"
+              >
+                <i
+                  class="fab fa-apple me-2"
+                  style="width: 24px; height: 24px; font-size: 24px;"
+                ></i>
+                <div class="text-start lh-1">
+                  <small class="d-block text-white-50" style="font-size: 10px"
+                    >Download on</small
+                  >
+                  <span class="fw-bold text-white" style="font-size: 12px"
+                    >App Store</span
+                  >
+                </div>
+              </a>
+              <a
+                href="#"
+                class="btn btn-info d-flex align-items-center p-2 rounded-3 text-decoration-none"
+                style="flex: 1"
+              >
+                <i
+                  class="fab fa-google-play me-2"
+                  style="width: 24px; height: 24px; font-size: 24px;"
+                ></i>
+                <div class="text-start lh-1">
+                  <small class="d-block text-white-50" style="font-size: 10px"
+                    >Get it on</small
+                  >
+                  <span class="fw-bold text-white" style="font-size: 12px"
+                    >Google Play</span
+                  >
+                </div>
+              </a>
           </div>
-        </div>
+          </div>
         <div class="footer-bottom">
           <p>
             © 2026 Giặt Ủi Nhanh. Đã đăng ký Bản quyền. Sản xuất tại ❤️ Việt Nam
@@ -1683,7 +1740,7 @@
         </div>
       </div>
     </div>
-
+    <div id="modalContainer"></div>
     <script
       type="text/javascript"
       src="public/asset/js/bootstrap.bundle.min.js"
@@ -1694,6 +1751,7 @@
     ></script>
     <script type="text/javascript" src="public/asset/js/database.js"></script>
     <script type="text/javascript" src="public/asset/js/script.js"></script>
+    <script type="text/javascript" src="public/asset/js/booking.js"></script>
     <script src="public/asset/js/plugin/webfont/webfont.min.js"></script>
     <script>
       WebFont.load({

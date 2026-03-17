@@ -1,0 +1,190 @@
+<!-- The Modal -->
+<div class="modal fade" id="bookingModal">
+  <div class="modal-dialog modal-lg">
+    <div class="modal-content">
+      <form id="bookingForm">
+        <!-- Modal Header -->
+        <div class="modal-header">
+          <h4 class="modal-title">Đặt dịch vụ</h4>
+          <button
+            type="button"
+            class="btn-close"
+            data-bs-dismiss="modal"
+          ></button>
+        </div>
+
+        <!-- Modal body -->
+        <div class="modal-body">
+          <div class="row g-4">
+            <div class="col-md-6">
+              <label class="form-label"
+                ><i class="fas fa-user me-2"></i>Họ và tên
+                <span class="text-danger">*</span></label
+              >
+              <input
+                type="text"
+                class="form-control"
+                placeholder="Nhập họ tên của bạn"
+                required
+              />
+            </div>
+            <div class="col-md-6">
+              <label class="form-label"
+                ><i class="fas fa-phone me-2"></i>Số điện thoại
+                <span class="text-danger">*</span></label
+              >
+              <input
+                type="tel"
+                class="form-control"
+                placeholder="Nhập số điện thoại"
+                required
+              />
+            </div>
+            <div class="col-md-12">
+              <div class="row">
+                <div class="col-md-6">
+                  <label class="form-label"
+                    ><i class="fas fa-list-ul me-2"></i>Loại dịch vụ
+                    <span class="text-danger">*</span></label
+                  >
+                  <select class="form-select" id="serviceSelect" required>
+                    <option value="">Chọn loại dịch vụ</option>
+                  </select>
+                </div>
+                <div class="col-md-6">
+                  <label class="form-label"
+                    ><i class="fas fa-list me-2"></i>Dịch vụ cụ thể
+                    <span class="text-danger">*</span>
+                  </label>
+                  <select class="form-select" id="subServiceSelect" required>
+                    <option value="">Chọn dịch vụ</option>
+                  </select>
+                </div>
+              </div>
+            </div>
+
+            <div class="col-md-4">
+              <label class="form-label">Loại xe *</label>
+              <select class="form-select" id="vehicleType" required>
+                <option value="Xe máy">Xe máy</option>
+              </select>
+            </div>
+
+            <div class="col-md-4">
+              <label class="form-label">Hãng xe *</label>
+              <select class="form-select" id="brandSelect" required>
+                <option value="">Chọn hãng</option>
+              </select>
+            </div>
+
+            <div class="col-md-4">
+              <label class="form-label">Phụ tùng / Sửa chữa *</label>
+              <select class="form-select" id="itemSelect" required>
+                <option value="">Chọn mục</option>
+              </select>
+            </div>
+            <div class="col-md-12">
+              <label class="form-label"
+                ><i class="fas fa-clock me-2"></i>Thời gian mong muốn
+                <span class="text-danger">*</span></label
+              >
+              <input type="datetime-local" class="form-control" />
+            </div>
+            <div class="col-md-12">
+              <label class="form-label"
+                ><i class="fas fa-map-marker-alt me-2"></i>Địa chỉ
+                <span class="text-danger">*</span></label
+              >
+              <div class="input-group">
+                <input
+                  id="addressInput"
+                  type="text"
+                  class="form-control"
+                  placeholder="Nhập địa chỉ của bạn"
+                  required
+                />
+                <button
+                  class="btn btn-outline-secondary"
+                  type="button"
+                  id="locateBtn"
+                >
+                  <i class="fas fa-location-arrow"></i> Vị trí của tôi
+                </button>
+              </div>
+            </div>
+            <div class="col-md-12">
+              <div class="row">
+                <div class="col-md-4">
+                  <label class="form-label"
+                    ><i class="fas fa-money-bill-wave-alt me-2"></i>Chi phí
+                    <span class="text-danger">*</span></label
+                  >
+                  <input
+                    type="text"
+                    class="form-control"
+                    id="price-contact"
+                    readonly
+                  />
+                </div>
+                <div class="col-md-4">
+                  <label class="form-label">
+                    <i class="fas fa-search me-2"></i>Chi phí khảo sát
+                  </label>
+                  <input
+                    type="text"
+                    class="form-control"
+                    id="survey-fee"
+                    readonly
+                  />
+                </div>
+                <div class="col-md-4">
+                  <label class="form-label"
+                    ><i class="fas fa-shipping-fast me-2"></i>Phí di chuyển
+                    <span class="text-danger">*</span></label
+                  >
+                  <input
+                    type="text"
+                    class="form-control"
+                    id="transport-fee"
+                    readonly
+                  />
+                </div>
+              </div>
+            </div>
+            <div class="col-md-12">
+              <label class="form-label"
+                ><i class="fas fa-map-marker-alt me-2"></i>Tổng chi phí ước tính
+                <span class="text-danger">*</span></label
+              >
+              <input
+                type="text"
+                class="form-control"
+                id="total-price"
+                readonly
+              />
+            </div>
+            <div class="col-12">
+              <label class="form-label"
+                ><i class="fas fa-comment me-2"></i>Mô tả vấn đề</label
+              >
+              <textarea
+                class="form-control"
+                rows="4"
+                placeholder="Mô tả chi tiết vấn đề của xe bạn..."
+              ></textarea>
+            </div>
+          </div>
+        </div>
+
+        <!-- Modal footer -->
+        <div class="modal-footer">
+          <div class="col-12 text-center">
+            <button type="submit" class="btn btn-primary-custom px-5 py-3">
+              <i class="fas fa-paper-plane me-2"></i>Gửi yêu cầu
+            </button>
+          </div>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>

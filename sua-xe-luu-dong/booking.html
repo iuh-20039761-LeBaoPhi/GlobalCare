@@ -61,9 +61,6 @@
               <a class="nav-link" href="index.html#services">Dịch vụ</a>
             </li>
             <li class="nav-item">
-              <a class="nav-link" href="index.html#booking">Đặt dịch vụ</a>
-            </li>
-            <li class="nav-item">
               <a class="nav-link" href="index.html#about">Về Chúng Tôi</a>
             </li>
             <li class="nav-item">
@@ -71,6 +68,9 @@
             </li>
             <li class="nav-item">
               <a class="nav-link" href="index.html#contact">Liên hệ</a>
+            </li>
+            <li class="nav-item">
+              <a class="nav-link" href="booking.html">Đặt dịch vụ</a>
             </li>
           </ul>
         </div>
@@ -155,121 +155,30 @@
                           <option value="">Chọn dịch vụ</option>
                         </select>
                       </div>
-                      <script>
-                        document.addEventListener(
-                          "DOMContentLoaded",
-                          function () {
-                            const serviceSelect =
-                              document.getElementById("serviceSelect");
-                            const subServiceSelect =
-                              document.getElementById("subServiceSelect");
-
-                            const priceInput =
-                              document.getElementById("price-contact");
-                            const transportInput =
-                              document.getElementById("transport-fee");
-                            const transportFee = 60000;
-
-                            transportInput.value =
-                              transportFee.toLocaleString("vi-VN");
-                            const totalInput =
-                              document.getElementById("total-price");
-
-                            let servicesData = [];
-
-                            fetch("public/services.json")
-                              .then((res) => res.json())
-                              .then((data) => {
-                                servicesData = data.services;
-
-                                servicesData.forEach((service) => {
-                                  const option =
-                                    document.createElement("option");
-                                  option.value = service.id;
-                                  option.textContent = service.name;
-
-                                  serviceSelect.appendChild(option);
-                                });
-                              });
-
-                            // Khi chọn dịch vụ chính
-                            serviceSelect.addEventListener(
-                              "change",
-                              function () {
-                                const serviceId = this.value;
-                                if (!serviceId) {
-                                  subServiceSelect.innerHTML =
-                                    '<option value="">Chọn loại dịch vụ</option>';
-
-                                  priceInput.value = "";
-                                  totalInput.value = "";
-                                  return;
-                                }
-
-                                subServiceSelect.innerHTML =
-                                  '<option value="">Chọn dịch vụ</option>';
-
-                                const service = servicesData.find(
-                                  (s) => s.id == serviceId,
-                                );
-
-                                if (!service) return;
-
-                                service.sub_services.forEach((sub) => {
-                                  const option =
-                                    document.createElement("option");
-
-                                  option.value = sub.id;
-                                  option.textContent = sub.name;
-                                  option.dataset.price = sub.price;
-
-                                  subServiceSelect.appendChild(option);
-                                });
-                              },
-                            );
-
-                            // Khi chọn dịch vụ con
-                            subServiceSelect.addEventListener(
-                              "change",
-                              function () {
-                                const option = this.options[this.selectedIndex];
-
-                                // Nếu chọn lại option rỗng
-                                if (!option.value) {
-                                  priceInput.value = "";
-                                  totalInput.value = "";
-                                  return;
-                                }
-
-                                const servicePrice = Number(
-                                  option.dataset.price,
-                                );
-                                const total = servicePrice + transportFee;
-
-                                priceInput.value =
-                                  servicePrice.toLocaleString("vi-VN");
-                                totalInput.value =
-                                  total.toLocaleString("vi-VN");
-                              },
-                            );
-                          },
-                        );
-                      </script>
                     </div>
                   </div>
 
-                  <div class="col-md-6">
-                    <label class="form-label"
-                      ><i class="fas fa-car me-2"></i>Loại xe
-                      <span class="text-danger">*</span></label
-                    >
-                    <input
-                      type="text"
-                      class="form-control"
-                      placeholder="Ví dụ: Honda City 2020"
-                    />
+                  <div class="col-md-4">
+                    <label class="form-label">Loại xe *</label>
+                    <select class="form-select" id="vehicleType" required>
+                      <option value="Xe máy">Xe máy</option>
+                    </select>
                   </div>
-                  <div class="col-md-6">
+
+                  <div class="col-md-4">
+                    <label class="form-label">Hãng xe *</label>
+                    <select class="form-select" id="brandSelect" required>
+                      <option value="">Chọn hãng</option>
+                    </select>
+                  </div>
+
+                  <div class="col-md-4">
+                    <label class="form-label">Phụ tùng / Sửa chữa *</label>
+                    <select class="form-select" id="itemSelect" required>
+                      <option value="">Chọn mục</option>
+                    </select>
+                  </div>
+                  <div class="col-md-12">
                     <label class="form-label"
                       ><i class="fas fa-clock me-2"></i>Thời gian mong muốn
                       <span class="text-danger">*</span></label
@@ -298,47 +207,9 @@
                       </button>
                     </div>
                   </div>
-                  <script>
-                    // button to get user's location and reverse geocode using OSM Nominatim (no key required)
-                    document.addEventListener("DOMContentLoaded", function () {
-                      const locateBtn = document.getElementById("locateBtn");
-                      const addressInput =
-                        document.getElementById("addressInput");
-                      if (locateBtn) {
-                        locateBtn.addEventListener("click", function () {
-                          if (navigator.geolocation) {
-                            navigator.geolocation.getCurrentPosition(
-                              function (position) {
-                                const lat = position.coords.latitude;
-                                const lng = position.coords.longitude;
-                                // use Nominatim reverse geocoding
-                                fetch(
-                                  `https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lng}`,
-                                )
-                                  .then((res) => res.json())
-                                  .then((data) => {
-                                    if (data && data.display_name) {
-                                      addressInput.value = data.display_name;
-                                    } else {
-                                      alert("Không thể xác định địa chỉ");
-                                    }
-                                  })
-                                  .catch((e) => console.error(e));
-                              },
-                              function (err) {
-                                alert("Không thể lấy vị trí: " + err.message);
-                              },
-                            );
-                          } else {
-                            alert("Trình duyệt không hỗ trợ định vị");
-                          }
-                        });
-                      }
-                    });
-                  </script>
                   <div class="col-md-12">
                     <div class="row">
-                      <div class="col-md-6">
+                      <div class="col-md-4">
                         <label class="form-label"
                           ><i class="fas fa-money-bill-wave-alt me-2"></i>Chi
                           phí <span class="text-danger">*</span></label
@@ -350,7 +221,18 @@
                           readonly
                         />
                       </div>
-                      <div class="col-md-6">
+                      <div class="col-md-4">
+                        <label class="form-label">
+                          <i class="fas fa-search me-2"></i>Chi phí khảo sát
+                        </label>
+                        <input
+                          type="text"
+                          class="form-control"
+                          id="survey-fee"
+                          readonly
+                        />
+                      </div>
+                      <div class="col-md-4">
                         <label class="form-label"
                           ><i class="fas fa-shipping-fast me-2"></i>Phí di
                           chuyển <span class="text-danger">*</span></label
@@ -359,7 +241,6 @@
                           type="text"
                           class="form-control"
                           id="transport-fee"
-                          value="60000"
                           readonly
                         />
                       </div>
@@ -368,7 +249,7 @@
                   <div class="col-md-12">
                     <label class="form-label"
                       ><i class="fas fa-map-marker-alt me-2"></i>Tổng chi phí
-                      <span class="text-danger">*</span></label
+                      ước tính <span class="text-danger">*</span></label
                     >
                     <input
                       type="text"
@@ -407,7 +288,7 @@
     <footer>
       <div class="container">
         <div class="row g-4">
-          <div class="col-lg-4">
+          <div class="col-lg-5">
             <div class="d-flex align-items-center mb-3">
               <img
                 class="logo-icon"
@@ -446,7 +327,7 @@
             </div>
           </div>
 
-          <div class="col-lg-4 col-md-6">
+          <div class="col-lg-3 col-md-6">
             <h6>Dịch vụ</h6>
             <ul>
               <li>
@@ -476,11 +357,47 @@
           <div class="col-lg-4 col-md-6">
             <h6>Hỗ trợ</h6>
             <ul>
-              <li><a href="#">Câu hỏi thường gặp</a></li>
-              <li><a href="#">Chính sách</a></li>
               <li><a href="terms.html">Điều khoản sử dụng</a></li>
-              <li><a href="#">Bảo mật</a></li>
             </ul>
+            <h5 class="h6 my-3">Tải Ứng Dụng</h5>
+            <div class="d-flex gap-2">
+              <a
+                href="#"
+                class="btn btn-primary d-flex align-items-center p-2 rounded-3 text-decoration-none"
+                style="flex: 1"
+              >
+                <i
+                  class="fab fa-apple me-2"
+                  style="width: 24px; height: 24px; font-size: 24px"
+                ></i>
+                <div class="text-start lh-1">
+                  <small class="d-block text-white-50" style="font-size: 10px"
+                    >Download on</small
+                  >
+                  <span class="fw-bold text-white" style="font-size: 12px"
+                    >App Store</span
+                  >
+                </div>
+              </a>
+              <a
+                href="#"
+                class="btn btn-success d-flex align-items-center p-2 rounded-3 text-decoration-none"
+                style="flex: 1"
+              >
+                <i
+                  class="fab fa-google-play me-2"
+                  style="width: 24px; height: 24px; font-size: 24px"
+                ></i>
+                <div class="text-start lh-1">
+                  <small class="d-block text-white-50" style="font-size: 10px"
+                    >Get it on</small
+                  >
+                  <span class="fw-bold text-white" style="font-size: 12px"
+                    >Google Play</span
+                  >
+                </div>
+              </a>
+            </div>
           </div>
         </div>
 
@@ -494,5 +411,7 @@
     </footer>
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="public/asset/js/setting.js"></script>
+    <script src="public/asset/js/data.js"></script>
   </body>
 </html>

@@ -1,0 +1,129 @@
+<div
+  class="modal fade"
+  id="bookingModal"
+  tabindex="-1"
+  aria-labelledby="bookingModalLabel"
+  aria-hidden="true"
+>
+  <div class="modal-dialog modal-lg">
+    <div class="modal-content">
+      <form id="contactForm" class="contactForm">
+        <!-- Modal Header -->
+        <div class="modal-header">
+          <h4 class="modal-title">Đặt dịch vụ</h4>
+          <button
+            type="button"
+            class="btn-close"
+            data-bs-dismiss="modal"
+          ></button>
+        </div>
+
+        <!-- Modal body -->
+        <div class="modal-body">
+          <div class="form-group">
+            <label for="name">Họ và tên *</label>
+            <input type="text" id="name" name="name" required />
+          </div>
+
+          <div class="form-group">
+            <label for="phone">Số điện thoại *</label>
+            <input type="number" id="phone" name="phone" required />
+          </div>
+
+          <div class="form-group">
+            <label for="addressInput">Địa chỉ</label>
+            <div class="input-group">
+              <input
+                type="text"
+                id="addressInput"
+                name="address"
+                placeholder="Nhập địa chỉ của bạn"
+              />
+            </div>
+          </div>
+          <div class="form-group">
+            <button class="btn btn-info" type="button" id="locateBtn">
+              <i class="fas fa-location-arrow"></i> Vị trí hiện tại
+            </button>
+          </div>
+
+          <div class="row">
+            <div class="col-sm-6">
+              <div class="form-group">
+                <label for="serviceContact">Dịch vụ quan tâm</label>
+                <select
+                  id="serviceContact"
+                  class="service-contact"
+                  name="service"
+                >
+                  <option value="">Chọn dịch vụ</option>
+                </select>
+              </div>
+            </div>
+
+            <div class="col-sm-6">
+              <div class="form-group">
+                <label>Dịch vụ cụ thể</label>
+                <select id="subService">
+                  <option value="">Chọn loại dịch vụ</option>
+                </select>
+              </div>
+            </div>
+          </div>
+
+          <div class="row">
+            <div class="col-md-6">
+              <div class="form-group">
+                <label>Giá dịch vụ</label>
+                <input type="text" id="priceContact" readonly />
+              </div>
+            </div>
+            <div class="col-md-6">
+              <div class="form-group">
+                <div id="kgBox">
+                  <label>Trọng lượng (kg)</label>
+                  <input type="number" id="kg" min="1" />
+                </div>
+
+                <div id="pairBox" style="display: none">
+                  <label>Đôi</label>
+                  <input type="number" id="pair" min="1" />
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div class="form-group">
+            <label>Phí vận chuyển</label>
+            <input type="text" id="ship" readonly />
+          </div>
+
+          <div class="form-group">
+            <label>Tổng tiền</label>
+            <input type="text" id="total" readonly />
+          </div>
+
+          <div class="form-group">
+            <label for="message">Ghi chú</label>
+            <textarea
+              id="message"
+              name="message"
+              placeholder="Nội dung cần tư vấn..."
+            ></textarea>
+          </div>
+        </div>
+
+        <!-- Modal footer -->
+        <div class="modal-footer">
+          <button
+            type="submit"
+            class="btn btn-primary"
+            style="width: 100%; justify-content: center"
+          >
+            <span>Đặt dịch vụ</span>
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
