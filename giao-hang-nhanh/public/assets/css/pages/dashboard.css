@@ -146,6 +146,12 @@ h2.section-title.dashboard-title {
   grid-template-columns: repeat(4, minmax(0, 1fr));
 }
 
+@media (max-width: 480px) {
+  .dashboard-kpi-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
 .dashboard-kpi-card {
   background: #ffffff;
   border-radius: 12px;

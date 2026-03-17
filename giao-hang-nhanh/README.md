@@ -9,6 +9,7 @@ Giao Hàng Nhanh là nền tảng logistics và giao nhận hàng hóa (Shipper)
 - Quản lý trạng thái và UI: Framework JS thuần tối ưu đặt tại `public/assets/js`. Modular hóa mạnh mẽ.
 - Pop-up thông minh: Mọi thao tác chọn dịch vụ mở modal trung tâm `public/assets/partials/shared-modals.html`.
 - **Hệ thống Tin tức & Hướng dẫn**: Module bài viết tĩnh (`news-data.json`) hỗ trợ SEO, tìm kiếm, lọc theo Tags và gợi ý bài viết liên quan.
+- **Tối ưu hóa Cơ sở dữ liệu**: Dữ liệu cấu hình tĩnh (quy định dịch vụ, thiết lập hệ thống) được quản lý qua JSON phía Frontend, giảm tải Database và tránh xung đột dữ liệu.
 
 ## Trải nghiệm người dùng cải tiến
 
@@ -16,12 +17,13 @@ Giao Hàng Nhanh là nền tảng logistics và giao nhận hàng hóa (Shipper)
   - Khách vãng lai (Guest) có thể tham khảo bảng giá và điền đơn ngay lập tức.
   - Hệ thống chỉ yêu cầu xác thực (Login/Register) ở bước cuối cùng trước khi chốt đơn.
   - Tự động lưu trạng thái bảo toàn dữ liệu thao tác sau khi đăng nhập thành công.
-- **Tính cước thời gian thực**:
+- **Tính cước thời gian thực & Hiển thị minh bạch**:
   - Giao diện báo giá tự động (Real-time Calculator) khi thay đổi khu vực nội thành/ngoại thành/quốc tế và cân nặng.
-  - Phụ phí COD, Bảo hiểm, Bùng nổ kích thước được bóc tách minh bạch trên UI.
+  - Trình bày tách rời chi tiết các khoản phí (Phí vận chuyển gốc, Phụ phí bảo hiểm hàng hóa, Tiền thu hộ COD, Phí vượt kích cỡ) cho tất cả góc nhìn (Customer, Shipper, Admin) để người dùng dễ đối chiếu.
 - **Đa dạng Phương thức Vận chuyển**:
+  - Tích hợp thêm UI/UX tiện lợi: Hỗ trợ nút Back riêng trên nền tảng di động và hiển thị Icon sinh động.
   - Nội địa: Giao Tiêu Chuẩn, Giao Nhanh, Hỏa Tốc.
-  - Quốc tế: Tiêu chuẩn quốc tế, Chuyển phát nhanh. Tự động tắt tính năng COD đối với đơn ngoại biên.
+  - Quốc tế: Tiêu chuẩn quốc tế, Chuyển phát nhanh. Tự động tắt tính năng COD (thu hộ) đối với đơn xuất ngoại.
 
 ## Phân quyền & Vai trò (Role-based functions)
 
@@ -48,6 +50,7 @@ Giao Hàng Nhanh là nền tảng logistics và giao nhận hàng hóa (Shipper)
 - Dashboard phân tích chỉ số kinh doanh, tỷ lệ giao thành công.
 - Quản lý mạng lưới khách hàng, thiết lập giá sàn, cước vận chuyển động.
 - Duyệt đối tác tài xế mới, phân phối công việc.
+- Quản lý Luồng xử lý đơn hàng đa dạng: Hỗ trợ xử lý thông tin Xuất Hóa đơn điện tử (VAT) cho doanh nghiệp, tra cứu chi tiết mặt hàng, và lộ trình gửi hàng quốc tế.
 
 ## Logic tính cước & Thuật toán
 
@@ -90,5 +93,3 @@ Web shipper/
 - `public/order.php`: Bóc tách payload tính phí, lưu vào cơ sở dữ liệu và Push Notification đến shipper.
 - `public/cancel_order_ajax.php`: Xử lý hủy đơn hàng từ phía người dùng (chỉ đơn pending).
 - `public/webhook_payment.php`: Cổng Webhook nhận thông báo thanh toán tự động từ ngân hàng/cổng thanh toán.
-
-_Lưu ý: Sau khi thực hiện chiến lược tái cấu trúc (Refactoring), toàn bộ Module liên quan đến Mảng kinh doanh "Chuyển nhà/Văn phòng" đã được bóc tách hoàn toàn sang một dự án Landing Page độc lập khác nhằm giữ cho kiến trúc hệ thống Core Giao Hàng đạt hiệu suất cao nhất._

@@ -7,32 +7,50 @@ if (!isset($_SESSION['user_id'])) {
     exit;
 }
 
-$user_id = $_SESSION['user_id'];
+$user_id = (int)$_SESSION['user_id'];
 
 // Phân trang
 $page = isset($_GET['page']) ? (int) $_GET['page'] : 1;
 $limit = 15;
 $offset = ($page - 1) * $limit;
+if ($page < 1) $page = 1;
 
-// Đếm tổng số
-$count_res = $conn->query("SELECT COUNT(*) as total FROM notifications WHERE user_id = $user_id");
-$total_records = $count_res->fetch_assoc()['total'];
+// Đếm tổng số sử dụng Prepared Statement
+$total_records = 0;
+$stmt_count = $conn->prepare("SELECT COUNT(*) as total FROM notifications WHERE user_id = ?");
+if ($stmt_count) {
+    $stmt_count->bind_param("i", $user_id);
+    $stmt_count->execute();
+    $stmt_count->bind_result($total_n);
+    if ($stmt_count->fetch()) {
+        $total_records = (int)$total_n;
+    }
+    $stmt_count->close();
+}
 $total_pages = ceil($total_records / $limit);
 
 // Lấy danh sách
 $notifications = [];
 $stmt = $conn->prepare("SELECT * FROM notifications WHERE user_id = ? ORDER BY created_at DESC LIMIT ? OFFSET ?");
-$stmt->bind_param("iii", $user_id, $limit, $offset);
-$stmt->execute();
-$result = $stmt->get_result();
-if ($result) {
-    while ($row = $result->fetch_assoc()) {
-        $notifications[] = $row;
+if ($stmt) {
+    $stmt->bind_param("iii", $user_id, $limit, $offset);
+    $stmt->execute();
+    $result = $stmt->get_result();
+    if ($result) {
+        while ($row = $result->fetch_assoc()) {
+            $notifications[] = $row;
+        }
     }
+    $stmt->close();
 }
 
-// Đánh dấu tất cả là đã đọc khi vào trang này
-$conn->query("UPDATE notifications SET is_read = 1 WHERE user_id = $user_id");
+// Đánh dấu tất cả là đã đọc
+$stmt_read = $conn->prepare("UPDATE notifications SET is_read = 1 WHERE user_id = ? AND is_read = 0");
+if ($stmt_read) {
+    $stmt_read->bind_param("i", $user_id);
+    $stmt_read->execute();
+    $stmt_read->close();
+}
 ?>
 <!DOCTYPE html>
 <html lang="vi">

@@ -81,22 +81,30 @@ $stats = [
     'income' => 0,
     'total' => 0,
     'completed' => 0,
-    'cancelled' => 0
+    'cancelled' => 0,
+    'revenue' => 0,
+    'success_rate' => 0
 ];
 
-$sql_stats = "SELECT 
-                COUNT(*) as total,
-                SUM(CASE WHEN status = 'completed' THEN 1 ELSE 0 END) as completed,
-                SUM(CASE WHEN status = 'cancelled' THEN 1 ELSE 0 END) as cancelled,
-                SUM(CASE WHEN status = 'completed' THEN shipping_fee ELSE 0 END) as income
-              FROM orders WHERE shipper_id = ?";
-$stmt = $conn->prepare($sql_stats);
+$stmt = $conn->prepare("SELECT 
+    COUNT(*) as total,
+    SUM(CASE WHEN status = 'completed' THEN 1 ELSE 0 END) as completed,
+    SUM(CASE WHEN status = 'cancelled' THEN 1 ELSE 0 END) as cancelled,
+    SUM(CASE WHEN status = 'completed' THEN shipping_fee ELSE 0 END) as revenue
+    FROM orders WHERE shipper_id = ?");
 $stmt->bind_param("i", $shipper_id);
 $stmt->execute();
-$res_stats = $stmt->get_result()->fetch_assoc();
-if ($res_stats) {
-    $stats = $res_stats;
+$res = $stmt->get_result()->fetch_assoc();
+if ($res) {
+    $stats['total'] = $res['total'];
+    $stats['completed'] = $res['completed'];
+    $stats['cancelled'] = $res['cancelled'];
+    $stats['revenue'] = $res['revenue'] ?? 0;
+    if ($stats['total'] > 0) {
+        $stats['success_rate'] = round(($stats['completed'] / $stats['total']) * 100, 1);
+    }
 }
+$stmt->close();
 
 // Lấy thông tin user
 $stmt = $conn->prepare("SELECT username, fullname, phone, email FROM users WHERE id = ?");
@@ -113,8 +121,7 @@ $user_info = $stmt->get_result()->fetch_assoc();
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <link rel="stylesheet" href="assets/css/styles.css?v=<?php echo time(); ?>">
     <link rel="stylesheet" href="assets/css/admin.css?v=<?php echo time(); ?>">
-    <link rel="stylesheet" href="assets/css/admin-pages.css?v=<?php echo time(); ?>">
-    <link rel="stylesheet" href="assets/css/admin_styles.css?v=<?php echo time(); ?>">
+    <link rel="stylesheet" href="assets/css/shipper.css?v=<?php echo time(); ?>">
 </head>
 
 <body>
@@ -133,31 +140,24 @@ $user_info = $stmt->get_result()->fetch_assoc();
         <?php endif; ?>
 
         <!-- THỐNG KÊ -->
-        <div class="profile-grid"
-            style="grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); margin-bottom: 30px;">
-            <div class="stat-box" style="border-bottom: 4px solid #28a745;">
-                <div class="stat-label">💰 Tổng thu nhập (Ship)</div>
-                <div class="stat-num" style="color: #28a745;">
-                    <?php echo number_format($stats['income'] ?? 0); ?>đ
-                </div>
+        <div class="profile-grid">
+            <div class="stat-card">
+                <div class="stat-label">Tổng đơn nhận</div>
+                <div class="stat-value"><?php echo number_format($stats['total']); ?></div>
             </div>
-            <div class="stat-box" style="border-bottom: 4px solid #0a2a66;">
-                <div class="stat-label">📦 Tổng đơn được giao</div>
-                <div class="stat-num" style="color: #0a2a66;">
-                    <?php echo number_format($stats['total']); ?>
-                </div>
+            <div class="stat-card" style="border-left: 4px solid #28a745;">
+                <div class="stat-label">Giao thành công</div>
+                <div class="stat-value" style="color: #28a745;"><?php echo number_format($stats['completed']); ?></div>
+                <div style="font-size: 12px; color: #666;">Tỷ lệ: <?php echo $stats['success_rate']; ?>%</div>
             </div>
-            <div class="stat-box" style="border-bottom: 4px solid #17a2b8;">
-                <div class="stat-label">✅ Giao thành công</div>
-                <div class="stat-num" style="color: #17a2b8;">
-                    <?php echo number_format($stats['completed']); ?>
-                </div>
+            <div class="stat-card" style="border-left: 4px solid #dc3545;">
+                <div class="stat-label">Đơn hủy</div>
+                <div class="stat-value" style="color: #dc3545;"><?php echo number_format($stats['cancelled']); ?></div>
             </div>
-            <div class="stat-box" style="border-bottom: 4px solid #dc3545;">
-                <div class="stat-label">❌ Đơn hủy / Thất bại</div>
-                <div class="stat-num" style="color: #dc3545;">
-                    <?php echo number_format($stats['cancelled']); ?>
-                </div>
+            <div class="stat-card" style="border-left: 4px solid #ff7a00;">
+                <div class="stat-label">Tổng thu nhập</div>
+                <div class="stat-value" style="color: #ff7a00;"><?php echo number_format($stats['revenue']); ?>đ</div>
+                <div style="font-size: 12px; color: #666;">(Ship fee đơn thành công)</div>
             </div>
         </div>
 

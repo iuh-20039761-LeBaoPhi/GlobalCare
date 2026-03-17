@@ -295,7 +295,10 @@
   }
 
   function buildPaymentContent(data) {
-    return '<p style="margin-top:15px; color:#28a745; text-align:center;"><em>Đơn hàng sẽ được xác nhận và thanh toán sau khi khảo sát thực tế.</em></p>';
+    return `
+      <div style="margin-top:10px; display:flex; flex-direction:column; align-items:center;">
+        <p style="color:#28a745; margin-top:5px; text-align:center;"><em>Đơn hàng sẽ được xác nhận và thanh toán sau khi khảo sát thực tế.</em></p>
+      </div>`;
   }
 
   function renderSubmitResult(form, msgDiv, data, config) {
@@ -305,22 +308,33 @@
     );
     const paymentContent = buildPaymentContent(data);
 
+    // Tìm modal form và ẩn đi
+    const modalContent = form.closest('.booking-modal-content');
+    if (modalContent) {
+        // Lấy tất cả children trừ nút tắt X (thường là element đầu tiên)
+        Array.from(modalContent.children).forEach(el => {
+            if (!el.classList.contains('modal-close-btn') && el !== msgDiv) {
+                el.style.display = 'none';
+            }
+        });
+    }
+
     msgDiv.style.display = "block";
     msgDiv.className = "";
     msgDiv.classList.add("success");
     msgDiv.innerHTML = `
       <div class="success-message">
-        <div class="check-icon">✓</div>
-        <h3>Đã gửi yêu cầu thành công!</h3>
-        <p>Mã yêu cầu: <strong style="font-size:18px; color:#1b4332;">${data.order_code || "SURVEY-" + Date.now()}</strong></p>
+        <h3 style="color:#28a745; font-size:24px; margin-top:10px;">Đã đặt lịch thành công!</h3>
+        <p style="margin-top:10px;">Mã yêu cầu: <strong style="font-size:18px; color:#1b4332;">${data.order_code || "SURVEY-" + Date.now()}</strong></p>
         <div style="text-align:left; font-size:14px; background:#fff; padding:15px; border-radius:8px; margin-top:15px; border:1px solid #eee;">
           <p style="margin-bottom:5px;">🚩 <strong>Địa điểm đi:</strong> ${pickup}</p>
           <p style="margin-bottom:5px;">🏁 <strong>Địa điểm đến:</strong> ${delivery}</p>
-          <p style="margin-bottom:5px;">💵 <strong>Phí dịch vụ:</strong> Báo giá sau khảo sát</p>
+          <p style="margin-bottom:5px; border-top: 1px dashed #ddd; padding-top: 5px; margin-top: 5px;">💸 <strong>Phí đi lại (khảo sát):</strong> <span style="color:#e63946; font-weight:bold;">50,000 VNĐ</span> <em>(Thanh toán trực tiếp sau)</em></p>
+          <p style="margin-bottom:5px;">💵 <strong>Phí dịch vụ:</strong> Báo giá chi tiết qua số điện thoại</p>
         </div>
         ${paymentContent}
         <div style="margin-top:25px; display:flex; gap:10px; justify-content:center;">
-          <button type="button" onclick="resetOrderForm('${config.id}')" class="btn-primary">Gửi yêu cầu mới</button>
+          <button type="button" onclick="closeBookingModal('${config.type}')" class="btn-primary" style="padding: 10px 30px;">Đóng</button>
         </div>
       </div>`;
   }
@@ -389,32 +403,35 @@
         return;
       }
 
-      if (
-        !confirm("Bạn có chắc chắn muốn xác nhận yêu cầu khảo sát này không?")
-      ) {
-        setButtonState(submitBtn, defaultSubmitText, false);
-        return;
-      }
-
       applyMovingDefaults(form);
       prepareMovingPayload(form, serviceTypeValue);
 
       const formData = new FormData(form);
+      formData.append('survey_fee', '50000'); // Gửi phí khảo sát 50k xuống server
 
-      // Lưu ý: Do backend đã bị xóa, đoạn này giả lập kết quả thành công để UI vẫn hoạt động logic
-      // Trong môi trường thực tế sẽ gọi AJAX tới endpoint mới
-      setTimeout(() => {
-        const mockData = {
-          status: "success",
-          order_code: "MV-" + Math.floor(Math.random() * 1000000),
-        };
-        renderSubmitResult(form, msgDiv, mockData, config);
-        if (submitBtn) submitBtn.style.display = "none";
-        form.reset();
-        const movingSelect = form.querySelector("[name=service_type]");
-        if (movingSelect) movingSelect.dispatchEvent(new Event("change"));
-        setButtonState(submitBtn, defaultSubmitText, false);
-      }, 1000);
+      // Gọi API thực tế
+      fetch("/dich-vu-chuyen-don/admin-chuyendon/api/save_order.php", {
+          method: "POST",
+          body: formData
+      })
+      .then(response => response.json())
+      .then(data => {
+          if (data.status === "success") {
+              renderSubmitResult(form, msgDiv, data, config);
+              if (submitBtn) submitBtn.style.display = "none";
+              form.reset();
+              const movingSelect = form.querySelector("[name=service_type]");
+              if (movingSelect) movingSelect.dispatchEvent(new Event("change"));
+          } else {
+             core.showFieldError(submitBtn, data.message || "Có lỗi xảy ra, vui lòng thử lại.");
+             setButtonState(submitBtn, defaultSubmitText, false);
+          }
+      })
+      .catch(err => {
+          console.error("Fetch Error:", err);
+          core.showFieldError(submitBtn, "Lỗi kết nối máy chủ. Vui lòng kiểm tra lại mạng.");
+          setButtonState(submitBtn, defaultSubmitText, false);
+      });
     });
   }
 
@@ -436,6 +453,13 @@
       }
 
       form.reset();
+      
+      const modalContent = form.closest('.booking-modal-content');
+      if (modalContent) {
+          Array.from(modalContent.children).forEach(el => {
+              el.style.display = ''; // Hiện lại mọi thứ khi reset
+          });
+      }
 
       const btn = form.querySelector("button[type='submit']");
       if (btn) {
@@ -454,3 +478,20 @@
     window.scrollTo({ top: 0, behavior: "smooth" });
   };
 })(window, document);
+
+// Cập nhật hàm Close Modal (do ta ẩn components đi ở trên nên cần reset lại trước khi đóng)
+const originalCloseBookingModal = typeof window.closeBookingModal === "function" ? window.closeBookingModal : null;
+window.closeBookingModal = function(type) {
+    if (type === 'moving') {
+        window.resetOrderForm("create-order-form-moving"); 
+    }
+    if (originalCloseBookingModal) {
+        originalCloseBookingModal(type);
+    } else {
+        const modal = document.getElementById("booking-modal-" + type);
+        if (modal) {
+          modal.style.display = "none";
+          document.body.style.overflow = "auto";
+        }
+    }
+};

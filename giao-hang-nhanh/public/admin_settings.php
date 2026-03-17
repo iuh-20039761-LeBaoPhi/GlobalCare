@@ -9,9 +9,9 @@ if (!isset($_SESSION['user_id']) || $_SESSION['role'] !== 'admin') {
 
 // Xử lý cập nhật cài đặt
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['update_settings'])) {
-    $settings = $_POST['settings'] ?? [];
+    $settings_data = $_POST['settings'] ?? [];
 
-    foreach ($settings as $key => $value) {
+    foreach ($settings_data as $key => $value) {
         $stmt = $conn->prepare("UPDATE system_settings SET setting_value = ? WHERE setting_key = ?");
         $stmt->bind_param("ss", $value, $key);
         $stmt->execute();
@@ -38,7 +38,6 @@ if ($result) {
     <title>Cài đặt hệ thống | Admin</title>
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <link rel="stylesheet" href="assets/css/admin.css?v=<?php echo time(); ?>">
-    <link rel="stylesheet" href="assets/css/admin-pages.css?v=<?php echo time(); ?>">
 </head>
 
 <body>
@@ -47,120 +46,123 @@ if ($result) {
     <main class="admin-container">
         <div class="page-header">
             <h2 class="page-title">⚙️ Cài đặt hệ thống</h2>
-            <a href="admin_stats.php" class="back-link">← Quay lại Dashboard</a>
+            <a href="admin_stats.php" class="back-link"><i class="fa-solid fa-arrow-left"></i> Dashboard</a>
         </div>
 
         <?php if (isset($success_msg)): ?>
-            <div
-                style="padding:15px; background:#d4edda; color:#155724; margin-bottom:20px; border-radius:6px; border:1px solid #c3e6cb;">
-                ✓ <?php echo $success_msg; ?>
+            <div class="status-badge status-active" style="width: 100%; margin-bottom: 25px; padding: 15px; border-radius: 12px;">
+                <i class="fa-solid fa-circle-check"></i> <?php echo $success_msg; ?>
             </div>
         <?php endif; ?>
 
         <form method="POST" class="settings-form">
-            <!-- Thông tin ngân hàng -->
-            <div class="settings-section">
-                <h3 style="color:#0a2a66; border-bottom:2px solid #ff7a00; padding-bottom:10px; margin-bottom:20px;">
-                    🏦 Thông tin ngân hàng (Thanh toán QR)
-                </h3>
-
-                <div class="form-grid" style="grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap:20px;">
-                    <div class="form-group">
-                        <label for="bank_id">Mã ngân hàng</label>
-                        <input type="text" id="bank_id" name="settings[bank_id]"
-                            value="<?php echo htmlspecialchars($settings['bank_id']['setting_value'] ?? ''); ?>"
-                            placeholder="VD: MB, VCB, ACB" required>
-                        <small style="color:#666; font-size:12px;">Mã ngân hàng theo chuẩn VietQR</small>
+            <div class="dashboard-layout" style="gap: 30px;">
+                
+                <!-- Section: Bank Info -->
+                <div class="admin-card">
+                    <div class="admin-card-header">
+                        <h3><i class="fa-solid fa-building-columns"></i> Thông tin ngân hàng (VietQR)</h3>
                     </div>
+                    
+                    <div class="grid-responsive">
+                        <div class="form-group">
+                            <label for="bank_id">Mã ngân hàng (VietQR)</label>
+                            <input type="text" id="bank_id" name="settings[bank_id]"
+                                value="<?php echo htmlspecialchars($settings['bank_id']['setting_value'] ?? ''); ?>"
+                                placeholder="VD: MB, VCB, ACB" class="admin-input" required>
+                            <small style="color:#64748b; font-size:12px;">Tra cứu mã ngân hàng tại vietqr.io</small>
+                        </div>
 
-                    <div class="form-group">
-                        <label for="bank_name">Tên ngân hàng</label>
-                        <input type="text" id="bank_name" name="settings[bank_name]"
-                            value="<?php echo htmlspecialchars($settings['bank_name']['setting_value'] ?? ''); ?>"
-                            placeholder="VD: MB Bank (Quân đội)" required>
-                    </div>
+                        <div class="form-group">
+                            <label for="bank_name">Tên ngân hàng đầy đủ</label>
+                            <input type="text" id="bank_name" name="settings[bank_name]"
+                                value="<?php echo htmlspecialchars($settings['bank_name']['setting_value'] ?? ''); ?>"
+                                placeholder="VD: Ngân hàng Quân Đội" class="admin-input" required>
+                        </div>
 
-                    <div class="form-group">
-                        <label for="bank_account_no">Số tài khoản</label>
-                        <input type="text" id="bank_account_no" name="settings[bank_account_no]"
-                            value="<?php echo htmlspecialchars($settings['bank_account_no']['setting_value'] ?? ''); ?>"
-                            placeholder="VD: 0333666999" required>
-                    </div>
+                        <div class="form-group">
+                            <label for="bank_account_no">Số tài khoản</label>
+                            <input type="text" id="bank_account_no" name="settings[bank_account_no]"
+                                value="<?php echo htmlspecialchars($settings['bank_account_no']['setting_value'] ?? ''); ?>"
+                                placeholder="VD: 0333666999" class="admin-input" required>
+                        </div>
 
-                    <div class="form-group">
-                        <label for="bank_account_name">Tên chủ tài khoản</label>
-                        <input type="text" id="bank_account_name" name="settings[bank_account_name]"
-                            value="<?php echo htmlspecialchars($settings['bank_account_name']['setting_value'] ?? ''); ?>"
-                            placeholder="VD: GIAO HÀNG NHANH" required>
-                    </div>
+                        <div class="form-group">
+                            <label for="bank_account_name">Tên chủ tài khoản</label>
+                            <input type="text" id="bank_account_name" name="settings[bank_account_name]"
+                                value="<?php echo htmlspecialchars($settings['bank_account_name']['setting_value'] ?? ''); ?>"
+                                placeholder="VD: NGUYEN VAN A" class="admin-input" required>
+                        </div>
 
-                    <div class="form-group">
-                        <label for="qr_template">Mẫu QR Code</label>
-                        <select id="qr_template" name="settings[qr_template]">
-                            <option value="compact" <?php echo ($settings['qr_template']['setting_value'] ?? '') === 'compact' ? 'selected' : ''; ?>>Compact (Gọn)</option>
-                            <option value="print" <?php echo ($settings['qr_template']['setting_value'] ?? '') === 'print' ? 'selected' : ''; ?>>Print (In ấn)</option>
-                            <option value="qr_only" <?php echo ($settings['qr_template']['setting_value'] ?? '') === 'qr_only' ? 'selected' : ''; ?>>QR Only (Chỉ mã)</option>
-                        </select>
-                    </div>
-                </div>
-            </div>
-
-            <!-- Thông tin công ty -->
-            <div class="settings-section" style="margin-top:30px;">
-                <h3 style="color:#0a2a66; border-bottom:2px solid #ff7a00; padding-bottom:10px; margin-bottom:20px;">
-                    🏢 Thông tin công ty
-                </h3>
-
-                <div class="form-grid" style="grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap:20px;">
-                    <div class="form-group">
-                        <label for="company_name">Tên công ty</label>
-                        <input type="text" id="company_name" name="settings[company_name]"
-                            value="<?php echo htmlspecialchars($settings['company_name']['setting_value'] ?? ''); ?>"
-                            placeholder="VD: Giao Hàng Nhanh Logistics">
-                    </div>
-
-                    <div class="form-group">
-                        <label for="company_hotline">Hotline</label>
-                        <input type="text" id="company_hotline" name="settings[company_hotline]"
-                            value="<?php echo htmlspecialchars($settings['company_hotline']['setting_value'] ?? ''); ?>"
-                            placeholder="VD: 0123 456 789">
-                    </div>
-
-                    <div class="form-group">
-                        <label for="company_email">Email liên hệ</label>
-                        <input type="email" id="company_email" name="settings[company_email]"
-                            value="<?php echo htmlspecialchars($settings['company_email']['setting_value'] ?? ''); ?>"
-                            placeholder="VD: contact@giao_hang_nhanh.vn">
-                    </div>
-
-                    <div class="form-group">
-                        <label for="company_address">Địa chỉ</label>
-                        <input type="text" id="company_address" name="settings[company_address]"
-                            value="<?php echo htmlspecialchars($settings['company_address']['setting_value'] ?? ''); ?>"
-                            placeholder="VD: TP. Hồ Chí Minh">
+                        <div class="form-group">
+                            <label for="qr_template">Giao diện QR Code</label>
+                            <select id="qr_template" name="settings[qr_template]" class="admin-select">
+                                <option value="compact" <?php echo ($settings['qr_template']['setting_value'] ?? '') === 'compact' ? 'selected' : ''; ?>>Compact (Gọn)</option>
+                                <option value="print" <?php echo ($settings['qr_template']['setting_value'] ?? '') === 'print' ? 'selected' : ''; ?>>Print (Để in ấn)</option>
+                                <option value="qr_only" <?php echo ($settings['qr_template']['setting_value'] ?? '') === 'qr_only' ? 'selected' : ''; ?>>QR Only (Chỉ mã)</option>
+                            </select>
+                        </div>
                     </div>
                 </div>
-            </div>
 
-            <div style="margin-top:30px; text-align:right;">
-                <button type="submit" name="update_settings" class="btn-primary"
-                    style="padding:12px 30px; font-size:16px;">
-                    💾 Lưu cài đặt
-                </button>
+                <!-- Section: Company Info -->
+                <div class="admin-card">
+                    <div class="admin-card-header">
+                        <h3><i class="fa-solid fa-briefcase"></i> Thông tin doanh nghiệp</h3>
+                    </div>
+
+                    <div class="grid-responsive">
+                        <div class="form-group">
+                            <label for="company_name">Tên thương hiệu</label>
+                            <input type="text" id="company_name" name="settings[company_name]"
+                                value="<?php echo htmlspecialchars($settings['company_name']['setting_value'] ?? ''); ?>"
+                                placeholder="VD: Giao Hàng Nhanh" class="admin-input">
+                        </div>
+
+                        <div class="form-group">
+                            <label for="company_hotline">Đường dây nóng (Hotline)</label>
+                            <input type="text" id="company_hotline" name="settings[company_hotline]"
+                                value="<?php echo htmlspecialchars($settings['company_hotline']['setting_value'] ?? ''); ?>"
+                                placeholder="VD: 1900 1234" class="admin-input">
+                        </div>
+
+                        <div class="form-group">
+                            <label for="company_email">Email liên hệ hệ thống</label>
+                            <input type="email" id="company_email" name="settings[company_email]"
+                                value="<?php echo htmlspecialchars($settings['company_email']['setting_value'] ?? ''); ?>"
+                                placeholder="VD: support@ghn.vn" class="admin-input">
+                        </div>
+
+                        <div class="form-group">
+                            <label for="company_address">Địa chỉ trụ sở chính</label>
+                            <input type="text" id="company_address" name="settings[company_address]"
+                                value="<?php echo htmlspecialchars($settings['company_address']['setting_value'] ?? ''); ?>"
+                                placeholder="VD: 123 Nguyễn Huệ, TP. HCM" class="admin-input">
+                        </div>
+                    </div>
+                </div>
+
+                <!-- QR Preview Integration -->
+                <div class="admin-card" style="background: rgba(10, 42, 102, 0.02); border-style: dashed;">
+                    <div class="admin-card-header">
+                        <h3><i class="fa-solid fa-qrcode"></i> Xem trước hiển thị thanh toán</h3>
+                    </div>
+                    <div style="display: flex; flex-direction: column; align-items: center; gap: 20px;">
+                        <img id="qr-preview" src="" alt="QR Preview"
+                            style="max-width:240px; border-radius:12px; box-shadow: 0 10px 30px rgba(0,0,0,0.1); display:none;">
+                        <button type="button" onclick="previewQR()" class="btn-secondary" style="padding: 10px 30px;">
+                            <i class="fa-solid fa-arrows-rotate"></i> Cập nhật bản xem trước
+                        </button>
+                    </div>
+                </div>
+
+                <div style="position: sticky; bottom: 30px; z-index: 10; padding: 20px 0; display: flex; justify-content: flex-end;">
+                    <button type="submit" name="update_settings" class="btn-primary" style="padding: 15px 40px; font-size: 16px; box-shadow: 0 10px 30px rgba(10,42,102,0.4);">
+                        <i class="fa-solid fa-floppy-disk"></i> Lưu tất cả thay đổi
+                    </button>
+                </div>
             </div>
         </form>
-
-        <!-- Preview QR Code -->
-        <div class="settings-section" style="margin-top:40px; background:#f8f9fa; padding:20px; border-radius:8px;">
-            <h3 style="color:#0a2a66; margin-bottom:15px;">👁️ Xem trước QR Code</h3>
-            <div style="text-align:center;">
-                <img id="qr-preview" src="" alt="QR Preview"
-                    style="max-width:300px; border:2px solid #0a2a66; border-radius:8px; display:none;">
-                <button type="button" onclick="previewQR()" class="btn-secondary" style="margin-top:15px;">
-                    🔄 Tạo QR mẫu
-                </button>
-            </div>
-        </div>
     </main>
 
     <?php include __DIR__ . '/../includes/footer.php'; ?>
@@ -172,17 +174,17 @@ if ($result) {
             const accountName = document.getElementById('bank_account_name').value || 'GIAO HÀNG NHANH';
             const template = document.getElementById('qr_template').value || 'compact';
 
-            const amount = 50000; // Số tiền mẫu
-            const addInfo = 'FAST-DEMO123'; // Mã đơn mẫu
+            const amount = 50000;
+            const addInfo = 'MA_DON_HANG';
 
             const qrUrl = `https://img.vietqr.io/image/${bankId}-${accountNo}-${template}.png?amount=${amount}&addInfo=${encodeURIComponent(addInfo)}&accountName=${encodeURIComponent(accountName)}`;
 
             const img = document.getElementById('qr-preview');
             img.src = qrUrl;
             img.style.display = 'block';
+            img.scrollIntoView({ behavior: 'smooth', block: 'center' });
         }
     </script>
 </body>
 
 </html>
-

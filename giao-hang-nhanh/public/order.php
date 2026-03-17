@@ -97,9 +97,26 @@ $intl_purpose = trim($_POST['intl_purpose'] ?? '');
 $fee_payer = trim($_POST['fee_payer'] ?? 'sender');
 $shipping_fee = $_POST['shipping_fee'] ?? 0;
 $pickup_time = $_POST['pickup_time'] ?? '';
+if ($pickup_time !== '') {
+    // Nếu pickup_time chứa khung giờ (VD: 2026-03-20 - 08:00-10:00),
+    // lấy phần ngày (10 ký tự đầu) để MySQL lưu đúng kiểu datetime.
+    $pickup_time = substr($pickup_time, 0, 10);
+} else {
+    $pickup_time = null;
+}
 $delivery_time = $_POST['delivery_time'] ?? '';
+if ($delivery_time !== '') {
+    $delivery_time = substr($delivery_time, 0, 10);
+} else {
+    $delivery_time = null;
+}
 $payment_method = $_POST['payment_method'] ?? 'cod';
 $note = $_POST['note'] ?? '';
+$goods_description = $_POST['goods_description'] ?? '';
+$client_order_code = trim($_POST['client_order_code'] ?? '');
+if ($client_order_code === '') $client_order_code = null;
+$vehicle_type = trim($_POST['vehicle_type'] ?? '');
+if ($vehicle_type === '') $vehicle_type = null;
 
 // Đồng bộ giá trị từ nhiều form frontend cũ/mới
 if ($payment_method === 'bank') {
@@ -185,6 +202,7 @@ if (!in_array($fee_payer, ['sender', 'receiver'], true))
 // Nếu là chuyển khoản, tiền thu hộ phải bằng 0
 if ($payment_method === 'bank_transfer' || $is_international) {
     $cod_amount = 0;
+    $client_order_code = null; // Chỉ hỗ trợ trong nước
 }
 
 $note_extras = [];
@@ -215,10 +233,39 @@ if ($is_international) {
         $note_extras[] = "Mục đích gửi: " . ($purpose_map[$intl_purpose] ?? $intl_purpose);
     }
 }
+// --- CẢI THIỆN: Xử lý danh sách hàng hóa từ JSON payload (quy trình mới) ---
+$items_payload_raw = $_POST['order-items-payload'] ?? '';
+$items_list = [];
+if (!empty($items_payload_raw)) {
+    $items_list = json_decode($items_payload_raw, true);
+}
+
 if (!empty($note_extras)) {
     $note = trim((string) $note);
     $extras_text = implode("\n", $note_extras);
     $note = $note === '' ? $extras_text : ($note . "\n" . $extras_text);
+}
+
+if ($insurance_value > 0) {
+    if ($note !== '') $note .= "\n";
+    $note .= "💎 Bảo hiểm hàng hóa: " . number_format($insurance_value) . " VNĐ";
+}
+
+if (!empty($items_list)) {
+    if ($note !== '') $note .= "\n";
+    $note .= "--- CHI TIẾT HÀNG HÓA ---\n";
+    foreach ($items_list as $idx => $it) {
+        $it_name = $it['name'] ?: 'Chưa đặt tên';
+        $it_qty = $it['quantity'] ?: 1;
+        $it_weight = $it['weight_per_unit'] ?: 0;
+        $it_insured = isset($it['insurance_value']) ? " (Khai giá: ".number_format($it['insurance_value'])."đ)" : "";
+        $note .= ($idx + 1) . ". " . $it_name . " [x" . $it_qty . "] - " . $it_weight . "kg/kiện" . $it_insured . "\n";
+    }
+}
+
+if (!empty($goods_description)) {
+    $note = trim((string) $note);
+    $note = $note === '' ? $goods_description : ($note . "\n---\nGhi chú hàng hóa bổ sung:\n" . $goods_description);
 }
 
 // Nếu yêu cầu xuất hóa đơn, các trường công ty là bắt buộc
@@ -275,8 +322,8 @@ $conn->begin_transaction();
 try {
     // 3.1. Chèn vào bảng `orders`
     $stmt = $conn->prepare("INSERT INTO `orders`
-    (order_code, user_id, route_type, name, phone, pickup_address, pickup_city, receiver_name, receiver_phone, receiver_id_number, delivery_address, delivery_city, intl_country, service_type, pickup_time, weight, shipping_fee, cod_amount, insurance_value, fee_payer, payment_method, payment_status, status, note, is_corporate, company_name, company_email, company_tax_code, company_address, company_bank_info, created_at)
-    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, NOW())");
+    (order_code, client_order_code, user_id, pickup_address, name, phone, receiver_name, receiver_phone, delivery_address, is_corporate, company_name, company_email, company_tax_code, company_address, company_bank_info, service_type, vehicle_type, package_type, weight, cod_amount, shipping_fee, pickup_time, note, payment_method, payment_status, status, created_at)
+    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, NOW())");
 
     if (!$stmt) {
         throw new Exception("Order Prepare Failed: " . $conn->error);
@@ -284,15 +331,36 @@ try {
 
     $status = 'pending';
     $payment_status = 'unpaid';
+    $package_type = 'other'; // Mặc định nếu không có
 
     $stmt->bind_param(
-        "sisssssssssssssddddsssssissssss",
-        $order_code, $user_id, $route_type, $name, $phone,
-        $pickup, $pickup_city, $receiver_name, $receiver_phone, $receiver_id_number,
-        $delivery, $delivery_city, $intl_country, $service_type, $pickup_time,
-        $weight, $shipping_fee, $cod_amount, $insurance_value, $fee_payer,
-        $payment_method, $payment_status, $status, $note,
-        $is_corporate, $company_name, $company_email, $company_tax_code, $company_address, $company_bank_info
+        "ssissssssissssssssdddsssss",
+        $order_code,        // order_code (s)
+        $client_order_code, // client_order_code (s)
+        $user_id,           // user_id (i)
+        $pickup,            // pickup_address (s)
+        $name,              // name (s)
+        $phone,             // phone (s)
+        $receiver_name,     // receiver_name (s)
+        $receiver_phone,    // receiver_phone (s)
+        $delivery,          // delivery_address (s)
+        $is_corporate,      // is_corporate (i)
+        $company_name,      // company_name (s)
+        $company_email,     // company_email (s)
+        $company_tax_code,  // company_tax_code (s)
+        $company_address,   // company_address (s)
+        $company_bank_info, // company_bank_info (s)
+        $service_type,      // service_type (s)
+        $vehicle_type,      // vehicle_type (s)
+        $package_type,      // package_type (s)
+        $weight,            // weight (d)
+        $cod_amount,        // cod_amount (d)
+        $shipping_fee,      // shipping_fee (d)
+        $pickup_time,       // pickup_time (s)
+        $note,              // note (s)
+        $payment_method,    // payment_method (s)
+        $payment_status,    // payment_status (s)
+        $status             // status (s)
     );
 
     if (!$stmt->execute()) {
@@ -302,28 +370,7 @@ try {
     $order_id = $conn->insert_id;
     $stmt->close();
 
-    // 3.2. Chèn vào bảng `order_items`
-    $stmt_item = $conn->prepare("INSERT INTO order_items (order_id, item_name, quantity, unit_weight, declared_value, item_type) VALUES (?, ?, ?, ?, ?, ?)");
-
-    if ($stmt_item && is_array($goods_item_names)) {
-        for ($i = 0; $i < count($goods_item_names); $i++) {
-            $itm_name = trim($goods_item_names[$i]);
-            if (empty($itm_name)) continue;
-
-            $itm_qty = intval($goods_item_quantities[$i] ?? 1);
-            $itm_weight = floatval($goods_item_weights[$i] ?? 0);
-            $itm_val = parse_money_value($goods_item_declareds[$i] ?? 0);
-            $itm_type = trim($goods_item_types[$i] ?? 'goods');
-
-            $stmt_item->bind_param("isidds", $order_id, $itm_name, $itm_qty, $itm_weight, $itm_val, $itm_type);
-            if (!$stmt_item->execute()) {
-                throw new Exception("Item Insert Failed: " . $stmt_item->error);
-            }
-        }
-        $stmt_item->close();
-    }
-
-    // --- TÍNH NĂNG MỚI: Cập nhật thông tin công ty vào bảng users để ghi nhớ ---
+    // 3.2. Cập nhật thông tin công ty vào bảng users để ghi nhớ
     if ($is_corporate && $user_id) {
         $stmt_user = $conn->prepare("UPDATE users SET company_name = ?, tax_code = ?, company_address = ? WHERE id = ?");
         $stmt_user->bind_param("sssi", $company_name, $company_tax_code, $company_address, $user_id);
@@ -331,26 +378,26 @@ try {
         $stmt_user->close();
     }
 
-    // --- CẢI THIỆN: Lấy thông tin ngân hàng từ CSDL thay vì hardcode ---
-    $bank_settings = [];
-    $settings_res = $conn->query("SELECT setting_key, setting_value FROM system_settings WHERE setting_key IN ('bank_id', 'bank_account_no', 'bank_account_name', 'qr_template')");
-    if ($settings_res) {
-        while ($row = $settings_res->fetch_assoc()) {
-            $bank_settings[$row['setting_key']] = $row['setting_value'];
-        }
-    }
+    // --- CẢI THIỆN: Sử dụng giá trị mặc định cho thông tin ngân hàng ---
+    // (Vì bảng system_settings không tồn tại trong giaohang.sql)
+    $bank_settings = [
+        'bank_id' => 'MB',
+        'bank_account_no' => '0333666999',
+        'bank_account_name' => 'GIAO HÀNG NHANH',
+        'qr_template' => 'compact'
+    ];
 
-    // Trả về JSON thay vì text thuần để Frontend xử lý hiển thị QR
+    // Trả về JSON để Frontend xử lý hiển thị QR
     echo json_encode([
         'status' => 'success',
         'order_code' => $order_code,
         'payment_method' => $payment_method,
-        'amount' => $shipping_fee, // Số tiền cần thanh toán (Phí ship)
-        'bank_info' => [ // Dữ liệu động từ DB
-            'bank_id' => $bank_settings['bank_id'] ?? 'MB',
-            'account_no' => $bank_settings['bank_account_no'] ?? '0333666999',
-            'account_name' => $bank_settings['bank_account_name'] ?? 'GIAO HÀNG NHANH',
-            'template' => $bank_settings['qr_template'] ?? 'compact'
+        'amount' => $shipping_fee,
+        'bank_info' => [
+            'bank_id' => $bank_settings['bank_id'],
+            'account_no' => $bank_settings['bank_account_no'],
+            'account_name' => $bank_settings['bank_account_name'],
+            'template' => $bank_settings['qr_template']
         ]
     ]);
 

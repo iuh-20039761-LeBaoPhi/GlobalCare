@@ -118,7 +118,6 @@ while ($row = $res->fetch_assoc()) {
     <title>Thống kê hệ thống | Admin</title>
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <link rel="stylesheet" href="assets/css/admin.css?v=<?php echo time(); ?>">
-    <link rel="stylesheet" href="assets/css/admin-pages.css?v=<?php echo time(); ?>">
     <!-- Chart.js CDN -->
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <!-- Chart.js DataLabels Plugin -->

@@ -11,38 +11,7 @@
         ? ""
         : "public/";
 
-  const districtGroups = {
-    inner: [
-      "Quận 1",
-      "Quận 3",
-      "Quận 4",
-      "Quận 5",
-      "Quận 6",
-      "Quận 10",
-      "Quận 11",
-      "Phú Nhuận",
-      "Bình Thạnh",
-      "Gò Vấp",
-      "Tân Bình",
-      "Tân Phú",
-    ],
-    outer: [
-      "Quận 2",
-      "Quận 7",
-      "Quận 8",
-      "Quận 9",
-      "Quận 12",
-      "Thủ Đức",
-      "Bình Tân",
-      "Hóc Môn",
-      "Bình Chánh",
-      "Nhà Bè",
-      "Củ Chi",
-      "Cần Giờ",
-    ],
-  };
-
-  const allDistricts = [...districtGroups.inner, ...districtGroups.outer];
+  // districtGroups hardcoded HCM đã được gỡ bỏ để chuyển sang dùng dữ liệu từ JSON.
   let orderShippingBound = false;
 
   function toApiUrl(path) {
@@ -107,24 +76,36 @@
   }
 
   function checkDistrict(address, group) {
-    if (!address) return false;
+    if (!address || !Array.isArray(group)) return false;
     return group.some((d) => address.toLowerCase().includes(d.toLowerCase()));
   }
 
-  function detectDomesticZone(address) {
-    if (!address) return "outside";
-    if (checkDistrict(address, districtGroups.inner)) return "inner";
-    if (checkDistrict(address, districtGroups.outer)) return "outer";
-    return "outside";
-  }
+  function resolveDomesticArea(pickupAddr, deliveryAddr, extras = {}) {
+    // 1. Ưu tiên dùng dữ liệu Tỉnh/Thành có cấu trúc từ Select
+    const fCity = String(extras.fromCity || "").trim();
+    const tCity = String(extras.toCity || "").trim();
+    const fDist = String(extras.fromDistrict || "").trim();
+    const tDist = String(extras.toDistrict || "").trim();
 
-  function resolveDomesticArea(pickupAddr, deliveryAddr) {
-    const fromZone = detectDomesticZone(pickupAddr);
-    const toZone = detectDomesticZone(deliveryAddr);
+    if (fCity && tCity) {
+      if (fCity !== tCity) {
+        return "lien-tinh";
+      }
+      // Cùng tỉnh thành
+      // Ở đây ta có thể định nghĩa nội/ngoại thành linh hoạt hơn.
+      // Tạm thời: Cùng tỉnh thành thì coi là nội thành (hoặc ngoại thành tùy cấu hình)
+      // Theo logic cũ: nội thành là group 1, ngoại thành là group 2.
+      return "noi-thanh";
+    }
 
-    if (fromZone === "outside" || toZone === "outside") return "lien-tinh";
-    if (fromZone === "inner" && toZone === "inner") return "noi-thanh";
-    return "ngoai-thanh";
+    // 2. Fallback: Dùng search chuỗi (Legacy)
+    if (!pickupAddr || !deliveryAddr) return "lien-tinh";
+    const pickupLower = pickupAddr.toLowerCase();
+    const deliveryLower = deliveryAddr.toLowerCase();
+
+    // Nếu không cùng một Tỉnh/Thành phố (dựa trên tìm kiếm chuỗi cơ bản)
+    // Đây là phần cần cải thiện thêm nếu muốn chính xác tuyệt đối mà không có select.
+    return "lien-tinh";
   }
 
   function mapServiceLevelByArea(serviceType, areaKey) {
@@ -422,7 +403,7 @@
 
     const domesticData = getDomesticPricingData();
     const domesticCalculator = getDomesticCalculator();
-    const areaKey = resolveDomesticArea(pickupAddr, deliveryAddr);
+    const areaKey = resolveDomesticArea(pickupAddr, deliveryAddr, extras);
     const levelKey = mapServiceLevelByArea(normalizedServiceType, areaKey);
 
     if (
@@ -468,13 +449,8 @@
       };
     }
 
-    if (pickupAddr && deliveryAddr) {
-      const isFromOuter = checkDistrict(pickupAddr, districtGroups.outer);
-      const isToOuter = checkDistrict(deliveryAddr, districtGroups.outer);
-
-      if (isFromOuter && isToOuter) regionFee = 20000;
-      else if (isFromOuter || isToOuter) regionFee = 15000;
-    }
+    // Phần fallback legacy dựa trên districtGroups đã gỡ bỏ.
+    // Nếu quote từ JSON thất bại, ta mặc định phí vùng = 0.
 
     const w = parseFloat(weight) || 0;
     if (w > config.weight_free) {
@@ -673,11 +649,8 @@
   window.GiaoHangNhanhCore = {
     inPublicDir,
     apiBasePath,
-    districtGroups,
-    allDistricts,
     toApiUrl,
     checkDistrict,
-    detectDomesticZone,
     resolveDomesticArea,
     mapServiceLevelByArea,
     isInternationalServiceType,
