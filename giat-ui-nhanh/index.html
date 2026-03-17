@@ -25,19 +25,16 @@
     <nav class="navbar" id="navbar">
       <div class="nav-container">
         <a href="../index.html" class="logo">
-          <img
-            style="width: 80px; height: 60px"
-            src="public/asset/image/Gemini_Generated_Image_5e570m5e570m5e57-removebg-preview.png"
-            alt=""
-          />
+          <img src="public/asset/image/logo.png" alt="" />
           <span>Giặt Ủi Nhanh</span>
+          <img src="public/asset/image/Frame 1.png" alt="" />
         </a>
         <ul class="nav-menu" id="navMenu">
           <li><a href="index.html" class="nav-link">Trang chủ</a></li>
           <li><a href="#about" class="nav-link">Giới thiệu</a></li>
           <li><a href="#services" class="nav-link">Dịch vụ</a></li>
           <li><a href="#process" class="nav-link">Quy trình</a></li>
-          <li><a href="#contact" class="nav-link">Đặt dịch vụ</a></li>
+          <li><a href="booking.html" class="nav-link">Đặt dịch vụ</a></li>
           <li><a href="blog.html" class="nav-link">Bài viết</a></li>
           <li>
             <a
@@ -603,7 +600,7 @@
                 ${service.min_price.toLocaleString("vi-VN")} VNĐ / ${unit}
               </p>
 
-              <a class="btn btn-info choose-service" href="#contact">
+              <a class="btn btn-info choose-service" href="booking.html">
                 Đặt dịch vụ
               </a>
             </div>
@@ -1075,7 +1072,7 @@
     </section>
 
     <!-- Contact Section -->
-    <section id="contact">
+    <!-- <section id="contact">
       <div class="container">
         <div class="section-header">
           <div class="section-badge">
@@ -1480,7 +1477,7 @@
           </div>
         </div>
       </div>
-    </section>
+    </section> -->
 
     <!-- Footer -->
     <footer>
@@ -1492,6 +1489,32 @@
               Dịch vụ giặt ủi chuyên nghiệp hàng đầu Việt Nam. Cam kết chất
               lượng uy tín, giá cả hợp lý, giao nhận tận nơi.
             </p>
+            <p>CÔNG TY TNHH DỊCH VỤ QUANH TA KERI. <br />MST: 0315609853</p>
+            <ul class="footer-links">
+              <li>
+                <p>
+                  <i
+                    class="fas fa-map-marker-alt"
+                    style="margin-right: 10px"
+                  ></i>
+                  Tòa Nhà Sbi, Lô 6b, Đường Số 3, Công Viên Phần Mềm Quang
+                  Trung, Phường Tân Chánh Hiệp, Quận 12, Thành Phố Hồ Chí Minh,
+                  Việt Nam
+                </p>
+              </li>
+              <li>
+                <p>
+                  <i class="fas fa-phone" style="margin-right: 10px"> </i>
+                  0775 472 347
+                </p>
+              </li>
+              <li>
+                <p>
+                  <i class="fas fa-envelope" style="margin-right: 10px"></i>
+                  dichvuquanhta.vn@gmail.com
+                </p>
+              </li>
+            </ul>
             <div class="social-links">
               <a href="#" class="social-icon">
                 <svg
@@ -1553,19 +1576,6 @@
           </div>
 
           <div class="footer-section">
-            <h4>Liên Kết</h4>
-            <ul class="footer-links">
-              <li><a href="#home">Trang chủ</a></li>
-              <li><a href="#about">Giới thiệu</a></li>
-              <li><a href="#services">Dịch vụ</a></li>
-              <li><a href="#process">Quy trình</a></li>
-              <!-- <li><a href="#pricing">Bảng giá</a></li> -->
-              <li><a href="#contact">Liên hệ</a></li>
-              <li><a href="terms.html">Điều khoản sử dụng</a></li>
-            </ul>
-          </div>
-
-          <div class="footer-section">
             <h4>Dịch Vụ</h4>
             <ul class="footer-links">
               <li>
@@ -1592,6 +1602,13 @@
               <li>
                 <a href="../sua-xe-luu-dong/">Sửa xe lưu động</a>
               </li>
+            </ul>
+          </div>
+
+          <div class="footer-section">
+            <h4>Hỗ trợ</h4>
+            <ul class="footer-links">
+              <li><a href="terms.html">Điều khoản sử dụng</a></li>
             </ul>
           </div>
         </div>
@@ -1625,29 +1642,6 @@
         />
       </svg>
     </button>
-    <!-- <button
-      class="back-to-home"
-      id="backToHome"
-      aria-label="Back to home"
-      title="Dịch Vụ Quanh Ta"
-    >
-      <svg
-        xmlns="http://www.w3.org/2000/svg"
-        width="20"
-        height="20"
-        fill="currentColor"
-        class="bi bi-house-fill"
-        viewBox="0 0 16 16"
-        style="margin-bottom: 5px"
-      >
-        <path
-          d="M8.707 1.5a1 1 0 0 0-1.414 0L.646 8.146a.5.5 0 0 0 .708.708L8 2.207l6.646 6.647a.5.5 0 0 0 .708-.708L13 5.793V2.5a.5.5 0 0 0-.5-.5h-1a.5.5 0 0 0-.5.5v1.293z"
-        />
-        <path
-          d="m8 3.293 6 6V13.5a1.5 1.5 0 0 1-1.5 1.5h-9A1.5 1.5 0 0 1 2 13.5V9.293z"
-        />
-      </svg>
-    </button> -->
     <!-- Toast -->
     <div class="toast-container position-fixed top-0 end-0 p-3">
       <div

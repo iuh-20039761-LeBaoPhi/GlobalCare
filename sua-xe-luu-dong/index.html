@@ -3,11 +3,19 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta
+      name="description"
+      content="Sửa Xe Lưu Động - dịch vụ sửa chữa xe tận nơi 24/7 tại TP.HCM, nhanh chóng, chuyên nghiệp, hỗ trợ khắc phục sự cố ô tô/moto trong vòng 15 phút."
+    />
+    <meta
+      name="keywords"
+      content="sửa xe lưu động, sửa xe tận nơi, sửa chữa ô tô, sửa chữa xe máy, cứu hộ xe, bảo dưỡng xe, sửa xe 24/7, sửa xe tại nhà, dịch vụ sửa xe, sửa chữa động cơ"
+    />
     <title>Dịch Vụ Sửa Chữa Xe Lưu Động</title>
     <link
       rel="shortcut icon"
       type="image/x-icon"
-      href="public/asset/image/logo.png"
+      href="public/asset/image/20260306_1533_Image_Generation_simple_compose_01kk14ee7sev3t76ywmcyw85e4-removebg-preview.png"
     />
     <link
       href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css"
@@ -24,8 +32,13 @@
     <nav class="navbar navbar-expand-lg navbar-dark">
       <div class="container">
         <a class="navbar-brand" href="../index.html">
-          <img class="logo-icon" src="public/asset/image/logo.png" alt="" />
+          <img class="logo-icon" src="public/asset/image/logo1.png" alt="" />
           <span>Sửa Xe Lưu Động</span>
+          <img
+            class="logo-icon"
+            src="public/asset/image/20260306_1533_Image_Generation_simple_compose_01kk14ee7sev3t76ywmcyw85e4-removebg-preview.png"
+            alt=""
+          />
         </a>
         <button
           class="navbar-toggler"
@@ -41,7 +54,7 @@
         <div class="collapse navbar-collapse" id="navbarNav">
           <ul class="navbar-nav ms-auto">
             <li class="nav-item">
-              <a class="nav-link" href="#home">Trang chủ</a>
+              <a class="nav-link" href="index.html">Trang chủ</a>
             </li>
             <li class="nav-item">
               <a class="nav-link" href="#services">Dịch vụ</a>
@@ -53,7 +66,13 @@
               <a class="nav-link" href="#about">Về Chúng Tôi</a>
             </li>
             <li class="nav-item">
+              <a class="nav-link" href="blog.html">Bài viết</a>
+            </li>
+            <li class="nav-item">
               <a class="nav-link" href="#contact">Liên hệ</a>
+            </li>
+            <li class="nav-item">
+              <a class="nav-link" href="booking.html">Đặt dịch vụ</a>
             </li>
           </ul>
         </div>
@@ -158,7 +177,7 @@
                         <h5>${service.name}</h5>
                         <p>${service.summary}</p>
                         ${minPriceText ? `<p class="service-price">${minPriceText}</p>` : ""}
-                        <a href="#booking" class="btn btn-primary-custom mt-3">
+                        <a href="booking.html" class="btn btn-primary-custom mt-3">
                           Đặt dịch vụ
                         </a>
                       </div>
@@ -263,7 +282,7 @@
     </section>
 
     <!-- Booking Section -->
-    <section id="booking" class="booking-section">
+    <!-- <section id="booking" class="booking-section">
       <div class="container py-5">
         <div class="row justify-content-center">
           <div class="col-lg-8">
@@ -571,7 +590,7 @@
           </div>
         </div>
       </div>
-    </section>
+    </section> -->
 
     <!-- Contact Section -->
     <section id="contact" class="contact-section">
@@ -616,7 +635,9 @@
               <h5>Địa chỉ</h5>
               <p>Văn phòng</p>
               <span class="contact-link"
-                >123 Đường ABC, Quận 1, TP. Hồ Chí Minh</span
+                >Tòa Nhà Sbi, Lô 6b, Đường Số 3, Công Viên Phần Mềm Quang Trung,
+                Phường Tân Chánh Hiệp, Quận 12, Thành Phố Hồ Chí Minh, Việt
+                Nam</span
               >
             </div>
           </div>
@@ -628,14 +649,36 @@
     <footer>
       <div class="container">
         <div class="row g-4">
-          <div class="col-lg-5">
+          <div class="col-lg-4">
             <div class="d-flex align-items-center mb-3">
-              <img class="logo-icon" src="public/asset/image/logo.png" alt="" />
+              <img
+                class="logo-icon"
+                src="public/asset/image/logo.png"
+                alt="logo dịch vụ quanh ta"
+              />
               <h5 class="mb-0 ms-2">Sửa Xe Lưu Động</h5>
+              <img
+                class="logo-icon"
+                src="public/asset/image/20260306_1533_Image_Generation_simple_compose_01kk14ee7sev3t76ywmcyw85e4-removebg-preview.png"
+                alt="logo sửa xe lưu động"
+              />
             </div>
             <p class="mb-3">
               Dịch vụ sửa chữa xe lưu động hàng đầu Việt Nam. Chúng tôi luôn sẵn
               sàng phục vụ bạn 24/7.
+            </p>
+            <p>
+              CÔNG TY TNHH DỊCH VỤ QUANH TA KERI <br />
+              MST: 0315609853
+            </p>
+            <p>
+              <i class="fas fa-map-marker-alt me-2"></i> Tòa Nhà Sbi, Lô 6b,
+              Đường Số 3, Công Viên Phần Mềm Quang Trung, Phường Tân Chánh Hiệp,
+              Quận 12, Thành Phố Hồ Chí Minh, Việt Nam
+            </p>
+            <p><i class="fas fa-phone me-2"></i> 0775 472 347</p>
+            <p>
+              <i class="fas fa-envelope me-2"></i> dichvuquanhta.vn@gmail.com
             </p>
             <div class="social-links">
               <a href="#"><i class="fab fa-facebook-f"></i></a>
@@ -645,60 +688,40 @@
             </div>
           </div>
 
-          <div class="col-lg-2 col-md-6">
+          <div class="col-lg-4 col-md-6">
             <h6>Dịch vụ</h6>
             <ul>
               <li>
-                <a target="_blank" href="../vesinhcare/demo/"
-                  >Lau Dọn Vệ Sinh</a
-                >
+                <a href="../vesinhcare/demo/">Lau Dọn Vệ Sinh</a>
               </li>
-              <li><a target="_blank" href="../csmvb/">Chăm Sóc Mẹ & Bé</a></li>
+              <li><a href="../csmvb/">Chăm Sóc Mẹ & Bé</a></li>
               <li>
-                <a target="_blank" href="../web-cham-soc-vuon-nha/"
-                  >Chăm Sóc Vườn & Rẫy</a
-                >
+                <a href="../web-cham-soc-vuon-nha/">Chăm Sóc Vườn & Rẫy</a>
               </li>
               <li>
-                <a target="_blank" href="../giat-ui-nhanh/">Giặt Ủi Cao Cấp</a>
+                <a href="../giat-ui-nhanh/">Giặt Ủi Cao Cấp</a>
               </li>
               <li>
-                <a target="_blank" href="../tho-nha/">Thợ Nhà & Sửa Chữa</a>
+                <a href="../tho-nha/">Thợ Nhà & Sửa Chữa</a>
               </li>
-              <li><a target="_blank" href="../csng/">Chăm Sóc Người Già</a></li>
-              <li><a target="_blank" href="../csbn/">Chăm Sóc Bệnh Nhân</a></li>
+              <li><a href="../csng/">Chăm Sóc Người Già</a></li>
+              <li><a href="../csbn/">Chăm Sóc Bệnh Nhân</a></li>
               <li>
-                <a target="_blank" href="../he-thong-giao-hang-chuyen-don/"
-                  >Giao Hàng Nhanh</a
-                >
+                <a href="../he-thong-giao-hang-chuyen-don/">Giao Hàng Nhanh</a>
               </li>
               <li>
-                <a target="_blank" href="../sxld/">Sửa Xe Lưu Động</a>
+                <a href="../sxld/">Sửa Xe Lưu Động</a>
               </li>
             </ul>
           </div>
 
-          <div class="col-lg-2 col-md-6">
+          <div class="col-lg-4 col-md-6">
             <h6>Hỗ trợ</h6>
             <ul>
               <li><a href="#">Câu hỏi thường gặp</a></li>
               <li><a href="#">Chính sách</a></li>
               <li><a href="terms.html">Điều khoản sử dụng</a></li>
               <li><a href="#">Bảo mật</a></li>
-            </ul>
-          </div>
-
-          <div class="col-lg-3 col-md-6">
-            <h6>Liên hệ</h6>
-            <ul>
-              <li><i class="fas fa-phone me-2"></i>0775 472 347</li>
-              <li>
-                <i class="fas fa-envelope me-2"></i>dichvuquanhta.vn@gmail.com
-              </li>
-              <li>
-                <i class="fas fa-map-marker-alt me-2"></i>123 Đường ABC, Quận 1,
-                TP. Hồ Chí Minh
-              </li>
             </ul>
           </div>
         </div>

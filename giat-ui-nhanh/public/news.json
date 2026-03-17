@@ -4,7 +4,7 @@
     "title": "Cách giặt quần áo trắng luôn sạch và không bị ố vàng",
     "slug": "cach-giat-quan-ao-trang-luon-sach",
     "date": "2026-03-01",
-    "summary": "Những mẹo giúp quần áo trắng luôn sạch sáng, không bị ngả vàng và cách xử lý vết ố cứng đầu.",
+    "description": "Những mẹo giúp quần áo trắng luôn sạch sáng, không bị ngả vàng và cách xử lý vết ố cứng đầu.",
     "img": "public/asset/image/Gemini_Generated_Image_xupsnfxupsnfxups.png",
     "category": "Mẹo giặt ủi",
     "tags": [
@@ -20,7 +20,7 @@
     "title": "Tại sao nên sử dụng dịch vụ giặt ủi chuyên nghiệp cho gia đình",
     "slug": "tai-sao-nen-su-dung-dich-vu-giat-ui",
     "date": "2026-02-25",
-    "summary": "Những lợi ích khi sử dụng dịch vụ giặt ủi chuyên nghiệp: tiết kiệm thời gian, chăm sóc quần áo tốt hơn.",
+    "description": "Những lợi ích khi sử dụng dịch vụ giặt ủi chuyên nghiệp: tiết kiệm thời gian, chăm sóc quần áo tốt hơn.",
     "img": "public/asset/image/Gemini_Generated_Image_3fq7p63fq7p63fq7.png",
     "category": "Dịch vụ giặt ủi",
     "tags": [
@@ -36,7 +36,7 @@
     "title": "Những sai lầm khi giặt đồ tại nhà khiến quần áo nhanh hỏng",
     "slug": "nhung-sai-lam-khi-giat-do-tai-nha",
     "date": "2026-02-18",
-    "summary": "Các sai lầm phổ biến khi giặt quần áo tại nhà: giặt quá nhiều, sai nhiệt độ nước.",
+    "description": "Các sai lầm phổ biến khi giặt quần áo tại nhà: giặt quá nhiều, sai nhiệt độ nước.",
     "img": "public/asset/image/Gemini_Generated_Image_w5aidjw5aidjw5ai.png",
     "category": "Mẹo giặt ủi",
     "tags": ["sai lầm giặt đồ", "bảo quản quần áo", "hướng dẫn giặt giũ"],
@@ -47,7 +47,7 @@
     "title": "Bí quyết giữ đồ len mềm mịn không bị xù lông",
     "slug": "bi-quyet-giu-do-len-mem-min",
     "date": "2026-02-10",
-    "summary": "Cách giặt và bảo quản đồ len đúng cách để không bị giãn và luôn mềm mịn.",
+    "description": "Cách giặt và bảo quản đồ len đúng cách để không bị giãn và luôn mềm mịn.",
     "img": "public/asset/image/Gemini_Generated_Image_lj75xtlj75xtlj75.png",
     "category": "Chăm sóc trang phục",
     "tags": [
@@ -63,7 +63,7 @@
     "title": "Các loại thuốc tẩy quần áo và cách sử dụng an toàn",
     "slug": "cac-loai-thuoc-tay-va-cach-dung",
     "date": "2026-02-05",
-    "summary": "Hướng dẫn phân biệt các loại thuốc tẩy Clo và Oxy để loại bỏ vết bẩn hiệu quả.",
+    "description": "Hướng dẫn phân biệt các loại thuốc tẩy Clo và Oxy để loại bỏ vết bẩn hiệu quả.",
     "img": "public/asset/image/20260313_1653_Image Generation_simple_compose_01kkk9ty0gffpa0xr5bb2zw8tv.png",
     "category": "Kiến thức vải vóc",
     "tags": ["thuốc tẩy", "tẩy quần áo", "an toàn hóa chất", "thuốc tẩy oxy"],
@@ -74,7 +74,7 @@
     "title": "Dịch vụ giặt ủi nhanh – Giải pháp cho người bận rộn",
     "slug": "giat-ui-nhanh-tiet-kiem-thoi-gian",
     "date": "2026-01-30",
-    "summary": "Tận dụng dịch vụ giặt ủi nhanh để tiết kiệm 3-5 giờ mỗi tuần cho gia đình bạn.",
+    "description": "Tận dụng dịch vụ giặt ủi nhanh để tiết kiệm 3-5 giờ mỗi tuần cho gia đình bạn.",
     "img": "public/asset/image/20260313_1656_Image Generation_simple_compose_01kkka0c71f3stpnm3qgdjsnps.png",
     "category": "Dịch vụ giặt ủi",
     "tags": [
@@ -90,7 +90,7 @@
     "title": "Chương trình khuyến mãi giặt ủi tháng 3/2026",
     "slug": "khuyen-mai-thang-3-2026",
     "date": "2026-01-20",
-    "summary": "Ưu đãi cực lớn nhân dịp Quốc tế Phụ nữ 8/3 và các gói giặt ủi gia đình tiết kiệm.",
+    "description": "Ưu đãi cực lớn nhân dịp Quốc tế Phụ nữ 8/3 và các gói giặt ủi gia đình tiết kiệm.",
     "img": "public/asset/image/20260313_1659_Image Generation_simple_compose_01kkka5b70ey8s6tm1m20ecfm8.png",
     "category": "Khuyến mãi",
     "tags": [
@@ -106,7 +106,7 @@
     "title": "Hướng dẫn giặt chăn ga gối đệm đúng cách tại nhà",
     "slug": "huong-dan-giat-chan-ga-goi-dem",
     "date": "2026-01-10",
-    "summary": "Vệ sinh chăn ga gối định kỳ giúp bảo vệ sức khỏe giấc ngủ và loại bỏ mạt bụi.",
+    "description": "Vệ sinh chăn ga gối định kỳ giúp bảo vệ sức khỏe giấc ngủ và loại bỏ mạt bụi.",
     "img": "public/asset/image/20260313_1702_Image Generation_simple_compose_01kkka9zvxfveadprwyve0cpv0.png",
     "category": "Giặt ủi chuyên sâu",
     "tags": [
@@ -123,7 +123,7 @@
     "title": "Phân biệt các loại vải trước khi giặt: Bí quyết bền đồ",
     "slug": "phan-biet-cac-loai-vai-truoc-khi-giat",
     "date": "2025-12-28",
-    "summary": "Hướng dẫn nhận biết vải cotton, lụa, kaki, polyester để chọn chế độ giặt phù hợp.",
+    "description": "Hướng dẫn nhận biết vải cotton, lụa, kaki, polyester để chọn chế độ giặt phù hợp.",
     "img": "public/asset/image/20260313_1704_Image Generation_simple_compose_01kkkae701fvsrp145anz3p80t.png",
     "category": "Kiến thức vải vóc",
     "tags": [
@@ -140,7 +140,7 @@
     "title": "Mẹo giữ màu quần áo lâu phai như mới mua",
     "slug": "giu-mau-quan-ao-lau-phai",
     "date": "2025-12-15",
-    "summary": "Cách giữ màu cho quần áo đen, đỏ và các màu đậm không bị bạc màu sau nhiều lần giặt.",
+    "description": "Cách giữ màu cho quần áo đen, đỏ và các màu đậm không bị bạc màu sau nhiều lần giặt.",
     "img": "public/asset/image/20260313_1708_Image Generation_simple_compose_01kkkap377ft7b0bfn1qvys8fz.png",
     "category": "Mẹo giặt ủi",
     "tags": [
@@ -157,7 +157,7 @@
     "title": "Cách loại bỏ vết cà phê trên quần áo cực nhanh",
     "slug": "cach-loai-bo-vet-ca-phe-tren-quan-ao",
     "date": "2025-12-10",
-    "summary": "Xử lý vết cà phê cứng đầu trên sơ mi trắng và đồ màu chỉ trong 5 phút.",
+    "description": "Xử lý vết cà phê cứng đầu trên sơ mi trắng và đồ màu chỉ trong 5 phút.",
     "img": "public/asset/image/20260313_1711_Image Generation_simple_compose_01kkkatp7begz9c5zfakdnrr5m.png",
     "category": "Mẹo giặt ủi",
     "tags": [
@@ -174,7 +174,7 @@
     "title": "Bao lâu nên giặt chăn ga gối một lần là tốt nhất?",
     "slug": "bao-lau-nen-giat-chan-ga-goi",
     "date": "2025-12-05",
-    "summary": "Tần suất vệ sinh chăn ga gối đệm để đảm bảo sức khỏe và ngăn ngừa mụn lưng.",
+    "description": "Tần suất vệ sinh chăn ga gối đệm để đảm bảo sức khỏe và ngăn ngừa mụn lưng.",
     "img": "public/asset/image/20260313_1714_Image Generation_simple_compose_01kkkb05zyem39vd60fvpvq7hx.png",
     "category": "Giặt ủi chuyên sâu",
     "tags": [
@@ -191,7 +191,7 @@
     "title": "Cách giặt áo sơ mi không bị nhăn bằng máy giặt",
     "slug": "cach-giat-ao-so-mi-khong-bi-nhan",
     "date": "2025-12-01",
-    "summary": "Mẹo giặt máy nhưng áo sơ mi vẫn phẳng phiu, tiết kiệm thời gian ủi đồ.",
+    "description": "Mẹo giặt máy nhưng áo sơ mi vẫn phẳng phiu, tiết kiệm thời gian ủi đồ.",
     "img": "public/asset/image/20260313_1715_Image Generation_simple_compose_01kkkb3ea0fdrt579v49sbnt79.png",
     "category": "Chăm sóc trang phục",
     "tags": [
@@ -208,7 +208,7 @@
     "title": "Mẹo giặt quần jean bền màu, không bị giãn",
     "slug": "meo-giat-quan-jean-ben-mau",
     "date": "2025-11-28",
-    "summary": "Giữ form quần jean cứng cáp và màu xanh indigo nguyên bản sau hàng chục lần giặt.",
+    "description": "Giữ form quần jean cứng cáp và màu xanh indigo nguyên bản sau hàng chục lần giặt.",
     "img": "public/asset/image/20260313_1719_Image Generation_simple_compose_01kkkbabasfsfbnm6e9c8bn7q0.png",
     "category": "Chăm sóc trang phục",
     "tags": [
@@ -225,7 +225,7 @@
     "title": "Cách khử mùi hôi trên quần áo thể thao triệt để",
     "slug": "khu-mui-hoi-quan-ao-the-thao",
     "date": "2025-11-25",
-    "summary": "Loại bỏ mùi mồ hôi ám ảnh trên vải thun lạnh, vải poly chuyên dụng cho tập gym.",
+    "description": "Loại bỏ mùi mồ hôi ám ảnh trên vải thun lạnh, vải poly chuyên dụng cho tập gym.",
     "img": "public/asset/image/ChatGPT Image 17_24_34 13 thg 3, 2026.png",
     "category": "Mẹo giặt ủi",
     "tags": [
@@ -242,7 +242,7 @@
     "title": "Mẹo giặt khăn tắm luôn mềm mại như ở khách sạn",
     "slug": "meo-giat-khan-tam-luon-mem-mai",
     "date": "2025-11-22",
-    "summary": "Bí quyết giúp khăn tắm không bị khô cứng, thô ráp sau nhiều lần giặt.",
+    "description": "Bí quyết giúp khăn tắm không bị khô cứng, thô ráp sau nhiều lần giặt.",
     "img": "public/asset/image/ChatGPT Image 17_27_51 13 thg 3, 2026.png",
     "category": "Mẹo chăm sóc đồ dùng",
     "tags": [
@@ -259,7 +259,7 @@
     "title": "Cách giặt áo khoác đúng cách để không hỏng form",
     "slug": "cach-giat-ao-khoac-dung-cach",
     "date": "2025-11-20",
-    "summary": "Hướng dẫn giặt áo phao, áo dạ và áo gió an toàn tại nhà.",
+    "description": "Hướng dẫn giặt áo phao, áo dạ và áo gió an toàn tại nhà.",
     "img": "public/asset/image/ChatGPT Image 17_32_40 13 thg 3, 2026.png",
     "category": "Giặt ủi chuyên sâu",
     "tags": [
@@ -276,7 +276,7 @@
     "title": "Mẹo giặt đồ trẻ em an toàn, không kích ứng da",
     "slug": "meo-giat-do-tre-em-an-toan",
     "date": "2025-11-18",
-    "summary": "Lựa chọn nước giặt và quy trình vệ sinh quần áo cho trẻ sơ sinh và trẻ nhỏ.",
+    "description": "Lựa chọn nước giặt và quy trình vệ sinh quần áo cho trẻ sơ sinh và trẻ nhỏ.",
     "img": "public/asset/image/ChatGPT Image 17_40_14 13 thg 3, 2026.png",
     "category": "Mẹo giặt ủi",
     "tags": [
@@ -293,7 +293,7 @@
     "title": "Cách giặt rèm cửa sạch như mới tại nhà",
     "slug": "cach-giat-rem-cua-sach-nhu-moi",
     "date": "2025-11-15",
-    "summary": "Hướng dẫn tháo lắp và quy trình giặt rèm vải, rèm voan hiệu quả, giữ đúng form dáng.",
+    "description": "Hướng dẫn tháo lắp và quy trình giặt rèm vải, rèm voan hiệu quả, giữ đúng form dáng.",
     "img": "public/asset/image/ChatGPT Image 17_43_16 13 thg 3, 2026.png",
     "category": "Giặt ủi chuyên sâu",
     "tags": [
@@ -310,7 +310,7 @@
     "title": "Giặt đồ bằng nước nóng hay lạnh: Lựa chọn nào tốt hơn?",
     "slug": "giat-do-bang-nuoc-nong-hay-lanh",
     "date": "2025-11-12",
-    "summary": "Tối ưu nhiệt độ nước giặt để sạch vết bẩn mà không tốn điện.",
+    "description": "Tối ưu nhiệt độ nước giặt để sạch vết bẩn mà không tốn điện.",
     "img": "public/asset/image/ChatGPT Image 17_46_27 13 thg 3, 2026.png",
     "category": "Mẹo giặt ủi",
     "tags": [
@@ -327,7 +327,7 @@
     "title": "Cách giặt áo thun không bị giãn và biến dạng",
     "slug": "cach-giat-ao-thun-khong-bi-gian",
     "date": "2025-11-10",
-    "summary": "Giữ form áo phông luôn vuông vức, không bị chảy xệ phần cổ áo.",
+    "description": "Giữ form áo phông luôn vuông vức, không bị chảy xệ phần cổ áo.",
     "img": "public/asset/image/ChatGPT Image 17_49_59 13 thg 3, 2026.png",
     "category": "Chăm sóc trang phục",
     "tags": [
@@ -344,7 +344,7 @@
     "title": "Cách xử lý vết dầu mỡ trên quần áo hiệu quả",
     "slug": "xu-ly-vet-dau-mo-tren-quan-ao",
     "date": "2025-11-08",
-    "summary": "Loại bỏ vết dầu ăn, mỡ động vật bám trên vải bằng các nguyên liệu có sẵn.",
+    "description": "Loại bỏ vết dầu ăn, mỡ động vật bám trên vải bằng các nguyên liệu có sẵn.",
     "img": "public/asset/image/ChatGPT Image 17_53_07 13 thg 3, 2026.png",
     "category": "Mẹo giặt ủi",
     "tags": [
@@ -361,7 +361,7 @@
     "title": "Cách giặt đồ lụa đúng cách tại nhà",
     "slug": "cach-giat-do-lua-dung-cach",
     "date": "2025-11-05",
-    "summary": "Hướng dẫn giặt tay và bảo quản vải lụa tơ tằm luôn mềm mại, bóng mượt.",
+    "description": "Hướng dẫn giặt tay và bảo quản vải lụa tơ tằm luôn mềm mại, bóng mượt.",
     "img": "public/asset/image/ChatGPT Image 17_57_37 13 thg 3, 2026.png",
     "category": "Chăm sóc trang phục cao cấp",
     "tags": [
@@ -378,7 +378,7 @@
     "title": "Cách giặt giày thể thao tại nhà sạch như mới",
     "slug": "cach-giat-giay-the-thao-tai-nha",
     "date": "2025-11-02",
-    "summary": "Mẹo vệ sinh giày sneaker, giày vải mà không làm hỏng keo hay ố vàng.",
+    "description": "Mẹo vệ sinh giày sneaker, giày vải mà không làm hỏng keo hay ố vàng.",
     "img": "public/asset/image/ChatGPT Image 18_02_47 13 thg 3, 2026.png",
     "category": "Mẹo chăm sóc đồ dùng",
     "tags": [
@@ -395,7 +395,7 @@
     "title": "Cách làm thơm quần áo lâu dài không cần nước xả",
     "slug": "cach-lam-thom-quan-ao-lau-dai",
     "date": "2025-10-30",
-    "summary": "Bí quyết giữ quần áo luôn tỏa hương dễ chịu ngay cả khi cất trong tủ lâu ngày.",
+    "description": "Bí quyết giữ quần áo luôn tỏa hương dễ chịu ngay cả khi cất trong tủ lâu ngày.",
     "img": "public/asset/image/ChatGPT Image 18_09_29 13 thg 3, 2026.png",
     "category": "Mẹo giặt ủi",
     "tags": [
@@ -412,7 +412,7 @@
     "title": "Cách phơi quần áo đúng cách tránh mùi hôi và ẩm mốc",
     "slug": "cach-phoi-quan-ao-dung-cach",
     "date": "2025-10-28",
-    "summary": "Kỹ thuật phơi đồ giúp quần áo nhanh khô và bền màu dưới mọi thời tiết.",
+    "description": "Kỹ thuật phơi đồ giúp quần áo nhanh khô và bền màu dưới mọi thời tiết.",
     "img": "public/asset/image/ChatGPT Image 18_12_38 13 thg 3, 2026.png",
     "category": "Mẹo giặt ủi",
     "tags": [
@@ -429,7 +429,7 @@
     "title": "Những loại vải cần giặt tay để tránh hư hỏng",
     "slug": "nhung-loai-vai-can-giat-tay",
     "date": "2025-10-25",
-    "summary": "Danh sách các loại trang phục bạn tuyệt đối không nên bỏ vào máy giặt.",
+    "description": "Danh sách các loại trang phục bạn tuyệt đối không nên bỏ vào máy giặt.",
     "img": "public/asset/image/ChatGPT Image 18_14_52 13 thg 3, 2026.png",
     "category": "Chăm sóc trang phục cao cấp",
     "tags": [
@@ -446,7 +446,7 @@
     "title": "Cách bảo quản quần áo lâu bền theo thời gian",
     "slug": "cach-bao-quan-quan-ao-lau-ben",
     "date": "2025-10-22",
-    "summary": "Kỹ thuật treo, gấp và lưu trữ quần áo để trang phục luôn như mới sau nhiều năm.",
+    "description": "Kỹ thuật treo, gấp và lưu trữ quần áo để trang phục luôn như mới sau nhiều năm.",
     "img": "public/asset/image/ChatGPT Image 18_17_56 13 thg 3, 2026.png",
     "category": "Chăm sóc trang phục",
     "tags": [
@@ -463,7 +463,7 @@
     "title": "Mẹo giặt đồ mùa mưa không bị mùi ẩm mốc",
     "slug": "giat-do-mua-mua-khong-bi-mui",
     "date": "2025-10-20",
-    "summary": "Giải pháp cho quần áo trong những ngày nồm ẩm và mưa kéo dài.",
+    "description": "Giải pháp cho quần áo trong những ngày nồm ẩm và mưa kéo dài.",
     "img": "public/asset/image/ChatGPT Image 18_19_54 13 thg 3, 2026.png",
     "category": "Mẹo giặt ủi",
     "tags": [
@@ -480,7 +480,7 @@
     "title": "Cách chọn nước giặt phù hợp với từng loại máy giặt",
     "slug": "cach-chon-nuoc-giat-phu-hop",
     "date": "2025-10-18",
-    "summary": "Phân biệt nước giặt cho máy cửa trên, cửa trước và bảo vệ tuổi thọ máy giặt.",
+    "description": "Phân biệt nước giặt cho máy cửa trên, cửa trước và bảo vệ tuổi thọ máy giặt.",
     "img": "public/asset/image/ChatGPT Image 18_22_20 13 thg 3, 2026.png",
     "category": "Kiến thức gia đình",
     "tags": [
