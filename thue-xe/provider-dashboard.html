@@ -75,11 +75,27 @@
         .btn-confirm:hover  { background: #d97706; color: white; }
         .btn-complete { background: #dcfce7; color: #15803d; }
         .btn-complete:hover { background: #15803d; color: white; }
+        .btn-detail   { padding: 4px 12px; border-radius: 50px; font-size: 0.78rem; font-weight: 600; border: 1px solid #e2e8f0; background: white; cursor: pointer; color: #475569; transition: all 0.2s; font-family: 'Poppins', sans-serif; }
+        .btn-detail:hover { border-color: var(--primary); color: var(--primary); }
         .btn-action:disabled { opacity: 0.4; cursor: not-allowed; }
 
         .empty-state { padding: 3rem 1rem; text-align: center; color: #94a3b8; }
         .empty-state i { font-size: 2.5rem; margin-bottom: 12px; }
         .spinner-wrap { padding: 3rem; text-align: center; }
+
+        /* MODAL */
+        .modal-detail-header { background: linear-gradient(135deg, #d97706, #b45309); color: white; padding: 1.25rem 1.5rem; border-radius: 12px 12px 0 0; }
+        .modal-detail-header h5 { margin: 0; font-size: 1rem; font-weight: 700; }
+        .modal-detail-header .order-sub { font-size: 0.8rem; opacity: 0.85; margin-top: 2px; }
+        .detail-section { padding: 1.25rem 1.5rem; }
+        .detail-section + .detail-section { border-top: 1px solid #f1f5f9; }
+        .detail-section-title { font-size: 0.72rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.06em; color: #94a3b8; margin-bottom: 0.85rem; }
+        .detail-row { display: flex; justify-content: space-between; gap: 8px; margin-bottom: 6px; font-size: 0.88rem; }
+        .detail-row .label { color: #64748b; white-space: nowrap; }
+        .detail-row .value { color: #1e293b; font-weight: 600; text-align: right; }
+        .customer-info-box { background: #fffbeb; border: 1px solid #fde68a; border-radius: 10px; padding: 1rem 1.25rem; }
+        .customer-info-box .cname { font-size: 0.95rem; font-weight: 700; color: #92400e; }
+        .customer-info-box .cdetail { font-size: 0.83rem; color: #475569; margin-top: 3px; }
     </style>
 </head>
 <body>
@@ -93,7 +109,7 @@
         <div class="avatar" id="sidebarAvatar">P</div>
         <div class="user-name" id="sidebarName">Nhà cung cấp</div>
         <div class="user-company" id="sidebarCompany"></div>
-        <div class="user-role"><i class="fas fa-circle me-1" style="font-size:8px;"></i>Nhà cung cấp xe</div>
+        <div class="user-role"><i class="fas fa-circle me-1" style="font-size:8px;color:#fbbf24;"></i>Nhà cung cấp xe</div>
     </div>
     <nav class="sidebar-nav">
         <ul class="p-0">
@@ -152,6 +168,24 @@
     </div>
 </div>
 
+<!-- Detail Modal -->
+<div class="modal fade" id="detailModal" tabindex="-1">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content border-0 shadow" style="border-radius:12px;overflow:hidden;">
+            <div class="modal-detail-header">
+                <h5 id="modalTitle">Chi tiết đơn thuê</h5>
+                <div class="order-sub" id="modalSub"></div>
+            </div>
+            <div id="modalBody" style="max-height:70vh;overflow-y:auto;"></div>
+            <div style="padding:1rem 1.5rem;border-top:1px solid #f1f5f9;display:flex;justify-content:flex-end;gap:8px;">
+                <button type="button" id="modalActionBtn" class="btn btn-sm btn-warning fw-semibold" style="display:none;border-radius:50px;font-size:0.85rem;"></button>
+                <button type="button" class="btn btn-sm btn-secondary" data-bs-dismiss="modal">Đóng</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 <script>
 const STATUS_MAP = {
     pending:   { label: 'Chờ xác nhận', cls: 'badge-pending' },
@@ -195,7 +229,7 @@ function loadBookings() {
             renderTable(allBookings);
         })
         .catch(() => {
-            document.getElementById('tableWrap').innerHTML = `<div class="empty-state"><i class="fas fa-exclamation-triangle d-block"></i><p>Không tải được dữ liệu</p></div>`;
+            document.getElementById('tableWrap').innerHTML = '<div class="empty-state"><i class="fas fa-exclamation-triangle d-block"></i><p>Không tải được dữ liệu</p></div>';
         });
 }
 
@@ -208,10 +242,10 @@ function filterBookings(status, btn) {
 
 function renderTable(bookings) {
     if (bookings.length === 0) {
-        document.getElementById('tableWrap').innerHTML = `<div class="empty-state"><i class="fas fa-inbox d-block"></i><p>Không có đơn nào</p></div>`;
+        document.getElementById('tableWrap').innerHTML = '<div class="empty-state"><i class="fas fa-inbox d-block"></i><p>Không có đơn nào</p></div>';
         return;
     }
-    let rows = bookings.map(b => {
+    const rows = bookings.map(b => {
         const s = STATUS_MAP[b.status] || { label: b.status, cls: 'badge-pending' };
         let actionBtn = '';
         if (b.status === 'pending')   actionBtn = `<button class="btn-action btn-confirm"  onclick="updateStatus(${b.id},'confirmed',this)"><i class="fas fa-check"></i>Xác nhận</button>`;
@@ -224,7 +258,7 @@ function renderTable(bookings) {
             <td>${b.total_days} ngày</td>
             <td><strong>${fmtPrice(b.total_price)}</strong></td>
             <td><span class="badge-status ${s.cls}">${s.label}</span></td>
-            <td>${actionBtn}</td>
+            <td style="white-space:nowrap;">${actionBtn} <button class="btn-detail" onclick='showDetail(${JSON.stringify(b).replace(/'/g,"&#39;")})'>Chi tiết</button></td>
         </tr>`;
     }).join('');
 
@@ -240,9 +274,59 @@ function renderTable(bookings) {
         </div>`;
 }
 
+function showDetail(b) {
+    const s = STATUS_MAP[b.status] || { label: b.status, cls: 'badge-pending' };
+    document.getElementById('modalTitle').textContent = b.car_name;
+    document.getElementById('modalSub').textContent   = `${fmtDate(b.pickup_date)} → ${fmtDate(b.return_date)} · ${b.total_days} ngày`;
+
+    document.getElementById('modalBody').innerHTML = `
+        <div class="detail-section">
+            <div class="detail-section-title"><i class="fas fa-user me-1"></i>Thông tin khách đặt</div>
+            <div class="customer-info-box">
+                <div class="cname"><i class="fas fa-user-circle me-2"></i>${b.customer_name || '—'}</div>
+                ${b.customer_phone ? `<div class="cdetail"><i class="fas fa-phone me-2 text-muted"></i>${b.customer_phone}</div>` : ''}
+                ${b.pickup_location ? `<div class="cdetail"><i class="fas fa-map-marker-alt me-2 text-muted"></i>${b.pickup_location}</div>` : ''}
+            </div>
+        </div>
+        <div class="detail-section">
+            <div class="detail-section-title"><i class="fas fa-car me-1"></i>Thông tin chuyến thuê</div>
+            <div class="detail-row"><span class="label">Xe</span><span class="value">${b.car_name}</span></div>
+            <div class="detail-row"><span class="label">Ngày nhận xe</span><span class="value">${fmtDate(b.pickup_date)}</span></div>
+            <div class="detail-row"><span class="label">Ngày trả xe</span><span class="value">${fmtDate(b.return_date)}</span></div>
+            <div class="detail-row"><span class="label">Số ngày thuê</span><span class="value">${b.total_days} ngày</span></div>
+            <div class="detail-row"><span class="label">Tổng tiền</span><span class="value" style="color:#d97706;font-size:1rem;">${fmtPrice(b.total_price)}</span></div>
+            <div class="detail-row"><span class="label">Trạng thái</span><span class="value"><span class="badge-status ${s.cls}">${s.label}</span></span></div>
+            <div class="detail-row"><span class="label">Ngày đặt</span><span class="value">${fmtDate(b.created_at)}</span></div>
+        </div>
+    `;
+
+    const actionBtn = document.getElementById('modalActionBtn');
+    if (b.status === 'pending') {
+        actionBtn.style.display = '';
+        actionBtn.textContent = '✓ Xác nhận đơn';
+        actionBtn.onclick = () => { bootstrap.Modal.getInstance(document.getElementById('detailModal')).hide(); updateStatusDirect(b.id, 'confirmed'); };
+    } else if (b.status === 'confirmed') {
+        actionBtn.style.display = '';
+        actionBtn.textContent = '🏁 Đánh dấu hoàn thành';
+        actionBtn.onclick = () => { bootstrap.Modal.getInstance(document.getElementById('detailModal')).hide(); updateStatusDirect(b.id, 'completed'); };
+    } else {
+        actionBtn.style.display = 'none';
+    }
+
+    new bootstrap.Modal(document.getElementById('detailModal')).show();
+}
+
 function updateStatus(id, status, btn) {
     btn.disabled = true;
     btn.innerHTML = '<span class="spinner-border spinner-border-sm"></span>';
+    callUpdate(id, status, () => loadBookings(), () => { btn.disabled = false; });
+}
+
+function updateStatusDirect(id, status) {
+    callUpdate(id, status, () => loadBookings(), null);
+}
+
+function callUpdate(id, status, onSuccess, onError) {
     fetch('controllers/provider/bookings-controller.php?action=updateStatus', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -250,9 +334,10 @@ function updateStatus(id, status, btn) {
     })
     .then(r => r.json())
     .then(res => {
-        if (res.success) { loadBookings(); }
-        else { btn.disabled = false; alert(res.message || 'Cập nhật thất bại'); }
-    });
+        if (res.success) { onSuccess && onSuccess(); }
+        else { alert(res.message || 'Cập nhật thất bại'); onError && onError(); }
+    })
+    .catch(() => { alert('Lỗi kết nối'); onError && onError(); });
 }
 
 function logout() {

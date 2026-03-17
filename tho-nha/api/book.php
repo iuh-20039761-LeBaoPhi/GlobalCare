@@ -5,6 +5,7 @@ header('Access-Control-Allow-Origin: *');
 header('Access-Control-Allow-Methods: POST');
 header('Access-Control-Allow-Headers: Content-Type');
 
+require_once 'session.php'; // khởi động session để đọc user_id nếu đã đăng nhập
 require_once 'db.php';
 
 if (!isset($conn)) {
@@ -42,6 +43,11 @@ $selected_brand  = trim($data['selected_brand']  ?? '') ?: null;
 $estimated_price = isset($data['estimated_price']) && $data['estimated_price'] > 0
     ? (int)$data['estimated_price'] : null;
 
+// Nếu khách đã đăng nhập thì gắn user_id, không bắt buộc (guest vẫn đặt được)
+$user_id = (isset($_SESSION['user_id']) && $_SESSION['user_role'] === 'customer')
+    ? (int)$_SESSION['user_id']
+    : null;
+
 if (empty($name) || empty($phone) || empty($service_name) || empty($address)) {
     http_response_code(400);
     echo json_encode(["status" => "error", "message" => "Vui lòng điền đầy đủ thông tin bắt buộc"], JSON_UNESCAPED_UNICODE);
@@ -72,16 +78,16 @@ if ($col_check && $col_check->num_rows > 0) $has_new_cols = true;
 
 if ($has_new_cols) {
     $stmt = $conn->prepare(
-        "INSERT INTO bookings (order_code, customer_name, phone, service_name, address, note, status, selected_brand, estimated_price, created_at)
-         VALUES (?, ?, ?, ?, ?, ?, 'new', ?, ?, NOW())"
+        "INSERT INTO bookings (order_code, customer_name, phone, service_name, address, note, status, selected_brand, estimated_price, user_id, created_at)
+         VALUES (?, ?, ?, ?, ?, ?, 'new', ?, ?, ?, NOW())"
     );
-    $stmt->bind_param("sssssssi", $order_code, $name, $phone, $service_name, $address, $note, $selected_brand, $estimated_price);
+    $stmt->bind_param("sssssssii", $order_code, $name, $phone, $service_name, $address, $note, $selected_brand, $estimated_price, $user_id);
 } else {
     $stmt = $conn->prepare(
-        "INSERT INTO bookings (order_code, customer_name, phone, service_name, address, note, status, created_at)
-         VALUES (?, ?, ?, ?, ?, ?, 'new', NOW())"
+        "INSERT INTO bookings (order_code, customer_name, phone, service_name, address, note, status, user_id, created_at)
+         VALUES (?, ?, ?, ?, ?, ?, 'new', ?, NOW())"
     );
-    $stmt->bind_param("ssssss", $order_code, $name, $phone, $service_name, $address, $note);
+    $stmt->bind_param("ssssssi", $order_code, $name, $phone, $service_name, $address, $note, $user_id);
 }
 
 if ($stmt->execute()) {

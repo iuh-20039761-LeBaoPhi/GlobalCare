@@ -51,6 +51,11 @@ function setupNavigation() {
         loadPage('services');
     });
 
+    document.getElementById('providersLink').addEventListener('click', (e) => {
+        e.preventDefault();
+        loadPage('providers');
+    });
+
     document.getElementById('logoutBtn').addEventListener('click', (e) => {
         e.preventDefault();
         if (confirm('Bạn có chắc muốn đăng xuất?')) {
@@ -72,9 +77,11 @@ function loadPage(page) {
     window.ordersInitialized = false;
     window.cancelRequestsInitialized = false;
     window.servicesInitialized = false;
+    window.providersInitialized = false;
     // Update active menu
     document.querySelectorAll('.nav-menu a').forEach(a => a.classList.remove('active'));
-    document.getElementById(page + 'Link').classList.add('active');
+    const linkEl = document.getElementById(page + 'Link');
+    if (linkEl) linkEl.classList.add('active');
 
     // Load content based on page
     switch(page) {
@@ -93,6 +100,10 @@ function loadPage(page) {
         case 'services':
             document.getElementById('pageTitle').textContent = 'Quản Lý Dịch Vụ';
             loadServicesPage();
+            break;
+        case 'providers':
+            document.getElementById('pageTitle').textContent = 'Quản Lý Nhà Cung Cấp';
+            loadProvidersPage();
             break;
     }
 }
@@ -140,6 +151,17 @@ function loadServicesPage() {
         document.getElementById('pageContent').innerHTML = html;
         eval(script);
         if (typeof initServices === 'function') initServices();
+    });
+}
+
+function loadProvidersPage() {
+    Promise.all([
+        fetch('js/pages/providers.html').then(res => res.text()),
+        fetch('js/pages/providers.js').then(res => res.text())
+    ]).then(([html, script]) => {
+        document.getElementById('pageContent').innerHTML = html;
+        eval(script);
+        if (typeof initProviders === 'function') initProviders();
     });
 }
 
@@ -224,3 +246,24 @@ function updateCancelBadge() {
         badge.classList.add('hide');
     }
 }
+
+// Update provider pending badge
+function updateProviderBadge() {
+    fetch('api/admin/manage-providers.php?action=counts')
+        .then(r => r.json())
+        .then(res => {
+            if (res.status !== 'success') return;
+            const badge = document.getElementById('providerBadge');
+            if (!badge) return;
+            const n = res.data.pending || 0;
+            badge.textContent = n;
+            if (n > 0) { badge.classList.remove('hide'); }
+            else        { badge.classList.add('hide'); }
+        })
+        .catch(() => {});
+}
+
+// Auto-load provider badge on page load
+document.addEventListener('DOMContentLoaded', function() {
+    setTimeout(updateProviderBadge, 800);
+});

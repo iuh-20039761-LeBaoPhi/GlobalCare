@@ -25,11 +25,12 @@ CREATE TABLE `users` (
   `role`           ENUM('admin','customer','provider') NOT NULL DEFAULT 'customer',
   `status`         ENUM('active','blocked','pending','rejected') NOT NULL DEFAULT 'active',
   -- Chỉ dùng cho provider
-  `company_name`   VARCHAR(255) DEFAULT NULL,
-  `license_number` VARCHAR(100) DEFAULT NULL COMMENT 'Số GPKD / GPXE',
-  `address`        TEXT         DEFAULT NULL,
-  `description`    TEXT         DEFAULT NULL,
-  `created_at`     DATETIME     NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  `company_name`     VARCHAR(255) DEFAULT NULL,
+  `license_number`   VARCHAR(100) DEFAULT NULL COMMENT 'Số GPKD / GPXE',
+  `address`          TEXT         DEFAULT NULL,
+  `description`      TEXT         DEFAULT NULL,
+  `rejection_reason` VARCHAR(500) DEFAULT NULL COMMENT 'Lý do từ chối / khóa tài khoản (admin ghi)',
+  `created_at`       DATETIME     NOT NULL DEFAULT CURRENT_TIMESTAMP,
   PRIMARY KEY (`id`),
   UNIQUE KEY `email` (`email`),
   KEY `idx_role`   (`role`),
@@ -57,13 +58,23 @@ CREATE TABLE `bookings` (
   `customer_address`TEXT          NOT NULL DEFAULT '',
   `id_number`       VARCHAR(50)   DEFAULT '' COMMENT 'CCCD / CMND',
   `pickup_date`     DATE          NOT NULL,
+  `pickup_time`     TIME          NOT NULL DEFAULT '08:00:00' COMMENT 'Giờ nhận xe',
   `return_date`     DATE          NOT NULL,
+  `return_time`     TIME          NOT NULL DEFAULT '08:00:00' COMMENT 'Giờ trả xe',
   `pickup_location` VARCHAR(255)  DEFAULT '',
   `notes`           TEXT,
   `total_days`      INT           NOT NULL DEFAULT 1,
   `total_price`     DECIMAL(12,0) NOT NULL,
   `addon_services`  TEXT          DEFAULT NULL COMMENT 'JSON array of addon service names',
-  `addon_total`     DECIMAL(12,0) NOT NULL DEFAULT 0,
+  `addon_total`             DECIMAL(12,0) NOT NULL DEFAULT 0,
+  `subtotal`                DECIMAL(12,0) NOT NULL DEFAULT 0  COMMENT 'Tiền thuê gốc (total_days × price_per_day)',
+  `discount_amount`         DECIMAL(12,0) NOT NULL DEFAULT 0  COMMENT 'Giảm giá / khuyến mãi',
+  `tax_amount`              DECIMAL(12,0) NOT NULL DEFAULT 0  COMMENT 'Thuế VAT 10%',
+  `deposit_amount`          DECIMAL(12,0) NOT NULL DEFAULT 0  COMMENT 'Tiền đặt cọc (mặc định 30% subtotal)',
+  `surcharge_amount`        DECIMAL(12,0) NOT NULL DEFAULT 0  COMMENT 'Phụ phí phát sinh (trả trễ, v.v.)',
+  `weekend_surcharge_amount`DECIMAL(12,0) NOT NULL DEFAULT 0  COMMENT 'Phụ thu cuối tuần / ngày lễ',
+  `final_total`             DECIMAL(12,0) NOT NULL DEFAULT 0  COMMENT 'Tổng cuối — ánh xạ total_price (compat)',
+  `late_return_hours`       INT           NOT NULL DEFAULT 0  COMMENT 'Số giờ trả trễ (cập nhật sau khi trả xe)',
   `status`          ENUM('pending','confirmed','completed','cancelled') NOT NULL DEFAULT 'pending',
   `created_at`      DATETIME      NOT NULL DEFAULT CURRENT_TIMESTAMP,
   PRIMARY KEY (`id`),
@@ -100,3 +111,82 @@ CREATE TABLE `contacts` (
   `created_at` DATETIME     NOT NULL DEFAULT CURRENT_TIMESTAMP,
   PRIMARY KEY (`id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- =====================================================
+-- MIGRATION — Nâng cấp DB cũ
+-- Chạy phần này nếu DB đã tồn tại từ phiên bản trước.
+-- An toàn khi chạy nhiều lần (IF NOT EXISTS check).
+-- KHÔNG cần chạy khi import file này lần đầu.
+-- =====================================================
+
+DROP PROCEDURE IF EXISTS `cr_migrate`;
+DELIMITER $$
+CREATE PROCEDURE `cr_migrate`()
+BEGIN
+    -- v1 → v2: giờ nhận/trả xe
+    IF NOT EXISTS (SELECT 1 FROM INFORMATION_SCHEMA.COLUMNS WHERE TABLE_SCHEMA=DATABASE() AND TABLE_NAME='bookings' AND COLUMN_NAME='pickup_time') THEN
+        ALTER TABLE `bookings` ADD COLUMN `pickup_time` TIME NOT NULL DEFAULT '08:00:00' COMMENT 'Giờ nhận xe' AFTER `pickup_date`;
+    END IF;
+    IF NOT EXISTS (SELECT 1 FROM INFORMATION_SCHEMA.COLUMNS WHERE TABLE_SCHEMA=DATABASE() AND TABLE_NAME='bookings' AND COLUMN_NAME='return_time') THEN
+        ALTER TABLE `bookings` ADD COLUMN `return_time` TIME NOT NULL DEFAULT '08:00:00' COMMENT 'Giờ trả xe' AFTER `return_date`;
+    END IF;
+
+    -- v1 → v2: chi tiết cấu phần giá trong bookings
+    IF NOT EXISTS (SELECT 1 FROM INFORMATION_SCHEMA.COLUMNS WHERE TABLE_SCHEMA=DATABASE() AND TABLE_NAME='bookings' AND COLUMN_NAME='subtotal') THEN
+        ALTER TABLE `bookings`
+            ADD COLUMN `subtotal`                 DECIMAL(12,0) NOT NULL DEFAULT 0 COMMENT 'Tiền thuê gốc' AFTER `addon_total`,
+            ADD COLUMN `discount_amount`          DECIMAL(12,0) NOT NULL DEFAULT 0 COMMENT 'Giảm giá' AFTER `subtotal`,
+            ADD COLUMN `tax_amount`               DECIMAL(12,0) NOT NULL DEFAULT 0 COMMENT 'Thuế VAT 10%' AFTER `discount_amount`,
+            ADD COLUMN `deposit_amount`           DECIMAL(12,0) NOT NULL DEFAULT 0 COMMENT 'Tiền đặt cọc' AFTER `tax_amount`,
+            ADD COLUMN `surcharge_amount`         DECIMAL(12,0) NOT NULL DEFAULT 0 COMMENT 'Phụ phí phát sinh' AFTER `deposit_amount`,
+            ADD COLUMN `weekend_surcharge_amount` DECIMAL(12,0) NOT NULL DEFAULT 0 COMMENT 'Phụ thu cuối tuần' AFTER `surcharge_amount`,
+            ADD COLUMN `final_total`              DECIMAL(12,0) NOT NULL DEFAULT 0 COMMENT 'Tổng cuối' AFTER `weekend_surcharge_amount`,
+            ADD COLUMN `late_return_hours`        INT           NOT NULL DEFAULT 0 COMMENT 'Số giờ trả trễ' AFTER `final_total`;
+    END IF;
+
+    -- v1 → v2: services.unit (nếu bảng services tồn tại)
+    IF EXISTS (SELECT 1 FROM INFORMATION_SCHEMA.TABLES WHERE TABLE_SCHEMA=DATABASE() AND TABLE_NAME='services') THEN
+        IF NOT EXISTS (SELECT 1 FROM INFORMATION_SCHEMA.COLUMNS WHERE TABLE_SCHEMA=DATABASE() AND TABLE_NAME='services' AND COLUMN_NAME='unit') THEN
+            ALTER TABLE `services` ADD COLUMN `unit` ENUM('ngày','chuyến') NOT NULL DEFAULT 'chuyến' COMMENT 'Đơn vị tính phí' AFTER `price`;
+        END IF;
+    END IF;
+
+    -- v1 → v2: cars (nếu bảng cars tồn tại)
+    IF EXISTS (SELECT 1 FROM INFORMATION_SCHEMA.TABLES WHERE TABLE_SCHEMA=DATABASE() AND TABLE_NAME='cars') THEN
+        IF NOT EXISTS (SELECT 1 FROM INFORMATION_SCHEMA.COLUMNS WHERE TABLE_SCHEMA=DATABASE() AND TABLE_NAME='cars' AND COLUMN_NAME='weekend_surcharge_rate') THEN
+            ALTER TABLE `cars` ADD COLUMN `weekend_surcharge_rate` DECIMAL(5,4) NOT NULL DEFAULT 0.1000 COMMENT 'Tỷ lệ phụ thu cuối tuần' AFTER `price_per_day`;
+        END IF;
+        IF NOT EXISTS (SELECT 1 FROM INFORMATION_SCHEMA.COLUMNS WHERE TABLE_SCHEMA=DATABASE() AND TABLE_NAME='cars' AND COLUMN_NAME='deposit_rate') THEN
+            ALTER TABLE `cars` ADD COLUMN `deposit_rate` DECIMAL(5,4) NOT NULL DEFAULT 0.3000 COMMENT 'Tỷ lệ đặt cọc' AFTER `weekend_surcharge_rate`;
+        END IF;
+        IF NOT EXISTS (SELECT 1 FROM INFORMATION_SCHEMA.COLUMNS WHERE TABLE_SCHEMA=DATABASE() AND TABLE_NAME='cars' AND COLUMN_NAME='provider_id') THEN
+            ALTER TABLE `cars` ADD COLUMN `provider_id` INT DEFAULT NULL COMMENT 'FK → users (provider sở hữu xe)';
+            ALTER TABLE `cars` ADD INDEX `idx_cars_provider_id` (`provider_id`);
+        END IF;
+    END IF;
+
+    -- v2 → v3: rejection_reason cho users
+    IF NOT EXISTS (SELECT 1 FROM INFORMATION_SCHEMA.COLUMNS WHERE TABLE_SCHEMA=DATABASE() AND TABLE_NAME='users' AND COLUMN_NAME='rejection_reason') THEN
+        ALTER TABLE `users` ADD COLUMN `rejection_reason` VARCHAR(500) DEFAULT NULL COMMENT 'Lý do từ chối / khóa tài khoản (admin ghi)';
+    END IF;
+
+END$$
+DELIMITER ;
+
+CALL `cr_migrate`();
+DROP PROCEDURE IF EXISTS `cr_migrate`;
+
+-- Backfill bookings cũ: final_total = total_price, subtotal = total_price - addon_total
+UPDATE `bookings` SET `final_total` = `total_price`, `subtotal` = `total_price` - `addon_total`
+WHERE `final_total` = 0 AND `total_price` > 0;
+
+-- =====================================================
+-- Công thức tính tiền (tham khảo):
+--   subtotal                 = total_days × price_per_day
+--   weekend_surcharge_amount = weekend_days × price_per_day × weekend_surcharge_rate
+--   addon_total              = Σ services.price (×days nếu unit='ngày', ×1 nếu 'chuyến')
+--   tax_amount               = ROUND((subtotal + weekend_surcharge_amount + addon_total) × 0.10)
+--   deposit_amount           = ROUND(subtotal × deposit_rate)
+--   final_total              = subtotal + weekend_surcharge_amount + addon_total + tax_amount − discount_amount
+--   total_price              = final_total  (backward compatibility)
+-- =====================================================

@@ -294,12 +294,26 @@ function displayBookingForm(car) {
                 <form id="quickBookingForm">
                     <div class="mb-3">
                         <label class="form-label">Ngày nhận xe *</label>
-                        <input type="date" class="form-control" id="pickupDate" required min="${getTodayDate()}">
+                        <div class="row g-1">
+                            <div class="col-7">
+                                <input type="date" class="form-control" id="pickupDate" required min="${getTodayDate()}">
+                            </div>
+                            <div class="col-5">
+                                <input type="time" class="form-control" id="pickupTime" value="08:00" title="Giờ nhận xe">
+                            </div>
+                        </div>
                     </div>
-                    
+
                     <div class="mb-3">
                         <label class="form-label">Ngày trả xe *</label>
-                        <input type="date" class="form-control" id="returnDate" required min="${getTodayDate()}">
+                        <div class="row g-1">
+                            <div class="col-7">
+                                <input type="date" class="form-control" id="returnDate" required min="${getTodayDate()}">
+                            </div>
+                            <div class="col-5">
+                                <input type="time" class="form-control" id="returnTime" value="08:00" title="Giờ trả xe">
+                            </div>
+                        </div>
                     </div>
                     
                     <div id="priceCalculation" class="mb-3 p-3 bg-light rounded" style="display: none;">
@@ -417,16 +431,18 @@ async function submitBooking(car) {
     const form = document.getElementById('bookingFormFull');
     const formData = new FormData(form);
     
-    // Get dates from quick form
+    // Get dates + times from quick form
     const pickupDate = document.getElementById('pickupDate').value;
     const returnDate = document.getElementById('returnDate').value;
-    
+    const pickupTime = document.getElementById('pickupTime')?.value || '08:00';
+    const returnTime = document.getElementById('returnTime')?.value || '08:00';
+
     if(!pickupDate || !returnDate) {
         showBookingAlert('Vui lòng chọn ngày nhận và trả xe!', 'danger');
         return;
     }
-    if(returnDate <= pickupDate) {
-        showBookingAlert('Ngày trả xe phải sau ngày nhận xe!', 'danger');
+    if(returnDate < pickupDate || (returnDate === pickupDate && returnTime <= pickupTime)) {
+        showBookingAlert('Thời gian trả xe phải sau thời gian nhận xe!', 'danger');
         return;
     }
 
@@ -457,23 +473,23 @@ async function submitBooking(car) {
         return sum + (info.unit === 'ngày' ? info.price * days : info.price);
     }, 0);
 
-    // Prepare data
+    // Prepare data — price_per_day / addon_total / total_price bị loại bỏ;
+    // server tự tính lại từ DB (P0 fix).
     const bookingData = {
-        car_id: car.id,
-        car_name: car.name,
-        customer_name: formData.get('customer_name'),
-        customer_email: formData.get('customer_email'),
-        customer_phone: formData.get('customer_phone'),
+        car_id:           car.id,
+        car_name:         car.name,
+        customer_name:    formData.get('customer_name'),
+        customer_email:   formData.get('customer_email'),
+        customer_phone:   formData.get('customer_phone'),
         customer_address: formData.get('customer_address'),
-        id_number: formData.get('id_number'),
-        pickup_date: pickupDate,
-        return_date: returnDate,
-        pickup_location: formData.get('pickup_location'),
-        notes: formData.get('notes'),
-        price_per_day: car.price_per_day,
-        addon_services: addonServices,
-        addon_total: addonTotal,
-        total_price: days * car.price_per_day + addonTotal
+        id_number:        formData.get('id_number'),
+        pickup_date:      pickupDate,
+        return_date:      returnDate,
+        pickup_time:      pickupTime,   // giờ nhận xe
+        return_time:      returnTime,   // giờ trả xe
+        pickup_location:  formData.get('pickup_location'),
+        notes:            formData.get('notes'),
+        addon_services:   addonServices, // server tra giá từ DB theo tên
     };
     
     // Show loading
@@ -486,12 +502,12 @@ async function submitBooking(car) {
         const result = await API.bookings.create(bookingData);
 
         if(result.success) {
-            // Chuyển thông tin addon qua URL params thay vì sessionStorage
-            // (giữ dữ liệu khi user refresh trang booking_success)
+            // Dùng giá server trả về (authoritative) cho URL params
+            // để trang success hiển thị ngay trước khi fetch API
             const sp = new URLSearchParams({ page: 'booking-success', id: result.booking_id });
-            sp.set('days',        days);
-            sp.set('addon_total', addonTotal);
-            sp.set('total',       bookingData.total_price);
+            sp.set('days',        result.total_days      ?? days);
+            sp.set('addon_total', result.addon_total     ?? addonTotal);
+            sp.set('total',       result.final_total     ?? 0);
             if (addonServices.length) sp.set('addons', addonServices.join('|'));
             window.location.href = 'index.php?' + sp.toString();
         } else if(result.demo) {

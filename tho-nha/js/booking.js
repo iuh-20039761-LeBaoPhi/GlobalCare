@@ -3,11 +3,17 @@
  * Modal HTML được load động từ partials/booking-modal.html
  *
  * Công thức tính giá:
- *   basePrice    = giá hãng đã chọn (hoặc giá mặc định)
+ *   basePrice     = giá hãng đã chọn (hoặc giá mặc định)
  *   travelMin/Max = phí di chuyển min–max (fallback: fixed nếu không có distance thực tế)
- *   surveyAmount = phí khảo sát (chỉ tính khi required = true)
- *   estimatedMin = basePrice + travelMin + surveyAmount
- *   estimatedMax = basePrice + travelMax + surveyAmount
+ *   survey        = phí khảo sát (chỉ tính khi required = true)
+ *
+ *   Tổng "nếu đồng ý sửa":
+ *     totalMin = basePrice + travelMin   (phí khảo sát ĐƯỢC MIỄN khi tiến hành sửa)
+ *     totalMax = basePrice + travelMax
+ *
+ *   Tổng "nếu KHÔNG đồng ý sửa" (hiện thị trong notice):
+ *     noRepairMin = travelMin + survey
+ *     noRepairMax = travelMax + survey
  */
 
 // true khi chạy trên localhost/XAMPP, false khi chạy web tĩnh
@@ -38,15 +44,19 @@ function calcPricing(basePrice, travelFee, surveyFee) {
     const travelMin = travelFee ? (travelFee.min ?? travelFee.fixedAmount ?? 0) : 0;
     const travelMax = travelFee ? (travelFee.max ?? travelFee.fixedAmount ?? 0) : 0;
     // Phí khảo sát — chỉ tính khi required === true
-    const survey    = (surveyFee && surveyFee.required) ? (surveyFee.amount || 0) : 0;
+    const survey = (surveyFee && surveyFee.required) ? (surveyFee.amount || 0) : 0;
 
     return {
         travelMin,
         travelMax,
         survey,
-        totalMin: basePrice + travelMin + survey,
-        totalMax: basePrice + travelMax + survey,
-        hasFees:  travelMax > 0 || survey > 0
+        // Tổng khi đồng ý sửa: phí khảo sát được MIỄN
+        totalMin: basePrice + travelMin,
+        totalMax: basePrice + travelMax,
+        // Tổng khi KHÔNG đồng ý sửa: phải trả phí di chuyển + phí khảo sát
+        noRepairMin: travelMin + survey,
+        noRepairMax: travelMax + survey,
+        hasFees: travelMax > 0 || survey > 0
     };
 }
 
@@ -61,11 +71,9 @@ function updatePricingBreakdown(basePrice, item) {
         return;
     }
 
-    const bdService = document.getElementById('bd-service');
+    const bdService   = document.getElementById('bd-service');
     const bdTravelRow = document.getElementById('bd-travel-row');
     const bdTravel    = document.getElementById('bd-travel');
-    const bdSurveyRow = document.getElementById('bd-survey-row');
-    const bdSurvey    = document.getElementById('bd-survey');
     const bdTotal     = document.getElementById('bd-total');
 
     if (bdService)  bdService.textContent  = fmtVND(basePrice);
@@ -80,17 +88,31 @@ function updatePricingBreakdown(basePrice, item) {
         bdTravelRow.style.setProperty('display', 'none', 'important');
     }
 
-    if (pricing.survey > 0 && bdSurveyRow && bdSurvey) {
-        bdSurveyRow.style.removeProperty('display');
-        bdSurvey.textContent = fmtVND(pricing.survey) + ' (bắt buộc, trừ vào tổng khi đặt)';
-    } else if (bdSurveyRow) {
-        bdSurveyRow.style.setProperty('display', 'none', 'important');
-    }
-
     if (bdTotal) {
         bdTotal.textContent = pricing.totalMin === pricing.totalMax
             ? fmtVND(pricing.totalMin)
             : `${fmtVND(pricing.totalMin)} – ${fmtVND(pricing.totalMax)}`;
+    }
+
+    // Notice phí khảo sát — 2 kịch bản: đồng ý sửa / không sửa
+    const bdSurveyNotice   = document.getElementById('bd-survey-notice');
+    const bdSurveyTravel   = document.getElementById('bd-survey-travel');
+    const bdSurveyAmount   = document.getElementById('bd-survey-amount');
+    const bdSurveyNoRepair = document.getElementById('bd-survey-no-repair');
+    if (pricing.survey > 0 && bdSurveyNotice) {
+        // Phí di chuyển (dòng riêng trong bảng "nếu không sửa")
+        if (bdSurveyTravel) bdSurveyTravel.textContent = pricing.travelMin === pricing.travelMax
+            ? fmtVND(pricing.travelMin)
+            : `${fmtVND(pricing.travelMin)} – ${fmtVND(pricing.travelMax)}`;
+        // Phí khảo sát
+        if (bdSurveyAmount)   bdSurveyAmount.textContent   = fmtVND(pricing.survey);
+        // Tổng cần trả nếu không sửa
+        if (bdSurveyNoRepair) bdSurveyNoRepair.textContent = pricing.noRepairMin === pricing.noRepairMax
+            ? fmtVND(pricing.noRepairMin)
+            : `${fmtVND(pricing.noRepairMin)} – ${fmtVND(pricing.noRepairMax)}`;
+        bdSurveyNotice.style.display = '';
+    } else if (bdSurveyNotice) {
+        bdSurveyNotice.style.display = 'none';
     }
 
     pricingBreakdownWrap.style.display = '';
@@ -280,12 +302,12 @@ async function initBooking() {
         const selectedBrand = activeBrand ? activeBrand.dataset.brand : null;
         const serviceName   = subService.value + (selectedBrand ? ` (${selectedBrand})` : '');
 
-        // Tính estimated_price để gửi lên server
+        // Tính estimated_price (giá khi đồng ý sửa = dịch vụ + di chuyển, không cộng phí khảo sát)
         let estimatedPrice = 0;
         if (_currentItem) {
             const basePrice = activeBrand ? Number(activeBrand.dataset.price) : (_currentItem.price || 0);
             const p = calcPricing(basePrice, _currentItem.travelFee, _currentItem.surveyFee);
-            estimatedPrice = p.totalMin;
+            estimatedPrice = p.totalMin; // = basePrice + travelMin (survey đã tách riêng)
         }
 
         const data = {

@@ -165,6 +165,10 @@ $adminName  = $_SESSION['admin_name'] ?? 'Admin';
             <li><a class="nav-link" href="#" data-page="bookings" onclick="loadPage('bookings');return false;">
                 <i class="fas fa-calendar-check"></i>Đơn đặt xe
             </a></li>
+            <li><a class="nav-link" href="#" data-page="providers" onclick="loadPage('providers');return false;">
+                <i class="fas fa-user-tie"></i>Nhà cung cấp
+                <span id="providerPendingBadge" class="badge rounded-pill ms-auto" style="background:#d97706;display:none;">0</span>
+            </a></li>
         </ul>
     </nav>
     <div class="sidebar-footer">
@@ -420,11 +424,12 @@ function loadPage(page) {
     document.querySelectorAll('.sidebar-nav .nav-link').forEach(l =>
         l.classList.toggle('active', l.dataset.page === page));
     document.getElementById('pageTitle').textContent =
-        {dashboard:'Dashboard', cars:'Quản lý xe', bookings:'Đơn đặt xe'}[page] || page;
+        {dashboard:'Dashboard', cars:'Quản lý xe', bookings:'Đơn đặt xe', providers:'Nhà Cung Cấp'}[page] || page;
 
     if (page === 'dashboard') loadDashboard();
-    else if (page === 'cars')     loadCarsPage();
-    else if (page === 'bookings') loadBookingsPage();
+    else if (page === 'cars')       loadCarsPage();
+    else if (page === 'bookings')   loadBookingsPage();
+    else if (page === 'providers')  loadProvidersPage();
 }
 
 // ===== DASHBOARD =====
@@ -853,6 +858,153 @@ async function handleImageSelect(input) {
         statusEl.className   = 'small text-danger';
     }
 }
+
+// ===== PROVIDERS =====
+let _providerData = [];
+let _providerFilter = '';
+
+async function loadProvidersPage() {
+    setContent(`
+        <div id="provFilterRow" class="d-flex align-items-center gap-2 mb-3 flex-wrap">
+            <button class="btn btn-sm btn-outline-secondary prov-filter active" data-st="">Tất cả</button>
+            <button class="btn btn-sm prov-filter" data-st="pending"  style="background:#fef3c7;color:#d97706;border-color:#fde68a;">Chờ duyệt <span id="pCntPending">0</span></button>
+            <button class="btn btn-sm prov-filter" data-st="active"   style="background:#dcfce7;color:#15803d;border-color:#bbf7d0;">Hoạt động <span id="pCntActive">0</span></button>
+            <button class="btn btn-sm prov-filter" data-st="rejected" style="background:#fee2e2;color:#dc2626;border-color:#fecaca;">Từ chối <span id="pCntRejected">0</span></button>
+            <button class="btn btn-sm prov-filter" data-st="blocked"  style="background:#f1f5f9;color:#475569;border-color:#e2e8f0;">Đã khóa <span id="pCntBlocked">0</span></button>
+        </div>
+        <div class="card border-0 shadow-sm">
+            <div class="card-body p-0" id="provTable">
+                <div class="text-center py-4"><div class="spinner-border spinner-border-sm text-primary"></div></div>
+            </div>
+        </div>
+        <!-- Reason Modal -->
+        <div class="modal fade" id="provReasonModal" tabindex="-1">
+            <div class="modal-dialog modal-dialog-centered modal-sm">
+                <div class="modal-content">
+                    <div class="modal-header"><h5 class="modal-title fw-bold" id="provReasonTitle">Nhập lý do</h5><button type="button" class="btn-close" data-bs-dismiss="modal"></button></div>
+                    <div class="modal-body"><div id="provReasonAlert"></div><textarea class="form-control" id="provReasonInput" rows="3" placeholder="Nhập lý do..."></textarea></div>
+                    <div class="modal-footer"><button class="btn btn-secondary" data-bs-dismiss="modal">Hủy</button><button class="btn btn-danger fw-semibold" id="provReasonConfirmBtn">Xác nhận</button></div>
+                </div>
+            </div>
+        </div>
+    `);
+
+    document.querySelectorAll('.prov-filter').forEach(btn => {
+        btn.addEventListener('click', () => {
+            document.querySelectorAll('.prov-filter').forEach(b => b.classList.remove('active'));
+            btn.classList.add('active');
+            _providerFilter = btn.dataset.st;
+            renderProviders();
+        });
+    });
+
+    const [listRes, cntRes] = await Promise.all([
+        ADMIN_API.get('providers-controller.php', {action:'list'}),
+        ADMIN_API.get('providers-controller.php', {action:'counts'})
+    ]);
+
+    if (listRes.success) _providerData = listRes.data;
+    if (cntRes.success) {
+        const c = cntRes.data;
+        const el = id => document.getElementById(id);
+        if (el('pCntPending'))  el('pCntPending').textContent  = c.pending;
+        if (el('pCntActive'))   el('pCntActive').textContent   = c.active;
+        if (el('pCntRejected')) el('pCntRejected').textContent = c.rejected;
+        if (el('pCntBlocked'))  el('pCntBlocked').textContent  = c.blocked;
+        const badge = document.getElementById('providerPendingBadge');
+        if (badge) {
+            badge.textContent    = c.pending;
+            badge.style.display  = c.pending > 0 ? '' : 'none';
+        }
+    }
+    renderProviders();
+}
+
+function renderProviders() {
+    const rows = (_providerFilter
+        ? _providerData.filter(p => p.status === _providerFilter)
+        : _providerData);
+
+    const box = document.getElementById('provTable');
+    if (!rows.length) { box.innerHTML = '<p class="text-center text-muted py-4">Không có nhà cung cấp nào</p>'; return; }
+
+    const STATUS_STYLE = {
+        pending:  'background:#fef3c7;color:#d97706;',
+        active:   'background:#dcfce7;color:#15803d;',
+        rejected: 'background:#fee2e2;color:#dc2626;',
+        blocked:  'background:#f1f5f9;color:#64748b;',
+    };
+    const STATUS_LABEL = { pending:'Chờ duyệt', active:'Hoạt động', rejected:'Từ chối', blocked:'Đã khóa' };
+
+    box.innerHTML = `<div class="table-responsive"><table class="table mb-0">
+        <thead class="table-light"><tr>
+            <th>Nhà cung cấp</th><th>Công ty</th><th>SĐT</th><th>Ngày đăng ký</th><th>Trạng thái</th><th>Thao tác</th>
+        </tr></thead><tbody>
+        ${rows.map(p => {
+            const ss = STATUS_STYLE[p.status] || '';
+            const sl = STATUS_LABEL[p.status] || p.status;
+            let actions = '';
+            if (p.status === 'pending') {
+                actions = `<button class="btn btn-sm btn-success me-1 py-0" onclick="provAction(${p.id},'approve')"><i class="fas fa-check"></i></button>
+                           <button class="btn btn-sm btn-danger py-0" onclick="provActionReason(${p.id},'reject','Lý do từ chối')"><i class="fas fa-times"></i></button>`;
+            } else if (p.status === 'active') {
+                actions = `<button class="btn btn-sm btn-warning py-0" onclick="provActionReason(${p.id},'block','Lý do khóa')"><i class="fas fa-lock"></i></button>`;
+            } else if (p.status === 'blocked') {
+                actions = `<button class="btn btn-sm btn-success py-0" onclick="provAction(${p.id},'unblock')"><i class="fas fa-lock-open"></i></button>`;
+            } else if (p.status === 'rejected') {
+                actions = `<button class="btn btn-sm btn-success py-0" onclick="provAction(${p.id},'approve')"><i class="fas fa-check"></i></button>`;
+            }
+            return `<tr>
+                <td><div class="fw-semibold">${p.full_name}</div><small class="text-muted">${p.email}</small></td>
+                <td>${p.company_name||'—'}</td>
+                <td>${p.phone||'—'}</td>
+                <td>${fmtD(p.created_at)}</td>
+                <td><span style="display:inline-flex;padding:3px 10px;border-radius:50px;font-size:0.75rem;font-weight:600;${ss}">${sl}</span></td>
+                <td>${actions}</td>
+            </tr>`;
+        }).join('')}
+        </tbody></table></div>`;
+}
+
+async function provAction(id, action) {
+    const labels = {approve:'duyệt', unblock:'mở khóa'};
+    if (!confirm(`Bạn có chắc muốn ${labels[action]||action} tài khoản này?`)) return;
+    const res = await ADMIN_API.post('providers-controller.php', action, {provider_id: id});
+    if (res.success) { toast(res.message||'Thành công!'); await loadProvidersPage(); }
+    else toast(res.message||'Có lỗi xảy ra', 'danger');
+}
+
+let _pendingProvAction = null, _pendingProvId = null;
+function provActionReason(id, action, title) {
+    _pendingProvAction = action;
+    _pendingProvId = id;
+    document.getElementById('provReasonTitle').textContent = title;
+    document.getElementById('provReasonInput').value = '';
+    document.getElementById('provReasonAlert').innerHTML = '';
+    document.getElementById('provReasonConfirmBtn').onclick = async () => {
+        const reason = document.getElementById('provReasonInput').value.trim();
+        if (!reason) { document.getElementById('provReasonAlert').innerHTML = '<div class="alert alert-warning py-1 mb-2">Vui lòng nhập lý do</div>'; return; }
+        bootstrap.Modal.getInstance(document.getElementById('provReasonModal')).hide();
+        const res = await ADMIN_API.post('providers-controller.php', _pendingProvAction, {provider_id: _pendingProvId, reason});
+        if (res.success) { toast(res.message||'Thành công!'); await loadProvidersPage(); }
+        else toast(res.message||'Có lỗi xảy ra', 'danger');
+    };
+    new bootstrap.Modal(document.getElementById('provReasonModal')).show();
+}
+
+// Load provider badge on init
+(async () => {
+    try {
+        const r = await ADMIN_API.get('providers-controller.php', {action:'counts'});
+        if (r.success) {
+            const badge = document.getElementById('providerPendingBadge');
+            if (badge) {
+                badge.textContent   = r.data.pending;
+                badge.style.display = r.data.pending > 0 ? '' : 'none';
+            }
+        }
+    } catch(e) {}
+})();
 
 // Init
 loadPage('dashboard');
