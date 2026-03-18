@@ -159,7 +159,23 @@
             <li class="nav-item">
               <a class="nav-link fw-bold px-3" href="html/contact.html">Liên Hệ</a>
             </li>
-            
+            <li class="nav-item">
+                <a
+                  class="btn text-white rounded-pill px-4 py-2 shadow-sm"
+                  style="background: linear-gradient(135deg, #f06292, #ec407a);"
+                  href="khach_hang/lookup.html"
+                  data-lookup-modal
+                  data-lookup-modal-src="khach_hang/lookup.html"
+                  onmouseover="
+                    this.style.background = 'linear-gradient(135deg, #d84374, #c2185b)';
+                    this.style.transform = 'scale(1.05)';
+                  "
+                  onmouseout="
+                    this.style.background = 'linear-gradient(135deg, #f06292, #ec407a)';
+                    this.style.transform = 'scale(1)';
+                  "
+                >Tra cứu đơn hàng</a>
+              </li>
             <li class="nav-item ms-lg-3">
               <a
                 href="html/contact.html"
@@ -1016,7 +1032,51 @@
         $("#reviewNote").text(data.note || "-");
         $("#reviewPrice").text(data.price || "0 đ");
       }
+      function mapBookingDataForDatabase(data) {
+        var payload = {
+          ten: (data.name || "").trim(),
+          dien_thoai: (data.phone || "").trim(),
+          email: (data.email || "").trim(),
+          dia_chi: (data.address || "").trim(),
+          dich_vu: data.service || "",
+          goi_dich_vu: data.package || "Không chọn gói",
+          cong_viec: data.jobs || "",
+          startDate: data.startDate || "",
+          endDate: data.endDate || "",
+          durationUnit: data.durationUnit || "",
+          durationAmount: (data.durationUnit && data.durationUnit !== "day") ? (data.durationAmount || "") : "",
+          totalDays: Number(data.totalDays || 0),
+          startTime: data.startTime || "",
+          endTime: data.endTime || "",
+          totalHours: Number(data.totalHours || 0),
+          extraRequest: data.extraRequest || "",
+          gia_tien: data.price || "0 đ",
+          ghi_chu: (data.note || "").trim()
+        };
 
+        if (window.currentLoggedInId) {
+          payload.khach_hang_id = window.currentLoggedInId;
+        } else if (window.loggedInUserId) {
+          payload.khach_hang_id = window.loggedInUserId;
+        }
+
+        return payload;
+      }
+
+      function saveBookingToDatabase(data) {
+        return fetch("api/create_booking.php", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(mapBookingDataForDatabase(data))
+        })
+        .then(function(res) { return res.json(); })
+        .then(function(resp) {
+          if (resp.success || resp.result === "success") {
+            return resp;
+          }
+          throw new Error(resp.message || "Lưu cơ sở dữ liệu thất bại");
+        });
+      }
       function submitBookingToSheet(data) {
         var saveBtn = $("#btnConfirmSave");
         var backBtn = $("#btnBackToEdit");
@@ -1033,22 +1093,31 @@
         .then(function(res) { return res.json(); })
         .then(function(result) {
           if (result.result === "success") {
-            if (!reviewModal) reviewModal = new bootstrap.Modal(document.getElementById("reviewBookingModal"));
-            if (!bsModal) bsModal = new bootstrap.Modal(document.getElementById("bookingModal"));
-            $("#reviewBookingModal").one("hidden.bs.modal", function() {
-              bsModal.show();
-              $("#bookingForm").slideUp();
-              $("#successMessage").removeClass("d-none");
-            });
-            reviewModal.hide();
+            saveBookingToDatabase(data)
+            .then(function() {
+              if (!reviewModal) reviewModal = new bootstrap.Modal(document.getElementById("reviewBookingModal"));
+              if (!bsModal) bsModal = new bootstrap.Modal(document.getElementById("bookingModal"));
+              $("#reviewBookingModal").one("hidden.bs.modal", function() {
+                bsModal.show();
+                $("#bookingForm").slideUp();
+                $("#successMessage").removeClass("d-none");
+              });
+              reviewModal.hide();
 
-            setTimeout(function() {
-              window.__bookingFlowPreserveState = false;
-              bsModal.hide();
+              setTimeout(function() {
+                window.__bookingFlowPreserveState = false;
+                bsModal.hide();
+                saveBtn.html(originalText).prop("disabled", false);
+                backBtn.prop("disabled", false);
+                PENDING_BOOKING_DATA = null;
+              }, 2500);
+            })
+            .catch(function(err) {
+              console.error("Lỗi khi lưu cơ sở dữ liệu:", err);
               saveBtn.html(originalText).prop("disabled", false);
               backBtn.prop("disabled", false);
-              PENDING_BOOKING_DATA = null;
-            }, 2500);
+              alert("Đã lưu Google Sheet nhưng lưu cơ sở dữ liệu thất bại. Vui lòng thử lại.\n" + err.message);
+            });
           } else {
             saveBtn.html(originalText).prop("disabled", false);
             backBtn.prop("disabled", false);
@@ -1263,6 +1332,8 @@
 
     }); // end document.ready
     </script>
+    <script src="JS/lookup-modal-core.js"></script>
+    <script src="JS/lookup-modal-loader.js"></script>
   </body>
 </html>
 
