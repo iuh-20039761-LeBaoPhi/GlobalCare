@@ -1,0 +1,354 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<title>Dịch vụ | Chăm Sóc Vườn</title>
+<link rel="icon" href="assets/images/logo2.jpg" type="image/jpg">
+
+<style>
+
+/* ===== SCOPE RIÊNG ===== */
+#services-page{
+font-family:'Segoe UI',sans-serif;
+background:#f4fbf6;
+margin:0;
+}
+
+/* ===== HERO (ĐỒNG NHẤT ABOUT) ===== */
+#services-page .hero{
+background:linear-gradient(135deg,#2e7d32,#1b5e20);
+color:white;
+text-align:center;
+padding:90px 20px 70px;
+}
+
+#services-page .hero h1{
+font-size:clamp(32px,5vw,46px);
+font-weight:700;
+margin-bottom:10px;
+}
+
+#services-page .hero p{
+font-size:16px;
+opacity:.9;
+margin-bottom:25px;
+}
+
+/* SEARCH */
+#services-page .search-box{
+max-width:520px;
+margin:auto;
+display:flex;
+background:white;
+border-radius:40px;
+overflow:hidden;
+box-shadow:0 8px 20px rgba(0,0,0,0.15);
+}
+
+#services-page .search-box input{
+flex:1;
+border:none;
+padding:14px 18px;
+outline:none;
+font-size:14px;
+}
+
+#services-page .search-box button{
+background:#1f6f43;
+color:white;
+border:none;
+padding:14px 22px;
+cursor:pointer;
+}
+
+/* ===== CATEGORY ===== */
+#services-page .category-bar{
+display:flex;
+flex-wrap:wrap;
+justify-content:center;
+gap:10px;
+padding:30px 15px 10px;
+}
+
+#services-page .category-btn{
+padding:10px 16px;
+border-radius:30px;
+border:1px solid #ddd;
+background:white;
+cursor:pointer;
+transition:.25s;
+font-size:14px;
+}
+
+#services-page .category-btn.active{
+background:#1f6f43;
+color:white;
+border:none;
+}
+
+/* ===== CONTAINER ===== */
+#services-page .wrap{
+max-width:1300px;
+margin:auto;
+padding:20px 15px 70px;
+}
+
+/* ===== GRID ===== */
+#services-page .services-container{
+display:grid;
+grid-template-columns:repeat(auto-fit,minmax(280px,1fr));
+gap:25px;
+}
+
+/* ===== CARD ===== */
+#services-page .service-card{
+background:white;
+border-radius:16px;
+overflow:hidden;
+box-shadow:0 8px 20px rgba(0,0,0,0.06);
+transition:.3s;
+display:flex;
+flex-direction:column;
+}
+
+#services-page .service-card:hover{
+transform:translateY(-6px);
+box-shadow:0 18px 40px rgba(0,0,0,0.12);
+}
+
+/* IMAGE */
+#services-page .service-image{
+height:190px;
+overflow:hidden;
+}
+
+#services-page .service-image img{
+width:100%;
+height:100%;
+object-fit:cover;
+transition:.4s;
+}
+
+#services-page .service-card:hover img{
+transform:scale(1.07);
+}
+
+/* CONTENT */
+#services-page .service-content{
+padding:18px;
+display:flex;
+flex-direction:column;
+flex:1;
+}
+
+#services-page .service-content h3{
+color:#14532d;
+margin-bottom:8px;
+font-size:18px;
+}
+
+#services-page .service-content p{
+font-size:14px;
+color:#555;
+line-height:1.6;
+flex:1;
+}
+
+/* META */
+#services-page .service-meta{
+margin-top:10px;
+font-size:13px;
+color:#777;
+}
+
+/* PRICE */
+#services-page .service-price{
+margin-top:10px;
+font-size:18px;
+font-weight:bold;
+color:#e63946;
+}
+
+/* BUTTON */
+#services-page .service-btn{
+margin-top:15px;
+text-align:center;
+background:#1f6f43;
+color:white;
+padding:11px;
+border-radius:8px;
+text-decoration:none;
+font-size:14px;
+transition:.25s;
+}
+
+#services-page .service-btn:hover{
+background:#14532d;
+}
+
+/* ===== MOBILE ===== */
+@media(max-width:768px){
+
+#services-page .hero{
+padding:70px 15px 50px;
+}
+
+#services-page .hero h1{
+font-size:26px;
+}
+
+}
+
+</style>
+
+</head>
+
+<body>
+
+<div id="header"></div>
+
+<main id="services-page">
+
+<!-- HERO -->
+<section class="hero">
+<h1>Dịch vụ chăm sóc vườn chuyên nghiệp</h1>
+<p>Biến không gian xanh của bạn trở nên hoàn hảo – sạch – đẹp – bền vững</p>
+
+<div class="search-box">
+<input type="text" id="searchInput" placeholder="Tìm dịch vụ...">
+<button>Tìm</button>
+</div>
+
+</section>
+
+<!-- CATEGORY -->
+<div class="category-bar">
+
+<button class="category-btn active" data-category="all">Tất cả</button>
+<button class="category-btn" data-category="coban">Cơ bản</button>
+<button class="category-btn" data-category="nangcao">Nâng cao</button>
+<button class="category-btn" data-category="thietke">Thiết kế</button>
+<button class="category-btn" data-category="ray">Rẫy</button>
+<button class="category-btn" data-category="vesinh">Vệ sinh</button>
+
+</div>
+
+<div class="wrap">
+<div class="services-container" id="servicesContainer"></div>
+</div>
+
+</main>
+
+<div id="footer"></div>
+
+<script>
+
+/* LOAD HEADER */
+fetch("header.html")
+.then(res=>res.text())
+.then(data=>{
+document.getElementById("header").innerHTML=data;
+});
+
+/* LOAD FOOTER */
+fetch("footer.html")
+.then(res=>res.text())
+.then(data=>{
+document.getElementById("footer").innerHTML=data;
+});
+
+let allServices=[];
+const container=document.getElementById("servicesContainer");
+
+/* RENDER */
+function renderServices(list){
+
+container.innerHTML="";
+
+list.forEach(service=>{
+
+let price="Liên hệ";
+
+if(service.price_m2_min){
+price = service.price_m2_min.toLocaleString('vi-VN') + " VNĐ";
+}
+
+const card=document.createElement("div");
+card.className="service-card";
+
+card.innerHTML=`
+<div class="service-image">
+<img src="assets/images/${service.image}">
+</div>
+
+<div class="service-content">
+
+<h3>${service.name}</h3>
+
+<p>${service.description.substring(0,110)}...</p>
+
+<div class="service-meta">
+📍 ${service.service_area || "Đang cập nhật"}
+</div>
+
+<div class="service-price">${price}</div>
+
+<a href="service_detail.html?id=${service.id}" class="service-btn">
+Xem chi tiết
+</a>
+
+</div>
+`;
+
+container.appendChild(card);
+
+});
+
+}
+
+/* LOAD DATA */
+fetch("services.json?v="+Date.now())
+.then(res=>res.json())
+.then(data=>{
+allServices=data.services;
+renderServices(allServices);
+});
+
+/* FILTER */
+document.querySelectorAll(".category-btn").forEach(btn=>{
+btn.onclick=function(){
+
+document.querySelectorAll(".category-btn").forEach(b=>b.classList.remove("active"));
+this.classList.add("active");
+
+const category=this.dataset.category;
+
+if(category==="all"){
+renderServices(allServices);
+}else{
+renderServices(allServices.filter(s=>s.category===category));
+}
+
+};
+});
+
+/* SEARCH */
+document.getElementById("searchInput").addEventListener("keyup",function(){
+
+const keyword=this.value.toLowerCase();
+
+const filtered=allServices.filter(s=>
+s.name.toLowerCase().includes(keyword)
+);
+
+renderServices(filtered);
+
+});
+
+</script>
+
+</body>
+</html>

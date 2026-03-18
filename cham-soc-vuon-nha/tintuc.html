@@ -1,0 +1,356 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<title>Tin tức | Chăm Sóc Vườn</title>
+<link rel="icon" href="assets/images/logo2.jpg" type="image/jpg">
+
+<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet">
+
+<style>
+
+/* ===== SCOPE RIÊNG ===== */
+#news-page{
+font-family:'Poppins',sans-serif;
+background:#f4fbf6;
+margin:0;
+}
+
+/* ===== HERO (ĐỒNG NHẤT) ===== */
+#news-page .hero {
+  background: linear-gradient(135deg, #4bb450, #4db554); /* gradient xanh lá */
+  color: #fff; /* chữ trắng để nổi bật trên nền xanh */
+  text-align: center;
+  padding: 90px 20px 70px;
+}
+
+#news-page .hero h1 {
+  font-size: clamp(30px, 5vw, 44px);
+  font-weight: 700;
+  margin-bottom: 10px;
+}
+
+#news-page .hero p {
+  opacity: 0.9;
+  font-size: 16px;
+  line-height: 1.6; /* thêm để đọc dễ hơn */
+}
+
+/* ===== SEARCH ===== */
+#news-page .search-box{
+max-width:600px;
+margin:30px auto;
+display:flex;
+background:white;
+border-radius:40px;
+overflow:hidden;
+box-shadow:0 8px 20px rgba(0,0,0,0.12);
+}
+
+#news-page .search-box input{
+flex:1;
+padding:14px;
+border:none;
+outline:none;
+}
+
+#news-page .search-box button{
+background:#1f6f43;
+color:white;
+border:none;
+padding:0 25px;
+cursor:pointer;
+}
+
+/* ===== LAYOUT ===== */
+#news-page .wrap{
+max-width:1300px;
+margin:auto;
+padding:20px 15px 60px;
+}
+
+#news-page .blog-container{
+display:grid;
+grid-template-columns:3fr 1fr;
+gap:30px;
+}
+
+/* ===== POSTS ===== */
+#news-page .posts{
+display:grid;
+grid-template-columns:repeat(auto-fit,minmax(280px,1fr));
+gap:25px;
+}
+
+#news-page .post{
+background:white;
+border-radius:16px;
+overflow:hidden;
+box-shadow:0 8px 20px rgba(0,0,0,0.06);
+transition:.3s;
+}
+
+#news-page .post:hover{
+transform:translateY(-6px);
+box-shadow:0 18px 40px rgba(0,0,0,0.12);
+}
+
+#news-page .post img{
+width:100%;
+height:200px;
+object-fit:cover;
+}
+
+#news-page .post-content{
+padding:18px;
+}
+
+#news-page .post h3{
+font-size:18px;
+margin-bottom:8px;
+}
+
+#news-page .post h3 a{
+text-decoration:none;
+color:#14532d;
+}
+
+#news-page .meta{
+font-size:13px;
+color:#777;
+margin-bottom:10px;
+}
+
+#news-page .desc{
+font-size:14px;
+color:#555;
+line-height:1.6;
+}
+
+#news-page .tag{
+display:inline-block;
+margin-top:10px;
+background:#e8f5e9;
+color:#2e7d32;
+padding:5px 12px;
+border-radius:20px;
+font-size:12px;
+}
+
+/* ===== SIDEBAR ===== */
+#news-page .sidebar{
+display:flex;
+flex-direction:column;
+gap:20px;
+}
+
+#news-page .side-card{
+background:white;
+padding:18px;
+border-radius:14px;
+box-shadow:0 8px 20px rgba(0,0,0,0.06);
+}
+
+#news-page .side-card h3{
+margin-bottom:15px;
+color:#2e7d32;
+}
+
+#news-page .latest-post{
+display:flex;
+gap:10px;
+margin-bottom:12px;
+}
+
+#news-page .latest-post img{
+width:65px;
+height:55px;
+border-radius:8px;
+object-fit:cover;
+}
+
+#news-page .latest-post a{
+font-size:13px;
+text-decoration:none;
+color:#222;
+font-weight:600;
+}
+
+/* ===== PAGINATION ===== */
+#news-page .pagination{
+text-align:center;
+margin-top:30px;
+}
+
+#news-page .pagination button{
+width:38px;
+height:38px;
+margin:4px;
+border:none;
+border-radius:8px;
+background:#eee;
+cursor:pointer;
+}
+
+#news-page .pagination .active{
+background:#1f6f43;
+color:white;
+}
+
+/* ===== MOBILE ===== */
+@media(max-width:900px){
+
+#news-page .blog-container{
+grid-template-columns:1fr;
+}
+
+#news-page .hero{
+padding:70px 15px 50px;
+}
+
+#news-page .hero h1{
+font-size:26px;
+}
+
+}
+
+</style>
+
+</head>
+
+<body>
+
+<div id="header"></div>
+
+<main id="news-page">
+
+<!-- HERO -->
+<section class="hero">
+<h1>Tin tức làm vườn</h1>
+<p>Cập nhật kiến thức – chia sẻ kinh nghiệm – nâng tầm không gian xanh</p>
+</section>
+
+<!-- SEARCH -->
+<div class="search-box">
+<input type="text" id="search" placeholder="Tìm bài viết...">
+<button onclick="searchPost()">Tìm</button>
+</div>
+
+<div class="wrap">
+
+<section class="blog-container">
+
+<!-- LEFT -->
+<div>
+<div class="posts" id="posts"></div>
+<div class="pagination" id="pagination"></div>
+</div>
+
+<!-- RIGHT -->
+<aside class="sidebar">
+<div class="side-card">
+<h3>Bài viết mới</h3>
+<div id="latest"></div>
+</div>
+</aside>
+
+</section>
+
+</div>
+
+</main>
+
+<div id="footer"></div>
+
+<script>
+
+/* HEADER FOOTER */
+fetch("header.html").then(r=>r.text()).then(d=>document.getElementById("header").innerHTML=d)
+fetch("footer.html").then(r=>r.text()).then(d=>document.getElementById("footer").innerHTML=d)
+
+let news=[],filtered=[],postsPerPage=6,currentPage=1
+
+fetch("news.json?v="+Date.now())
+.then(r=>r.json())
+.then(d=>{
+news=d.news;
+filtered=[...news];
+render();
+})
+
+function render(){
+let start=(currentPage-1)*postsPerPage
+let end=start+postsPerPage
+let list=filtered.slice(start,end)
+
+let container=document.getElementById("posts")
+container.innerHTML=""
+
+list.forEach(post=>{
+container.innerHTML+=`
+<article class="post">
+<img src="assets/images/${post.image}">
+<div class="post-content">
+<h3><a href="news_detail.html?slug=${post.slug}">${post.title}</a></h3>
+<div class="meta">📅 ${new Date(post.date).toLocaleDateString('vi-VN')} • ⏱ ${post.readingTime} phút</div>
+<p class="desc">${post.content.substring(0,120)}...</p>
+<span class="tag">${post.category}</span>
+</div>
+</article>
+`
+})
+
+renderPagination()
+renderLatest()
+}
+
+function renderPagination(){
+let total=Math.ceil(filtered.length/postsPerPage)
+let html=""
+for(let i=1;i<=total;i++){
+html+=`<button class="${i==currentPage?'active':''}" onclick="go(${i})">${i}</button>`
+}
+document.getElementById("pagination").innerHTML=html
+}
+
+function go(p){
+currentPage=p
+window.scrollTo({top:0,behavior:"smooth"})
+render()
+}
+
+function searchPost(){
+let keyword=document.getElementById("search").value.toLowerCase()
+
+filtered=news.filter(n=>
+n.title.toLowerCase().includes(keyword) ||
+n.category.toLowerCase().includes(keyword)
+)
+
+currentPage=1
+render()
+}
+
+function renderLatest(){
+let box=document.getElementById("latest")
+box.innerHTML=""
+
+news.slice(0,5).forEach(p=>{
+box.innerHTML+=`
+<div class="latest-post">
+<img src="assets/images/${p.image}">
+<div>
+<a href="news_detail.html?slug=${p.slug}">${p.title}</a>
+</div>
+</div>
+`
+})
+}
+
+</script>
+
+</body>
+</html>
