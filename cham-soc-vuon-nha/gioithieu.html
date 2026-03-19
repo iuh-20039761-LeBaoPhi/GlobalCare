@@ -1,0 +1,283 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<title>Giới thiệu | Chăm Sóc Vườn</title>
+
+<link rel="icon" href="assets/images/logo2.jpg" type="image/jpg">
+<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+
+<style>
+
+.about-page{
+margin-top:0;
+font-family:'Poppins',sans-serif;
+}
+
+/* HERO */
+.about-page .hero{
+background:linear-gradient(135deg,#2e7d32,#1b5e20);
+color:white;
+text-align:center;
+padding:100px 20px;
+}
+
+.about-page .hero h1{
+font-size:42px;
+margin-bottom:10px;
+}
+
+.about-page .hero p{
+opacity:0.9;
+font-size:18px;
+}
+
+/* CONTAINER */
+.about-page .container{
+max-width:1200px;
+margin:auto;
+padding:60px 20px;
+}
+
+/* ABOUT */
+.about-page .about{
+display:grid;
+grid-template-columns:1fr 1fr;
+gap:50px;
+align-items:center;
+}
+
+.about-page .about img{
+width:100%;
+border-radius:15px;
+}
+
+.about-page h2{
+color:#1b5e20;
+margin-bottom:15px;
+}
+
+.about-page p{
+line-height:1.7;
+}
+
+/* STATS */
+.about-page .stats{
+display:flex;
+gap:40px;
+margin-top:20px;
+}
+
+.about-page .stat{
+display:flex;
+align-items:center;
+gap:10px;
+font-weight:600;
+}
+
+/* TITLE */
+.about-page .title{
+text-align:center;
+margin:80px 0 30px;
+}
+
+.about-page .title h2{
+font-size:28px;
+}
+
+/* ✅ FIX CHUẨN PHẦN MISSION */
+.about-page .mission{
+display:grid;
+grid-template-columns:repeat(2,1fr);
+gap:30px;
+max-width:900px;      /* 👉 giới hạn để nó gọn */
+margin:auto;          /* 👉 căn giữa */
+}
+
+.about-page .mission-box{
+background:#f5f7fa;
+padding:30px;
+border-radius:12px;
+text-align:center;    /* 👉 chữ nằm giữa */
+box-shadow:0 5px 15px rgba(0,0,0,0.05);
+}
+
+.about-page .mission-box i{
+font-size:26px;
+color:#2e7d32;
+margin-bottom:10px;
+}
+
+/* FEATURES */
+.about-page .features{
+display:grid;
+grid-template-columns:repeat(auto-fit,minmax(250px,1fr));
+gap:25px;
+}
+
+.about-page .feature{
+background:white;
+padding:30px;
+border-radius:12px;
+text-align:center;
+box-shadow:0 8px 20px rgba(0,0,0,0.05);
+}
+
+/* CTA */
+.about-page .cta{
+background:linear-gradient(135deg,#66bb6a,#2e7d32);
+color:white;
+text-align:center;
+padding:70px 20px;
+margin-top:80px;
+}
+
+.about-page .cta a{
+display:inline-block;
+margin-top:20px;
+padding:14px 35px;
+background:white;
+color:#1b5e20;
+border-radius:30px;
+text-decoration:none;
+font-weight:600;
+}
+
+/* MOBILE */
+@media(max-width:768px){
+.about-page .about{
+grid-template-columns:1fr;
+}
+.about-page .mission{
+grid-template-columns:1fr;
+}
+}
+
+</style>
+</head>
+
+<body>
+
+<div id="header"></div>
+
+<main class="about-page">
+
+<!-- HERO -->
+<section class="hero">
+<h1>Giới thiệu về Chăm Sóc Vườn</h1>
+<p>Kiến tạo không gian sống xanh – nâng tầm chất lượng cuộc sống</p>
+</section>
+
+<!-- ABOUT -->
+<div class="container">
+<div class="about">
+
+<div>
+<h2>Về Chúng Tôi</h2>
+
+<p>Chăm Sóc Vườn là đơn vị chuyên cung cấp dịch vụ chăm sóc cây xanh, thiết kế và bảo dưỡng cảnh quan chuyên nghiệp tại Việt Nam. Với hơn 10 năm kinh nghiệm, chúng tôi đã đồng hành cùng hàng trăm khách hàng trong việc xây dựng không gian sống xanh.</p>
+
+<p>Chúng tôi tin rằng một khu vườn đẹp không chỉ mang lại giá trị thẩm mỹ mà còn giúp cải thiện sức khỏe, tinh thần và chất lượng cuộc sống.</p>
+
+<div class="stats">
+<div class="stat">
+<i class="fa-solid fa-tree"></i>
+1000+ Dự án
+</div>
+
+<div class="stat">
+<i class="fa-solid fa-users"></i>
+500+ Khách hàng
+</div>
+</div>
+
+</div>
+
+<div>
+<img src="assets/images/cattianghethuat.jpg">
+</div>
+
+</div>
+</div>
+
+<!-- MISSION -->
+<div class="container">
+
+<div class="title">
+<h2>Sứ mệnh và Tầm nhìn</h2>
+</div>
+
+<div class="mission">
+
+<div class="mission-box">
+<i class="fa-solid fa-bullseye"></i>
+<h3>Sứ mệnh</h3>
+<p>Mang đến giải pháp chăm sóc cây xanh chuyên nghiệp, giúp khách hàng sở hữu không gian sống xanh, sạch và gần gũi thiên nhiên.</p>
+</div>
+
+<div class="mission-box">
+<i class="fa-solid fa-eye"></i>
+<h3>Tầm nhìn</h3>
+<p>Trở thành thương hiệu hàng đầu trong lĩnh vực chăm sóc cảnh quan tại Việt Nam, hướng đến phát triển bền vững.</p>
+</div>
+
+</div>
+
+</div>
+
+<!-- FEATURES -->
+<div class="container">
+
+<div class="title">
+<h2>Tại sao chọn chúng tôi?</h2>
+</div>
+
+<div class="features">
+
+<div class="feature">
+<i class="fa-solid fa-leaf"></i>
+<h3>Tận tâm</h3>
+<p>Chăm sóc từng chi tiết nhỏ trong khu vườn của bạn.</p>
+</div>
+
+<div class="feature">
+<i class="fa-solid fa-seedling"></i>
+<h3>Chuyên nghiệp</h3>
+<p>Đội ngũ giàu kinh nghiệm, quy trình rõ ràng.</p>
+</div>
+
+<div class="feature">
+<i class="fa-solid fa-earth-asia"></i>
+<h3>Bền vững</h3>
+<p>Giải pháp thân thiện môi trường và lâu dài.</p>
+</div>
+
+</div>
+
+</div>
+
+<!-- CTA -->
+<section class="cta">
+<h2>Sẵn sàng nâng cấp khu vườn của bạn?</h2>
+<p>Liên hệ ngay để được tư vấn miễn phí</p>
+<a href="datlich.html">Đặt lịch ngay</a>
+</section>
+
+</main>
+
+<div id="footer"></div>
+
+<script>
+fetch("header.html").then(res=>res.text()).then(data=>{
+document.getElementById("header").innerHTML=data;
+});
+fetch("footer.html").then(res=>res.text()).then(data=>{
+document.getElementById("footer").innerHTML=data;
+});
+</script>
+
+</body>
+</html>
