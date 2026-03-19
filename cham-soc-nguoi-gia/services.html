@@ -846,6 +846,10 @@
           var actualEnd = (eMin < sMin) ? eMin + 1440 : eMin;
           if (actualEnd - sMin > 1440) { showErr("Cả ngày: Tổng thời gian không được vượt quá 24 giờ."); return false; }
           if (actualEnd <= sMin) { showErr("Giờ kết thúc phải sau giờ bắt đầu."); return false; }
+        } else {
+          // Các gói giờ linh hoạt (ví dụ: "khác") cho phép qua đêm.
+          var flexEnd = (eMin < sMin) ? eMin + 1440 : eMin;
+          if (flexEnd <= sMin) { showErr("Giờ kết thúc phải sau giờ bắt đầu."); return false; }
         }
         return true;
       }
@@ -860,10 +864,13 @@
         var eh = parseInt(end.split(":")[0]),   em = parseInt(end.split(":")[1]);
         var sMin = sh * 60 + sm, eMin = eh * 60 + em;
         var type = getShiftType();
-        if (type === "day_night" || type === "day_full") { if (eMin < sMin) eMin += 1440; }
+        if (type === "day_night" || type === "day_full" || type === "gio") {
+          if (eMin < sMin) eMin += 1440;
+        }
         var diff = eMin - sMin;
         return diff > 0 ? diff / 60 : 0;
       }
+
 
       /* --------------------------------------------------
          CALCULATE DAYS
@@ -1310,14 +1317,22 @@
         updateTotalPrice();
       });
 
-      $("#startTime, #endTime").on("change", updateTotalPrice);
+      $(document).on("change input", "#startTime, #endTime", updateTotalPrice);
 
-      $("#startDate").on("change", function() { updateAutoEndDate(); updateTotalPrice(); });
-      $("#endDate").on("change", updateTotalPrice);
+      $(document).on("change", "#startDate", function() {
+        updateAutoEndDate();
+        updateTotalPrice();
+      });
+      $(document).on("change", "#endDate", updateTotalPrice);
 
-      $("#durationUnit").on("change", function() { updateDurationUI(); updateTotalPrice(); });
-      $("#durationAmount").on("input", function() { updateAutoEndDate(); updateTotalPrice(); });
-
+      $(document).on("change", "#durationUnit", function() {
+        updateDurationUI();
+        updateTotalPrice();
+      });
+      $(document).on("input change", "#durationAmount", function() {
+        updateAutoEndDate();
+        updateTotalPrice();
+      });
       /* --------------------------------------------------
          SUBMIT FORM
       -------------------------------------------------- */

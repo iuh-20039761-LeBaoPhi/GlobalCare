@@ -786,47 +786,6 @@
       /* --------------------------------------------------
          APPLY SHIFT HINTS
       -------------------------------------------------- */
-      function applyShiftHints() {
-        var type = getShiftType();
-        var box  = $("#shiftInfoBox");
-        box.addClass("d-none").removeClass("alert-info alert-warning").html("");
-        $("#startTimeHint").text("");
-        $("#endTimeHint").text("");
-        $("#timeError").addClass("d-none").text("");
-
-        if (!type) return;
-
-        if (type === "day_morning") {
-          box.removeClass("d-none").addClass("alert-info")
-             .html('<i class="fas fa-sun me-1"></i><strong>Ca sáng:</strong> Chọn giờ từ <strong>06:00</strong> đến <strong>18:00</strong> cùng ngày.');
-          $("#startTimeHint").text("Từ 06:00");
-          $("#endTimeHint").text("Đến 18:00");
-        } else if (type === "day_night") {
-          box.removeClass("d-none").addClass("alert-warning")
-             .html('<i class="fas fa-moon me-1"></i><strong>Ca đêm:</strong> Bắt đầu từ <strong>18:00</strong> tối, kết thúc trước <strong>06:00</strong> sáng hôm sau.');
-          $("#startTimeHint").text("Từ 18:00 trở đi");
-          $("#endTimeHint").text("Trước 06:00 sáng hôm sau");
-        } else if (type === "day_full") {
-          box.removeClass("d-none").addClass("alert-info")
-             .html('<i class="fas fa-clock me-1"></i><strong>Cả ngày:</strong> Chọn giờ tự do, tối đa <strong>24 giờ</strong> liên tục.');
-          $("#startTimeHint").text("Giờ bất kỳ ngày thứ nhất");
-          $("#endTimeHint").text("Giờ bất kỳ ngày thứ hai (max 24h)");
-        }
-      }
-      function updatePackageLockState() {
-        var $all = $(".package-check");
-        var $selected = $all.filter(":checked");
-
-        $all.prop("disabled", false);
-        $all.closest("label").removeClass("package-locked");
-
-        if ($selected.length) {
-          $all.not($selected).prop("disabled", true).closest("label").addClass("package-locked");
-        }
-      }
-      /* --------------------------------------------------
-         VALIDATE TIME
-      -------------------------------------------------- */
       function validateTimeForShift() {
         var type  = getShiftType();
         var start = $("#startTime").val();
@@ -852,6 +811,10 @@
           var actualEnd = (eMin < sMin) ? eMin + 1440 : eMin;
           if (actualEnd - sMin > 1440) { showErr("Cả ngày: Tổng thời gian không được vượt quá 24 giờ."); return false; }
           if (actualEnd <= sMin) { showErr("Giờ kết thúc phải sau giờ bắt đầu."); return false; }
+        } else {
+          // Các gói giờ linh hoạt (ví dụ: "khác") cho phép qua đêm.
+          var flexEnd = (eMin < sMin) ? eMin + 1440 : eMin;
+          if (flexEnd <= sMin) { showErr("Giờ kết thúc phải sau giờ bắt đầu."); return false; }
         }
         return true;
       }
@@ -866,10 +829,13 @@
         var eh = parseInt(end.split(":")[0]),   em = parseInt(end.split(":")[1]);
         var sMin = sh * 60 + sm, eMin = eh * 60 + em;
         var type = getShiftType();
-        if (type === "day_night" || type === "day_full") { if (eMin < sMin) eMin += 1440; }
+        if (type === "day_night" || type === "day_full" || type === "gio") {
+          if (eMin < sMin) eMin += 1440;
+        }
         var diff = eMin - sMin;
         return diff > 0 ? diff / 60 : 0;
       }
+
 
       /* --------------------------------------------------
          CALCULATE DAYS
@@ -1311,19 +1277,27 @@
         updateTotalPrice();
       });
 
-      // Chọn công việc
+      /// Chọn công việc
       $(document).on("change", ".job-check", function() {
         updateTotalPrice();
       });
 
-      $("#startTime, #endTime").on("change", updateTotalPrice);
+      $(document).on("change input", "#startTime, #endTime", updateTotalPrice);
 
-      $("#startDate").on("change", function() { updateAutoEndDate(); updateTotalPrice(); });
-      $("#endDate").on("change", updateTotalPrice);
+      $(document).on("change", "#startDate", function() {
+        updateAutoEndDate();
+        updateTotalPrice();
+      });
+      $(document).on("change", "#endDate", updateTotalPrice);
 
-      $("#durationUnit").on("change", function() { updateDurationUI(); updateTotalPrice(); });
-      $("#durationAmount").on("input", function() { updateAutoEndDate(); updateTotalPrice(); });
-
+      $(document).on("change", "#durationUnit", function() {
+        updateDurationUI();
+        updateTotalPrice();
+      });
+      $(document).on("input change", "#durationAmount", function() {
+        updateAutoEndDate();
+        updateTotalPrice();
+      });
       /* --------------------------------------------------
          SUBMIT FORM
       -------------------------------------------------- */
