@@ -1,16 +1,16 @@
 [
   {
     "id": 1,
-    "name": "Gói Phục hồi Sức khỏe Mẹ sau sinh",
-    "image": "assets/be-be-di-choi.png",
-    "description": "Tập trung chuyên sâu vào việc hồi phục thể chất và tinh thần cho mẹ.",
+    "name": "Gói Chăm sóc Toàn diện Mẹ & Bé",
+    "image": "assets/ru-be-ngu.png",
+    "description": "Giải pháp trọn gói kết hợp tinh hoa của tất cả các dịch vụ.",
     "includes": [
-      "Trọng tâm: Chăm sóc vết mổ/vết khâu và vệ sinh y tế",
-      "Theo dõi huyết áp và dấu hiệu sinh tồn",
-      "Massage thảo dược giúp co hồi tử cung",
-      "Xông tắm thảo dược tại chỗ cho mẹ",
-      "Hướng dẫn bài tập vận động nhẹ nhàng",
-      "Hỗ trợ mẹ vệ sinh cá nhân và nghỉ ngơi"
+      "Chăm sóc vết thương và sức khỏe cho mẹ (Gói 1)",
+      "Tắm bé và vệ sinh y tế chuẩn chuyên gia (Gói 2)",
+      "Nấu ăn dinh dưỡng và lợi sữa (Gói 3)",
+      "Giặt đồ và dọn dẹp không gian của mẹ & bé (Gói 4)",
+      "Hỗ trợ kỹ năng nuôi con và kích sữa (Gói 5)",
+      "Lên kế hoạch nghỉ ngơi tối ưu cho cả gia đình"
     ],
     "pricing": [
       {
@@ -31,7 +31,6 @@
         "hours": 24,
         "type": "day_full"
       }
-      
     ]
   },
 
@@ -174,19 +173,18 @@
       }
     ]
   },
-
   {
     "id": 6,
-    "name": "Gói Chăm sóc Toàn diện Mẹ & Bé",
-    "image": "assets/ru-be-ngu.png",
-    "description": "Giải pháp trọn gói kết hợp tinh hoa của tất cả các dịch vụ.",
+    "name": "Gói Phục hồi Sức khỏe Mẹ sau sinh",
+    "image": "assets/be-be-di-choi.png",
+    "description": "Tập trung chuyên sâu vào việc hồi phục thể chất và tinh thần cho mẹ.",
     "includes": [
-      "Chăm sóc vết thương và sức khỏe cho mẹ (Gói 1)",
-      "Tắm bé và vệ sinh y tế chuẩn chuyên gia (Gói 2)",
-      "Nấu ăn dinh dưỡng và lợi sữa (Gói 3)",
-      "Giặt đồ và dọn dẹp không gian của mẹ & bé (Gói 4)",
-      "Hỗ trợ kỹ năng nuôi con và kích sữa (Gói 5)",
-      "Lên kế hoạch nghỉ ngơi tối ưu cho cả gia đình"
+      "Trọng tâm: Chăm sóc vết mổ/vết khâu và vệ sinh y tế",
+      "Theo dõi huyết áp và dấu hiệu sinh tồn",
+      "Massage thảo dược giúp co hồi tử cung",
+      "Xông tắm thảo dược tại chỗ cho mẹ",
+      "Hướng dẫn bài tập vận động nhẹ nhàng",
+      "Hỗ trợ mẹ vệ sinh cá nhân và nghỉ ngơi"
     ],
     "pricing": [
       {
@@ -207,6 +205,8 @@
         "hours": 24,
         "type": "day_full"
       }
+      
     ]
   }
+
 ]

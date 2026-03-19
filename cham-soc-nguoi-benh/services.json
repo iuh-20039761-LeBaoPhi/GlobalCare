@@ -1,16 +1,16 @@
 [
   {
     "id": 201,
-    "name": "Gói Phục hồi & Trị liệu cơ bản",
-    "image": "assets/dich-vu-phuc-hoi-tri-lieu-co-ban.png",
-    "description": "Tập trung vào việc vận động và phục hồi chức năng vật lý cho người bệnh.",
+    "name": "Gói Chăm sóc Toàn Diện",
+    "image": "assets/dich-vu-cham-soc-toan-dien.png",
+    "description": "Giải pháp tối ưu kết hợp tất cả các dịch vụ trọng yếu nhất.",
     "includes": [
-      "Trọng tâm: Hỗ trợ tập vật lý trị liệu và vận động theo chỉ định",
-      "Xoa bóp, massage giảm đau mỏi cơ thể",
-      "Hỗ trợ di chuyển, đi lại trong nhà hoặc khuôn viên",
-      "Hướng dẫn các bài tập hít thở và thư giãn",
-      "Theo dõi tiến độ phục hồi vận động hàng ngày",
-      "Hỗ trợ thay đổi tư thế nằm/ngồi để tránh mỏi"
+      "Hỗ trợ tập vận động và phục hồi chức năng (Gói 1)",
+      "Theo dõi y tế và quản lý thuốc nghiêm ngặt (Gói 2)",
+      "Chế biến và hỗ trợ ăn uống dinh dưỡng (Gói 3)",
+      "Vệ sinh thân thể và làm sạch không gian sống (Gói 4)",
+      "Chăm sóc tinh thần và đồng hành cùng người bệnh (Gói 5)",
+      "Báo cáo tổng hợp tình trạng sức khỏe định kỳ cho gia đình"
     ],
     "pricing": [
       {
@@ -33,7 +33,6 @@
       }
     ]
   },
-
   {
     "id": 202,
     "name": "Gói Theo dõi Y tế & Thuốc men",
@@ -173,19 +172,18 @@
       }
     ]
   },
-
   {
     "id": 206,
-    "name": "Gói Chăm sóc Toàn Diện",
-    "image": "assets/dich-vu-cham-soc-toan-dien.png",
-    "description": "Giải pháp tối ưu kết hợp tất cả các dịch vụ trọng yếu nhất.",
+    "name": "Gói Phục hồi & Trị liệu cơ bản",
+    "image": "assets/dich-vu-phuc-hoi-tri-lieu-co-ban.png",
+    "description": "Tập trung vào việc vận động và phục hồi chức năng vật lý cho người bệnh.",
     "includes": [
-      "Hỗ trợ tập vận động và phục hồi chức năng (Gói 1)",
-      "Theo dõi y tế và quản lý thuốc nghiêm ngặt (Gói 2)",
-      "Chế biến và hỗ trợ ăn uống dinh dưỡng (Gói 3)",
-      "Vệ sinh thân thể và làm sạch không gian sống (Gói 4)",
-      "Chăm sóc tinh thần và đồng hành cùng người bệnh (Gói 5)",
-      "Báo cáo tổng hợp tình trạng sức khỏe định kỳ cho gia đình"
+      "Trọng tâm: Hỗ trợ tập vật lý trị liệu và vận động theo chỉ định",
+      "Xoa bóp, massage giảm đau mỏi cơ thể",
+      "Hỗ trợ di chuyển, đi lại trong nhà hoặc khuôn viên",
+      "Hướng dẫn các bài tập hít thở và thư giãn",
+      "Theo dõi tiến độ phục hồi vận động hàng ngày",
+      "Hỗ trợ thay đổi tư thế nằm/ngồi để tránh mỏi"
     ],
     "pricing": [
       {
@@ -208,4 +206,5 @@
       }
     ]
   }
+  
 ]

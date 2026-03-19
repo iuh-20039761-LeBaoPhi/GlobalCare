@@ -1,16 +1,16 @@
 [
   {
     "id": 1,
-    "name": "Gói Theo dõi Sức khỏe Y tế",
-    "image": "assets/bai-viet-bi-quyet-cham-soc-nguoi-gia-kho-di-lai.png",
-    "description": "Tập trung kiểm soát các chỉ số sinh tồn và nhắc nhở y tế cho người cao tuổi.",
+    "name": "Gói Chăm sóc Toàn Diện",
+    "image": "assets/bai-viet-ve-sinh-ca-nhan-cho-nguoi-gia-dung-cach.png",
+    "description": "Giải pháp cao cấp kết hợp tất cả các dịch vụ trọng yếu nhất.",
     "includes": [
-      "Trọng tâm: Kiểm tra huyết áp, nhịp tim và đường huyết định kỳ",
-      "Nhắc nhở và hỗ trợ uống thuốc đúng liều theo đơn bác sĩ",
-      "Theo dõi các dấu hiệu bất thường và báo cáo kịp thời cho gia đình",
-      "Hỗ trợ thay băng hoặc vệ sinh vết thương (nếu có)",
-      "Ghi chép nhật ký sức khỏe và các chỉ số hàng ngày",
-      "Hỗ trợ đặt lịch và nhắc lịch tái khám định kỳ"
+      "Kiểm tra y tế và theo dõi chỉ số sinh tồn hàng ngày (Gói 1)",
+      "Chế biến thực đơn dinh dưỡng và hỗ trợ ăn uống (Gói 2)",
+      "Vệ sinh thân thể và không gian sống sạch sẽ (Gói 3)",
+      "Hỗ trợ tập phục hồi và vận động chống loét (Gói 4)",
+      "Đồng hành, tâm sự và chăm sóc sức khỏe tinh thần (Gói 5)",
+      "Báo cáo tổng hợp tình trạng hàng ngày cho gia đình qua ứng dụng"
     ],
     "pricing": [
       {
@@ -33,7 +33,6 @@
       }
     ]
   },
-
   {
     "id": 2,
     "name": "Gói Dinh dưỡng & Ẩm thực",
@@ -173,19 +172,18 @@
       }
     ]
   },
-
   {
     "id": 6,
-    "name": "Gói Chăm sóc Toàn Diện",
-    "image": "assets/bai-viet-ve-sinh-ca-nhan-cho-nguoi-gia-dung-cach.png",
-    "description": "Giải pháp cao cấp kết hợp tất cả các dịch vụ trọng yếu nhất.",
+    "name": "Gói Theo dõi Sức khỏe Y tế",
+    "image": "assets/bai-viet-bi-quyet-cham-soc-nguoi-gia-kho-di-lai.png",
+    "description": "Tập trung kiểm soát các chỉ số sinh tồn và nhắc nhở y tế cho người cao tuổi.",
     "includes": [
-      "Kiểm tra y tế và theo dõi chỉ số sinh tồn hàng ngày (Gói 1)",
-      "Chế biến thực đơn dinh dưỡng và hỗ trợ ăn uống (Gói 2)",
-      "Vệ sinh thân thể và không gian sống sạch sẽ (Gói 3)",
-      "Hỗ trợ tập phục hồi và vận động chống loét (Gói 4)",
-      "Đồng hành, tâm sự và chăm sóc sức khỏe tinh thần (Gói 5)",
-      "Báo cáo tổng hợp tình trạng hàng ngày cho gia đình qua ứng dụng"
+      "Trọng tâm: Kiểm tra huyết áp, nhịp tim và đường huyết định kỳ",
+      "Nhắc nhở và hỗ trợ uống thuốc đúng liều theo đơn bác sĩ",
+      "Theo dõi các dấu hiệu bất thường và báo cáo kịp thời cho gia đình",
+      "Hỗ trợ thay băng hoặc vệ sinh vết thương (nếu có)",
+      "Ghi chép nhật ký sức khỏe và các chỉ số hàng ngày",
+      "Hỗ trợ đặt lịch và nhắc lịch tái khám định kỳ"
     ],
     "pricing": [
       {
@@ -208,4 +206,5 @@
       }
     ]
   }
+  
 ]
