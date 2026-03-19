@@ -9,6 +9,7 @@
 let map, markerPickup, markerDelivery;
 let khoang_cach_km = 0;
 let selectedService = null;
+let reorderContext = null;
 let orderItems = [
   { loai_hang: '', ten_hang: '', so_luong: 1, gia_tri_khai_bao: 0, can_nang: 1.0, chieu_dai: 15, chieu_rong: 10, chieu_cao: 10 }
 ];
@@ -167,6 +168,8 @@ document.addEventListener("DOMContentLoaded", () => {
     });
     item.style.cursor = "pointer";
   });
+
+  initReorderPrefill();
 });
 
 function getCurrentStep() {
@@ -265,6 +268,15 @@ function isDateInPast(dateStr) {
   return selected < today;
 }
 
+function escapeHtml(value) {
+  return String(value ?? "")
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;")
+    .replace(/'/g, "&#39;");
+}
+
 // ========== MAP ==========
 function initMap() {
   map = L.map('map').setView([10.762622, 106.660172], 12);
@@ -298,20 +310,22 @@ function initMap() {
   recalculateDistance();
 }
 
-function recalculateDistance() {
+async function recalculateDistance() {
   const a = markerPickup.getLatLng();
   const b = markerDelivery.getLatLng();
   const url = `https://router.project-osrm.org/route/v1/driving/${a.lng},${a.lat};${b.lng},${b.lat}?overview=false`;
-  fetch(url)
-    .then(r => r.json())
-    .then(d => {
-      khoang_cach_km = d.routes[0].distance / 1000;
-      showDistance();
-    })
-    .catch(() => {
-      khoang_cach_km = a.distanceTo(b) / 1000;
-      showDistance();
-    });
+  try {
+    const response = await fetch(url);
+    const data = await response.json();
+    if (data && data.routes && data.routes[0] && data.routes[0].distance) {
+      khoang_cach_km = data.routes[0].distance / 1000;
+    } else {
+      throw new Error("No route");
+    }
+  } catch (error) {
+    khoang_cach_km = a.distanceTo(b) / 1000;
+  }
+  showDistance();
 }
 
 function showDistance() {
@@ -368,6 +382,143 @@ function reverseGeocode(latlng, inputId) {
     .then(d => { if (d.display_name) document.getElementById(inputId).value = d.display_name; });
 }
 
+function getQueryParam(name) {
+  if (typeof window === "undefined") return "";
+  return new URLSearchParams(window.location.search).get(name) || "";
+}
+
+async function resolveAddressToLatLng(address) {
+  const query = String(address || "").trim();
+  if (!query) return null;
+
+  const response = await fetch(`https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(query)}&addressdetails=1&countrycodes=vn&limit=1`);
+  const data = await response.json();
+  if (!Array.isArray(data) || !data.length) {
+    return null;
+  }
+
+  return {
+    lat: parseFloat(data[0].lat),
+    lng: parseFloat(data[0].lon),
+  };
+}
+
+function setOptionGroupValue(groupId, value) {
+  const button = document.querySelector(`#${groupId} .option-btn[data-val="${value}"]`);
+  if (button) {
+    selectOption(groupId, button);
+  }
+}
+
+function normalizeReorderItems(items) {
+  if (!Array.isArray(items) || !items.length) {
+    return [{ loai_hang: '', ten_hang: '', so_luong: 1, gia_tri_khai_bao: 0, can_nang: 1, chieu_dai: 15, chieu_rong: 10, chieu_cao: 10 }];
+  }
+
+  return items.map((item) => ({
+    loai_hang: item.loai_hang || 'thuong',
+    ten_hang: item.ten_hang || '',
+    so_luong: Math.max(1, parseInt(item.so_luong, 10) || 1),
+    gia_tri_khai_bao: parseFloat(item.gia_tri_khai_bao) || 0,
+    can_nang: Math.max(0.1, parseFloat(item.can_nang) || 0.1),
+    chieu_dai: Math.max(0, parseFloat(item.chieu_dai) || 0),
+    chieu_rong: Math.max(0, parseFloat(item.chieu_rong) || 0),
+    chieu_cao: Math.max(0, parseFloat(item.chieu_cao) || 0),
+  }));
+}
+
+function markReorderMode(orderCode) {
+  const container = document.querySelector(".booking-container");
+  if (!container || document.getElementById("reorder-banner")) return;
+
+  const banner = document.createElement("div");
+  banner.id = "reorder-banner";
+  banner.style.cssText = "margin-bottom:18px;padding:14px 16px;border-radius:14px;background:#eff6ff;border:1px solid #bfdbfe;color:#1d4ed8;font-weight:700;";
+  banner.innerHTML = `<i class="fas fa-rotate-right"></i> Đang đặt lại từ đơn <strong>${escapeHtml(orderCode || "")}</strong>. Bạn có thể chỉnh lại trước khi gửi.`;
+  container.insertBefore(banner, container.firstChild);
+}
+
+async function applyReorderAddresses(data) {
+  document.getElementById("search-pickup").value = data.pickup_address || "";
+  document.getElementById("search-delivery").value = data.delivery_address || "";
+
+  const [pickupPoint, deliveryPoint] = await Promise.all([
+    resolveAddressToLatLng(data.pickup_address).catch(() => null),
+    resolveAddressToLatLng(data.delivery_address).catch(() => null),
+  ]);
+
+  if (pickupPoint) {
+    markerPickup.setLatLng([pickupPoint.lat, pickupPoint.lng]);
+  }
+  if (deliveryPoint) {
+    markerDelivery.setLatLng([deliveryPoint.lat, deliveryPoint.lng]);
+  }
+
+  if (pickupPoint && deliveryPoint) {
+    map.fitBounds([
+      [pickupPoint.lat, pickupPoint.lng],
+      [deliveryPoint.lat, deliveryPoint.lng],
+    ], { padding: [40, 40] });
+  } else if (pickupPoint || deliveryPoint) {
+    const point = pickupPoint || deliveryPoint;
+    map.panTo([point.lat, point.lng]);
+  }
+
+  await recalculateDistance();
+}
+
+async function applyReorderPrefill(data) {
+  reorderContext = {
+    source_order_id: data.source_order_id || null,
+    source_order_code: data.source_order_code || "",
+  };
+
+  document.getElementById("sender-name").value = data.sender_name || "";
+  document.getElementById("sender-phone").value = data.sender_phone || "";
+  document.getElementById("receiver-name").value = data.receiver_name || "";
+  document.getElementById("receiver-phone").value = data.receiver_phone || "";
+  document.getElementById("notes").value = data.notes || "";
+  document.getElementById("cod-value").value = parseFloat(data.cod_value) || 0;
+
+  const vehicleChoice = document.getElementById("vehicle-choice");
+  if (vehicleChoice) {
+    vehicleChoice.value = Array.from(vehicleChoice.options).some((option) => option.value === data.vehicle) ? data.vehicle : "auto";
+  }
+
+  setOptionGroupValue("payer-group", data.fee_payer || "gui");
+  setOptionGroupValue("payment-group", data.payment_method || "tien_mat");
+
+  orderItems = normalizeReorderItems(data.items);
+  renderItems();
+
+  if (data.service_type) {
+    selectedService = { serviceType: data.service_type };
+  }
+
+  await applyReorderAddresses(data);
+  if (data.service_type) {
+    renderServiceCards();
+  }
+  markReorderMode(data.source_order_code || `#${data.source_order_id || ""}`);
+}
+
+async function initReorderPrefill() {
+  const reorderId = getQueryParam("reorder_id");
+  if (!reorderId) return;
+
+  try {
+    const response = await fetch(`dat-lich-ajax.php?reorder_id=${encodeURIComponent(reorderId)}`);
+    const result = await response.json();
+    if (!response.ok || !result.success || !result.data) {
+      throw new Error(result.message || "Không thể tải dữ liệu đơn cần đặt lại.");
+    }
+    await applyReorderPrefill(result.data);
+  } catch (error) {
+    console.error(error);
+    showError(1, error.message || "Không thể tải dữ liệu đơn cũ để đặt lại.");
+  }
+}
+
 // ========== ITEMS ==========
 function addItem() {
   orderItems.push({ loai_hang: '', ten_hang: '', so_luong: 1, gia_tri_khai_bao: 0, can_nang: 1.0, chieu_dai: 15, chieu_rong: 10, chieu_cao: 10 });
@@ -402,9 +553,13 @@ function renderItems() {
   container.innerHTML = "";
   orderItems.forEach((item, idx) => {
     const names = ITEM_NAMES_BY_TYPE[item.loai_hang] || [];
-    const nameOpts = names.map(n => `<option value="${n}" ${item.ten_hang===n?'selected':''}>${n}</option>`).join('');
+    const hasCustomName = item.ten_hang && !names.includes(item.ten_hang);
+    const nameOpts = [
+      hasCustomName ? `<option value="${escapeHtml(item.ten_hang)}" selected>${escapeHtml(item.ten_hang)}</option>` : "",
+      ...names.map(n => `<option value="${escapeHtml(n)}" ${item.ten_hang===n?'selected':''}>${escapeHtml(n)}</option>`),
+    ].join('');
     const typeOptions = ITEM_TYPES.map((type) => `
-      <option value="${type.key}" ${item.loai_hang===type.key?'selected':''}>${type.label}</option>
+      <option value="${escapeHtml(type.key)}" ${item.loai_hang===type.key?'selected':''}>${escapeHtml(type.label)}</option>
     `).join("");
     const isTypeChosen = Boolean(item.loai_hang);
     const div = document.createElement("div");
@@ -833,9 +988,9 @@ function prepareReview() {
         <i class="fas fa-box"></i>
       </div>
       <div style="flex: 1;">
-        <div style="font-weight: 800; color: #1e293b; font-size: 14px;">${it.ten_hang || 'Hàng hóa #' + (idx+1)}</div>
+        <div style="font-weight: 800; color: #1e293b; font-size: 14px;">${escapeHtml(it.ten_hang || ('Hàng hóa #' + (idx+1)))}</div>
         <div style="font-size: 12px; color: #64748b;">
-          Loại: <strong>${ITEM_TYPE_LABELS[it.loai_hang] || it.loai_hang}</strong> • Số lượng: <strong>${it.so_luong || 1}</strong> • Nặng: <strong>${it.can_nang}kg/kiện</strong> • Khai giá: <strong>${it.gia_tri_khai_bao.toLocaleString()}₫</strong>
+          Loại: <strong>${escapeHtml(ITEM_TYPE_LABELS[it.loai_hang] || it.loai_hang)}</strong> • Số lượng: <strong>${it.so_luong || 1}</strong> • Nặng: <strong>${it.can_nang}kg/kiện</strong> • Khai giá: <strong>${it.gia_tri_khai_bao.toLocaleString()}₫</strong>
         </div>
       </div>
       <div style="font-size: 11px; color: #94a3b8; text-align: right;">
@@ -906,7 +1061,7 @@ function previewUpload(type) {
 
 // ========== SUBMIT ==========
 async function submitOrder() {
-  const btn = document.querySelector(".btn-next.orange");
+  const btn = document.getElementById("btn-submit-order");
   const originalText = btn.innerHTML;
   btn.disabled = true;
   btn.innerHTML = `<i class="fas fa-spinner fa-spin"></i> Đang xử lý...`;
@@ -952,6 +1107,7 @@ async function submitOrder() {
 
 function buildPayload() {
   return {
+    reorder_id:       reorderContext && reorderContext.source_order_id ? reorderContext.source_order_id : null,
     sender_name:      document.getElementById("sender-name").value,
     sender_phone:     document.getElementById("sender-phone").value,
     receiver_name:    document.getElementById("receiver-name").value,

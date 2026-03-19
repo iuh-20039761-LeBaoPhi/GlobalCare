@@ -20,8 +20,15 @@ giao-hang-nhanh/
 │   ├── header_user.php               # Header dành cho Customer
 │   └── header_shipper.php            # Header dành cho Shipper
 ├── admin-giaohang/
-│   ├── api/save_order.php            # API lưu đơn hàng (từ admin)
-│   ├── config/db.php                 # DB config riêng cho admin module
+│   ├── api/
+│   │   ├── save_order.php           # API lưu đơn hàng (từ admin)
+│   │   ├── stats.php                # API thống kê dashboard admin
+│   │   ├── orders.php               # API danh sách đơn hàng admin
+│   │   ├── users.php                # API quản lý người dùng admin
+│   │   ├── settings.php             # API cài đặt hệ thống
+│   │   ├── shipper_detail.php       # API chi tiết hiệu suất shipper
+│   │   └── contacts.php             # API hòm thư liên hệ
+│   ├── config/db.php                # DB config riêng cho admin module
 │   └── database/giaohang.sql        # Schema CSDL
 └── public/
     ├── assets/
@@ -63,16 +70,14 @@ giao-hang-nhanh/
     ├── chinh-sach-van-chuyen.html    # Chính sách vận chuyển
     ├── chinh-sach-bao-mat.html       # Chính sách bảo mật
     ├── dieu-khoan-su-dung.html       # Điều khoản sử dụng
-    ├── login.php / register.php      # Đăng nhập / Đăng ký
+    ├── login.html / register.html    # Đăng nhập / Đăng ký
     ├── dashboard.php                 # Dashboard khách hàng
     ├── order.php / order_detail.php  # Tạo & chi tiết đơn hàng
     ├── order_history.php             # Lịch sử đơn hàng
     ├── tracking.php                  # Tra cứu đơn (server-side)
-    ├── create_order.php              # Form tạo đơn đầy đủ
+    ├── dat-lich-ajax.php            # API xử lý đặt lịch giao hàng
     ├── shipper_dashboard.php         # Dashboard Shipper
     ├── shipper_order_detail.php      # Chi tiết đơn của Shipper
-    ├── admin_stats.php               # Thống kê Admin
-    ├── admin_settings.php            # Cài đặt hệ thống
     ├── print_invoice.php             # In hóa đơn
     └── webhook_payment.php           # Webhook thanh toán ngân hàng
 ```
@@ -88,7 +93,7 @@ giao-hang-nhanh/
 - Đặt lịch thử tại `dat-lich-giao-hang-nhanh.html`
 
 ### 🛒 Khách hàng (Customer)
-- Đăng nhập → tạo đơn tại `create_order.php`
+- Đăng nhập → tạo đơn tại `dat-lich-giao-hang-nhanh.html`
 - Quản lý đơn: `order_history.php`, `order_detail.php`
 - Hủy đơn, in hóa đơn, cập nhật hồ sơ
 
@@ -98,8 +103,8 @@ giao-hang-nhanh/
 - Upload POD (hình ảnh bằng chứng giao hàng)
 
 ### 🔧 Admin
-- Thống kê tổng quan: `admin_stats.php`
-- Quản lý người dùng, đơn hàng, cài đặt hệ thống
+- Thống kê tổng quan: `admin-giaohang/api/stats.php`
+- Quản lý người dùng, đơn hàng, cài đặt hệ thống qua `admin-giaohang/api/*`
 - Phê duyệt shipper mới
 
 ---

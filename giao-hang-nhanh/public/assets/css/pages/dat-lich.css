@@ -141,7 +141,7 @@
 
 .card-title {
   font-size: 24px;
-  font-weight: 800;
+  font-weight: 700;
   color: #0a2a66;
   margin-bottom: 24px;
   display: flex;
@@ -222,7 +222,7 @@ textarea.form-control {
 
 .contact-box-title {
   font-size: 14px;
-  font-weight: 800;
+  font-weight: 700;
   margin-bottom: 14px;
   display: flex;
   align-items: center;
@@ -338,7 +338,7 @@ textarea.form-control {
 
 .items-header h3 {
   font-size: 16px;
-  font-weight: 800;
+  font-weight: 700;
   color: #334155;
   margin: 0;
 }
@@ -424,12 +424,12 @@ textarea.form-control {
 
 .service-name {
   font-size: 17px;
-  font-weight: 800;
+  font-weight: 700;
   color: #0a2a66;
 }
 .service-price {
   font-size: 20px;
-  font-weight: 900;
+  font-weight: 800;
   color: #ff7a00;
 }
 .service-eta {
@@ -577,7 +577,7 @@ textarea.form-control {
   margin: 0 0 8px;
   color: #0a2a66;
   font-size: 15px;
-  font-weight: 800;
+  font-weight: 700;
 }
 
 .vehicle-choice-panel p {
@@ -632,7 +632,7 @@ textarea.form-control {
 
 .review-section h4 {
   font-size: 14px;
-  font-weight: 800;
+  font-weight: 700;
   color: #0a2a66;
   margin: 0 0 10px;
 }
