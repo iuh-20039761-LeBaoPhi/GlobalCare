@@ -46,7 +46,7 @@
       hoan_thanh: '<span class="badge rounded-pill text-bg-success">Hoàn thành</span>',
       da_huy: '<span class="badge rounded-pill text-bg-danger">Đã hủy</span>',
       pending: '<span class="badge rounded-pill text-bg-warning">Chờ xử lý</span>',
-      accepted: '<span class="badge rounded-pill text-bg-info">Đã nhận</span>',
+      da_duyet: '<span class="badge rounded-pill text-bg-info">Đã nhận</span>',
       in_progress: '<span class="badge rounded-pill text-bg-primary">Đang làm</span>',
       completed: '<span class="badge rounded-pill text-bg-success">Hoàn thành</span>',
       cancelled: '<span class="badge rounded-pill text-bg-danger">Đã hủy</span>'
@@ -190,7 +190,7 @@
     var leftInfoLines = [];
     var rightInfoLines = [];
 
-    addInvoiceField(leftInfoLines, 'Mã hóa đơn', invoice.id);
+    // addInvoiceField(leftInfoLines, 'Mã hóa đơn', invoice.id);
     addInvoiceField(leftInfoLines, 'Tên khách hàng', invoice.ten_khach_hang || invoice.ten);
     addInvoiceField(leftInfoLines, 'Số điện thoại', invoice.dien_thoai);
     addInvoiceField(leftInfoLines, 'Dịch vụ', invoice.dich_vu);
@@ -209,7 +209,7 @@
     addInvoiceField(rightInfoLines, 'Giá tiền', invoice.gia_tien, { money: true });
     addInvoiceField(rightInfoLines, 'Tổng tiền', invoice.tong_tien, { money: true });
     addInvoiceField(rightInfoLines, 'Trạng thái', invoice.trang_thai, { badge: true });
-    addInvoiceField(rightInfoLines, 'ID nhân viên', invoice.nhan_vien_id);
+    // addInvoiceField(rightInfoLines, 'ID nhân viên', invoice.nhan_vien_id);
     addInvoiceField(rightInfoLines, 'Ngày tạo', invoice.ngay_tao);
     addInvoiceField(rightInfoLines, 'Ngày cập nhật', invoice.ngay_cap_nhat || invoice.updated_at);
 

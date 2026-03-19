@@ -46,7 +46,7 @@
       hoan_thanh: '<span class="badge rounded-pill text-bg-success">Hoàn thành</span>',
       da_huy: '<span class="badge rounded-pill text-bg-danger">Đã hủy</span>',
       pending: '<span class="badge rounded-pill text-bg-warning">Chờ xử lý</span>',
-      accepted: '<span class="badge rounded-pill text-bg-info">Đã nhận</span>',
+      da_duyet: '<span class="badge rounded-pill text-bg-info">Đã nhận</span>',
       in_progress: '<span class="badge rounded-pill text-bg-primary">Đang làm</span>',
       completed: '<span class="badge rounded-pill text-bg-success">Hoàn thành</span>',
       cancelled: '<span class="badge rounded-pill text-bg-danger">Đã hủy</span>'
