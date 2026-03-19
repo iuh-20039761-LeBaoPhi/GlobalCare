@@ -1,211 +1,117 @@
 [
   {
     "id": 201,
-    "name": "Gói Phục hồi & Trị liệu cơ bản",
-    "image": "assets/dich-vu-phuc-hoi-tri-lieu-co-ban.png",
-    "description": "Tập trung vào việc vận động và phục hồi chức năng vật lý cho người bệnh.",
+    "name": "Hỗ Trợ Sinh Hoạt Mức Nhẹ",
+    "image": "assets/dich-vu-cham-soc-toan-dien.png",
+    "description": "Phù hợp cho người bệnh vẫn tự chủ một phần, cần thêm người đồng hành để sinh hoạt hằng ngày đều đặn, an toàn và bớt mệt mỏi.",
     "includes": [
-      "Trọng tâm: Hỗ trợ tập vật lý trị liệu và vận động theo chỉ định",
-      "Xoa bóp, massage giảm đau mỏi cơ thể",
-      "Hỗ trợ di chuyển, đi lại trong nhà hoặc khuôn viên",
-      "Hướng dẫn các bài tập hít thở và thư giãn",
-      "Theo dõi tiến độ phục hồi vận động hàng ngày",
-      "Hỗ trợ thay đổi tư thế nằm/ngồi để tránh mỏi"
+      "Chuẩn bị bữa ăn hằng ngày, hỗ trợ ăn uống đúng giờ và dọn dẹp sau bữa",
+      "Nhắc lịch sinh hoạt, hỗ trợ di chuyển nhẹ trong nhà để hạn chế té ngã",
+      "Hỗ trợ tắm rửa, thay đồ, vệ sinh cá nhân cơ bản khi người bệnh mệt",
+      "Giặt giũ, thay ga gối, sắp xếp không gian nghỉ ngơi gọn gàng",
+      "Đi chợ, mua vật dụng thiết yếu và chuẩn bị đồ dùng cá nhân theo nhu cầu",
+      "Trò chuyện, đọc tin, hỗ trợ giải trí nhẹ giúp người bệnh thoải mái tinh thần"
     ],
     "pricing": [
-      {
-        "label": "Ca sáng (6h - 18h)",
-        "value": 700000,
-        "hours": 12,
-        "type": "day_morning"
-      },
-      {
-        "label": "Ca đêm (18h - 6h)",
-        "value": 750000,
-        "hours": 12,
-        "type": "day_night"
-      },
       {
         "label": "Cả ngày 24h",
         "value": 1400000,
         "hours": 24,
         "type": "day_full"
+      },
+      {
+        "label": "khác",
+        "value": 50000,
+        "hours": 1,
+        "type": "gio"
       }
     ]
   },
-
   {
     "id": 202,
-    "name": "Gói Theo dõi Y tế & Thuốc men",
+    "name": "Hỗ Trợ Sinh Hoạt Mức Trung Bình",
     "image": "assets/dich-vu-theo-doi-y-te-thuoc-men.png",
-    "description": "Đảm bảo tính chính xác trong việc dùng thuốc và theo dõi chỉ số sinh tồn.",
+    "description": "Dành cho người bệnh suy yếu rõ rệt, cần người kề bên nhiều thời điểm trong ngày để hỗ trợ các việc cá nhân và việc nhà cơ bản.",
     "includes": [
-      "Trọng tâm: Quản lý và nhắc nhở uống thuốc đúng liều, đúng giờ",
-      "Kiểm tra huyết áp, thân nhiệt, nhịp tim định kỳ",
-      "Theo dõi đường huyết (nếu có thiết bị gia đình)",
-      "Vệ sinh vết thương nhẹ hoặc vết mổ khô",
-      "Ghi chép nhật ký sức khỏe chi tiết hàng ngày",
-      "Thông báo ngay cho người thân các dấu hiệu bất thường"
+      "Hỗ trợ ăn uống tại giường hoặc tại bàn khi người bệnh khó tự phục vụ",
+      "Hỗ trợ đi vệ sinh, thay tã người lớn hoặc vệ sinh sau khi đi vệ sinh",
+      "Hỗ trợ tắm lau, thay đồ, giữ cơ thể sạch sẽ và dễ chịu mỗi ngày",
+      "Đỡ người bệnh ngồi dậy, đổi tư thế, di chuyển trong nhà bằng dụng cụ hỗ trợ sẵn có",
+      "Dọn dẹp khu vực sinh hoạt, xử lý đồ bẩn và khử mùi không gian sống",
+      "Cập nhật tình hình ăn ngủ, sinh hoạt trong ngày để gia đình dễ theo dõi"
     ],
     "pricing": [
-      {
-        "label": "Ca sáng (6h - 18h)",
-        "value": 700000,
-        "hours": 12,
-        "type": "day_morning"
-      },
-      {
-        "label": "Ca đêm (18h - 6h)",
-        "value": 750000,
-        "hours": 12,
-        "type": "day_night"
-      },
       {
         "label": "Cả ngày 24h",
         "value": 1400000,
         "hours": 24,
         "type": "day_full"
+      },
+      {
+        "label": "khác",
+        "value": 50000,
+        "hours": 1,
+        "type": "gio"
       }
     ]
   },
 
   {
     "id": 203,
-    "name": "Gói Dinh dưỡng & Chế độ ăn uống",
+    "name": "Hỗ Trợ Sinh Hoạt Mức Nặng",
     "image": "assets/dich-vu-dinh-duong-che-do-an-uong.png",
-    "description": "Chăm sóc chuyên sâu về khẩu phần ăn phù hợp với bệnh lý.",
+    "description": "Phù hợp cho người bệnh gần như không tự sinh hoạt, cần hỗ trợ gần như trọn thời gian để đảm bảo sạch sẽ, thoải mái và ổn định nhịp sống tại nhà.",
     "includes": [
-      "Trọng tâm: Chế biến thực đơn dinh dưỡng theo bệnh lý",
-      "Đi chợ lựa chọn thực phẩm tươi sạch cho người bệnh",
-      "Hỗ trợ đút ăn hoặc chuẩn bị dụng cụ hỗ trợ ăn uống",
-      "Theo dõi lượng nước uống và khẩu phần ăn mỗi bữa",
-      "Vệ sinh khu vực bếp và dụng cụ ăn uống của người bệnh",
-      "Tư vấn thay đổi món ăn để kích thích vị giác"
+      "Hỗ trợ toàn bộ việc ăn uống, uống nước và vệ sinh sau ăn cho người bệnh",
+      "Hỗ trợ thay đồ, vệ sinh tại giường, chăm sóc tóc và móng tay móng chân cơ bản",
+      "Xoay trở, thay đổi tư thế định kỳ để người bệnh đỡ mỏi và dễ chịu hơn",
+      "Giặt giũ, thay chăn ga, làm sạch đệm và khu vực nghỉ ngơi thường xuyên",
+      "Hỗ trợ người bệnh giao tiếp với người thân qua điện thoại hoặc video call",
+      "Phối hợp với gia đình để chuẩn bị lịch sinh hoạt phù hợp theo từng ngày"
     ],
     "pricing": [
-      {
-        "label": "Ca sáng (6h - 18h)",
-        "value": 700000,
-        "hours": 12,
-        "type": "day_morning"
-      },
-      {
-        "label": "Ca đêm (18h - 6h)",
-        "value": 750000,
-        "hours": 12,
-        "type": "day_night"
-      },
       {
         "label": "Cả ngày 24h",
         "value": 1400000,
         "hours": 24,
         "type": "day_full"
+      },
+      {
+        "label": "khác",
+        "value": 50000,
+        "hours": 1,
+        "type": "gio"
       }
     ]
   },
 
   {
     "id": 204,
-    "name": "Gói Vệ sinh & Tiện ích cá nhân",
+    "name": "Hỗ Trợ Đồng Hành 24/7 Cho Người Phụ Thuộc Hoàn Toàn",
     "image": "assets/dich-vu-ve-sinh-tien-ich-ca-nhan.png",
-    "description": "Giữ gìn vệ sinh thân thể và không gian sống sạch sẽ cho người bệnh.",
+    "description": "Giải pháp cho người bệnh cần người túc trực thường xuyên cả ngày lẫn đêm, đặc biệt khi gia đình bận rộn hoặc không thể ở cạnh liên tục.",
     "includes": [
-      "Trọng tâm: Tắm rửa, vệ sinh cá nhân và thay tã (nếu cần)",
-      "Hỗ trợ đi vệ sinh hoặc sử dụng bô tại giường",
-      "Thay ga giường, chăn gối và quần áo hàng ngày",
-      "Cắt móng tay, móng chân, chăm sóc da tránh lở loét",
-      "Dọn dẹp, khử khuẩn phòng của người bệnh",
-      "Giặt giũ đồ dùng cá nhân của người bệnh"
+      "Túc trực hỗ trợ sinh hoạt liên tục theo ca: ăn uống, vệ sinh, thay đồ, nghỉ ngơi",
+      "Theo sát nhu cầu phát sinh trong ngày và ban đêm, phản hồi nhanh cho gia đình",
+      "Hỗ trợ đưa người bệnh đi tái khám, đi dạo ngắn hoặc thay đổi không khí khi cần",
+      "Quản lý đồ dùng thiết yếu: tã, khăn, quần áo, vật dụng vệ sinh và đồ ăn dự trữ",
+      "Dọn dẹp khu vực người bệnh, giữ không gian sạch, thoáng, an toàn khi di chuyển",
+      "Đồng hành tâm lý, trò chuyện và tạo cảm giác yên tâm để người bệnh bớt cô đơn"
     ],
     "pricing": [
-      {
-        "label": "Ca sáng (6h - 18h)",
-        "value": 700000,
-        "hours": 12,
-        "type": "day_morning"
-      },
-      {
-        "label": "Ca đêm (18h - 6h)",
-        "value": 750000,
-        "hours": 12,
-        "type": "day_night"
-      },
       {
         "label": "Cả ngày 24h",
         "value": 1400000,
         "hours": 24,
         "type": "day_full"
-      }
-    ]
-  },
-
-  {
-    "id": 205,
-    "name": "Gói Đồng hành & Chăm sóc Tinh thần",
-    "image": "assets/dich-vu-dong-hanh-cham-soc-tinh-than.png",
-    "description": "Giúp người bệnh có tâm lý thoải mái để nhanh chóng hồi phục.",
-    "includes": [
-      "Trọng tâm: Trò chuyện, đọc báo, nghe nhạc cùng người bệnh",
-      "Hỗ trợ liên lạc video với người thân khi có yêu cầu",
-      "Đọc sách hoặc kể chuyện giúp người bệnh thư giãn",
-      "Đưa người bệnh đi dạo bằng xe lăn hoặc đi bộ nhẹ",
-      "Quan sát và hỗ trợ các nhu cầu nảy sinh tức thời",
-      "Khích lệ tinh thần và hỗ trợ các sở thích nhẹ nhàng"
-    ],
-    "pricing": [
-      {
-        "label": "Ca sáng (6h - 18h)",
-        "value": 700000,
-        "hours": 12,
-        "type": "day_morning"
       },
       {
-        "label": "Ca đêm (18h - 6h)",
-        "value": 750000,
-        "hours": 12,
-        "type": "day_night"
-      },
-      {
-        "label": "Cả ngày 24h",
-        "value": 1400000,
-        "hours": 24,
-        "type": "day_full"
-      }
-    ]
-  },
-
-  {
-    "id": 206,
-    "name": "Gói Chăm sóc Toàn Diện",
-    "image": "assets/dich-vu-cham-soc-toan-dien.png",
-    "description": "Giải pháp tối ưu kết hợp tất cả các dịch vụ trọng yếu nhất.",
-    "includes": [
-      "Hỗ trợ tập vận động và phục hồi chức năng (Gói 1)",
-      "Theo dõi y tế và quản lý thuốc nghiêm ngặt (Gói 2)",
-      "Chế biến và hỗ trợ ăn uống dinh dưỡng (Gói 3)",
-      "Vệ sinh thân thể và làm sạch không gian sống (Gói 4)",
-      "Chăm sóc tinh thần và đồng hành cùng người bệnh (Gói 5)",
-      "Báo cáo tổng hợp tình trạng sức khỏe định kỳ cho gia đình"
-    ],
-    "pricing": [
-      {
-        "label": "Ca sáng (6h - 18h)",
-        "value": 700000,
-        "hours": 12,
-        "type": "day_morning"
-      },
-      {
-        "label": "Ca đêm (18h - 6h)",
-        "value": 750000,
-        "hours": 12,
-        "type": "day_night"
-      },
-      {
-        "label": "Cả ngày 24h",
-        "value": 1400000,
-        "hours": 24,
-        "type": "day_full"
+        "label": "khác",
+        "value": 50000,
+        "hours": 1,
+        "type": "gio"
       }
     ]
   }
+
 ]

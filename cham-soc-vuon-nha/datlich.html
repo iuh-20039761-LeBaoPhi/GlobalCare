@@ -1,0 +1,406 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Đặt lịch dịch vụ</title>
+<link rel="icon" href="assets/images/logo2.jpg" type="image/jpg">
+<style>
+body{
+  font-family:'Segoe UI',sans-serif;
+  background:#f4f7f6;
+}
+
+/* container */
+.container{
+  max-width:1000px;
+  margin:40px auto;
+  background:#fff;
+  padding:30px;
+  border-radius:18px;
+  box-shadow:0 10px 30px rgba(0,0,0,0.1);
+}
+
+h2{color:#1f6f43;margin-bottom:20px;}
+
+.grid{
+  display:grid;
+  grid-template-columns:1fr 1fr;
+  gap:18px;
+}
+
+.form-group{display:flex;flex-direction:column;}
+
+label{font-weight:600;margin-bottom:5px;}
+
+input,select{
+  padding:12px;
+  border:1px solid #ddd;
+  border-radius:8px;
+}
+
+/* preview */
+#preview{
+  display:none;
+  width:100%;
+  border-radius:10px;
+  margin-top:10px;
+}
+
+/* price */
+.price{
+  margin-top:20px;
+  background:#f7faf8;
+  padding:15px;
+  border-radius:10px;
+}
+
+.price-row{
+  display:flex;
+  justify-content:space-between;
+}
+
+.total{
+  font-weight:700;
+  color:#e63946;
+}
+
+/* button */
+.actions{
+  margin-top:20px;
+  display:flex;
+  gap:10px;
+}
+
+button{
+  flex:1;
+  padding:12px;
+  border:none;
+  border-radius:8px;
+  cursor:pointer;
+}
+
+.submit{background:#1f6f43;color:#fff;}
+.back{background:#ccc;}
+
+/* ===== FIX QUAN TRỌNG: MODAL ===== */
+.modal{
+  position:fixed;
+  top:0;
+  left:0;
+  width:100%;
+  height:100%;
+  background:rgba(0,0,0,0.5);
+
+  display:none;
+  align-items:center;
+  justify-content:center;
+
+  z-index:9999;
+  padding:15px;
+}
+
+.modal-box{
+  background:#fff;
+  border-radius:20px;
+  width:100%;
+  max-width:700px;
+  padding:25px;
+  box-shadow:0 20px 60px rgba(0,0,0,0.2);
+  animation:fadeIn .3s ease;
+
+  max-height:90vh;
+  overflow-y:auto;
+}
+
+@keyframes fadeIn{
+  from{transform:translateY(20px);opacity:0;}
+  to{transform:translateY(0);opacity:1;}
+}
+
+.modal-header{
+  font-size:22px;
+  font-weight:700;
+  color:#1f6f43;
+}
+
+.section{margin-top:15px;}
+
+.section-title{
+  font-weight:700;
+  color:#1f6f43;
+  margin-bottom:8px;
+}
+
+.info-grid{
+  display:grid;
+  grid-template-columns:1fr 1fr;
+  gap:10px;
+}
+
+.info-item{
+  background:#f7faf8;
+  padding:10px;
+  border-radius:10px;
+}
+
+.label{
+  font-size:12px;
+  color:#666;
+}
+
+.value{
+  font-weight:600;
+}
+
+.full{
+  grid-column: span 2;
+}
+
+.modal-total{
+  margin-top:15px;
+  font-size:24px;
+  font-weight:700;
+  color:#e63946;
+  text-align:right;
+}
+
+.modal img{
+  width:100%;
+  border-radius:12px;
+  margin-top:10px;
+}
+
+.modal-actions{
+  display:flex;
+  gap:10px;
+  margin-top:20px;
+}
+
+.cancel{background:#ddd;}
+.confirm{background:#1f6f43;color:#fff;}
+
+/* mobile */
+@media(max-width:768px){
+  .grid{grid-template-columns:1fr;}
+  .info-grid{grid-template-columns:1fr;}
+}
+</style>
+</head>
+
+<body>
+
+<div class="container">
+<h2>Đặt lịch dịch vụ</h2>
+
+<form id="form">
+
+<div class="grid">
+
+<div class="form-group">
+<label>Tên</label>
+<input type="text" id="name">
+</div>
+
+<div class="form-group">
+<label>SĐT</label>
+<input type="tel" id="phone" required>
+</div>
+
+<div class="form-group">
+<label>Email</label>
+<input type="email" id="email" required>
+</div>
+
+<div class="form-group">
+<label>Dịch vụ</label>
+<select id="service" required></select>
+</div>
+
+<div class="form-group">
+<label>Diện tích</label>
+<input type="number" id="area" required>
+</div>
+
+<div class="form-group">
+<label>Ngày</label>
+<input type="date" id="date" required>
+</div>
+
+<div class="form-group">
+<label>Giờ</label>
+<input type="time" id="time" required>
+</div>
+
+<div class="form-group">
+<label>Địa chỉ</label>
+<input type="text" id="address" required>
+<button type="button" onclick="getLocation()">📍 Lấy vị trí</button>
+</div>
+
+<div class="form-group">
+<label>Ảnh</label>
+<input type="file" id="imageUpload">
+<img id="preview">
+</div>
+
+</div>
+
+<div class="price">
+<div class="price-row"><span>Dịch vụ</span><span id="servicePrice">0</span></div>
+<div class="price-row"><span>Hoa hồng</span><span id="commission">0</span></div>
+<div class="price-row total"><span>Tổng</span><span id="total">0</span></div>
+</div>
+
+<div class="actions">
+<button type="button" class="back" onclick="history.back()">Quay lại</button>
+<button type="submit" class="submit">Đặt lịch</button>
+</div>
+
+</form>
+</div>
+
+<!-- MODAL -->
+<div class="modal" id="modal">
+  <div class="modal-box" id="info"></div>
+</div>
+
+<script>
+const serviceSelect=document.getElementById("service");
+const areaInput=document.getElementById("area");
+
+const servicePriceBox=document.getElementById("servicePrice");
+const commissionBox=document.getElementById("commission");
+const totalBox=document.getElementById("total");
+
+const preview=document.getElementById("preview");
+const modal=document.getElementById("modal");
+const info=document.getElementById("info");
+
+let services=[];
+let uploadedImage="";
+
+// LOAD
+fetch("services.json")
+.then(r=>r.json())
+.then(data=>{
+  services=data.services;
+
+  serviceSelect.innerHTML="<option value=''>Chọn dịch vụ</option>";
+
+  services.forEach(s=>{
+    serviceSelect.innerHTML+=`<option value="${s.id}">${s.name}</option>`;
+  });
+
+  // 🔥 QUAN TRỌNG
+  autoFill();
+});
+
+// CALC
+function calc(){
+  let s=services.find(x=>x.id==serviceSelect.value);
+  let area=Number(areaInput.value);
+
+  if(!s||!area){
+    servicePriceBox.innerText=0;
+    commissionBox.innerText=0;
+    totalBox.innerText=0;
+    return;
+  }
+
+  let dv=s.price_m2_min*area;
+  let hh=dv*0.1;
+
+  servicePriceBox.innerText=dv.toLocaleString()+" VNĐ";
+  commissionBox.innerText=hh.toLocaleString()+" VNĐ";
+  totalBox.innerText=(dv+hh).toLocaleString()+" VNĐ";
+}
+
+serviceSelect.onchange=calc;
+areaInput.oninput=calc;
+
+// GPS
+function getLocation(){
+  navigator.geolocation.getCurrentPosition(pos=>{
+    address.value=`Lat: ${pos.coords.latitude.toFixed(5)}, Lng: ${pos.coords.longitude.toFixed(5)}`;
+  });
+}
+
+// UPLOAD
+imageUpload.onchange=e=>{
+  const file=e.target.files[0];
+  if(!file)return;
+
+  const reader=new FileReader();
+  reader.onload=x=>{
+    uploadedImage=x.target.result;
+    preview.src=uploadedImage;
+    preview.style.display="block";
+  };
+  reader.readAsDataURL(file);
+};
+
+// SUBMIT
+form.onsubmit=e=>{
+  e.preventDefault();
+
+  let s=services.find(x=>x.id==serviceSelect.value);
+
+  info.innerHTML=`
+    <div class="modal-header">${s.name}</div>
+
+    <div class="section">
+      <div class="section-title">Thông tin</div>
+      <div class="info-grid">
+        <div class="info-item"><div class="label">Tên</div><div class="value">${document.getElementById("name").value.trim() || "Chưa nhập"}</div></div>
+        <div class="info-item"><div class="label">SĐT</div><div class="value">${phone.value}</div></div>
+        <div class="info-item"><div class="label">Email</div><div class="value">${email.value}</div></div>
+        <div class="info-item"><div class="label">Địa chỉ</div><div class="value">${address.value}</div></div>
+      </div>
+    </div>
+
+    <div class="section">
+      <div class="section-title">Chi tiết</div>
+      <div class="info-grid">
+        <div class="info-item"><div class="label">Diện tích</div><div class="value">${area.value} m²</div></div>
+        <div class="info-item"><div class="label">Ngày</div><div class="value">${date.value}</div></div>
+        <div class="info-item full"><div class="label">Giờ</div><div class="value">${time.value}</div></div>
+      </div>
+    </div>
+
+    ${uploadedImage ? `<img src="${uploadedImage}">` : ""}
+
+    <div class="modal-total">${totalBox.innerText}</div>
+
+    <div class="modal-actions">
+      <button class="cancel" onclick="modal.style.display='none'">Hủy</button>
+      <button class="confirm" onclick="alert('Đặt thành công!')">Xác nhận</button>
+    </div>
+  `;
+
+  modal.style.display="flex";
+};
+
+function autoFill(){
+  const params = new URLSearchParams(window.location.search);
+
+  const serviceId = params.get("service");
+  const area = params.get("area");
+
+  // set dịch vụ
+  if(serviceId){
+    serviceSelect.value = serviceId;
+  }
+
+  // set diện tích
+  if(area){
+    areaInput.value = area;
+  }
+
+  // 🔥 QUAN TRỌNG: phải gọi lại tính tiền
+  calc();
+}
+</script>
+
+</body>
+</html>

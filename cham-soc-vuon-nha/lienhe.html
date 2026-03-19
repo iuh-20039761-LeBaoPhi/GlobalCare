@@ -1,0 +1,226 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Liên hệ</title>
+
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+      font-family: 'Segoe UI', sans-serif;
+    }
+
+    body {
+      background: #eef7f0;
+      color: #333;
+    }
+
+    /* Banner */
+    .banner {
+      background: linear-gradient(135deg, #2ecc71, #27ae60);
+      color: white;
+      text-align: center;
+      padding: 60px 20px;
+      border-bottom-left-radius: 30px;
+      border-bottom-right-radius: 30px;
+    }
+
+    .banner h1 {
+      font-size: 2.5rem;
+      margin-bottom: 10px;
+    }
+
+    .banner p {
+      opacity: 0.9;
+    }
+
+    /* Layout */
+    .container {
+      max-width: 1100px;
+      margin: 40px auto;
+      padding: 20px;
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 25px;
+    }
+
+    .card {
+      background: white;
+      border-radius: 20px;
+      padding: 25px;
+      box-shadow: 0 10px 25px rgba(0,0,0,0.08);
+      transition: 0.3s;
+    }
+
+    .card:hover {
+      transform: translateY(-5px);
+    }
+
+    h2 {
+      margin-bottom: 20px;
+      color: #27ae60;
+    }
+
+    /* Form */
+    .form-group {
+      margin-bottom: 15px;
+    }
+
+    label {
+      display: block;
+      margin-bottom: 6px;
+      font-weight: 500;
+    }
+
+    input, textarea {
+      width: 100%;
+      padding: 12px;
+      border-radius: 10px;
+      border: 1px solid #ccc;
+      transition: 0.3s;
+    }
+
+    input:focus, textarea:focus {
+      border-color: #27ae60;
+      outline: none;
+      box-shadow: 0 0 6px rgba(39, 174, 96, 0.3);
+    }
+
+    textarea {
+      height: 120px;
+      resize: none;
+    }
+
+    button {
+      width: 100%;
+      padding: 14px;
+      background: linear-gradient(135deg, #2ecc71, #27ae60);
+      color: white;
+      border: none;
+      border-radius: 12px;
+      font-size: 16px;
+      cursor: pointer;
+      transition: 0.3s;
+    }
+
+    button:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 5px 15px rgba(0,0,0,0.15);
+    }
+
+    /* Info */
+    .info div {
+      background: #ecf9f1;
+      padding: 12px;
+      border-radius: 10px;
+      margin-bottom: 10px;
+    }
+
+    /* Map */
+    .map-container {
+      width: 100%;
+      height: 350px;
+      border-radius: 15px;
+      overflow: hidden;
+    }
+
+    .map-container iframe {
+      width: 100%;
+      height: 100%;
+      border: none;
+    }
+
+    /* Mobile */
+    @media (max-width: 768px) {
+      .container {
+        grid-template-columns: 1fr;
+      }
+
+      .banner h1 {
+        font-size: 2rem;
+      }
+    }
+  </style>
+</head>
+
+<body>
+
+  <!-- HEADER -->
+  <div id="header"></div>
+
+  <!-- BANNER -->
+  <div class="banner">
+    <h1>Liên hệ với chúng tôi</h1>
+    <p>Hỗ trợ nhanh chóng - Phản hồi trong 24h</p>
+  </div>
+
+  <!-- CONTENT -->
+  <div class="container">
+
+    <!-- FORM -->
+    <div class="card">
+      <h2>Gửi tin nhắn</h2>
+
+      <form>
+        <div class="form-group">
+          <label>Họ và tên</label>
+          <input type="text" placeholder="Nhập tên của bạn" required>
+        </div>
+
+        <div class="form-group">
+          <label>Email</label>
+          <input type="email" placeholder="example@email.com" required>
+        </div>
+
+        <div class="form-group">
+          <label>Nội dung</label>
+          <textarea placeholder="Nhập nội dung..." required></textarea>
+        </div>
+
+        <button type="submit">Gửi liên hệ</button>
+      </form>
+
+      <div class="info" style="margin-top:20px;">
+        <div>📞 0775 472 347</div>
+        <div>📧 dichvuquanhta.vn@gmail.com</div>
+        <div>
+          📍 Tòa nhà SBI, Lô 6B, Đường số 3<br>
+          Công viên phần mềm Quang Trung<br>
+          Quận 12, TP. Hồ Chí Minh
+        </div>
+      </div>
+    </div>
+
+    <!-- MAP -->
+    <div class="card">
+      <h2>Bản đồ</h2>
+      <div class="map-container">
+        <iframe src="https://www.google.com/maps?q=Công+viên+phần+mềm+Quang+Trung+Quận+12&output=embed"></iframe>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- FOOTER -->
+  <div id="footer"></div>
+
+  <!-- LOAD HEADER + FOOTER -->
+  <script>
+    fetch("header.html")
+      .then(res => res.text())
+      .then(data => {
+        document.getElementById("header").innerHTML = data;
+      });
+
+    fetch("footer.html")
+      .then(res => res.text())
+      .then(data => {
+        document.getElementById("footer").innerHTML = data;
+      });
+  </script>
+
+</body>
+</html>

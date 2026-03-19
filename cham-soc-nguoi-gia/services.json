@@ -1,211 +1,117 @@
 [
   {
     "id": 1,
-    "name": "Gói Theo dõi Sức khỏe Y tế",
-    "image": "assets/bai-viet-bi-quyet-cham-soc-nguoi-gia-kho-di-lai.png",
-    "description": "Tập trung kiểm soát các chỉ số sinh tồn và nhắc nhở y tế cho người cao tuổi.",
+    "name": "Đồng Hành Sinh Hoạt Hằng Ngày",
+    "image": "assets/bai-viet-ve-sinh-ca-nhan-cho-nguoi-gia-dung-cach.png",
+    "description": "Phù hợp cho người cao tuổi còn tự chủ một phần, cần thêm người hỗ trợ để sinh hoạt đều đặn, an toàn và đỡ vất vả khi không có con cháu bên cạnh.",
     "includes": [
-      "Trọng tâm: Kiểm tra huyết áp, nhịp tim và đường huyết định kỳ",
-      "Nhắc nhở và hỗ trợ uống thuốc đúng liều theo đơn bác sĩ",
-      "Theo dõi các dấu hiệu bất thường và báo cáo kịp thời cho gia đình",
-      "Hỗ trợ thay băng hoặc vệ sinh vết thương (nếu có)",
-      "Ghi chép nhật ký sức khỏe và các chỉ số hàng ngày",
-      "Hỗ trợ đặt lịch và nhắc lịch tái khám định kỳ"
+      "Chuẩn bị bữa ăn hằng ngày, nhắc giờ ăn uống và dọn dẹp sau bữa",
+      "Hỗ trợ đi chợ, mua thuốc theo toa có sẵn và các vật dụng thiết yếu trong nhà",
+      "Nhắc lịch sinh hoạt, đồng hành đi bộ nhẹ hoặc tập vận động cơ bản theo thói quen",
+      "Hỗ trợ tắm rửa, gội đầu, thay đồ khi người già mệt hoặc khó tự làm",
+      "Giặt giũ, sắp xếp quần áo, dọn phòng ngủ và khu vực sinh hoạt gọn gàng",
+      "Trò chuyện, đọc báo, nghe nhạc để người già bớt buồn chán và cô đơn"
     ],
     "pricing": [
-      {
-        "label": "Ca sáng (6h - 18h)",
-        "value": 700000,
-        "hours": 12,
-        "type": "day_morning"
-      },
-      {
-        "label": "Ca đêm (18h - 6h)",
-        "value": 750000,
-        "hours": 12,
-        "type": "day_night"
-      },
       {
         "label": "Cả ngày 24h",
         "value": 1400000,
         "hours": 24,
         "type": "day_full"
+      },
+      {
+        "label": "khác",
+        "value": 50000,
+        "hours": 1,
+        "type": "gio"
       }
     ]
   },
-
   {
     "id": 2,
-    "name": "Gói Dinh dưỡng & Ẩm thực",
+    "name": "Hỗ Trợ Người Già Khó Đi Lại",
     "image": "assets/bai-viet-tam-ly-nguoi-cao-tuoi-khong-the-tu-cham-soc.png",
-    "description": "Đảm bảo chế độ ăn uống khoa học, phù hợp với bệnh lý người già.",
+    "description": "Dành cho người cao tuổi đi lại chậm, đau khớp hoặc dễ mất thăng bằng, cần người kề bên để hỗ trợ an toàn trong các việc cá nhân hằng ngày.",
     "includes": [
-      "Trọng tâm: Nấu ăn dinh dưỡng phù hợp với bệnh lý (tiểu đường, cao huyết áp...)",
-      "Lên thực đơn thay đổi hàng ngày giúp người già ngon miệng",
-      "Đi chợ lựa chọn thực phẩm tươi sạch theo yêu cầu",
-      "Hỗ trợ đút ăn hoặc chuẩn bị dụng cụ hỗ trợ ăn uống",
-      "Vệ sinh sạch sẽ khu vực bếp và dụng cụ sau khi nấu",
-      "Pha chế thức uống bổ sung hoặc các loại trà thảo mộc"
+      "Dìu đỡ khi đứng lên ngồi xuống, đi lại trong nhà và lên xuống cầu thang",
+      "Hỗ trợ đi vệ sinh, vệ sinh cá nhân sau khi đi vệ sinh và thay quần áo sạch",
+      "Nấu ăn mềm, dễ nhai nuốt; hỗ trợ bày bữa và theo dõi người già ăn uống đầy đủ",
+      "Sắp xếp nhà cửa thông thoáng, hạn chế vật cản để giảm nguy cơ té ngã",
+      "Chuẩn bị đồ dùng hằng ngày trong tầm với để người già tiện sử dụng",
+      "Đồng hành đi khám theo lịch, hỗ trợ di chuyển và chờ khám cùng người già"
     ],
     "pricing": [
-      {
-        "label": "Ca sáng (6h - 18h)",
-        "value": 700000,
-        "hours": 12,
-        "type": "day_morning"
-      },
-      {
-        "label": "Ca đêm (18h - 6h)",
-        "value": 750000,
-        "hours": 12,
-        "type": "day_night"
-      },
       {
         "label": "Cả ngày 24h",
         "value": 1400000,
         "hours": 24,
         "type": "day_full"
+      },
+      {
+        "label": "khác",
+        "value": 50000,
+        "hours": 1,
+        "type": "gio"
       }
     ]
   },
 
   {
     "id": 3,
-    "name": "Gói Vệ sinh & Chăm sóc Thân thể",
+    "name": "Hỗ Trợ Người Già Suy Yếu Nhiều",
     "image": "assets/bai-viet-nguyen-tac-dinh-duong-cho-nguoi-gia-nam-liet.png",
-    "description": "Giữ gìn vệ sinh cá nhân và môi trường sống sạch sẽ cho cụ.",
+    "description": "Phù hợp cho người cao tuổi suy yếu, ăn ngủ thất thường hoặc cần hỗ trợ gần như cả ngày để duy trì nếp sinh hoạt ổn định và sạch sẽ.",
     "includes": [
-      "Trọng tâm: Tắm rửa, gội đầu và vệ sinh cá nhân tại giường/phòng",
-      "Hỗ trợ thay tã, vệ sinh sau khi đi đại tiểu tiện",
-      "Thay ga giường, chăn gối và quần áo sạch hàng ngày",
-      "Cắt móng tay, móng chân và chăm sóc da tránh khô/lở loét",
-      "Dọn dẹp phòng ngủ và khu vực sinh hoạt của người già",
-      "Giặt giũ và phơi phóng quần áo riêng cho cụ"
+      "Hỗ trợ ăn uống tại giường hoặc tại ghế, chuẩn bị phần ăn nhỏ dễ dùng",
+      "Hỗ trợ tắm lau, gội đầu, thay đồ và vệ sinh thân thể mỗi ngày",
+      "Hỗ trợ thay tã, xử lý đồ bẩn, giữ cơ thể và chỗ nằm luôn khô thoáng",
+      "Xoay trở, đổi tư thế nằm ngồi thường xuyên để người già đỡ mỏi",
+      "Thay ga gối, giặt giũ đồ cá nhân và dọn sạch khu vực nghỉ ngơi",
+      "Ghi nhận tình hình ăn ngủ, tinh thần trong ngày và cập nhật cho gia đình"
     ],
     "pricing": [
-      {
-        "label": "Ca sáng (6h - 18h)",
-        "value": 700000,
-        "hours": 12,
-        "type": "day_morning"
-      },
-      {
-        "label": "Ca đêm (18h - 6h)",
-        "value": 750000,
-        "hours": 12,
-        "type": "day_night"
-      },
       {
         "label": "Cả ngày 24h",
         "value": 1400000,
         "hours": 24,
         "type": "day_full"
+      },
+      {
+        "label": "khác",
+        "value": 50000,
+        "hours": 1,
+        "type": "gio"
       }
     ]
   },
 
   {
     "id": 4,
-    "name": "Gói Vận động & Vật lý trị liệu",
+    "name": "Hỗ Trợ Chăm Sóc 24/7 Cho Người Già Phụ Thuộc Hoàn Toàn",
     "image": "assets/bai-viet-cach-phong-ngua-loet-ti-de-o-nguoi-gia.png",
-    "description": "Khuyến khích vận động nhẹ nhàng để duy trì sức khỏe dẻo dai.",
+    "description": "Giải pháp cho người cao tuổi cần người túc trực liên tục ngày đêm vì không thể tự sinh hoạt, giúp gia đình yên tâm khi không thể chăm trực tiếp.",
     "includes": [
-      "Trọng tâm: Hỗ trợ tập vật lý trị liệu hoặc các bài tập phục hồi chức năng",
-      "Xoa bóp, massage các vùng cơ khớp giảm đau nhức",
-      "Dìu đi lại trong nhà hoặc dạo chơi ngoài trời bằng xe lăn",
-      "Thực hiện các thao tác lật trở người để chống loét giường",
-      "Hướng dẫn các bài tập thể dục dưỡng sinh nhẹ nhàng",
-      "Hỗ trợ các tư thế ngồi, nằm đúng cách cho cột sống"
+      "Túc trực theo ca 24/7, hỗ trợ toàn bộ ăn uống, vệ sinh và thay đồ đúng thời điểm",
+      "Theo sát nhu cầu ban ngày và ban đêm, báo ngay cho gia đình khi có bất thường trong sinh hoạt",
+      "Hỗ trợ di chuyển bằng xe lăn hoặc dụng cụ sẵn có khi cần đổi không gian",
+      "Chuẩn bị và quản lý đồ dùng thiết yếu: tã, khăn, quần áo, vật dụng vệ sinh",
+      "Dọn dẹp phòng ở sạch sẽ, sắp xếp đồ đạc an toàn cho việc chăm sóc lâu dài",
+      "Đồng hành trò chuyện, tạo cảm giác được quan tâm để người già an tâm và dễ ngủ hơn"
     ],
     "pricing": [
-      {
-        "label": "Ca sáng (6h - 18h)",
-        "value": 700000,
-        "hours": 12,
-        "type": "day_morning"
-      },
-      {
-        "label": "Ca đêm (18h - 6h)",
-        "value": 750000,
-        "hours": 12,
-        "type": "day_night"
-      },
       {
         "label": "Cả ngày 24h",
         "value": 1400000,
         "hours": 24,
         "type": "day_full"
-      }
-    ]
-  },
-
-  {
-    "id": 5,
-    "name": "Gói Đồng hành & Trị liệu Tinh thần",
-    "image": "assets/bai-viet-loi-ich-thue-osin-cham-soc-nguoi-gia.png",
-    "description": "Giảm bớt sự cô đơn, mang lại niềm vui tinh thần cho người cao tuổi.",
-    "includes": [
-      "Trọng tâm: Trò chuyện, tâm sự và lắng nghe người cao tuổi",
-      "Đọc báo, xem tivi hoặc nghe nhạc cùng cụ",
-      "Hỗ trợ liên lạc video call để cụ trò chuyện với con cháu",
-      "Tổ chức các trò chơi trí tuệ nhẹ nhàng (cờ, đố vui) để tránh minh mẫn",
-      "Quan sát tâm lý và kịp thời giải tỏa những lo âu của cụ",
-      "Đưa cụ đi tham gia các hoạt động cộng đồng/hội nhóm (nếu có thể)"
-    ],
-    "pricing": [
-      {
-        "label": "Ca sáng (6h - 18h)",
-        "value": 700000,
-        "hours": 12,
-        "type": "day_morning"
       },
       {
-        "label": "Ca đêm (18h - 6h)",
-        "value": 750000,
-        "hours": 12,
-        "type": "day_night"
-      },
-      {
-        "label": "Cả ngày 24h",
-        "value": 1400000,
-        "hours": 24,
-        "type": "day_full"
-      }
-    ]
-  },
-
-  {
-    "id": 6,
-    "name": "Gói Chăm sóc Toàn Diện",
-    "image": "assets/bai-viet-ve-sinh-ca-nhan-cho-nguoi-gia-dung-cach.png",
-    "description": "Giải pháp cao cấp kết hợp tất cả các dịch vụ trọng yếu nhất.",
-    "includes": [
-      "Kiểm tra y tế và theo dõi chỉ số sinh tồn hàng ngày (Gói 1)",
-      "Chế biến thực đơn dinh dưỡng và hỗ trợ ăn uống (Gói 2)",
-      "Vệ sinh thân thể và không gian sống sạch sẽ (Gói 3)",
-      "Hỗ trợ tập phục hồi và vận động chống loét (Gói 4)",
-      "Đồng hành, tâm sự và chăm sóc sức khỏe tinh thần (Gói 5)",
-      "Báo cáo tổng hợp tình trạng hàng ngày cho gia đình qua ứng dụng"
-    ],
-    "pricing": [
-      {
-        "label": "Ca sáng (6h - 18h)",
-        "value": 700000,
-        "hours": 12,
-        "type": "day_morning"
-      },
-      {
-        "label": "Ca đêm (18h - 6h)",
-        "value": 750000,
-        "hours": 12,
-        "type": "day_night"
-      },
-      {
-        "label": "Cả ngày 24h",
-        "value": 1400000,
-        "hours": 24,
-        "type": "day_full"
+        "label": "khác",
+        "value": 50000,
+        "hours": 1,
+        "type": "gio"
       }
     ]
   }
+
 ]

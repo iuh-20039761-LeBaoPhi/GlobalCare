@@ -1,252 +1,290 @@
-<header class="main-header" id="mainHeader">
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-<div class="header-container">
+<title>Header Chuẩn</title>
 
-<!-- LOGO -->
-
-<a href="../index.html" class="logo">
-<img src="assets/images/logo.jpg" alt="Logo Chăm Sóc Vườn Nhà">
-<span>Chăm Sóc Vườn Nhà</span>
-</a>
-
-<!-- MENU -->
-
-<nav class="main-nav" id="mainNav">
-
-<a href="indexs.html">Trang chủ</a> <a href="services.html">Dịch vụ</a> <a href="news.html">Tin tức</a>
-
-<a href="lookup.html">Tra cứu lịch</a>
-
-<a href="terms.html">Điều khoản</a>
-
-<a href="contact.html">Liên hệ</a>
-
-<a href="booking.html" class="booking-btn">Đặt lịch</a>
-
-</nav>
-
-<!-- HAMBURGER -->
-
-<div class="menu-toggle" id="menuToggle">
-
-<span></span> <span></span> <span></span>
-
-</div>
-
-</div>
-
-</header>
+<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700&display=swap" rel="stylesheet">
 
 <style>
 
-/* HEADER */
-
-.main-header{
-position:fixed;
-top:0;
-left:0;
-width:100%;
-background:#1f6f43;
-padding:18px 80px;
-z-index:9999;
-transition:0.3s;
+*{
+margin:0;
+padding:0;
+box-sizing:border-box;
+font-family:'Poppins',sans-serif;
 }
 
-/* CONTAINER */
+/* ===== HEADER ===== */
+.header{
+position:sticky;
+top:0;
+background:#fff;
+height:95px;
+display:flex;
+align-items:center;
+border-bottom:1px solid #eee;
+z-index:1000;
+}
 
-.header-container{
-max-width:1400px;
+.container{
+max-width:1300px;
 margin:auto;
+padding:0 20px;
 display:flex;
 align-items:center;
 justify-content:space-between;
+width:100%;
 }
 
-/* SCROLL EFFECT */
-
-.main-header.scrolled{
-background:white;
-box-shadow:0 6px 18px rgba(0,0,0,0.12);
-}
-
-.main-header.scrolled .main-nav a{
-color:#333;
-}
-
-.main-header.scrolled .logo span{
-color:#1f6f43;
-}
-
-/* LOGO */
-
+/* ===== LOGO ===== */
 .logo{
 display:flex;
 align-items:center;
-gap:14px;
+gap:10px;
 text-decoration:none;
-font-size:26px;
-font-weight:700;
-color:white;
-letter-spacing:0.5px;
 }
 
 .logo img{
-width:50px;
 height:50px;
-border-radius:50%;
-object-fit:cover;
-border:2px solid white;
 }
 
-/* MENU */
+.logo span{
+font-size:24px;
+font-weight:700;
+color:#111;
+}
 
-.main-nav{
+/* ===== MENU ===== */
+.nav{
 display:flex;
 align-items:center;
-gap:34px;
+gap:5px;
 }
 
-/* MENU LINK */
-
-.main-nav a{
+.nav a{
 text-decoration:none;
-color:white;
-font-size:18px;
-font-weight:600;
-transition:0.25s;
+color:#222;
+padding:10px 16px;
+font-size:16px;
+font-weight:500;
 position:relative;
 }
 
-/* HOVER LINE EFFECT */
+/* hover */
+.nav a:hover{
+color:#2e7d32;
+}
 
-.main-nav a::after{
+/* active đẹp */
+.nav a.active{
+color:#2e7d32;
+font-weight:600;
+}
+
+.nav a.active::after{
 content:"";
 position:absolute;
-left:0;
 bottom:-5px;
-width:0;
-height:2px;
-background:#ffd54f;
-transition:0.3s;
-}
-
-.main-nav a:hover::after{
-width:100%;
-}
-
-.main-nav a:hover{
-color:#ffd54f;
-}
-
-/* BOOKING BUTTON */
-
-.booking-btn{
-background:#ff9800;
-padding:12px 22px;
-border-radius:40px;
-font-weight:700;
-font-size:17px;
-color:white !important;
-transition:0.3s;
-}
-
-.booking-btn:hover{
-background:#ffb74d;
-transform:translateY(-3px);
-box-shadow:0 4px 10px rgba(0,0,0,0.2);
-}
-
-/* HAMBURGER */
-
-.menu-toggle{
-display:none;
-flex-direction:column;
-cursor:pointer;
-gap:6px;
-}
-
-.menu-toggle span{
-width:30px;
-height:3px;
-background:white;
-display:block;
-border-radius:3px;
-}
-
-/* MOBILE */
-
-@media(max-width:900px){
-
-.main-header{
-padding:16px 30px;
-}
-
-.logo{
-font-size:22px;
-}
-
-.menu-toggle{
-display:flex;
-}
-
-.main-nav{
-position:absolute;
-top:80px;
 left:0;
 width:100%;
-background:#1f6f43;
-flex-direction:column;
-align-items:center;
-gap:24px;
-padding:25px;
+height:3px;
+background:#2e7d32;
+border-radius:10px;
+}
+
+/* Trang chủ nổi bật */
+.nav a.home{
+color:#2e7d32;
+font-weight:700;
+}
+
+/* ===== LOGIN ===== */
+.login-box{
+position:relative;
+}
+
+.login-btn{
+background:#2e7d32;
+color:#fff;
+border:none;
+padding:10px 22px;
+border-radius:25px;
+font-weight:600;
+cursor:pointer;
+font-size:15px;
+}
+
+/* dropdown */
+.login-menu{
+position:absolute;
+top:55px;
+right:0;
+background:#fff;
+border-radius:10px;
+box-shadow:0 10px 25px rgba(0,0,0,0.15);
+width:220px;
 display:none;
+flex-direction:column;
+overflow:hidden;
 }
 
-.main-nav a{
-font-size:19px;
-}
-
-.main-nav.active{
+.login-menu.show{
 display:flex;
 }
 
-.booking-btn{
-width:80%;
-text-align:center;
+.login-menu a{
+padding:12px 18px;
+text-decoration:none;
+color:#333;
+font-size:14px;
+}
+
+.login-menu a:hover{
+background:#f2f7f3;
+color:#2e7d32;
+}
+
+/* ===== MOBILE ===== */
+.menu-btn{
+display:none;
+flex-direction:column;
+gap:5px;
+cursor:pointer;
+}
+
+.menu-btn span{
+width:25px;
+height:3px;
+background:#111;
+}
+
+/* mobile menu */
+.mobile-menu{
+position:fixed;
+top:0;
+left:-100%;
+width:260px;
+height:100%;
+background:#fff;
+box-shadow:0 0 20px rgba(0,0,0,0.2);
+padding:20px;
+transition:0.3s;
+z-index:2000;
+}
+
+.mobile-menu.show{
+left:0;
+}
+
+.mobile-menu a{
+display:block;
+padding:12px 0;
+text-decoration:none;
+color:#222;
+font-weight:500;
+border-bottom:1px solid #eee;
+}
+
+/* responsive */
+@media(max-width:992px){
+
+.nav{
+display:none;
+}
+
+.menu-btn{
+display:flex;
 }
 
 }
 
 </style>
+</head>
+
+<body>
+
+<header class="header">
+<div class="container">
+
+<!-- LOGO -->
+<a href="../index.html" class="logo">
+<img src="assets/images/logo1.jpg">
+<span>Chăm Sóc Vườn</span>
+<img src="assets/images/logo2.jpg">
+</a>
+
+<!-- MENU -->
+<nav class="nav">
+<a href="indexs.html" class="home active">Trang chủ</a>
+<a href="gioithieu.html">Giới thiệu</a>
+<a href="dichvu.html">Dịch vụ</a>
+<a href="tintuc.html">Tin tức</a>
+<a href="datlich.html">Đặt lịch</a>
+<a href="lienhe.html">Liên hệ</a>
+</nav>
+
+<!-- RIGHT -->
+<div style="display:flex;align-items:center;gap:15px;">
+
+<!-- LOGIN -->
+<div class="login-box">
+<button class="login-btn" id="loginBtn">Đăng nhập</button>
+
+<div class="login-menu" id="loginMenu">
+<a href="login_customer.html">👤 Khách hàng</a>
+<a href="admin/login_admin.html">🛡 Quản trị viên</a>
+</div>
+</div>
+
+<!-- MENU BUTTON -->
+<div class="menu-btn" id="menuBtn">
+<span></span>
+<span></span>
+<span></span>
+</div>
+
+</div>
+
+</div>
+</header>
+
+<!-- MOBILE MENU -->
+<div class="mobile-menu" id="mobileMenu">
+<a href="indexs.html">Trang chủ</a>
+<a href="gioithieu.html">Giới thiệu</a>
+<a href="dichvu.html">Dịch vụ</a>
+<a href="tintuc.html">Tin tức</a>
+<a href="datlich.html">Đặt lịch</a>
+<a href="lienhe.html">Liên hệ</a>
+</div>
 
 <script>
 
-/* MENU MOBILE */
+/* LOGIN DROPDOWN */
+const loginBtn = document.getElementById("loginBtn");
+const loginMenu = document.getElementById("loginMenu");
 
-const toggle = document.getElementById("menuToggle");
-const nav = document.getElementById("mainNav");
-
-toggle.onclick = () =>{
-nav.classList.toggle("active");
+loginBtn.onclick = (e)=>{
+e.stopPropagation();
+loginMenu.classList.toggle("show");
 };
 
+document.onclick = ()=>{
+loginMenu.classList.remove("show");
+};
 
-/* HEADER SCROLL */
+/* MOBILE MENU */
+const menuBtn = document.getElementById("menuBtn");
+const mobileMenu = document.getElementById("mobileMenu");
 
-window.addEventListener("scroll",function(){
-
-const header = document.getElementById("mainHeader");
-
-if(window.scrollY > 50){
-
-header.classList.add("scrolled");
-
-}else{
-
-header.classList.remove("scrolled");
-
-}
-
-});
+menuBtn.onclick = ()=>{
+mobileMenu.classList.toggle("show");
+};
 
 </script>
+
+</body>
+</html>
