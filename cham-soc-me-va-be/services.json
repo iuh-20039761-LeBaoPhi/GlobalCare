@@ -1,16 +1,16 @@
 [
   {
     "id": 1,
-    "name": "Gói Chăm sóc Toàn diện Mẹ & Bé",
+    "name": "Chăm Bé 0-12 Tháng Tại Nhà",
     "image": "assets/ru-be-ngu.png",
-    "description": "Giải pháp trọn gói kết hợp tinh hoa của tất cả các dịch vụ.",
+    "description": "Đồng hành cùng mẹ trong từng nếp sinh hoạt của bé, giúp bé sạch sẽ, bú ngoan, ngủ sâu và an tâm phát triển mỗi ngày.",
     "includes": [
-      "Chăm sóc vết thương và sức khỏe cho mẹ (Gói 1)",
-      "Tắm bé và vệ sinh y tế chuẩn chuyên gia (Gói 2)",
-      "Nấu ăn dinh dưỡng và lợi sữa (Gói 3)",
-      "Giặt đồ và dọn dẹp không gian của mẹ & bé (Gói 4)",
-      "Hỗ trợ kỹ năng nuôi con và kích sữa (Gói 5)",
-      "Lên kế hoạch nghỉ ngơi tối ưu cho cả gia đình"
+      "Tắm bé, thay tã và vệ sinh hằng ngày nhẹ nhàng, đúng nhịp sinh hoạt của bé",
+      "Pha sữa, cho bé bú bình, vệ sinh bình sữa và dụng cụ ăn uống của bé",
+      "Giặt, phơi, gấp gọn quần áo, khăn và đồ dùng cá nhân của bé",
+      "Bế ẵm, chơi cùng bé, trò chuyện tương tác và hỗ trợ kích thích giác quan theo độ tuổi",
+      "Massage thư giãn, vỗ ợ và ru bé ngủ để bé dễ vào giấc, ngủ sâu hơn",
+      "Chuẩn bị bữa ăn dặm cơ bản theo hướng dẫn của gia đình hoặc hỗ trợ mua đồ ăn phù hợp cho bé"
     ],
     "pricing": [
       {
@@ -36,16 +36,16 @@
 
   {
     "id": 2,
-    "name": "Gói Chuyên gia Chăm sóc Bé sơ sinh",
+    "name": "Hỗ Trợ Mẹ Bầu Nhẹ Nhàng",
     "image": "assets/cham-be.png",
-    "description": "Dành riêng cho việc chăm sóc và theo dõi sự phát triển của bé.",
+    "description": "Giảm bớt áp lực việc nhà để mẹ bầu được nghỉ ngơi đúng cách, ăn uống đủ chất và giữ tinh thần thoải mái trước ngày sinh.",
     "includes": [
-      "Trọng tâm: Tắm bé chuẩn y khoa và vệ sinh rốn/mắt/mũi",
-      "Massage giúp bé ngủ ngon và tránh đầy hơi",
-      "Theo dõi lịch trình bú và bài tiết của bé",
-      "Vệ sinh bình sữa và các dụng cụ của bé",
-      "Tương tác sớm qua trò chơi/hình ảnh",
-      "Hỗ trợ mẹ rèn luyện nếp sinh hoạt cho bé"
+      "Hỗ trợ mẹ vận động nhẹ, đi lại an toàn trong sinh hoạt hằng ngày",
+      "Nấu ăn dinh dưỡng theo khẩu vị và gợi ý của gia đình, ưu tiên món dễ tiêu hóa",
+      "Giặt và sắp xếp quần áo cá nhân của mẹ gọn gàng, sạch sẽ",
+      "Hỗ trợ đưa mẹ đi khám thai định kỳ hoặc đi mua sắm đồ dùng cần thiết",
+      "Hỗ trợ tắm rửa, massage thư giãn cơ bản giúp mẹ đỡ mỏi lưng, mỏi chân",
+      "Dọn dẹp khu vực sinh hoạt của mẹ bầu để không gian luôn thoáng và an toàn"
     ],
     "pricing": [
       {
@@ -71,16 +71,16 @@
 
   {
     "id": 3,
-    "name": "Gói Dinh dưỡng & Ẩm thực tại gia",
+    "name": "Chăm Mẹ Sau Sinh Phục Hồi Sinh Hoạt",
     "image": "assets/cho-be-bu.png",
-    "description": "Đảm bảo nguồn sữa dồi dào và dinh dưỡng phục hồi cho mẹ.",
+    "description": "Hỗ trợ mẹ sau sinh ổn định nhịp sống, có thêm thời gian nghỉ ngơi, ăn uống điều độ và lấy lại sức trong giai đoạn đầu nhiều bỡ ngỡ.",
     "includes": [
-      "Trọng tâm: Chế biến 3 bữa chính & 1 bữa phụ lợi sữa",
-      "Lên thực đơn theo tình trạng sức khỏe của mẹ",
-      "Đi chợ lựa chọn thực phẩm tươi sạch",
-      "Nấu các loại nước uống thảo mộc/ngũ cốc",
-      "Tư vấn chế độ ăn kiêng khoa học",
-      "Dọn dẹp sạch sẽ khu vực bếp sau khi nấu"
+      "Nấu các bữa ăn đủ chất, hỗ trợ mẹ duy trì năng lượng và thuận tiện chăm con",
+      "Hỗ trợ mẹ vận động nhẹ nhàng, thay đổi tư thế sinh hoạt để giảm mỏi cơ",
+      "Giặt, phơi, gấp quần áo cho mẹ và sắp xếp đồ cá nhân ngăn nắp",
+      "Hỗ trợ tắm rửa và massage cơ bản giúp mẹ thư giãn tinh thần",
+      "Trông bé theo khung giờ để mẹ có thời gian ngủ bù và hồi phục sức lực",
+      "Hỗ trợ đưa mẹ và bé đi tái khám theo lịch hoặc hỗ trợ chuẩn bị đồ đạc trước khi ra ngoài"
     ],
     "pricing": [
       {
@@ -106,16 +106,16 @@
 
   {
     "id": 4,
-    "name": "Gói Hỗ trợ Tiện ích Gia đình",
+    "name": "Đồng Hành Cùng Cả Mẹ Và Bé",
     "image": "assets/cham-soc-me-be.png",
-    "description": "Giúp mẹ giải phóng hoàn toàn việc nhà để tập trung cho bé.",
+    "description": "Giải pháp trọn gói cho gia đình cần thêm một người tin cậy để quán xuyến việc chăm mẹ và bé mỗi ngày, nhất là khi không có người thân bên cạnh.",
     "includes": [
-      "Trọng tâm: Giặt ủi và phân loại đồ dùng mẹ & bé",
-      "Vệ sinh và khử khuẩn phòng ngủ hàng ngày",
-      "Dọn dẹp nhà cửa và khu vực sinh hoạt chung",
-      "Hỗ trợ chuẩn bị nguyên liệu nấu ăn",
-      "Trông bé để mẹ có thời gian tắm rửa/nghỉ ngơi",
-      "Quản lý kho tã bỉm và đồ dùng cần thiết"
+      "Chăm bé hằng ngày: tắm bé, vệ sinh, cho bú bình, ru ngủ và chơi cùng bé theo nếp sinh hoạt",
+      "Chăm mẹ hằng ngày: nấu ăn dinh dưỡng, hỗ trợ vận động nhẹ, tắm rửa và massage cơ bản",
+      "Giặt giũ, phân loại và sắp xếp quần áo, đồ dùng của cả mẹ và bé gọn gàng",
+      "Dọn dẹp khu vực phòng mẹ bé, chuẩn bị đồ dùng cần thiết để luôn sẵn sàng khi cần",
+      "Hỗ trợ đi chợ, mua vật dụng thiết yếu hoặc đồng hành đưa mẹ và bé đi khám theo lịch",
+      "Linh hoạt nhận thêm các việc sinh hoạt phù hợp thực tế tại nhà theo từng gia đình"
     ],
     "pricing": [
       {
@@ -136,76 +136,6 @@
         "hours": 24,
         "type": "day_full"
       }
-    ]
-  },
-
-  {
-    "id": 5,
-    "name": "Gói Tư vấn & Kỹ năng nuôi con",
-    "image": "assets/tam-be.png",
-    "description": "Dành cho những người lần đầu làm mẹ cần sự hướng dẫn chuyên môn.",
-    "includes": [
-      "Trọng tâm: Hướng dẫn mẹ cho bé bú và xử lý tắc tia sữa",
-      "Tư vấn tâm lý và phòng ngừa trầm cảm sau sinh",
-      "Dạy mẹ kỹ năng bế, quấn và vỗ ợ hơi cho bé",
-      "Hướng dẫn xử lý các tình huống khẩn cấp ở trẻ",
-      "Lập sổ theo dõi tăng trưởng hàng tuần cho bé",
-      "Tư vấn mua sắm đồ dùng cần thiết tiết kiệm"
-    ],
-    "pricing": [
-      {
-        "label": "Ca sáng (6h - 18h)",
-        "value": 700000,
-        "hours": 12,
-        "type": "day_morning"
-      },
-      {
-        "label": "Ca đêm (18h - 6h)",
-        "value": 750000,
-        "hours": 12,
-        "type": "day_night"
-      },
-      {
-        "label": "Cả ngày 24h",
-        "value": 1400000,
-        "hours": 24,
-        "type": "day_full"
-      }
-    ]
-  },
-  {
-    "id": 6,
-    "name": "Gói Phục hồi Sức khỏe Mẹ sau sinh",
-    "image": "assets/be-be-di-choi.png",
-    "description": "Tập trung chuyên sâu vào việc hồi phục thể chất và tinh thần cho mẹ.",
-    "includes": [
-      "Trọng tâm: Chăm sóc vết mổ/vết khâu và vệ sinh y tế",
-      "Theo dõi huyết áp và dấu hiệu sinh tồn",
-      "Massage thảo dược giúp co hồi tử cung",
-      "Xông tắm thảo dược tại chỗ cho mẹ",
-      "Hướng dẫn bài tập vận động nhẹ nhàng",
-      "Hỗ trợ mẹ vệ sinh cá nhân và nghỉ ngơi"
-    ],
-    "pricing": [
-      {
-        "label": "Ca sáng (6h - 18h)",
-        "value": 700000,
-        "hours": 12,
-        "type": "day_morning"
-      },
-      {
-        "label": "Ca đêm (18h - 6h)",
-        "value": 750000,
-        "hours": 12,
-        "type": "day_night"
-      },
-      {
-        "label": "Cả ngày 24h",
-        "value": 1400000,
-        "hours": 24,
-        "type": "day_full"
-      }
-      
     ]
   }
 
