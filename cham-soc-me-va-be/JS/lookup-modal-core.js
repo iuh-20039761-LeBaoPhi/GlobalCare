@@ -430,7 +430,7 @@
 
           var actionButtons =
             '<button class="btn btn-sm btn-outline-danger mb-1" onclick="lookupViewInvoiceDetail(' + invoice.id + ')">' +
-            '<i class="bi bi-eye"></i><span class="d-none d-md-inline ms-1"></span></button>';
+            '<i class="fa fa-eye"></i><span class="d-none d-md-inline ms-1"></span></button>';
 
           return (
             '<tr>' +
@@ -465,7 +465,7 @@
           '    <div class="lookup-mobile-row"><span class="lookup-mobile-label">Trạng thái</span><span class="lookup-mobile-value">' + getStatusBadge(invoice.trang_thai) + '</span></div>' +
           '    <div class="lookup-mobile-row"><span class="lookup-mobile-label">Nhân viên</span><span class="lookup-mobile-value">' + employeeName + '</span></div>' +
           '    <div class="lookup-mobile-actions mt-2">' +
-          '      <button class="btn btn-sm btn-outline-danger" onclick="lookupViewInvoiceDetail(' + invoice.id + ')"><i class="bi bi-eye me-1"></i>Chi tiết</button>' +
+          '      <button class="btn btn-sm btn-outline-danger" onclick="lookupViewInvoiceDetail(' + invoice.id + ')"><i class="fa fa-eye me-1"></i>Chi tiết</button>' +
           '    </div>' +
           '  </div>' +
           '</div>'
