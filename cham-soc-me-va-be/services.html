@@ -553,6 +553,7 @@
           // 5. Ẩn thông báo thành công và hiện lại form (nếu lần trước đã gửi thành công)
           $('#successMessage').addClass('d-none');
           $('#bookingForm').show();
+            resetQuickAttachments();
       });
     /* ============================================================
        GET LOCATION
@@ -685,6 +686,10 @@
       var SERVICES = [];
       var CURRENT_SERVICE = null;
       var PENDING_BOOKING_DATA = null;
+      var QUICK_ATTACHMENTS = {
+        images: [],
+        videos: []
+      };
 
       /* --------------------------------------------------
          LOAD JSON
@@ -821,6 +826,99 @@
         $("#holidayRow").removeClass("d-flex").addClass("d-none");
         $("#basePrice").text("0 đ");
         $("#totalPrice").val("0 đ");
+      }
+
+      function resetQuickAttachments() {
+        QUICK_ATTACHMENTS.images.forEach(function(item) {
+          if (item.url) URL.revokeObjectURL(item.url);
+        });
+        QUICK_ATTACHMENTS.videos.forEach(function(item) {
+          if (item.url) URL.revokeObjectURL(item.url);
+        });
+        QUICK_ATTACHMENTS.images = [];
+        QUICK_ATTACHMENTS.videos = [];
+        $("#quickPhotoInput").val("");
+        $("#quickVideoInput").val("");
+        renderAttachmentPreview();
+        renderReviewAttachmentPreview();
+      }
+
+      function renderAttachmentPreview() {
+        var list = QUICK_ATTACHMENTS.images.concat(QUICK_ATTACHMENTS.videos);
+        var $empty = $("#attachmentPreviewEmpty");
+        var $grid = $("#attachmentPreviewGrid");
+        if (!$empty.length || !$grid.length) return;
+
+        if (!list.length) {
+          $empty.removeClass("d-none");
+          $grid.addClass("d-none").empty();
+          return;
+        }
+
+        $empty.addClass("d-none");
+        $grid.removeClass("d-none").empty();
+
+        list.forEach(function(item) {
+          var safeName = $("<div>").text(item.name).html();
+          var mediaHtml =
+            item.kind === "image"
+              ? '<img src="' + item.url + '" alt="' + safeName + '">'
+              : '<video src="' + item.url + '" controls muted preload="metadata"></video>';
+
+          $grid.append(
+            '<div class="attachment-item">' +
+              mediaHtml +
+              '<div class="attachment-item-name" title="' + safeName + '">' + safeName + '</div>' +
+            '</div>'
+          );
+        });
+      }
+
+      function renderReviewAttachmentPreview() {
+        var list = QUICK_ATTACHMENTS.images.concat(QUICK_ATTACHMENTS.videos);
+        var $empty = $("#reviewAttachmentEmpty");
+        var $grid = $("#reviewAttachmentGrid");
+        if (!$empty.length || !$grid.length) return;
+
+        if (!list.length) {
+          $empty.removeClass("d-none");
+          $grid.addClass("d-none").empty();
+          return;
+        }
+
+        $empty.addClass("d-none");
+        $grid.removeClass("d-none").empty();
+
+        list.forEach(function(item) {
+          var safeName = $("<div>").text(item.name).html();
+          var mediaHtml =
+            item.kind === "image"
+              ? '<img src="' + item.url + '" alt="' + safeName + '">'
+              : '<video src="' + item.url + '" controls muted preload="metadata"></video>';
+
+          $grid.append(
+            '<div class="attachment-item">' +
+              mediaHtml +
+              '<div class="attachment-item-name" title="' + safeName + '">' + safeName + '</div>' +
+            '</div>'
+          );
+        });
+      }
+
+      function appendQuickFiles(fileList, kind) {
+        if (!fileList || !fileList.length) return;
+        var bucket = kind === "image" ? QUICK_ATTACHMENTS.images : QUICK_ATTACHMENTS.videos;
+
+        Array.from(fileList).forEach(function(file) {
+          bucket.push({
+            kind: kind,
+            name: file.name,
+            url: URL.createObjectURL(file)
+          });
+        });
+
+        renderAttachmentPreview();
+        renderReviewAttachmentPreview();
       }
 
       /* --------------------------------------------------
@@ -1104,6 +1202,7 @@
         $("#reviewExtraRequest").text(data.extraRequest || "-");
         $("#reviewNote").text(data.note || "-");
         $("#reviewPrice").text(data.price || "0 đ");
+        renderReviewAttachmentPreview();
       }
       function mapBookingDataForDatabase(data) {
         var payload = {
@@ -1183,6 +1282,7 @@
                 saveBtn.html(originalText).prop("disabled", false);
                 backBtn.prop("disabled", false);
                 PENDING_BOOKING_DATA = null;
+                resetQuickAttachments();
               }, 2500);
             })
             .catch(function(err) {
@@ -1378,6 +1478,24 @@
       $(document).on("input change", "#durationAmount", function() {
         updateAutoEndDate();
         updateTotalPrice();
+      });
+
+      $(document).on("click", "#btnQuickPhoto", function() {
+        $("#quickPhotoInput").trigger("click");
+      });
+
+      $(document).on("click", "#btnQuickVideo", function() {
+        $("#quickVideoInput").trigger("click");
+      });
+
+      $(document).on("change", "#quickPhotoInput", function() {
+        appendQuickFiles(this.files, "image");
+        this.value = "";
+      });
+
+      $(document).on("change", "#quickVideoInput", function() {
+        appendQuickFiles(this.files, "video");
+        this.value = "";
       });
 
       /* --------------------------------------------------
