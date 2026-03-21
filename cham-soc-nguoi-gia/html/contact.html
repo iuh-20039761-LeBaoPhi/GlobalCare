@@ -130,6 +130,124 @@ body {
   text-align: left;
   line-height: 1.3;
 }
+
+.contact-info-panel {
+  border: 2px solid #6ccfa9;
+  background: #f1fcf6;
+  border-radius: 18px;
+  padding: 22px 20px;
+  box-shadow: 0 10px 20px rgba(46, 125, 50, 0.14);
+}
+
+.contact-info-title {
+  color: #2e7d32;
+  font-size: clamp(2rem, 3.8vw, 3.05rem);
+  margin-bottom: 1.25rem;
+}
+
+.contact-info-card {
+  display: flex;
+  align-items: flex-start;
+  gap: 14px;
+  background: #ffffff;
+  border: 2px solid #9de1c2;
+  border-radius: 16px;
+  padding: 14px 16px;
+  box-shadow: 0 6px 12px rgba(46, 125, 50, 0.14);
+}
+
+.contact-info-icon {
+  width: 44px;
+  height: 44px;
+  border-radius: 999px;
+  background: #2e7d32;
+  color: #fff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  font-size: 1.25rem;
+}
+
+.contact-info-card h4 {
+  margin: 0 0 4px;
+  font-weight: 700;
+  color: #2f2f2f;
+}
+
+.contact-info-card p {
+  margin: 0;
+  color: #555;
+  font-size: 0.95rem;
+}
+
+.contact-info-card a {
+  color: #2e7d32;
+  text-decoration: none;
+}
+
+.contact-info-hours p + p {
+  margin-top: 4px;
+}
+
+.contact-form-card {
+  background: linear-gradient(#f3fff4, #f3fff6) padding-box,
+    linear-gradient(135deg, #188e62, #62f075) border-box;
+  border: 4px solid transparent;
+  border-radius: 22px;
+  box-shadow: 0 12px 28px rgba(20, 60, 45, 0.18);
+}
+
+#bookingForm label {
+  font-weight: 700 !important;
+  color: #2f2f2f !important;
+}
+
+#bookingForm input,
+#bookingForm textarea {
+  border: 2px solid #188e62 !important;
+  border-radius: 12px !important;
+  box-shadow: none !important;
+}
+
+#bookingForm input::placeholder,
+#bookingForm textarea::placeholder {
+  color: #7b7b7b;
+}
+
+.service-list .btn.btn-outline-success {
+  border: 2px solid #188e62;
+  color: #2f2f2f;
+  background-color: #ffffff;
+  border-radius: 14px;
+  box-shadow: 0 3px 8px rgba(24, 142, 98, 0.2);
+}
+
+.service-list .btn-check:checked + .btn.btn-outline-success {
+  background-color: #eaf7f0;
+  border-color: #188e62;
+  color: #14553c;
+}
+
+.service-list .btn.btn-outline-success:hover {
+  border-color: #147a54;
+  color: #1d3e32;
+}
+
+#bookingForm button[type="submit"] {
+  background: linear-gradient(135deg, #217715, #55e461) !important;
+  box-shadow: 0 8px 16px rgba(240, 98, 146, 0.35);
+}
+
+#bookingForm button[type="submit"]:hover {
+  filter: brightness(0.95);
+}
+
+@media (max-width: 767.98px) {
+  .contact-form-card {
+    padding: 1.2rem !important;
+  }
+}
 </style>
   </head>
   <body style="font-family: &quot;Quicksand&quot;, sans-serif">
@@ -307,126 +425,58 @@ body {
         <div class="row g-5">
           <!-- Contact Info -->
           <div class="col-lg-5">
-            <h2 class="fw-bold display-5 mb-4">Thông Tin Liên Hệ</h2>
+            <div class="contact-info-panel">
+              <h2 class="fw-bold contact-info-title">Thông Tin Liên Hệ</h2>
 
-            <div class="d-flex gap-4 mb-4">
-              <div
-                style="
-                  font-size: 2.5rem;
-                  color: #2e7d32;
-                  min-width: 60px;
-                  text-align: center;
-                "
-              >
-                <i class="fas fa-map-marker-alt"></i>
+              <div class="contact-info-card mb-3">
+                <div class="contact-info-icon">
+                  <i class="fas fa-map-marker-alt"></i>
+                </div>
+                <div>
+                  <h4>Địa Chỉ</h4>
+                  <p>123 Đường ABC, Quận 1, TP. Hồ Chí Minh</p>
+                </div>
               </div>
-              <div class="flex-grow-1">
-                <h4 class="fw-600 mb-2" style="font-weight: 600">Địa Chỉ</h4>
-                <p
-                  class="text-muted mb-1"
-                  style="color: #666; font-size: 0.95rem"
-                >
-                  123 Đường ABC, Quận 1, TP. Hồ Chí Minh
-                </p>
-              </div>
-            </div>
 
-            <div class="d-flex gap-4 mb-4">
-              <div
-                style="
-                  font-size: 2.5rem;
-                  color: #2e7d32;
-                  min-width: 60px;
-                  text-align: center;
-                "
-              >
-                <i class="fas fa-phone"></i>
+              <div class="contact-info-card mb-3">
+                <div class="contact-info-icon">
+                  <i class="fas fa-phone"></i>
+                </div>
+                <div>
+                  <h4>Điện Thoại</h4>
+                  <p><a href="tel:0775472347">0775472347</a></p>
+                </div>
               </div>
-              <div class="flex-grow-1">
-                <h4 class="fw-600 mb-2" style="font-weight: 600">Điện Thoại</h4>
-                <p
-                  class="text-muted mb-2"
-                  style="color: #666; font-size: 0.95rem"
-                >
-                  <a
-                    href="tel:0775472347"
-                    class="text-decoration-none"
-                    style="color: #2e7d32; transition: 0.3s"
-                    >0775472347</a
-                  >
-                </p>
-              </div>
-            </div>
 
-            <div class="d-flex gap-4 mb-4">
-              <div
-                style="
-                  font-size: 2.5rem;
-                  color: #2e7d32;
-                  min-width: 60px;
-                  text-align: center;
-                "
-              >
-                <i class="fas fa-envelope"></i>
+              <div class="contact-info-card mb-3">
+                <div class="contact-info-icon">
+                  <i class="fas fa-envelope"></i>
+                </div>
+                <div>
+                  <h4>Email</h4>
+                  <p><a href="mailto:dichvuquanhta.vn@gmail.com">dichvuquanhta.vn@gmail.com</a></p>
+                </div>
               </div>
-              <div class="flex-grow-1">
-                <h4 class="fw-600 mb-2" style="font-weight: 600">Email</h4>
-                <p
-                  class="text-muted mb-2"
-                  style="color: #666; font-size: 0.95rem"
-                >
-                  <a
-                    href="mailto:dichvuquanhta.vn@gmail.com"
-                    class="text-decoration-none"
-                    style="color: #2e7d32; transition: 0.3s"
-                    >dichvuquanhta.vn@gmail.com</a
-                  >
-                </p>
-              </div>
-            </div>
 
-            <div class="d-flex gap-4">
-              <div
-                style="
-                  font-size: 2.5rem;
-                  color: #2e7d32;
-                  min-width: 60px;
-                  text-align: center;
-                "
-              >
-                <i class="fas fa-clock"></i>
-              </div>
-              <div class="flex-grow-1">
-                <h4 class="fw-600 mb-2" style="font-weight: 600">
-                  Giờ Làm Việc
-                </h4>
-                <p
-                  class="text-muted mb-2"
-                  style="color: #666; font-size: 0.95rem"
-                >
-                  Thứ 2 - Thứ 6: 8:00 - 17:30
-                </p>
-                <p
-                  class="text-muted mb-2"
-                  style="color: #666; font-size: 0.95rem"
-                >
-                  Thứ 7 - Chủ Nhật: 8:00 - 12:00
-                </p>
-                <p
-                  class="text-muted mb-0"
-                  style="color: #666; font-size: 0.95rem"
-                >
-                  Chúng tôi mở cửa 24/7 cho các trường hợp khẩn cấp
-                </p>
+              <div class="contact-info-card contact-info-hours">
+                <div class="contact-info-icon">
+                  <i class="fas fa-clock"></i>
+                </div>
+                <div>
+                  <h4>Giờ Làm Việc</h4>
+                  <p>Thứ 2 - Thứ 6: 8:00 - 17:30</p>
+                  <p>Thứ 7 - Chủ Nhật: 8:00 - 12:00</p>
+                  <p>Chúng tôi mở cửa 24/7 cho các trường hợp khẩn cấp</p>
+                </div>
               </div>
             </div>
           </div>
 
           <!-- Contact Form -->
           <div class="col-lg-7">
-            <div class="p-5 rounded-4" style="background-color: #f3fbff">
+            <div class="p-5 contact-form-card">
               <div>
-                <h2 class="fw-bold mb-4" style="color: #333">
+                <h2 class="fw-bold mb-4" style="color: #135c04">
                   <i class="fas fa-paper-plane me-2"></i>Gửi Tin Nhắn Cho Chúng
                   Tôi
                 </h2>
@@ -463,12 +513,12 @@ body {
                         transition: 0.3s;
                       "
                       onfocus="
-                        this.style.borderColor = '#2e7d32';
+                        this.style.borderColor = '#188e62';
                         this.style.boxShadow =
-                          '0 0 10px rgba(46, 125, 50, 0.2)';
+                          '0 0 10px rgba(24, 142, 98, 0.2)';
                       "
                       onblur="
-                        this.style.borderColor = '#ddd';
+                        this.style.borderColor = '#188e62';
                         this.style.boxShadow = 'none';
                       "
                     />
@@ -499,12 +549,12 @@ body {
                             transition: 0.3s;
                           "
                           onfocus="
-                            this.style.borderColor = '#2e7d32';
+                            this.style.borderColor = '#188e62';
                             this.style.boxShadow =
-                              '0 0 10px rgba(46, 125, 50, 0.2)';
+                              '0 0 10px rgba(24, 142, 98, 0.2)';
                           "
                           onblur="
-                            this.style.borderColor = '#ddd';
+                            this.style.borderColor = '#188e62';
                             this.style.boxShadow = 'none';
                           "
                         />
@@ -532,12 +582,12 @@ body {
                             transition: 0.3s;
                           "
                           onfocus="
-                            this.style.borderColor = '#2e7d32';
+                            this.style.borderColor = '#188e62';
                             this.style.boxShadow =
-                              '0 0 10px rgba(46, 125, 50, 0.2)';
+                              '0 0 10px rgba(24, 142, 98, 0.2)';
                           "
                           onblur="
-                            this.style.borderColor = '#ddd';
+                            this.style.borderColor = '#188e62';
                             this.style.boxShadow = 'none';
                           "
                         />
@@ -565,12 +615,12 @@ body {
                         transition: 0.3s;
                       "
                       onfocus="
-                        this.style.borderColor = '#2e7d32';
+                        this.style.borderColor = '#188e62';
                         this.style.boxShadow =
-                          '0 0 10px rgba(46, 125, 50, 0.2)';
+                          '0 0 10px rgba(24, 142, 98, 0.2)';
                       "
                       onblur="
-                        this.style.borderColor = '#ddd';
+                        this.style.borderColor = '#188e62';
                         this.style.boxShadow = 'none';
                       "
                     ></textarea>
@@ -596,7 +646,7 @@ body {
                           '0 5px 15px rgba(240, 98, 146, 0.4)';
                       "
                       onmouseout="
-                        this.style.backgroundColor = '#007bff';
+                        this.style.backgroundColor = '#f06f9d';
                         this.style.transform = 'scale(1)';
                         this.style.boxShadow = 'none';
                       "
