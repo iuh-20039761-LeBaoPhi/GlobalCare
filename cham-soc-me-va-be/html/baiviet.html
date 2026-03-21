@@ -24,6 +24,12 @@
         --teal:   #26a69a;
         --teal-l: #e0f2f1;
       }
+      html,
+      body {
+        width: 100%;
+        max-width: 100%;
+        overflow-x: hidden;
+      }
       body { font-family:"Quicksand",sans-serif; line-height:1.85; color:#444; background:#fafafa; }
 
       /* ── CATEGORY PILLS ─────────────────────────── */
@@ -79,17 +85,36 @@
         display: flex;
         flex-wrap: nowrap !important;
         align-items: center;
+        min-width: 0;
       }
 
       /* ================= MOBILE ONLY ================= */
       @media (max-width: 991.98px) {
+
+        .navbar {
+          overflow-x: clip;
+        }
+
+        .navbar .container > span {
+          max-width: 34vw;
+          white-space: nowrap;
+          overflow: hidden;
+          text-overflow: ellipsis;
+          font-size: 0.95rem;
+        }
+
+        .navbar-brand img {
+          width: 56px !important;
+          height: 42px !important;
+        }
 
         /* ÉP menu xuống dưới navbar */
         .navbar-collapse {
           position: absolute;
           top: 100%;
           left: 0;
-          width: 100%;
+          right: 0;
+          width: auto;
           background: #fff;
           z-index: 999;
           border-radius: 0 0 12px 12px;
