@@ -154,14 +154,39 @@
         #bookingModal .action-submit-btn:hover {
           background-color: #0a58ca;
         }
+
+        #bookingModal .booking-modal-title {
+          display: inline-flex;
+          align-items: center;
+          gap: 8px;
+        }
+
+        #bookingModal .booking-modal-title-logo {
+          width: 34px;
+          height: 26px;
+          object-fit: contain;
+          flex-shrink: 0;
+        }
+
+        @media (max-width: 575.98px) {
+          #bookingModal .booking-modal-title-logo {
+            width: 30px;
+            height: 22px;
+          }
+        }
       </style>
       <div class="modal-dialog modal-dialog-scrollable modal-dialog-centered">
         <div class="modal-content rounded-4 shadow">
 
           <!-- Header -->
           <div class="modal-header border-0 pb-0">
-            <h5 class="modal-title fw-bold" id="bookingModalLabel" style="color:#007bff">
-              <i class="fas fa-calendar-plus me-2"></i>Đặt Lịch Dịch Vụ
+            <h5 class="modal-title fw-bold booking-modal-title" id="bookingModalLabel" style="color:#007bff">
+              <img
+                class="booking-modal-title-logo"
+                src="assets/logo-cham-soc-benh-nhan.png"
+                alt="cham-soc-benh-nhan"
+              />
+              Đặt Lịch Dịch Vụ
             </h5>
             <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
           </div>
