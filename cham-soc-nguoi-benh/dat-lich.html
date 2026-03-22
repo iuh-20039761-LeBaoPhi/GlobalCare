@@ -759,11 +759,11 @@
                     <i class="fas fa-camera-retro me-1"></i>Tệp đính kèm nhanh
                   </label>
                   <div class="d-flex gap-2">
-                    <button type="button" id="btnQuickPhoto" class="btn flex-fill fw-bold rounded-pill"
+                    <button type="button" id="capturePhotoBtn" class="btn flex-fill fw-bold rounded-pill"
                       style="background:linear-gradient(135deg,#ffe0ec,#ffd1e3);color:#c2185b;border:1px solid #f8bbd0">
                       <i class="fas fa-camera me-1"></i>Chụp ảnh
                     </button>
-                    <button type="button" id="btnQuickVideo" class="btn flex-fill fw-bold rounded-pill"
+                    <button type="button" id="recordVideoBtn" class="btn flex-fill fw-bold rounded-pill"
                       style="background:linear-gradient(135deg,#e3f2fd,#d6ecff);color:#1565c0;border:1px solid #bbdefb">
                       <i class="fas fa-video me-1"></i>Quay hình
                     </button>
@@ -1941,11 +1941,11 @@
           updateTotalPrice();
         });
 
-        $('#btnQuickPhoto').on('click', function () {
+        $('#capturePhotoBtn').on('click', function () {
           $('#quickPhotoInput').trigger('click');
         });
 
-        $('#btnQuickVideo').on('click', function () {
+        $('#recordVideoBtn').on('click', function () {
           $('#quickVideoInput').trigger('click');
         });
 
