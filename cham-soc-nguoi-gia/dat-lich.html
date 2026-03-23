@@ -328,7 +328,7 @@
                     <label class="form-label">Họ và tên <span class="text-danger">*</span></label>
                     <div class="input-group">
                       <span class="input-group-text"><i class="far fa-user"></i></span>
-                      <input type="text" id="customerName" required placeholder="Họ tên" class="form-control" />
+                      <input type="text" id="customerName" required placeholder="" class="form-control" />
                     </div>
                   </div>
 
@@ -337,14 +337,14 @@
                       <label class="form-label">Số điện thoại <span class="text-danger">*</span></label>
                       <div class="input-group">
                         <span class="input-group-text"><i class="fas fa-phone"></i></span>
-                        <input type="tel" id="customerPhone" required placeholder="0377553588" pattern="[0-9]{10,11}" class="form-control" />
+                        <input type="tel" id="customerPhone" required placeholder="0775472347" pattern="[0-9]{10,11}" class="form-control" />
                       </div>
                     </div>
                     <div class="col-md-6">
                       <label class="form-label">Email</label>
                       <div class="input-group">
                         <span class="input-group-text"><i class="far fa-envelope"></i></span>
-                        <input type="email" id="customerEmail" placeholder="email@example.com" class="form-control" />
+                        <input type="email" id="customerEmail" placeholder="" class="form-control" />
                       </div>
                     </div>
                   </div>
@@ -381,7 +381,10 @@
                     <div id="serviceJobs"></div>
                   </div>
                 </div>
-
+                <div class="mb-3 extra-request-box">
+                  <label class="form-label fw-bold">Yêu cầu khác:</label>
+                  <textarea id="extraRequest" rows="2" class="form-control" placeholder="Ví dụ: cần người có kinh nghiệm chăm bé sinh non..."></textarea>
+                </div>
                 <div class="schedule-box">
                   <div class="mb-2">
                     <label class="form-label fw-bold" style="color: #1f2a37"><i class="fas fa-clock me-1" style="color: #2f93df"></i>Chọn khung giờ</label>
@@ -428,10 +431,7 @@
                   <span id="totalDaysText" class="text-muted ms-2"></span>
                 </div>
 
-                <div class="mb-3 extra-request-box">
-                  <label class="form-label fw-bold">Yêu cầu khác:</label>
-                  <textarea id="extraRequest" rows="2" class="form-control" placeholder="Ví dụ: cần người có kinh nghiệm chăm bé sinh non..."></textarea>
-                </div>
+                
 
                 <div class="card border-0 mb-3 price-detail-box">
                   <div class="card-body py-2 px-3">
