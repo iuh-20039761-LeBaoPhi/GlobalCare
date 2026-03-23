@@ -447,16 +447,65 @@ body {
           height: 100%;
         }
 
+        #bookingFlowModal .booking-modal-title {
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          gap: 10px;
+          color: #2e7d32;
+          font-size: 1.2rem;
+          line-height: 1.2;
+          margin: 0;
+        }
+
+        #bookingFlowModal .booking-modal-title .brand-logo {
+          display: inline-flex;
+          align-items: center;
+        }
+
+        #bookingFlowModal .booking-modal-title .brand-logo img {
+          width: 56px;
+          height: 42px;
+          object-fit: contain;
+          image-rendering: -webkit-optimize-contrast;
+        }
+
+        #bookingFlowModal .modal-header {
+          padding-top: 0.75rem;
+          padding-bottom: 0.75rem;
+        }
+
+        #bookingFlowModal .modal-header .btn-close {
+          margin-left: 10px;
+        }
+
         @media (max-width: 575.98px) {
           #bookingFlowModal .modal-body {
             height: calc(100vh - 140px);
+          }
+          #bookingFlowModal .booking-modal-title {
+            gap: 8px;
+            font-size: 1rem;
+          }
+
+          #bookingFlowModal .booking-modal-title .brand-logo img {
+            width: 44px;
+            height: 33px;
           }
         }
       </style>
       <div class="modal-dialog modal-dialog-centered modal-dialog-scrollable">
         <div class="modal-content border-0 rounded-4 overflow-hidden">
           <div class="modal-header border-0" style="background: linear-gradient(135deg, #e1ffe1 0%, #ffffff 50%, #e0f7e4 100%);">
-            <h5 class="modal-title fw-bold" style="color:#2e7d32">Đặt Lịch Dịch Vụ</h5>
+            <h5 class="modal-title fw-bold booking-modal-title">
+              <a class="navbar-brand d-flex align-items-center gap-2 fw-bold fs-3 brand-logo" href="../index.html" style="color: #2e7d32">
+                <img src="assets/logo.png" alt="cham-soc-nguoi-gia" />
+              </a>
+              <span>Đặt Lịch Dịch Vụ</span>
+              <a class="navbar-brand d-flex align-items-center gap-2 fw-bold fs-3 brand-logo" href="index.html" style="color: #2e7d32">
+                <img src="assets/logong.png" alt="cham-soc-nguoi-gia" />
+              </a>
+            </h5>
             <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
           </div>
           <div class="modal-body p-0" style="background:#fff;">
