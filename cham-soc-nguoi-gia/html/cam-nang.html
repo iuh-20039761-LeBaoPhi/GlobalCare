@@ -733,10 +733,15 @@
     renderArt(p);
     document.getElementById('list-view').style.display    = 'none';
     document.getElementById('article-view').style.display = 'block';
+    const seoKeywords = typeof p.keywords === 'string' && p.keywords.trim()
+      ? p.keywords.trim()
+      : Array.isArray(p.keywords) && p.keywords.length
+        ? p.keywords.join(', ')
+        : (p.tags || []).join(', ');
     // SEO update
-    document.getElementById('page-title').textContent = p.title + ' – Chăm Sóc   Người Già';
+    document.getElementById('page-title').textContent = p.title + ' – Chăm Sóc Người Cao Tuổi';
     document.getElementById('meta-desc').content      = p.excerpt;
-    document.getElementById('meta-kw').content        = (p.tags||[]).join(', ');
+    document.getElementById('meta-kw').content        = seoKeywords;
     document.getElementById('og-title').content       = p.title;
     document.getElementById('og-desc').content        = p.excerpt;
     document.getElementById('hero-title').textContent = p.title;
@@ -829,8 +834,12 @@
   function showList() {
     document.getElementById('list-view').style.display    = 'block';
     document.getElementById('article-view').style.display = 'none';
-    document.getElementById('page-title').textContent = 'Cẩm Nang Chăm Sóc   Người Già – Kiến Thức   Toàn Diện';
-    document.getElementById('hero-title').textContent = 'Cẩm Nang Chăm Sóc   Người Già  ';
+    document.getElementById('page-title').textContent = 'Cẩm Nang Chăm Sóc Người Già – Kiến Thức   Toàn Diện';
+    document.getElementById('meta-desc').content      = 'Cẩm nang kiến thức chăm sóc người già: dinh dưỡng, sức khỏe, chăm sóc tại nhà, dịch vụ osin chuyên nghiệp.';
+    document.getElementById('meta-kw').content        = 'chăm sóc người già, chăm sóc tại nhà, dinh dưỡng người già, osin chăm sóc người già, phục hồi sức khỏe người già';
+    document.getElementById('og-title').content       = 'Cẩm Nang Chăm Sóc Người Cao Tuổi';
+    document.getElementById('og-desc').content        = 'Kiến thức chăm sóc người cao tuổi toàn diện.';
+    document.getElementById('hero-title').textContent = 'Cẩm Nang Chăm Sóc Người Già  ';
     document.getElementById('hero-sub').textContent   = '30 bài viết kiến thức chuyên sâu về chăm sóc  Người Già , dinh dưỡng và phục hồi   — biên soạn bởi đội ngũ chuyên nghiệp.';
   }
 

@@ -670,10 +670,15 @@
     renderArt(p);
     document.getElementById('list-view').style.display    = 'none';
     document.getElementById('article-view').style.display = 'block';
+    const seoKeywords = typeof p.keywords === 'string' && p.keywords.trim()
+      ? p.keywords.trim()
+      : Array.isArray(p.keywords) && p.keywords.length
+        ? p.keywords.join(', ')
+        : (p.tags || []).join(', ');
     // SEO update
     document.getElementById('page-title').textContent = p.title + ' – Chăm Sóc Mẹ Và Bé';
     document.getElementById('meta-desc').content      = p.excerpt;
-    document.getElementById('meta-kw').content        = (p.tags||[]).join(', ');
+    document.getElementById('meta-kw').content        = seoKeywords;
     document.getElementById('og-title').content       = p.title;
     document.getElementById('og-desc').content        = p.excerpt;
     document.getElementById('hero-title').textContent = p.title;
@@ -767,6 +772,10 @@
     document.getElementById('list-view').style.display    = 'block';
     document.getElementById('article-view').style.display = 'none';
     document.getElementById('page-title').textContent = 'Cẩm Nang Chăm Sóc Mẹ Và Bé – Kiến Thức Sau Sinh Toàn Diện';
+    document.getElementById('meta-desc').content      = 'Cẩm nang kiến thức chăm sóc mẹ và bé sau sinh: dinh dưỡng, sức khỏe tâm lý, phát triển trẻ sơ sinh, dịch vụ osin chuyên nghiệp tại nhà.';
+    document.getElementById('meta-kw').content        = 'chăm sóc mẹ sau sinh, chăm sóc bé sơ sinh, dinh dưỡng sau sinh, osin chăm bé, phục hồi sau sinh';
+    document.getElementById('og-title').content       = 'Cẩm Nang Chăm Sóc Mẹ Và Bé';
+    document.getElementById('og-desc').content        = 'Kiến thức chăm sóc mẹ và bé sau sinh toàn diện.';
     document.getElementById('hero-title').textContent = 'Cẩm Nang Chăm Sóc Mẹ Và Bé Sau Sinh';
     document.getElementById('hero-sub').textContent   = '30 bài viết kiến thức chuyên sâu về chăm sóc mẹ, bé sơ sinh, dinh dưỡng và phục hồi sau sinh — biên soạn bởi đội ngũ chuyên nghiệp.';
   }
