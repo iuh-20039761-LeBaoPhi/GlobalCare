@@ -49,12 +49,18 @@
   line-height: 1.5;
   color: #475569;
   display: flex;
-  gap: 10px;
+  align-items: flex-start;
 }
 
 .service-card-details li strong {
   color: #1e293b;
-  min-width: 65px;
+  min-width: 140px;
+  text-align: left;
+  flex-shrink: 0;
+}
+
+.service-card-details li span {
+  display: grid;
 }
 
 .feature-item {

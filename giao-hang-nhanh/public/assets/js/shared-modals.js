@@ -3,9 +3,7 @@
   const marker = "/giao-hang-nhanh/";
   const markerIndex = path.toLowerCase().lastIndexOf(marker);
   const projectBasePath =
-    markerIndex !== -1
-      ? path.slice(0, markerIndex + marker.length)
-      : "/";
+    markerIndex !== -1 ? path.slice(0, markerIndex + marker.length) : "/";
   const basePath =
     typeof window.apiBasePath === "string"
       ? window.apiBasePath
@@ -43,7 +41,7 @@
     };
   }
 
-  const partialUrl = `${basePath}assets/partials/shared-modals.html`;
+  // Path calculation is now handled inside ensureModalMarkup
   const deliveryModalId = "booking-modal-delivery";
   let initialized = false;
   const deliveryItemOptionsByType = {
@@ -116,6 +114,10 @@
   function ensureModalMarkup() {
     const hasDelivery = !!document.getElementById(deliveryModalId);
     if (hasDelivery) return true;
+
+    const currentBasePath =
+      typeof window.apiBasePath === "string" ? window.apiBasePath : basePath;
+    const partialUrl = `${currentBasePath}assets/partials/shared-modals.html`;
 
     try {
       const xhr = new XMLHttpRequest();
@@ -483,7 +485,7 @@
     closeAllModals();
   };
 
-  if (ensureModalMarkup()) initModalBindings();
+  // if (ensureModalMarkup()) initModalBindings();
 
   document.addEventListener("DOMContentLoaded", function () {
     if (ensureModalMarkup()) initModalBindings();

@@ -8,7 +8,7 @@ $projectBase = $projectPos !== false
 $parentBase = preg_replace('#giao-hang-nhanh/?$#i', '', $projectBase);
 
 $footerLinks = [
-    'about' => $projectBase . 'index.html#hero',
+    'about' => $projectBase . 'index.html',
     'services' => $projectBase . 'index.html#services',
     'contact' => $projectBase . 'index.html#contact',
     'terms' => $projectBase . 'dieu-khoan-su-dung.html',

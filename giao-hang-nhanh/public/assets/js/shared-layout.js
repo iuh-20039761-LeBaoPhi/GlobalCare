@@ -47,8 +47,8 @@
       mainLogo: `${projectBase}public/assets/images/logo-dich-vu-quanh-ta.png`,
       brandLogo: `${projectBase}public/assets/images/favicon.png`,
 
-      home: `${projectBase}index.html#hero`,
-      about: `${projectBase}index.html#hero`,
+      home: `${projectBase}index.html`,
+      about: `${projectBase}index.html`,
       services: `${projectBase}dich-vu-giao-hang.html`,
       pricing: `${projectBase}tra-cuu-gia.html`,
       contact: `${projectBase}index.html#contact`,
@@ -60,7 +60,7 @@
       "shipping-policy": `${projectBase}chinh-sach-van-chuyen.html`,
       privacy: `${projectBase}chinh-sach-bao-mat.html`,
       terms: `${projectBase}dieu-khoan-su-dung.html`,
-      articles: `${projectBase}bai-viet.html`,
+      articles: `${projectBase}cam-nang.html`,
 
       "svc-giao-hang-nhanh": `${parentBase}giao-hang-nhanh/`,
       "svc-dich-vu-chuyen-don": `${parentBase}dich-vu-chuyen-don/`,

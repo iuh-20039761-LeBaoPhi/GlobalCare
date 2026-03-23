@@ -719,12 +719,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'GET' && ($_GET['action'] ?? '') === 'weather
     ]);
 }
 
-// Chỉ cho phép người dùng đăng nhập
-if (!isset($_SESSION['user_id'])) {
-    json_response(['success' => false, 'message' => 'Vui lòng đăng nhập để đặt đơn.'], 401);
-}
-
 if ($_SERVER['REQUEST_METHOD'] === 'GET' && ($_GET['action'] ?? '') === 'prefill') {
+    if (!isset($_SESSION['user_id'])) {
+        json_response(['success' => false, 'message' => 'Vui lòng đăng nhập để dùng tính năng tự điền.'], 401);
+    }
     $userId = intval($_SESSION['user_id']);
     json_response([
         'success' => true,
@@ -733,6 +731,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'GET' && ($_GET['action'] ?? '') === 'prefill
 }
 
 if ($_SERVER['REQUEST_METHOD'] === 'GET' && isset($_GET['reorder_id'])) {
+    if (!isset($_SESSION['user_id'])) {
+        json_response(['success' => false, 'message' => 'Vui lòng đăng nhập để đặt lại đơn cũ.'], 401);
+    }
     $reorderId = intval($_GET['reorder_id']);
     if ($reorderId <= 0) {
         json_response(['success' => false, 'message' => 'Mã đơn đặt lại không hợp lệ.'], 400);
@@ -846,7 +847,7 @@ if (!is_array($data)) {
 $conn->begin_transaction();
 
 try {
-    $user_id = $_SESSION['user_id'];
+    $user_id = isset($_SESSION['user_id']) ? intval($_SESSION['user_id']) : null;
     $order_code = 'ORD' . time();
     
     // Thu thập các thông tin cơ bản

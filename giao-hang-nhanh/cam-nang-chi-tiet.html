@@ -11,7 +11,7 @@
     <!-- FontAwesome 6.4.0 -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
-      /* CSS cho trang chi tiết bài viết */
+      /* CSS cho trang chi tiết cẩm nang */
       .article-header {
         text-align: center;
         margin-bottom: 40px;
@@ -94,7 +94,7 @@
         font-size: 0.9em;
       }
 
-      /* CSS cho phần Bài viết liên quan */
+      /* CSS cho phần Cẩm nang liên quan */
       .related-section {
         margin-top: 60px;
         padding-top: 40px;
@@ -178,12 +178,12 @@
     <main class="container" style="padding-top: 120px; padding-bottom: 60px">
       <article>
         <div style="display: flex; justify-content: flex-start; align-items: center; margin-bottom: 25px;">
-          <a href="bai-viet.html" class="back-to-list-top">
-            <i class="fas fa-arrow-left"></i> Quay lại danh sách bài viết
+          <a href="cam-nang.html" class="back-to-list-top">
+            <i class="fas fa-arrow-left"></i> Quay lại danh sách cẩm nang
           </a>
         </div>
         <header class="article-header" id="article-header-host">
-          <!-- Header bài viết sẽ được JS chèn vào đây -->
+          <!-- Header cẩm nang sẽ được JS chèn vào đây -->
         </header>
 
         <img
@@ -195,9 +195,9 @@
         />
 
         <div class="article-content" id="article-content-host">
-          <!-- Nội dung bài viết sẽ được JS chèn vào đây -->
-          <a href="bai-viet.html" class="back-to-news"
-            >← Quay lại trang bài viết</a
+          <!-- Nội dung cẩm nang sẽ được JS chèn vào đây -->
+          <a href="cam-nang.html" class="back-to-news"
+            >← Quay lại trang cẩm nang</a
           >
         </div>
       </article>
@@ -212,7 +212,7 @@
 
         if (!articleId) {
           document.getElementById("article-content-host").innerHTML =
-            '<h2>Bài viết không tồn tại.</h2><a href="bai-viet.html" class="back-to-news">← Quay lại trang bài viết</a>';
+            '<h2>Mục cẩm nang không tồn tại.</h2><a href="cam-nang.html" class="back-to-news">← Quay lại trang cẩm nang</a>';
           return;
         }
 
@@ -221,7 +221,7 @@
           .then(function(newsData) { renderArticle(newsData); })
           .catch(function() {
             document.getElementById("article-content-host").innerHTML =
-              '<h2>Không thể tải bài viết.</h2><a href="bai-viet.html" class="back-to-news">← Quay lại</a>';
+              '<h2>Không thể tải cẩm nang.</h2><a href="cam-nang.html" class="back-to-news">← Quay lại</a>';
           });
 
         function resolveArticleAssetPath(path) {
@@ -274,7 +274,7 @@
           contentHost.innerHTML =
             normalizeArticleContent(article.content) +
             tagsHtml +
-            '<a href="bai-viet.html" class="back-to-news">← Quay lại trang bài viết</a>';
+            '<a href="cam-nang.html" class="back-to-news">← Quay lại trang cẩm nang</a>';
 
           // --- LOGIC BÀI VIẾT LIÊN QUAN NÂNG CAO (SCORING SYSTEM) ---
 
@@ -289,7 +289,7 @@
 
           const currentKeywords = getKeywords(article.title);
 
-          // Tính điểm cho từng bài viết
+          // Tính điểm cho từng mục cẩm nang
           const scoredArticles = newsData
             .filter((item) => item.id !== article.id) // Trừ bài hiện tại
             .map((item) => {
@@ -337,13 +337,13 @@
               .map(
                 (item) => `
                 <div class="related-card">
-                    <a href="bai-viet-chi-tiet.html?id=${item.id}">
+                    <a href="cam-nang-chi-tiet.html?id=${item.id}">
                         <img src="${resolveArticleAssetPath(item.img)}" alt="${item.title}" class="related-img" />
                     </a>
                     <div class="related-body">
                         <div class="related-date">${item.date}</div>
                         <h4 class="related-card-title">
-                            <a href="bai-viet-chi-tiet.html?id=${item.id}">${item.title}</a>
+                            <a href="cam-nang-chi-tiet.html?id=${item.id}">${item.title}</a>
                         </h4>
                     </div>
                 </div>
@@ -353,14 +353,14 @@
 
             const relatedSection = document.createElement("div");
             relatedSection.className = "related-section";
-            relatedSection.innerHTML = `<h3 class="related-title">Bài viết liên quan</h3><div class="related-grid">${relatedHtml}</div>`;
+            relatedSection.innerHTML = `<h3 class="related-title">Cẩm nang liên quan</h3><div class="related-grid">${relatedHtml}</div>`;
 
             // Chèn vào cuối thẻ <article>
             document.querySelector("article").appendChild(relatedSection);
           }
           } else {
             document.getElementById("article-content-host").innerHTML =
-              '<h2>Bài viết không tồn tại.</h2><a href="bai-viet.html" class="back-to-news">← Quay lại trang bài viết</a>';
+              '<h2>Mục cẩm nang không tồn tại.</h2><a href="cam-nang.html" class="back-to-news">← Quay lại trang cẩm nang</a>';
           }
         } // end renderArticle
       });
