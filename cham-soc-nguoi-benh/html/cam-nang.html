@@ -229,7 +229,7 @@
               </button>
               <ul class="dropdown-menu dropdown-menu-end shadow border-0">
                 <li><a class="dropdown-item" href="khach_hang/profile.html" data-profile-modal data-profile-modal-src="khach_hang/profile.html">Sửa đổi thông tin</a></li>
-                <li><a class="dropdown-item" href="khach_hang/dshoadon.html" data-dashboard-modal data-dashboard-modal-src="khach_hang/dshoadon.html">Danh sách hóa đơn đã đặt</a></li>
+                <!-- <li><a class="dropdown-item" href="khach_hang/dshoadon.html" data-dashboard-modal data-dashboard-modal-src="khach_hang/dshoadon.html">Danh sách hóa đơn đã đặt</a></li> -->
                 <li><hr class="dropdown-divider"></li>
                 <li><a class="dropdown-item text-danger" href="../api/logout.php">Đăng xuất</a></li>
               </ul>
@@ -735,10 +735,15 @@
     renderArt(p);
     document.getElementById('list-view').style.display    = 'none';
     document.getElementById('article-view').style.display = 'block';
+    const seoKeywords = typeof p.keywords === 'string' && p.keywords.trim()
+      ? p.keywords.trim()
+      : Array.isArray(p.keywords) && p.keywords.length
+        ? p.keywords.join(', ')
+        : (p.tags || []).join(', ');
     // SEO update
-    document.getElementById('page-title').textContent = p.title + ' – Chăm Sóc  Người Bệnh';
+    document.getElementById('page-title').textContent = p.title + ' – Chăm Sóc Người Bệnh';
     document.getElementById('meta-desc').content      = p.excerpt;
-    document.getElementById('meta-kw').content        = (p.tags||[]).join(', ');
+    document.getElementById('meta-kw').content        = seoKeywords;
     document.getElementById('og-title').content       = p.title;
     document.getElementById('og-desc').content        = p.excerpt;
     document.getElementById('hero-title').textContent = p.title;
@@ -832,6 +837,10 @@
     document.getElementById('list-view').style.display    = 'block';
     document.getElementById('article-view').style.display = 'none';
     document.getElementById('page-title').textContent = 'Cẩm Nang Chăm Sóc  Người Bệnh – Kiến Thức   Toàn Diện';
+    document.getElementById('meta-desc').content      = 'Cẩm nang kiến thức chăm sóc người bệnh: dinh dưỡng, sức khỏe tâm lý, phục hồi chức năng, dịch vụ osin chuyên nghiệp tại nhà.';
+    document.getElementById('meta-kw').content        = 'chăm sóc người bệnh, dinh dưỡng người bệnh, phục hồi chức năng, osin chăm sóc người bệnh';
+    document.getElementById('og-title').content       = 'Cẩm Nang Chăm Sóc Người Bệnh';
+    document.getElementById('og-desc').content        = 'Kiến thức chăm sóc người bệnh toàn diện.';
     document.getElementById('hero-title').textContent = 'Cẩm Nang Chăm Sóc  Người Bệnh  ';
     document.getElementById('hero-sub').textContent   = '30 bài viết kiến thức chuyên sâu về chăm sóc  Người Bệnh , dinh dưỡng và phục hồi   — biên soạn bởi đội ngũ chuyên nghiệp.';
   }
@@ -861,5 +870,7 @@
     <script src="../JS/login-modal-loader.js"></script>
     <script src="../JS/lookup-modal-core.js"></script>
     <script src="../JS/lookup-modal-loader.js"></script>
+    <script src="../JS/profile-modal-core.js"></script>
+  <script src="../JS/profile-modal-loader.js"></script>
 </body>
 </html>
