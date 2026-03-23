@@ -154,6 +154,167 @@
     }
   }
 
+  const PROMO_POPUP_ALLOWED_PAGES = new Set([
+    "",
+    "index.html",
+    "dich-vu-giao-hang.html",
+    "tra-cuu-gia.html",
+  ]);
+  const PROMO_POPUP_STORAGE_KEY = "ghn_delivery_promo_popup_seen_date_v1";
+
+  function getVietnamDateToken() {
+    try {
+      return new Intl.DateTimeFormat("en-CA", {
+        timeZone: "Asia/Ho_Chi_Minh",
+        year: "numeric",
+        month: "2-digit",
+        day: "2-digit",
+      }).format(new Date());
+    } catch (error) {
+      const now = new Date();
+      const year = now.getFullYear();
+      const month = String(now.getMonth() + 1).padStart(2, "0");
+      const day = String(now.getDate()).padStart(2, "0");
+      return `${year}-${month}-${day}`;
+    }
+  }
+
+  function canUseLocalStorage() {
+    try {
+      const probeKey = "__ghn_promo_popup_probe__";
+      window.localStorage.setItem(probeKey, "1");
+      window.localStorage.removeItem(probeKey);
+      return true;
+    } catch (error) {
+      return false;
+    }
+  }
+
+  function shouldShowPromoPopup() {
+    if (!PROMO_POPUP_ALLOWED_PAGES.has(currentPage)) return false;
+    if (!canUseLocalStorage()) return true;
+    return (
+      window.localStorage.getItem(PROMO_POPUP_STORAGE_KEY) !==
+      getVietnamDateToken()
+    );
+  }
+
+  function markPromoPopupSeen() {
+    if (!canUseLocalStorage()) return;
+    try {
+      window.localStorage.setItem(
+        PROMO_POPUP_STORAGE_KEY,
+        getVietnamDateToken(),
+      );
+    } catch (error) {
+      console.warn("Không thể lưu trạng thái popup quảng cáo:", error);
+    }
+  }
+
+  function ensurePromoPopup(linkMap) {
+    const existing = document.getElementById("promo-popup-overlay");
+    if (existing) return existing;
+
+    const overlay = document.createElement("div");
+    overlay.id = "promo-popup-overlay";
+    overlay.className = "promo-popup-overlay";
+    overlay.setAttribute("role", "dialog");
+    overlay.setAttribute("aria-modal", "true");
+    overlay.setAttribute("aria-labelledby", "promo-popup-title");
+    overlay.innerHTML = `
+      <div class="promo-popup-card">
+        <button type="button" class="promo-popup-close" aria-label="Đóng thông báo">&times;</button>
+        <div class="promo-popup-body">
+          <div class="promo-popup-copy">
+            <span class="promo-popup-kicker">
+              <i class="fas fa-bolt"></i>
+              Ưu đãi nổi bật trong ngày
+            </span>
+            <h2 class="promo-popup-title" id="promo-popup-title">
+              Giao hàng <strong>rẻ hơn 30%</strong> so với các đơn vị giao hàng công nghệ khác
+            </h2>
+            <p class="promo-popup-desc">
+              Theo dõi đơn hàng theo thời gian thực trên bản đồ và chủ động nắm lộ trình giao nhận ngay trên website.
+            </p>
+            <div class="promo-popup-highlights">
+              <div class="promo-popup-chip">
+                <strong>Giá tham khảo dễ chốt</strong>
+                <span>Mức cước minh bạch, dễ so sánh cho nhu cầu giao nội thành hằng ngày.</span>
+              </div>
+              <div class="promo-popup-chip">
+                <strong>Theo dõi trực tuyến</strong>
+                <span>Cập nhật vị trí đơn hàng liên tục để bạn chủ động phối hợp lấy và giao hàng.</span>
+              </div>
+            </div>
+            <div class="promo-popup-actions">
+              <a href="${linkMap.pricing}" class="promo-popup-btn promo-popup-btn--primary" data-promo-link="pricing">
+                <i class="fas fa-tags"></i>
+                Tra giá ngay
+              </a>
+              <a href="${linkMap.booking}" class="promo-popup-btn promo-popup-btn--secondary" data-promo-link="booking">
+                <i class="fas fa-truck-fast"></i>
+                Đặt đơn nhanh
+              </a>
+            </div>
+            <div class="promo-popup-note">
+              Thông báo này chỉ hiển thị một lần trong ngày để tránh làm phiền bạn.
+            </div>
+          </div>
+          <div class="promo-popup-visual" aria-hidden="true">
+            <span class="promo-popup-live">Realtime Tracking</span>
+            <div class="promo-popup-map">
+              <span class="promo-popup-pin promo-popup-pin--start">
+                <i class="fas fa-box"></i>
+              </span>
+              <span class="promo-popup-pin promo-popup-pin--end">
+                <i class="fas fa-location-dot"></i>
+              </span>
+            </div>
+            <h3>Nhìn thấy hành trình đơn hàng</h3>
+            <p>
+              Theo dõi từ lúc lấy hàng đến khi giao xong ngay trên bản đồ.
+            </p>
+          </div>
+        </div>
+      </div>
+    `;
+
+    const closeBtn = overlay.querySelector(".promo-popup-close");
+    const dismiss = () => {
+      overlay.remove();
+      document.body.classList.remove("promo-popup-open");
+      document.removeEventListener("keydown", handleEscClose);
+    };
+    const handleEscClose = (event) => {
+      if (event.key === "Escape") {
+        dismiss();
+      }
+    };
+
+    closeBtn?.addEventListener("click", dismiss);
+    overlay.addEventListener("click", (event) => {
+      if (event.target === overlay) dismiss();
+    });
+    overlay.querySelectorAll("[data-promo-link]").forEach((link) => {
+      link.addEventListener("click", () => {
+        dismiss();
+      });
+    });
+
+    document.body.appendChild(overlay);
+    document.body.classList.add("promo-popup-open");
+    document.addEventListener("keydown", handleEscClose);
+    return overlay;
+  }
+
+  function maybeShowPromoPopup(linkMap) {
+    if (!shouldShowPromoPopup()) return;
+    markPromoPopupSeen();
+    window.setTimeout(() => {
+      ensurePromoPopup(linkMap);
+    }, 650);
+  }
+
   const headerHost = injectPartial("site-header", "header.html");
   const footerHost = injectPartial("site-footer", "footer.html");
   const linkMap = buildLinkMap();
@@ -162,6 +323,7 @@
   if (headerHost) applyActiveNav(headerHost);
   if (footerHost) applyLinks(footerHost, linkMap);
   applyFavicon();
+  maybeShowPromoPopup(linkMap);
 
   window.addEventListener("hashchange", function () {
     if (headerHost) applyActiveNav(headerHost);
