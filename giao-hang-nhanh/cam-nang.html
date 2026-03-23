@@ -2,14 +2,14 @@
 <html lang="vi">
   <head>
     <meta charset="UTF-8" />
-    <title>Bài viết & Hướng dẫn | Giao Hàng Nhanh</title>
+    <title>Cẩm nang | Giao Hàng Nhanh</title>
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <link rel="icon" type="image/x-icon" href="public/assets/images/favicon.ico" />
     <link rel="stylesheet" href="public/assets/css/styles.css" />
     <!-- FontAwesome 6.4.0 -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
-      /* CSS riêng cho trang tin tức */
+      /* CSS riêng cho trang cẩm nang */
       .news-grid {
         display: grid;
         grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
@@ -204,7 +204,7 @@
     <main class="container" style="padding-top: 100px; padding-bottom: 80px;">
 
       <div class="text-center mb-5">
-        <h2 class="section-title">Bài viết & Hướng dẫn</h2>
+        <h2 class="section-title">Cẩm nang</h2>
         <p class="section-desc">
           Tổng hợp các hướng dẫn, kinh nghiệm đóng gói và gửi hàng hiệu quả.
         </p>
@@ -278,7 +278,7 @@
           </div>
           <div class="filter-actions">
             <a
-              href="bai-viet.html"
+              href="cam-nang.html"
               id="clear-filter-button"
               style="
                 display: none;
@@ -317,7 +317,7 @@
       </div>
 
       <div class="news-grid">
-        <!-- Các bài viết sẽ được JS chèn vào đây -->
+        <!-- Các mục cẩm nang sẽ được JS chèn vào đây -->
       </div>
 
       <div id="pagination-controls" class="pagination"></div>
@@ -343,7 +343,7 @@
 
         let currentData = [];
         let currentPage = 1;
-        const itemsPerPage = 9; // Hiển thị 9 bài viết mỗi trang
+        const itemsPerPage = 9; // Hiển thị 9 mục cẩm nang mỗi trang
 
         // --- Helper Functions ---
         function parseDate(dateString) {
@@ -366,25 +366,25 @@
         function renderArticles(articles) {
           if (articles.length === 0) {
             newsGrid.innerHTML =
-              '<p style="text-align: center; color: #666; grid-column: 1 / -1;">Không tìm thấy bài viết nào phù hợp.</p>';
+              '<p style="text-align: center; color: #666; grid-column: 1 / -1;">Không tìm thấy mục cẩm nang nào phù hợp.</p>';
             return;
           }
           const articlesHtml = articles
             .map(
               (article) => `
             <article class="news-card">
-                <a href="bai-viet-chi-tiet.html?id=${article.id}">
+                <a href="cam-nang-chi-tiet.html?id=${article.id}">
                   <img src="${resolveArticleAssetPath(article.img)}" alt="${article.title}" class="news-img" />
                 </a>
                 <div class="news-content">
                     <span class="news-date">${article.date}</span>
                     <h3 class="news-title">
-                      <a href="bai-viet-chi-tiet.html?id=${article.id}" style="color: inherit; text-decoration: none;">
+                      <a href="cam-nang-chi-tiet.html?id=${article.id}" style="color: inherit; text-decoration: none;">
                         ${article.title}
                       </a>
                     </h3>
                     <p class="news-desc">${article.description}</p>
-                    <a href="bai-viet-chi-tiet.html?id=${article.id}" class="news-link">Xem chi tiết →</a>
+                    <a href="cam-nang-chi-tiet.html?id=${article.id}" class="news-link">Xem chi tiết →</a>
                 </div>
             </article>
         `,
@@ -555,7 +555,7 @@
             return searchMatch && categoryMatch && monthMatch && yearMatch;
           });
 
-          // Sắp xếp các bài viết đã lọc
+          // Sắp xếp các mục cẩm nang đã lọc
           filteredArticles.sort((a, b) => {
             const dateA = parseDate(a.date);
             const dateB = parseDate(b.date);
@@ -600,7 +600,7 @@
             filterButton.addEventListener("click", applyFilter);
             sortSelect.addEventListener("change", applyFilter);
           })
-          .catch(function(err) { console.error("Không thể tải dữ liệu bài viết:", err); });
+          .catch(function(err) { console.error("Không thể tải dữ liệu cẩm nang:", err); });
         // No need to add event listener for reset button, it's a link now.
       });
     </script>

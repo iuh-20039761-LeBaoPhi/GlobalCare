@@ -107,6 +107,12 @@ function clean_customer_note(?string $note): string
     return trim($clean);
 }
 
+function payer_label(array $order, array $payload): string
+{
+    $payer = $payload['fee_payer'] ?? $order['fee_payer'] ?? 'gui';
+    return $payer === 'nhan' ? 'Người nhận' : 'Người gửi';
+}
+
 if (!isset($_SESSION['user_id']) || ($_SESSION['role'] ?? '') !== 'admin') {
     header('Location: ../../index.html');
     exit;

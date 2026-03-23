@@ -60,42 +60,63 @@ loadHeader();
 <section class="py-4 bg-light" id="rental-search">
     <div class="container">
         <div class="card border-0 shadow-sm">
-            <div class="card-body p-4">
-                <div class="text-center mb-4">
+            <div class="card-body p-3 p-md-4">
+                <div class="text-center mb-3 mb-md-4">
                     <h2 class="fw-bold mb-1">Tìm Xe Nhanh</h2>
                     <p class="text-muted mb-0">Chọn bộ lọc để xem ngay danh sách xe phù hợp tại trang này</p>
                 </div>
                 <form id="serviceSearchForm">
-                    <div class="row g-3">
+                    <div class="row g-2 g-md-3">
                         <div class="col-md-3">
                             <label class="form-label small fw-medium mb-1">Hãng xe</label>
-                            <select class="form-select" id="serviceSearchBrand">
-                                <option value="">Tất cả hãng</option>
-                                <option value="Toyota">Toyota</option>
-                                <option value="Honda">Honda</option>
-                                <option value="Mazda">Mazda</option>
-                                <option value="Mitsubishi">Mitsubishi</option>
-                                <option value="Ford">Ford</option>
-                                <option value="VinFast">VinFast</option>
-                                <option value="Suzuki">Suzuki</option>
-                            </select>
+                            <div class="search-dropdown" id="dropBrand">
+                                <button type="button" class="search-dropdown-btn" aria-expanded="false">
+                                    <span class="search-dropdown-label">Tất cả hãng</span>
+                                    <i class="fas fa-chevron-down search-dropdown-arrow"></i>
+                                </button>
+                                <ul class="search-dropdown-menu">
+                                    <li data-value="">Tất cả hãng</li>
+                                    <li data-value="Toyota">Toyota</li>
+                                    <li data-value="Honda">Honda</li>
+                                    <li data-value="Mazda">Mazda</li>
+                                    <li data-value="Mitsubishi">Mitsubishi</li>
+                                    <li data-value="Ford">Ford</li>
+                                    <li data-value="VinFast">VinFast</li>
+                                    <li data-value="Suzuki">Suzuki</li>
+                                </ul>
+                                <input type="hidden" id="serviceSearchBrand" value="">
+                            </div>
                         </div>
                         <div class="col-md-3">
                             <label class="form-label small fw-medium mb-1">Số chỗ</label>
-                            <select class="form-select" id="serviceSearchSeats">
-                                <option value="">Tất cả</option>
-                                <option value="5">5 chỗ</option>
-                                <option value="7">7 chỗ</option>
-                            </select>
+                            <div class="search-dropdown" id="dropSeats">
+                                <button type="button" class="search-dropdown-btn" aria-expanded="false">
+                                    <span class="search-dropdown-label">Tất cả</span>
+                                    <i class="fas fa-chevron-down search-dropdown-arrow"></i>
+                                </button>
+                                <ul class="search-dropdown-menu">
+                                    <li data-value="">Tất cả</li>
+                                    <li data-value="5">5 chỗ</li>
+                                    <li data-value="7">7 chỗ</li>
+                                </ul>
+                                <input type="hidden" id="serviceSearchSeats" value="">
+                            </div>
                         </div>
                         <div class="col-md-3">
                             <label class="form-label small fw-medium mb-1">Khoảng giá</label>
-                            <select class="form-select" id="serviceSearchPrice">
-                                <option value="">Tất cả mức giá</option>
-                                <option value="0-500000">Dưới 500.000đ</option>
-                                <option value="500000-1000000">500.000 – 1.000.000đ</option>
-                                <option value="1000000">Trên 1.000.000đ</option>
-                            </select>
+                            <div class="search-dropdown" id="dropPrice">
+                                <button type="button" class="search-dropdown-btn" aria-expanded="false">
+                                    <span class="search-dropdown-label">Tất cả mức giá</span>
+                                    <i class="fas fa-chevron-down search-dropdown-arrow"></i>
+                                </button>
+                                <ul class="search-dropdown-menu">
+                                    <li data-value="">Tất cả mức giá</li>
+                                    <li data-value="0-500000">Dưới 500.000đ</li>
+                                    <li data-value="500000-1000000">500.000 – 1.000.000đ</li>
+                                    <li data-value="1000000">Trên 1.000.000đ</li>
+                                </ul>
+                                <input type="hidden" id="serviceSearchPrice" value="">
+                            </div>
                         </div>
                         <div class="col-md-3 d-flex align-items-end">
                             <button type="submit" class="btn btn-gradient w-100">
@@ -310,6 +331,116 @@ document.getElementById('serviceSearchForm').addEventListener('submit', function
             </div>`;
     });
 });
+</script>
+
+<style>
+.search-dropdown {
+    position: relative;
+    width: 100%;
+}
+.search-dropdown-btn {
+    width: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0.5rem 0.75rem;
+    background: #fff;
+    border: 1px solid #dee2e6;
+    border-radius: 0.375rem;
+    font-size: 1rem;
+    color: #212529;
+    cursor: pointer;
+    text-align: left;
+    transition: border-color 0.15s;
+}
+.search-dropdown-btn:focus {
+    outline: none;
+    border-color: var(--color-primary, #3b82f6);
+    box-shadow: 0 0 0 0.2rem rgba(59,130,246,.25);
+}
+.search-dropdown-arrow {
+    font-size: 0.75rem;
+    color: #6c757d;
+    transition: transform 0.2s;
+    flex-shrink: 0;
+}
+.search-dropdown.open .search-dropdown-arrow {
+    transform: rotate(180deg);
+}
+.search-dropdown-menu {
+    display: none;
+    position: absolute;
+    top: calc(100% + 2px);
+    left: 0;
+    width: 100%;
+    background: #fff;
+    border: 1px solid #dee2e6;
+    border-radius: 0.375rem;
+    box-shadow: 0 4px 12px rgba(0,0,0,.1);
+    list-style: none;
+    margin: 0;
+    padding: 0.25rem 0;
+    z-index: 1050;
+    max-height: 220px;
+    overflow-y: auto;
+}
+.search-dropdown.open .search-dropdown-menu {
+    display: block;
+}
+.search-dropdown-menu li {
+    padding: 0.5rem 0.75rem;
+    cursor: pointer;
+    color: #212529;
+    font-size: 0.95rem;
+    transition: background 0.15s;
+}
+.search-dropdown-menu li:hover,
+.search-dropdown-menu li.active {
+    background: #f0f6ff;
+    color: var(--color-primary, #3b82f6);
+}
+</style>
+
+<script>
+(function () {
+    function initSearchDropdown(wrapId, inputId) {
+        const wrap = document.getElementById(wrapId);
+        const input = document.getElementById(inputId);
+        if (!wrap || !input) return;
+        const btn = wrap.querySelector('.search-dropdown-btn');
+        const label = wrap.querySelector('.search-dropdown-label');
+        const menu = wrap.querySelector('.search-dropdown-menu');
+        const items = menu.querySelectorAll('li');
+
+        btn.addEventListener('click', function (e) {
+            e.stopPropagation();
+            const isOpen = wrap.classList.toggle('open');
+            btn.setAttribute('aria-expanded', isOpen);
+        });
+
+        items.forEach(function (li) {
+            li.addEventListener('click', function () {
+                items.forEach(function (x) { x.classList.remove('active'); });
+                li.classList.add('active');
+                label.textContent = li.textContent;
+                input.value = li.dataset.value;
+                wrap.classList.remove('open');
+                btn.setAttribute('aria-expanded', 'false');
+            });
+        });
+    }
+
+    document.addEventListener('click', function () {
+        document.querySelectorAll('.search-dropdown.open').forEach(function (d) {
+            d.classList.remove('open');
+            d.querySelector('.search-dropdown-btn').setAttribute('aria-expanded', 'false');
+        });
+    });
+
+    initSearchDropdown('dropBrand', 'serviceSearchBrand');
+    initSearchDropdown('dropSeats', 'serviceSearchSeats');
+    initSearchDropdown('dropPrice', 'serviceSearchPrice');
+})();
 </script>
 </body>
 </html>

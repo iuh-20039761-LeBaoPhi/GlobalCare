@@ -999,9 +999,10 @@ async function _bdLoadStandaloneServices() {
         });
     }
 
-    // Prefill từ URL param ?service=TênDịchVụ
+    // Prefill từ URL param ?service=TênDịchVụ hoặc window._BD_PREFILL_SERVICE (panel mode)
     const params = new URLSearchParams(window.location.search);
-    const svcParam = params.get('service');
+    const svcParam = params.get('service') || window._BD_PREFILL_SERVICE || '';
+    if (window._BD_PREFILL_SERVICE) window._BD_PREFILL_SERVICE = null; // dùng 1 lần
     if (svcParam) {
         const decoded = decodeURIComponent(svcParam);
         for (const cat of services) {

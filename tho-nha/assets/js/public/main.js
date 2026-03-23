@@ -44,7 +44,3 @@ window.addEventListener('scroll', function() {
         }
     });
 });
-//
-function goToServiceDetail(category) {
-    window.location.href = `chi-tiet-dich-vu.html?category=${category}`;
-}

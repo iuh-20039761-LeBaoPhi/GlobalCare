@@ -14,8 +14,8 @@ giao-hang-nhanh/
 ├── tra-cuu-gia.html                  # Trang tra cứu bảng giá
 ├── tra-don-hang.html                 # Trang tra cứu đơn hàng
 ├── dat-lich-giao-hang-nhanh.html     # Trang đặt lịch giao hàng
-├── bai-viet.html                     # Danh sách bài viết
-├── bai-viet-chi-tiet.html            # Chi tiết bài viết
+├── cam-nang.html                     # Danh sách cẩm nang
+├── cam-nang-chi-tiet.html            # Chi tiết cẩm nang
 ├── huong-dan-dat-hang.html           # Hướng dẫn đặt hàng
 ├── chinh-sach-van-chuyen.html        # Chính sách vận chuyển
 ├── chinh-sach-bao-mat.html           # Chính sách bảo mật
@@ -186,3 +186,4 @@ Phí = Phí cơ bản + Phí cân nặng + Phụ phí loại hàng + Phí COD + 
 | `landing_data_ajax.php` | Dữ liệu động cho landing page |
 | `forgot_password_ajax.php` | Đặt lại mật khẩu |
 | `webhook_payment.php` | Webhook nhận thông báo thanh toán tự động |
+

@@ -27,14 +27,14 @@
     { "key": "xe_tai", "label": "Xe tải nhẹ" }
   ],
   "khunggiolayhang": [
-    { "key": "sang_08_10", "label": "08:00 - 10:00", "start": "08:00", "end": "10:00", "phicodinh": 0, "heso": 1, "ghichu": "Khung giờ tiêu chuẩn, 3 gói thường không cộng phí thời gian" },
-    { "key": "sang_10_12", "label": "10:00 - 12:00", "start": "10:00", "end": "12:00", "phicodinh": 0, "heso": 1, "ghichu": "Khung giờ tiêu chuẩn, 3 gói thường không cộng phí thời gian" },
-    { "key": "trua_12_14", "label": "12:00 - 14:00", "start": "12:00", "end": "14:00", "phicodinh": 5000, "heso": 1, "ghichu": "Chỉ áp dụng phụ phí thời gian cho Giao Ngay Lập Tức" },
-    { "key": "chieu_14_16", "label": "14:00 - 16:00", "start": "14:00", "end": "16:00", "phicodinh": 0, "heso": 1, "ghichu": "Khung giờ tiêu chuẩn, 3 gói thường không cộng phí thời gian" },
-    { "key": "chieu_16_18", "label": "16:00 - 18:00", "start": "16:00", "end": "18:00", "phicodinh": 5000, "heso": 1, "ghichu": "Chỉ áp dụng phụ phí thời gian cho Giao Ngay Lập Tức" },
-    { "key": "toi_18_20", "label": "18:00 - 20:00", "start": "18:00", "end": "20:00", "phicodinh": 15000, "heso": 1.08, "ghichu": "Ngoài giờ hành chính, chỉ cộng riêng cho Giao Ngay Lập Tức" },
-    { "key": "dem_20_22", "label": "20:00 - 22:00", "start": "20:00", "end": "22:00", "phicodinh": 25000, "heso": 1.15, "ghichu": "Khung tối muộn, chỉ cộng riêng cho Giao Ngay Lập Tức" },
-    { "key": "dem_22_2359", "label": "22:00 - 23:59", "start": "22:00", "end": "23:59", "phicodinh": 30000, "heso": 1.18, "ghichu": "Khung đêm khuya, chỉ cộng riêng cho Giao Ngay Lập Tức" }
+    { "key": "sang_08_10", "label": "08:00 - 10:00", "start": "08:00", "end": "10:00", "phicodinh": 0, "heso": 1, "ghichu": "Khung giờ tiêu chuẩn, cả 4 gói áp dụng chung logic phụ phí dịch vụ" },
+    { "key": "sang_10_12", "label": "10:00 - 12:00", "start": "10:00", "end": "12:00", "phicodinh": 0, "heso": 1, "ghichu": "Khung giờ tiêu chuẩn, cả 4 gói áp dụng chung logic phụ phí dịch vụ" },
+    { "key": "trua_12_14", "label": "12:00 - 14:00", "start": "12:00", "end": "14:00", "phicodinh": 5000, "heso": 1, "ghichu": "Khung giờ bận, cả 4 gói cùng cộng phụ phí theo cấu hình" },
+    { "key": "chieu_14_16", "label": "14:00 - 16:00", "start": "14:00", "end": "16:00", "phicodinh": 0, "heso": 1, "ghichu": "Khung giờ tiêu chuẩn, cả 4 gói áp dụng chung logic phụ phí dịch vụ" },
+    { "key": "chieu_16_18", "label": "16:00 - 18:00", "start": "16:00", "end": "18:00", "phicodinh": 5000, "heso": 1, "ghichu": "Khung giờ bận, cả 4 gói cùng cộng phụ phí theo cấu hình" },
+    { "key": "toi_18_20", "label": "18:00 - 20:00", "start": "18:00", "end": "20:00", "phicodinh": 15000, "heso": 1.08, "ghichu": "Ngoài giờ hành chính, cả 4 gói cùng áp dụng phụ phí thời gian" },
+    { "key": "dem_20_22", "label": "20:00 - 22:00", "start": "20:00", "end": "22:00", "phicodinh": 25000, "heso": 1.15, "ghichu": "Khung tối muộn, cả 4 gói cùng áp dụng phụ phí thời gian" },
+    { "key": "dem_22_2359", "label": "22:00 - 23:59", "start": "22:00", "end": "23:59", "phicodinh": 30000, "heso": 1.18, "ghichu": "Khung đêm khuya, cả 4 gói cùng áp dụng phụ phí thời gian" }
   ],
   "dieukiengiaongap": [
     { "key": "macdinh", "label": "Bình thường", "ghichu": "Không cộng thêm phụ phí điều kiện giao" },

@@ -264,7 +264,7 @@
 
   function renderFeeBreakdownRows(breakdown, shippingFee) {
     const rows = [
-      { label: "Cước cơ bản", value: breakdown.base_price || 0 },
+      { label: "Phí vận chuyển", value: breakdown.base_price || 0 },
       { label: "Phí trọng lượng vượt mức", value: breakdown.overweight_fee || 0 },
       { label: "Phí thể tích", value: breakdown.volume_fee || 0 },
       { label: "Phụ phí loại hàng", value: breakdown.goods_fee || 0 },

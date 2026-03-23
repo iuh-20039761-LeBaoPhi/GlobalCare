@@ -34,38 +34,6 @@
     button.disabled = !!disabled;
   }
 
-  function buildBookingReturnPath(serviceType) {
-    const currentUrl = new URL(window.location.href);
-    currentUrl.searchParams.set("open_booking", "true");
-    const normalizedService = String(serviceType || "").trim().toLowerCase();
-    if (normalizedService) {
-      currentUrl.searchParams.set("service", normalizedService);
-    } else {
-      currentUrl.searchParams.delete("service");
-    }
-    return `${currentUrl.pathname}${currentUrl.search}`;
-  }
-
-  function renderAuthRequiredMessage(msgDiv, serviceType) {
-    if (!msgDiv) return;
-    const returnPath = buildBookingReturnPath(serviceType);
-    const loginUrl = `${core.toApiUrl("dang-nhap.html")}?redirect=${encodeURIComponent(returnPath)}`;
-    const registerUrl = `${core.toApiUrl("dang-ky.html")}?redirect=${encodeURIComponent(returnPath)}`;
-
-    msgDiv.style.display = "block";
-    msgDiv.className = "";
-    msgDiv.classList.add("error");
-    msgDiv.innerHTML = `
-      <div style="background:#fff7e6; border:1px solid #ffd48a; border-radius:8px; padding:14px;">
-        <p style="margin:0 0 10px; color:#7a4c00;"><strong>Bạn cần đăng nhập để xác nhận đặt đơn.</strong></p>
-        <div style="display:flex; gap:10px; flex-wrap:wrap;">
-          <a href="${loginUrl}" class="btn-primary" style="text-decoration:none; display:inline-flex; align-items:center; justify-content:center; min-width:120px;">Đăng nhập</a>
-          <a href="${registerUrl}" class="btn-secondary" style="text-decoration:none; display:inline-flex; align-items:center; justify-content:center; min-width:120px; color:#0a2a66; border-color:#0a2a66;">Đăng ký</a>
-        </div>
-      </div>
-    `;
-  }
-
   function validateOrderForm(form) {
     let isValid = true;
 
@@ -522,3 +490,34 @@
     window.scrollTo({ top: 0, behavior: "smooth" });
   };
 })(window, document);
+  function buildBookingReturnPath(serviceType) {
+    const currentUrl = new URL(window.location.href);
+    currentUrl.searchParams.set("open_booking", "true");
+    const normalizedService = String(serviceType || "").trim().toLowerCase();
+    if (normalizedService) {
+      currentUrl.searchParams.set("service", normalizedService);
+    } else {
+      currentUrl.searchParams.delete("service");
+    }
+    return `${currentUrl.pathname}${currentUrl.search}`;
+  }
+
+  function renderAuthRequiredMessage(msgDiv, serviceType) {
+    if (!msgDiv) return;
+    const returnPath = buildBookingReturnPath(serviceType);
+    const loginUrl = `${core.toApiUrl("dang-nhap.html")}?redirect=${encodeURIComponent(returnPath)}`;
+    const registerUrl = `${core.toApiUrl("dang-ky.html")}?redirect=${encodeURIComponent(returnPath)}`;
+
+    msgDiv.style.display = "block";
+    msgDiv.className = "";
+    msgDiv.classList.add("error");
+    msgDiv.innerHTML = `
+      <div style="background:#fff7e6; border:1px solid #ffd48a; border-radius:8px; padding:14px;">
+        <p style="margin:0 0 10px; color:#7a4c00;"><strong>Bạn cần đăng nhập để xác nhận đặt đơn.</strong></p>
+        <div style="display:flex; gap:10px; flex-wrap:wrap;">
+          <a href="${loginUrl}" class="btn-primary" style="text-decoration:none; display:inline-flex; align-items:center; justify-content:center; min-width:120px;">Đăng nhập</a>
+          <a href="${registerUrl}" class="btn-secondary" style="text-decoration:none; display:inline-flex; align-items:center; justify-content:center; min-width:120px; color:#0a2a66; border-color:#0a2a66;">Đăng ký</a>
+        </div>
+      </div>
+    `;
+  }
