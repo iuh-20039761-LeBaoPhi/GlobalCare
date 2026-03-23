@@ -14,8 +14,8 @@
     "chuyen-nha.html": "moving-house",
     "chuyen-kho-bai.html": "moving-warehouse",
     "chuyen-van-phong.html": "moving-office",
-    "tin-tuc.html": "news",
-    "chi-tiet-tin-tuc.html": "news",
+    "cam-nang.html": "news",
+    "cam-nang-chi-tiet.html": "news",
   };
 
   function loadPartial(url) {
@@ -77,21 +77,21 @@
       "moving-house": `${rootPath}public/chuyen-nha.html`,
       "moving-warehouse": `${rootPath}public/chuyen-kho-bai.html`,
       "moving-office": `${rootPath}public/chuyen-van-phong.html`,
-      "news": `${rootPath}public/tin-tuc.html`,
+      "news": `${rootPath}public/cam-nang.html`,
       "brandLogo": `${rootPath}public/assets/images/favicon.png`,
 
       // Các link đến dịch vụ khác trong footer
-      "svc-giao-hang-nhanh": `${externalServicePrefix}giao-hang-nhanh/`,
-      "svc-dich-vu-chuyen-don": `${externalServicePrefix}dich-vu-chuyen-don/`,
-      "svc-lau-don-ve-sinh": `${externalServicePrefix}dich-vu-don-ve-sinh/demo/`,
-      "svc-cham-soc-me-be": `${externalServicePrefix}cham-soc-me-va-be/`,
-      "svc-cham-soc-vuon": `${externalServicePrefix}cham-soc-vuon-nha/`,
-      "svc-giat-ui": `${externalServicePrefix}giat-ui-nhanh/`,
-      "svc-tho-nha": `${externalServicePrefix}tho-nha/`,
-      "svc-cham-soc-nguoi-gia": `${externalServicePrefix}cham-soc-nguoi-gia/`,
-      "svc-cham-soc-nguoi-benh": `${externalServicePrefix}cham-soc-nguoi-benh/`,
-      "svc-thue-xe": `${externalServicePrefix}thue-xe/`,
-      "svc-sua-xe": `${externalServicePrefix}sua-xe-luu-dong/`,
+      "svc-giao-hang-nhanh": `${externalServicePrefix}giao-hang-nhanh/dich-vu-giao-hang.html`,
+      "svc-dich-vu-chuyen-don": `${rootPath}index.html`,
+      "svc-lau-don-ve-sinh": `${externalServicePrefix}dich-vu-don-ve-sinh/demo/services.html`,
+      "svc-cham-soc-me-be": `${externalServicePrefix}cham-soc-me-va-be/dich-vu-cham-soc-me-be.html`,
+      "svc-cham-soc-vuon": `${externalServicePrefix}cham-soc-vuon-nha/dichvu.html`,
+      "svc-giat-ui": `${externalServicePrefix}giat-ui-nhanh/dich-vu.html`,
+      "svc-tho-nha": `${externalServicePrefix}tho-nha/pages/public/dich-vu.html`,
+      "svc-cham-soc-nguoi-gia": `${externalServicePrefix}cham-soc-nguoi-gia/dich-vu-cham-soc-nguoi-gia.html`,
+      "svc-cham-soc-nguoi-benh": `${externalServicePrefix}cham-soc-nguoi-benh/dich-vu-cham-soc-nguoi-benh.html`,
+      "svc-thue-xe": `${externalServicePrefix}thue-xe/views/pages/public/dich-vu.html`,
+      "svc-sua-xe": `${externalServicePrefix}sua-xe-luu-dong/dich-vu.html`,
     };
   }
 
