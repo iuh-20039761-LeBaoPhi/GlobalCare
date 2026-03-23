@@ -394,49 +394,46 @@
     <script src="../assets/js/shared/auth-nav.js"></script>
 
     <script>
-        // Base path cho fetch — từ partials/ cần lùi 1 cấp
-        window.BD_BASE = '../';
+        // Chỉ chạy khi truy cập trang dat-lich.html trực tiếp (standalone mode).
+        // Khi load qua jQuery vào panel, document.body là trang cha → không có class này.
+        if (document.body.classList.contains('dat-lich-standalone')) {
+            window.BD_BASE = '../';
 
-        fetch('../partials/dau-trang.html')
-            .then(r => r.text())
-            .then(html => {
-                document.getElementById('header-container').innerHTML = html;
-                // Fix tất cả đường dẫn src/href trong header cho ngữ cảnh partials/
-                // dau-trang.html được thiết kế cho pages/public/ (../../ = root)
-                // từ partials/ chỉ cần ../ để đến root → bỏ một cấp ../../ → ../
-                document.querySelectorAll('#header-container [src], #header-container [href]').forEach(el => {
-                    ['src', 'href'].forEach(attr => {
-                        const val = el.getAttribute(attr);
-                        if (!val || val.startsWith('http') || val.startsWith('/') || val.startsWith('#')) return;
-                        if (val.startsWith('../../')) {
-                            el.setAttribute(attr, val.replace(/^\.\.\/\.\.\//, '../'));
-                        } else if (val.startsWith('../')) {
-                            // ../customer/ → ../pages/customer/
-                            el.setAttribute(attr, val.replace(/^\.\.\//, '../pages/'));
-                        } else {
-                            // trang-chu.html → ../pages/public/trang-chu.html
-                            el.setAttribute(attr, '../pages/public/' + val);
-                        }
+            fetch('../partials/dau-trang.html')
+                .then(r => r.text())
+                .then(html => {
+                    document.getElementById('header-container').innerHTML = html;
+                    document.querySelectorAll('#header-container [src], #header-container [href]').forEach(el => {
+                        ['src', 'href'].forEach(attr => {
+                            const val = el.getAttribute(attr);
+                            if (!val || val.startsWith('http') || val.startsWith('/') || val.startsWith('#')) return;
+                            if (val.startsWith('../../')) {
+                                el.setAttribute(attr, val.replace(/^\.\.\/\.\.\//, '../'));
+                            } else if (val.startsWith('../')) {
+                                el.setAttribute(attr, val.replace(/^\.\.\//, '../pages/'));
+                            } else {
+                                el.setAttribute(attr, '../pages/public/' + val);
+                            }
+                        });
+                    });
+                    // Nút "Đặt Lịch" trên nav → scroll về form
+                    document.querySelectorAll('#header-container .booking-btn').forEach(btn => {
+                        btn.addEventListener('click', e => {
+                            e.preventDefault();
+                            e.stopImmediatePropagation();
+                            document.getElementById('bookingForm')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                        }, true);
+                    });
+                    window.addEventListener('scroll', () => {
+                        const navbar = document.querySelector('.navbar');
+                        if (navbar) navbar.classList.toggle('scrolled', window.scrollY > 50);
                     });
                 });
-                // Nút "Đặt Lịch" trên nav → scroll về form thay vì mở modal
-                document.querySelectorAll('#header-container [data-bs-target="#bookingModal"]').forEach(btn => {
-                    btn.removeAttribute('data-bs-toggle');
-                    btn.removeAttribute('data-bs-target');
-                    btn.addEventListener('click', e => {
-                        e.preventDefault();
-                        document.getElementById('bookingForm')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
-                    });
-                });
-                window.addEventListener('scroll', () => {
-                    const navbar = document.querySelector('.navbar');
-                    if (navbar) navbar.classList.toggle('scrolled', window.scrollY > 50);
-                });
-            });
 
-        fetch('../partials/chan-trang.html')
-            .then(r => r.text())
-            .then(html => { document.getElementById('footer-container').innerHTML = html; });
+            fetch('../partials/chan-trang.html')
+                .then(r => r.text())
+                .then(html => { document.getElementById('footer-container').innerHTML = html; });
+        }
     </script>
 
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
