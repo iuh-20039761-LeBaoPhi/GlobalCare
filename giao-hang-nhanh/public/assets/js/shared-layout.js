@@ -87,16 +87,6 @@
         }
       }
     });
-
-    const bookingLink = root.querySelector('[data-layout-link="booking"]');
-    if (bookingLink) {
-      bookingLink.addEventListener("click", function (event) {
-        if (typeof window.openBookingModal === "function") {
-          event.preventDefault();
-          window.openBookingModal();
-        }
-      });
-    }
   }
 
   function resolveActiveLinkKey() {

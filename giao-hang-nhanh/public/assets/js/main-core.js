@@ -45,8 +45,6 @@
       ? window.apiBasePath
       : publicBasePath;
 
-  let orderShippingBound = false;
-
   function toApiUrl(path) {
     if (!path) return path;
     if (/^(?:[a-z]+:)?\/\//i.test(path)) return path;
@@ -488,175 +486,6 @@
     };
   }
 
-  function calculateOrderShipping() {
-    const pickupInput = document.getElementById("pickup-addr");
-    const deliveryInput = document.getElementById("delivery-addr");
-    const serviceSelect = document.getElementById("order-service-type");
-    const pricePreview = document.getElementById("price-preview");
-    const feeDisplay = document.getElementById("shipping-fee-display");
-    const feeInput = document.getElementById("shipping-fee-input");
-
-    if (
-      !pickupInput ||
-      !deliveryInput ||
-      !serviceSelect ||
-      !pricePreview ||
-      !feeDisplay ||
-      !feeInput
-    ) {
-      return;
-    }
-
-    const pickupVal = pickupInput.value;
-    const deliveryVal = deliveryInput.value;
-    const serviceType = serviceSelect.value;
-    if (!String(serviceType || "").trim()) {
-      pricePreview.style.display = "none";
-      feeInput.value = 0;
-      return;
-    }
-    const weightInput = document.getElementById("weight");
-    const codInput = document.getElementById("cod_amount");
-    const weight = weightInput ? weightInput.value || 0 : 0;
-    const codRaw = codInput ? codInput.value || "" : "";
-    const codAmount = parseInt(String(codRaw).replace(/[^\d]/g, ""), 10) || 0;
-    const deliveryForm = document.getElementById("create-order-form");
-    const quantity =
-      deliveryForm?.querySelector("[name='quantity']")?.value || "1";
-    const length =
-      deliveryForm?.querySelector("[name='length']")?.value || "0";
-    const width = deliveryForm?.querySelector("[name='width']")?.value || "0";
-    const height =
-      deliveryForm?.querySelector("[name='height']")?.value || "0";
-    const insuranceValue =
-      deliveryForm?.querySelector("[name='insurance_value']")?.value || "0";
-    const itemType =
-      deliveryForm?.querySelector("[name='item_type']")?.value || "";
-    const packageType =
-      deliveryForm?.querySelector("[name='package_type']")?.value || "";
-    const fromCity =
-      deliveryForm?.querySelector("[name='pickup_city']")?.value || "";
-    const fromDistrict =
-      deliveryForm?.querySelector("[name='pickup_district']")?.value || "";
-    const toCity =
-      deliveryForm?.querySelector("[name='delivery_city']")?.value || "";
-    const toDistrict =
-      deliveryForm?.querySelector("[name='delivery_district']")?.value || "";
-    const intlCountry =
-      deliveryForm?.querySelector("[name='intl_country']")?.value || "";
-    const intlProvince =
-      deliveryForm?.querySelector("[name='intl_province']")?.value || "";
-    const isIntlService = isInternationalServiceType(serviceType);
-
-    if (pickupVal.length > 5 && deliveryVal.length > 5) {
-      if (isIntlService && !intlCountry) {
-        pricePreview.style.display = "none";
-        feeInput.value = 0;
-        return;
-      }
-      const feeDetails = getShippingFeeDetails(
-        serviceType,
-        weight,
-        codAmount,
-        pickupVal,
-        deliveryVal,
-        {
-          quantity,
-          length,
-          width,
-          height,
-          insuranceValue,
-          itemType,
-          packageType,
-          fromCity,
-          fromDistrict,
-          toCity,
-          toDistrict,
-          intlCountry,
-          intlProvince,
-        },
-      );
-
-      const selectedCard = document.querySelector(
-        ".order-service-package.is-selected",
-      );
-      if (selectedCard) {
-        const cardTotalText =
-          selectedCard.querySelector(".quote-service-total strong")
-            ?.innerText || "";
-        const cardTotal =
-          parseInt(cardTotalText.replace(/[^0-9]/g, ""), 10) || 0;
-        if (cardTotal > 0) {
-          pricePreview.style.display = "block";
-          feeDisplay.innerText = cardTotal.toLocaleString("vi-VN") + "đ";
-          feeInput.value = cardTotal;
-          return;
-        }
-      }
-
-      if (feeDetails.isContactPrice) {
-        pricePreview.style.display = "block";
-        feeDisplay.innerText = "Liên hệ";
-        feeInput.value = 0;
-        return;
-      }
-
-      pricePreview.style.display = "block";
-      feeDisplay.innerText = feeDetails.total.toLocaleString("vi-VN") + "đ";
-      feeInput.value = feeDetails.total;
-    } else {
-      pricePreview.style.display = "none";
-      feeInput.value = 0;
-    }
-  }
-
-  function bindOrderShippingInputs() {
-    if (orderShippingBound) return;
-
-    const deliveryForm = document.getElementById("create-order-form");
-    const baseInputs = [
-      document.getElementById("pickup-addr"),
-      document.getElementById("delivery-addr"),
-      document.getElementById("order-service-type"),
-      document.getElementById("weight"),
-      document.getElementById("cod_amount"),
-      document.getElementById("pickup-city"),
-      document.getElementById("pickup-district"),
-      document.getElementById("delivery-city"),
-      document.getElementById("delivery-district"),
-      document.getElementById("delivery-intl-country"),
-      document.getElementById("delivery-intl-province"),
-    ];
-    const extraInputs = deliveryForm
-      ? [
-          "quantity",
-          "length",
-          "width",
-          "height",
-          "insurance_value",
-          "item_type",
-          "package_type",
-          "pickup_city",
-          "pickup_district",
-          "delivery_city",
-          "delivery_district",
-          "intl_country",
-          "intl_province",
-        ].map((name) => deliveryForm.querySelector(`[name="${name}"]`))
-      : [];
-
-    const orderInputs = [...baseInputs, ...extraInputs].filter(Boolean);
-
-    if (!orderInputs.length) return;
-
-    orderInputs.forEach((input) => {
-      input.addEventListener("input", calculateOrderShipping);
-      input.addEventListener("change", calculateOrderShipping);
-    });
-    calculateOrderShipping();
-    orderShippingBound = true;
-  }
-
   window.GiaoHangNhanhCore = {
     inPublicDir,
     apiBasePath,
@@ -673,10 +502,7 @@
     escapeHtml,
     showToast,
     getShippingFeeDetails,
-    calculateOrderShipping,
-    bindOrderShippingInputs,
   };
 
   window.getShippingFeeDetails = getShippingFeeDetails;
-  window.calculateOrderShipping = calculateOrderShipping;
 })(window);
