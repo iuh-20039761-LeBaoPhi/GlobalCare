@@ -531,7 +531,7 @@ textarea.form-control {
 }
 
 /* --- Map --- */
-#map {
+#ban_do_giao_hang {
   height: 380px;
   border-radius: 10px;
   border: 2px solid #e2e8f0;
@@ -954,8 +954,8 @@ textarea.form-control {
   background: #f1f5f9;
 }
 
-#preview-image,
-#preview-video {
+#xem_truoc_anh_hang_hoa,
+#xem_truoc_video_hang_hoa {
   max-width: 100%;
   max-height: 200px;
   margin-top: 14px;
@@ -1014,8 +1014,8 @@ textarea.form-control {
   min-width: 0;
 }
 
-#weather-surcharge-panel .panel-summary,
-#weather-surcharge-panel .weather-surcharge-meta {
+#bang_phu_phi_thoi_tiet .panel-summary,
+#bang_phu_phi_thoi_tiet .weather-surcharge-meta {
   display: none;
 }
 
@@ -1106,18 +1106,18 @@ textarea.form-control {
   margin: 0 0 10px;
 }
 
-#rv-price-breakdown .rv-row {
+#xac_nhan_chi_tiet_gia .rv-row {
   display: grid;
   grid-template-columns: minmax(0, 1fr) auto;
   align-items: start;
   gap: 10px;
 }
 
-#rv-price-breakdown .rv-label {
+#xac_nhan_chi_tiet_gia .rv-label {
   min-width: 0;
 }
 
-#rv-price-breakdown .rv-val {
+#xac_nhan_chi_tiet_gia .rv-val {
   text-align: right;
   white-space: nowrap;
 }
@@ -1262,7 +1262,7 @@ textarea.form-control {
   .address-search-wrap {
     margin-bottom: 10px;
   }
-  #map {
+  #ban_do_giao_hang {
     height: 300px;
     border-width: 1px;
     margin-bottom: 8px;
@@ -1307,7 +1307,7 @@ textarea.form-control {
     align-items: flex-start;
     gap: 2px;
   }
-  #rv-price-breakdown .rv-row {
+  #xac_nhan_chi_tiet_gia .rv-row {
     display: grid;
     grid-template-columns: minmax(0, 1fr) auto;
     align-items: start;
@@ -1394,7 +1394,7 @@ textarea.form-control {
   .rv-val {
     text-align: left;
   }
-  #rv-price-breakdown .rv-val {
+  #xac_nhan_chi_tiet_gia .rv-val {
     text-align: right;
   }
   .rv-total-row {

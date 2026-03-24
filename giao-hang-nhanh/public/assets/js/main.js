@@ -7,7 +7,6 @@
   const modulePaths = [
     "main-core.js",
     "modules/main-navigation.js",
-    "modules/main-order.js",
     "modules/main-tracking.js",
     "modules/main-landing.js",
   ];
