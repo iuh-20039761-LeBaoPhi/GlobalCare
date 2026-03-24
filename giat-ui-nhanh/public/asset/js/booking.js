@@ -1534,6 +1534,26 @@ function initBookingConfirmFlow() {
     showBookingStep();
   }
 
+  function showBookingSuccessFeedback() {
+    const toastEl = document.getElementById("successToast");
+    if (
+      !toastEl ||
+      !window.bootstrap ||
+      typeof bootstrap.Toast !== "function"
+    ) {
+      alert("Đặt dịch vụ thành công! Chúng tôi sẽ liên hệ sớm.");
+      return;
+    }
+
+    const toastBody = toastEl.querySelector(".toast-body");
+    if (toastBody) {
+      toastBody.textContent =
+        "Đặt dịch vụ thành công! Chúng tôi sẽ liên hệ sớm.";
+    }
+
+    bootstrap.Toast.getOrCreateInstance(toastEl).show();
+  }
+
   function handleConfirmSubmit() {
     const { data } = collectBookingData();
     const originalText = confirmBtn.textContent;
@@ -1571,9 +1591,7 @@ function initBookingConfirmFlow() {
         bootstrap.Modal.getOrCreateInstance(confirmModalEl).hide();
         hideBookingStep();
 
-        alert(
-          "Đặt dịch vụ thành công! Chúng tôi sẽ liên hệ với bạn trong thời gian sớm nhất.",
-        );
+        showBookingSuccessFeedback();
 
         form.reset();
         clearConfirmMedia();
