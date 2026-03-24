@@ -70,12 +70,11 @@ giao-hang-nhanh/
     │   │   ├── base/                 # reset, typography, global
     │   │   ├── components/           # buttons, forms, modal, cards, ui-kit
     │   │   ├── layout/               # header, footer, navigation
-    │   │   └── pages/               # landing, auth, dashboard
+    │   │   └── pages/                # landing, auth, dashboard
     │   ├── js/
     │   │   ├── main.js               # Bootstrap loader — load dynamic modules
     │   │   ├── main-core.js          # Core utilities (tính phí, toast, field error)
     │   │   ├── shared-layout.js      # Inject header/footer, quản lý nav active
-    │   │   ├── shared-modals.js      # Modal hệ thống (booking, notifications)
     │   │   ├── pricing-data.js       # Dữ liệu & logic tính cước (nội địa + quốc tế)
     │   │   ├── dat-lich.js           # Logic trang đặt lịch (bản đồ Leaflet)
     │   │   ├── service-catalog.js    # Danh mục dịch vụ
@@ -83,11 +82,8 @@ giao-hang-nhanh/
     │   │   └── modules/
     │   │       ├── main-navigation.js   # Điều hướng và mobile menu
     │   │       ├── main-landing.js      # Logic form tính cước trang chủ
-    │   │       ├── main-order.js        # Xử lý submit đơn hàng
     │   │       └── main-tracking.js     # Tra cứu & hủy đơn hàng
-    │   ├── images/
-    │   └── partials/
-    │       └── shared-modals.html    # HTML modal dùng chung
+    │   └── images/
     ├── data/
     │   ├── pricing-data.json        # Dữ liệu bảng giá
     │   ├── form-dat-hang.json       # Cấu hình form đặt đơn
@@ -111,7 +107,6 @@ giao-hang-nhanh/
     ├── login_ajax.php               # API đăng nhập
     ├── logout.php                   # Đăng xuất
     ├── notifications.php            # Trang thông báo
-    ├── order.php                    # Xử lý tạo đơn
     ├── register.php                 # Xử lý đăng ký server-side
     ├── register_ajax.php            # API đăng ký
     ├── tracking.php                 # Tra cứu đơn (server-side)
@@ -155,7 +150,7 @@ giao-hang-nhanh/
 ### JS Module System
 `main.js` là **bootstrap loader** — tự động load tuần tự các module:
 ```
-main-core.js → main-navigation.js → main-order.js → main-tracking.js → main-landing.js
+main-core.js → main-navigation.js → main-tracking.js → main-landing.js
 ```
 Mỗi module có guard `if (window.__flag) return;` để tránh load lại.
 

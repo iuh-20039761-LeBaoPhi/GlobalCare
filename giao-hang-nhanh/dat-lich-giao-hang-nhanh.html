@@ -21,35 +21,35 @@
 
     <div class="booking-container">
       <!-- Step Indicator -->
-      <div class="step-indicator" id="step-indicator">
-        <div class="step-item active" id="ind-1">
+      <div class="step-indicator" id="tien_do_buoc">
+        <div class="step-item active" id="chi_bao_buoc_1">
           <div class="step-circle">1</div>
           <div class="step-label">Liên hệ & Địa chỉ</div>
         </div>
-        <div class="step-item" id="ind-2">
+        <div class="step-item" id="chi_bao_buoc_2">
           <div class="step-circle">2</div>
           <div class="step-label">Hàng hóa</div>
         </div>
-        <div class="step-item" id="ind-3">
+        <div class="step-item" id="chi_bao_buoc_3">
           <div class="step-circle">3</div>
           <div class="step-label">Lịch trình & Gói cước</div>
         </div>
-        <div class="step-item" id="ind-4">
+        <div class="step-item" id="chi_bao_buoc_4">
           <div class="step-circle">4</div>
           <div class="step-label">Thanh toán</div>
         </div>
-        <div class="step-item" id="ind-5">
+        <div class="step-item" id="chi_bao_buoc_5">
           <div class="step-circle">5</div>
           <div class="step-label">Xác nhận</div>
         </div>
       </div>
 
       <!-- ============== BƯỚC 1: Liên hệ & Địa chỉ ============== -->
-      <div class="booking-card active" id="step-1">
+      <div class="booking-card active" id="buoc_1">
         <div class="card-title">
           <i class="fas fa-address-card"></i> Bước 1: Liên hệ & địa chỉ
         </div>
-        <div class="step-error" id="error-step-1">
+        <div class="step-error" id="loi_buoc_1">
           <i class="fas fa-exclamation-circle"></i>
           <span class="error-text"></span>
         </div>
@@ -121,7 +121,7 @@
               >
               <button
                 type="button"
-                id="btn-get-location"
+                id="btn_lay_vi_tri_hien_tai"
                 style="
                   background: none;
                   border: none;
@@ -142,7 +142,7 @@
               name="dia_chi_lay_hang"
               autocomplete="off"
             />
-            <div class="suggestions-box" id="sug-pickup"></div>
+            <div class="suggestions-box" id="goi_y_dia_chi_lay_hang"></div>
           </div>
           <div class="address-search-wrap">
             <span class="address-search-label"
@@ -156,7 +156,7 @@
               name="dia_chi_giao_hang"
               autocomplete="off"
             />
-            <div class="suggestions-box" id="sug-delivery"></div>
+            <div class="suggestions-box" id="goi_y_dia_chi_giao_hang"></div>
           </div>
         </div>
 
@@ -174,31 +174,31 @@
             <span>Ghim đỏ: Điểm giao hàng</span>
           </div>
         </div>
-        <div id="map"></div>
+        <div id="ban_do_giao_hang"></div>
         <div style="margin-top: 12px; margin-bottom: 24px">
           <span
             class="distance-badge"
-            id="distance-badge"
+            id="thong_tin_khoang_cach"
             style="display: none"
           >
             <i class="fas fa-route"></i> Khoảng cách:
-            <span id="distance-km">0</span> km
+            <span id="gia_tri_khoang_cach_km">0</span> km
           </span>
         </div>
 
         <div class="btn-row">
-          <button type="button" class="btn-next" id="btn-1-to-2">
+          <button type="button" class="btn-next" id="btn_buoc_1_sang_2">
             Tiếp theo: Hàng hóa <i class="fas fa-arrow-right"></i>
           </button>
         </div>
       </div>
 
       <!-- ============== BƯỚC 2: Hàng hóa ============== -->
-      <div class="booking-card" id="step-2">
+      <div class="booking-card" id="buoc_2">
         <div class="card-title">
           <i class="fas fa-box-open"></i> Bước 2: Thông tin Hàng hóa
         </div>
-        <div class="step-error" id="error-step-2">
+        <div class="step-error" id="loi_buoc_2">
           <i class="fas fa-exclamation-circle"></i>
           <span class="error-text"></span>
         </div>
@@ -206,17 +206,17 @@
         <div class="section-shell section-shell--items">
           <div class="items-header">
             <h3><i class="fas fa-boxes-stacked"></i> Danh sách hàng hóa</h3>
-            <button type="button" class="btn-add" id="btn-add-item">
+            <button type="button" class="btn-add" id="btn_them_hang_hoa">
               <i class="fas fa-plus"></i> Thêm món hàng
             </button>
           </div>
-          <div id="items-list"></div>
+          <div id="danh_sach_hang_hoa"></div>
           <div class="items-summary">
             <span style="font-size: 13px; color: #64748b"
               >Tổng trọng lượng tính cước:</span
             >
             <span
-              id="total-weight-display"
+              id="hien_thi_tong_can_nang"
               style="font-size: 18px; font-weight: 800; color: #0a2a66"
               >0.0 kg</span
             >
@@ -284,10 +284,10 @@
               id="hinh_anh_hang_hoa"
               name="hinh_anh_hang_hoa"
               style="display: none"
-              onchange="previewUpload('image')"
+              onchange="xem_truoc_tai_len('anh')"
             />
-            <img id="preview-image" src="" alt="Xem trước ảnh gói hàng" />
-            <div class="upload-meta" id="image-upload-meta">
+            <img id="xem_truoc_anh_hang_hoa" src="" alt="Xem trước ảnh gói hàng" />
+            <div class="upload-meta" id="thong_tin_tai_len_anh">
               Chưa có ảnh nào được chọn.
             </div>
           </div>
@@ -306,10 +306,10 @@
               id="video_hang_hoa"
               name="video_hang_hoa"
               style="display: none"
-              onchange="previewUpload('video')"
+              onchange="xem_truoc_tai_len('video')"
             />
-            <video id="preview-video" controls preload="metadata"></video>
-            <div class="upload-meta" id="video-upload-meta">
+            <video id="xem_truoc_video_hang_hoa" controls preload="metadata"></video>
+            <div class="upload-meta" id="thong_tin_tai_len_video">
               Chưa có video nào được chọn.
             </div>
           </div>
@@ -325,21 +325,21 @@
         </div>
 
         <div class="btn-row">
-          <button type="button" class="btn-prev" onclick="goToStep(1)">
+          <button type="button" class="btn-prev" onclick="chuyen_den_buoc(1)">
             <i class="fas fa-arrow-left"></i> Quay lại
           </button>
-          <button type="button" class="btn-next" id="btn-2-to-3">
+          <button type="button" class="btn-next" id="btn_buoc_2_sang_3">
             Tiếp theo: Lịch trình <i class="fas fa-arrow-right"></i>
           </button>
         </div>
       </div>
 
       <!-- ============== BƯỚC 3: Lịch trình ============== -->
-      <div class="booking-card" id="step-3">
+      <div class="booking-card" id="buoc_3">
         <div class="card-title">
           <i class="fas fa-calendar-clock"></i> Bước 3: Lịch trình & Gói cước
         </div>
-        <div class="step-error" id="error-step-3">
+        <div class="step-error" id="loi_buoc_3">
           <i class="fas fa-exclamation-circle"></i>
           <span class="error-text"></span>
         </div>
@@ -359,7 +359,7 @@
             <option value="standard">Giao hàng tiêu chuẩn</option>
           </select>
           <p
-            id="package-hint"
+            id="goi_y_goi_cuoc"
             style="font-size: 12px; color: #64748b; margin-top: 6px"
           >
             Thời gian nhận hàng sẽ do hệ thống phân bổ theo lộ trình (khoảng vài
@@ -367,7 +367,7 @@
           </p>
         </div>
 
-        <div id="scheduled-flow">
+        <div id="luong_lich_hen">
           <div class="form-grid schedule-grid">
             <div class="form-group">
               <label><i class="fas fa-calendar-day"></i> Ngày lấy hàng</label>
@@ -381,7 +381,7 @@
 
           <!-- Đã gỡ bỏ ngày / khung giờ nhận mong muốn -->
 
-          <div class="eta-panel is-hidden" id="turnaround-panel">
+          <div class="eta-panel is-hidden" id="bang_thoi_gian_xu_ly">
             <p
               style="
                 font-size: 14px;
@@ -393,13 +393,13 @@
               <i class="fas fa-stopwatch"></i> Khoảng thời gian từ lấy đến giao:
             </p>
             <div
-              id="turnaround-display"
+              id="hien_thi_thoi_gian_xu_ly"
               style="font-size: 22px; font-weight: 800; color: #9a3412"
             >
               —
             </div>
             <p
-              id="turnaround-hint"
+              id="goi_y_thoi_gian_xu_ly"
               style="font-size: 12px; color: #64748b; margin: 6px 0 0"
             >
               Hệ thống dùng khoảng này để kiểm tra gói nào giao kịp và gói nào
@@ -407,9 +407,9 @@
             </p>
           </div>
 
-          <div class="schedule-estimate is-hidden" id="storage-note-panel">
+          <div class="schedule-estimate is-hidden" id="bang_goi_y_luu_kho">
             <strong><i class="fas fa-box-archive"></i> Gợi ý lưu kho:</strong>
-            <span id="storage-note-text"
+            <span id="noi_dung_goi_y_luu_kho"
               >Nếu khách cần giao xa ngày lấy, hệ thống có thể lưu kho và giao
               đúng hẹn.</span
             >
@@ -418,7 +418,7 @@
 
         <div
           class="vehicle-choice-panel vehicle-choice-panel--compact is-hidden"
-          id="weather-surcharge-panel"
+          id="bang_phu_phi_thoi_tiet"
           style="margin-top: 16px"
         >
           <div class="panel-heading">
@@ -431,22 +431,22 @@
               >
                 i
               </summary>
-              <div class="info-toggle__content" id="weather-surcharge-hint">
+              <div class="info-toggle__content" id="goi_y_phu_phi_thoi_tiet">
                 Khách hàng không cần chọn tay. Nếu hệ thống chưa lấy được dữ
                 liệu thời tiết, điều phối sẽ xác nhận bổ sung khi cần. Mức đang
                 hiển thị là giá tham khảo.
               </div>
             </details>
           </div>
-          <p class="panel-summary" id="weather-surcharge-desc">
+          <p class="panel-summary" id="mo_ta_phu_phi_thoi_tiet">
             Hệ thống đang kiểm tra thời tiết tại điểm lấy hàng để áp dụng phụ
             phí phù hợp.
           </p>
           <div class="weather-surcharge-summary">
-            <span class="weather-surcharge-badge" id="weather-surcharge-badge"
+            <span class="weather-surcharge-badge" id="huy_hieu_phu_phi_thoi_tiet"
               >Đang kiểm tra</span
             >
-            <span class="weather-surcharge-meta" id="weather-surcharge-meta"
+            <span class="weather-surcharge-meta" id="thong_tin_phu_phi_thoi_tiet"
               >Hệ thống sẽ tự kiểm tra dữ liệu thời tiết để tính phụ phí nếu cần.</span
             >
           </div>
@@ -481,13 +481,13 @@
           </select>
         </div>
 
-        <div id="service-list">
+        <div id="danh_sach_dich_vu">
           <div class="quote-loading">
             <i class="fas fa-spinner fa-spin"></i> Đang tính cước phí...
           </div>
         </div>
 
-        <div class="eta-panel is-hidden" id="eta-panel">
+        <div class="eta-panel is-hidden" id="bang_thoi_gian_giao_du_kien">
           <p
             style="
               font-size: 14px;
@@ -500,7 +500,7 @@
             gói:
           </p>
           <div
-            id="eta-display"
+            id="hien_thi_thoi_gian_giao_du_kien"
             style="font-size: 22px; font-weight: 800; color: #0a2a66"
           >
             —
@@ -513,21 +513,21 @@
         </div>
 
         <div class="btn-row">
-          <button type="button" class="btn-prev" onclick="goToStep(2)">
+          <button type="button" class="btn-prev" onclick="chuyen_den_buoc(2)">
             <i class="fas fa-arrow-left"></i> Quay lại
           </button>
-          <button type="button" class="btn-next" id="btn-3-to-4">
+          <button type="button" class="btn-next" id="btn_buoc_3_sang_4">
             Tiếp theo: Thanh toán <i class="fas fa-arrow-right"></i>
           </button>
         </div>
       </div>
 
       <!-- ============== BƯỚC 4: Thanh toán ============== -->
-      <div class="booking-card" id="step-4">
+      <div class="booking-card" id="buoc_4">
         <div class="card-title">
           <i class="fas fa-wallet"></i> Bước 4: Thanh toán
         </div>
-        <div class="step-error" id="error-step-4">
+        <div class="step-error" id="loi_buoc_4">
           <i class="fas fa-exclamation-circle"></i>
           <span class="error-text"></span>
         </div>
@@ -536,18 +536,18 @@
           <h3 class="choice-title">
             <i class="fas fa-user-tag"></i> Người trả cước
           </h3>
-          <div class="option-group option-group--compact" id="payer-group">
+          <div class="option-group option-group--compact" id="nhom_nguoi_tra_cuoc">
             <div
               class="option-btn active"
               data-val="gui"
-              onclick="selectOption('payer-group', this)"
+              onclick="chon_tuy_chon('nhom_nguoi_tra_cuoc', this)"
             >
               <i class="fas fa-paper-plane"></i>Người Gửi
             </div>
             <div
               class="option-btn"
               data-val="nhan"
-              onclick="selectOption('payer-group', this)"
+              onclick="chon_tuy_chon('nhom_nguoi_tra_cuoc', this)"
             >
               <i class="fas fa-hand-holding-box"></i>Người Nhận
             </div>
@@ -559,18 +559,18 @@
           <h3 class="choice-title">
             <i class="fas fa-wallet"></i> Phương thức thanh toán
           </h3>
-          <div class="option-group option-group--compact" id="payment-group">
+          <div class="option-group option-group--compact" id="nhom_phuong_thuc_thanh_toan">
             <div
               class="option-btn active"
               data-val="tien_mat"
-              onclick="selectOption('payment-group', this)"
+              onclick="chon_tuy_chon('nhom_phuong_thuc_thanh_toan', this)"
             >
               <i class="fas fa-money-bill"></i>Tiền mặt
             </div>
             <div
               class="option-btn"
               data-val="chuyen_khoan"
-              onclick="selectOption('payment-group', this)"
+              onclick="chon_tuy_chon('nhom_phuong_thuc_thanh_toan', this)"
             >
               <i class="fas fa-qrcode"></i>Chuyển khoản
             </div>
@@ -579,13 +579,13 @@
         </div>
 
         <div class="btn-row">
-          <button type="button" class="btn-prev" onclick="goToStep(3)">
+          <button type="button" class="btn-prev" onclick="chuyen_den_buoc(3)">
             <i class="fas fa-arrow-left"></i> Quay lại
           </button>
           <button
             type="button"
             class="btn-next orange"
-            id="btn-4-to-5"
+            id="btn_buoc_4_sang_5"
             disabled
           >
             Xem lại đơn hàng <i class="fas fa-check"></i>
@@ -594,11 +594,11 @@
       </div>
 
       <!-- ============== BƯỚC 5: Xác nhận ============== -->
-      <div class="booking-card" id="step-5">
+      <div class="booking-card" id="buoc_5">
         <div class="card-title">
           <i class="fas fa-clipboard-check"></i> Bước 5: Xác nhận Đơn hàng
         </div>
-        <div class="step-error" id="error-step-5">
+        <div class="step-error" id="loi_buoc_5">
           <i class="fas fa-exclamation-circle"></i>
           <span class="error-text"></span>
         </div>
@@ -607,30 +607,30 @@
           <h4><i class="fas fa-address-book"></i> Thông tin Liên hệ</h4>
           <div class="rv-row">
             <span class="rv-label">Người gửi:</span
-            ><span class="rv-val" id="rv-sender"></span>
+            ><span class="rv-val" id="xac_nhan_nguoi_gui"></span>
           </div>
           <div class="rv-row">
             <span class="rv-label">Người nhận:</span
-            ><span class="rv-val" id="rv-receiver"></span>
+            ><span class="rv-val" id="xac_nhan_nguoi_nhan"></span>
           </div>
           <div class="rv-row">
             <span class="rv-label">Lấy hàng tại:</span
-            ><span class="rv-val" id="rv-pickup-addr"></span>
+            ><span class="rv-val" id="xac_nhan_dia_chi_lay_hang"></span>
           </div>
           <div class="rv-row">
             <span class="rv-label">Giao hàng đến:</span
-            ><span class="rv-val" id="rv-delivery-addr"></span>
+            ><span class="rv-val" id="xac_nhan_dia_chi_giao_hang"></span>
           </div>
           <div class="rv-row">
             <span class="rv-label">Khoảng cách:</span
-            ><span class="rv-val" id="rv-distance"></span>
+            ><span class="rv-val" id="xac_nhan_khoang_cach"></span>
           </div>
         </div>
 
         <div class="review-section">
           <h4><i class="fas fa-boxes-stacked"></i> Hàng hóa & Đóng gói</h4>
           <div
-            id="rv-items-container"
+            id="xac_nhan_danh_sach_hang_hoa"
             style="
               display: flex;
               flex-direction: column;
@@ -647,42 +647,42 @@
             "
           >
             <span class="rv-label">Giá trị thu hộ (COD):</span>
-            <span class="rv-val" id="rv-cod"></span>
+            <span class="rv-val" id="xac_nhan_gia_tri_thu_ho_cod"></span>
           </div>
           <div class="rv-row">
             <span class="rv-label">Ghi chú vận chuyển:</span
-            ><span class="rv-val" id="rv-notes"></span>
+            ><span class="rv-val" id="xac_nhan_ghi_chu_tai_xe"></span>
           </div>
         </div>
 
         <div class="review-section">
           <h4><i class="fas fa-photo-film"></i> Media đính kèm</h4>
-          <p class="review-upload-empty" id="rv-upload-empty">
+          <p class="review-upload-empty" id="xac_nhan_media_trong">
             Chưa có ảnh hoặc video nào được chọn.
           </p>
-          <div class="review-upload-grid" id="rv-upload-list"></div>
+          <div class="review-upload-grid" id="xac_nhan_danh_sach_media"></div>
         </div>
 
         <div class="review-section">
           <h4><i class="fas fa-calendar-check"></i> Lịch trình</h4>
           <div class="rv-row">
             <span class="rv-label">Lấy hàng:</span
-            ><span class="rv-val" id="rv-pickup-time"></span>
+            ><span class="rv-val" id="xac_nhan_thoi_gian_lay_hang"></span>
           </div>
           <div class="rv-row">
             <span class="rv-label">Thời gian giao dự kiến:</span
-            ><span class="rv-val" id="rv-eta"></span>
+            ><span class="rv-val" id="xac_nhan_thoi_gian_giao_du_kien"></span>
           </div>
         </div>
 
         <div class="review-section">
           <h4><i class="fas fa-receipt"></i> Chi phí</h4>
-          <div id="rv-price-breakdown"></div>
+          <div id="xac_nhan_chi_tiet_gia"></div>
         </div>
 
-        <div class="rv-total-row" id="rv-total-row">
+        <div class="rv-total-row" id="xac_nhan_tong_tien_hang">
           <span>Tổng thanh toán</span>
-          <span id="rv-total" style="font-size: 22px"></span>
+          <span id="xac_nhan_tong_thanh_toan" style="font-size: 22px"></span>
         </div>
         <p style="margin-top: 10px; font-size: 12px; color: #64748b">
           Tổng trên là giá tham khảo theo dữ liệu hiện có. Điều phối sẽ đối
@@ -691,15 +691,15 @@
         </p>
 
         <div class="btn-row">
-          <button type="button" class="btn-prev" onclick="goToStep(4)">
+          <button type="button" class="btn-prev" onclick="chuyen_den_buoc(4)">
             <i class="fas fa-arrow-left"></i> Quay lại
           </button>
           <button
             type="button"
             class="btn-next orange"
-            id="btn-submit-order"
+            id="btn_gui_don_hang"
             style="font-size: 17px; padding: 14px 36px"
-            onclick="submitOrder()"
+            onclick="gui_don_hang()"
           >
             <i class="fas fa-paper-plane"></i> Đặt Đơn Ngay!
           </button>

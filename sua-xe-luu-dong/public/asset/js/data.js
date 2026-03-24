@@ -1,6 +1,8 @@
 const BOOKING_MODAL_SOURCE = "dat-dich-vu.html";
 const BOOKING_MODAL_STYLE_ID = "bookingModalInlineStyles";
 const BOOKING_MODAL_EMBED_FIX_STYLE_ID = "bookingModalEmbedFixStyles";
+const BOOKING_GOOGLE_SHEET_API =
+  "https://script.google.com/macros/s/AKfycbzGk9VOSebrVPRhBtXpOZyBpXaYZpzbvPD3hQ5oQ7uIGnn2HXBv2bBqJ6ouOpZ3g_kENA/exec";
 let bookingModalLoadPromise = null;
 
 function injectBookingModalStyles(doc) {
@@ -451,6 +453,9 @@ function initBookingModal() {
     "customItemInputWrapper",
   );
   const customItemInput = document.getElementById("customItemInput");
+  const datetimeInput = document.querySelector(
+    '#bookingForm input[type="datetime-local"]',
+  );
 
   const priceInput = document.getElementById("price-contact");
   const transportInput = document.getElementById("transport-fee");
@@ -538,6 +543,21 @@ function initBookingModal() {
     if (!useCustom) {
       customItemInput.value = "";
     }
+  }
+
+  function getCurrentDateTimeLocalValue() {
+    const now = new Date();
+    const year = now.getFullYear();
+    const month = String(now.getMonth() + 1).padStart(2, "0");
+    const day = String(now.getDate()).padStart(2, "0");
+    const hours = String(now.getHours()).padStart(2, "0");
+    const minutes = String(now.getMinutes()).padStart(2, "0");
+    return `${year}-${month}-${day}T${hours}:${minutes}`;
+  }
+
+  function fillCurrentDateTime() {
+    if (!datetimeInput) return;
+    datetimeInput.value = getCurrentDateTimeLocalValue();
   }
 
   function ensureOtherModelOption() {
@@ -985,6 +1005,7 @@ function initBookingModal() {
     });
   }
 
+  initMediaUpload();
   mapPickerInit();
   // ===== HELPER =====
   function resetSelect(select, placeholder) {
@@ -1013,6 +1034,14 @@ function initBookingModal() {
   bindQuickBookingButtons();
   ensureOtherModelOption();
   toggleCustomItemInput(false);
+  fillCurrentDateTime();
+
+  if (bookingModal && bookingModal.dataset.dateTimeAutofillBound !== "true") {
+    bookingModal.dataset.dateTimeAutofillBound = "true";
+    bookingModal.addEventListener("shown.bs.modal", function () {
+      fillCurrentDateTime();
+    });
+  }
 
   const bookingForm = document.getElementById("bookingForm");
   if (bookingForm && bookingForm.dataset.customItemResetBound !== "true") {
@@ -1028,10 +1057,256 @@ function initBookingModal() {
   initBookingConfirmFlow();
 }
 
+function initMediaUpload() {
+  const form = document.getElementById("bookingForm");
+  const imageBtn = document.getElementById("capturePhotoBtn");
+  const videoBtn = document.getElementById("recordVideoBtn");
+  const imageInput = document.getElementById("imageUploadInput");
+  const videoInput = document.getElementById("videoUploadInput");
+  const imageList = document.getElementById("imagePreviewList");
+  const videoList = document.getElementById("videoPreviewList");
+  const imageEmpty = document.getElementById("imageEmptyState");
+  const videoEmpty = document.getElementById("videoEmptyState");
+
+  if (
+    !form ||
+    !imageBtn ||
+    !videoBtn ||
+    !imageInput ||
+    !videoInput ||
+    !imageList ||
+    !videoList ||
+    !imageEmpty ||
+    !videoEmpty
+  ) {
+    return;
+  }
+
+  if (form.dataset.mediaUploadBound === "true") {
+    return;
+  }
+  form.dataset.mediaUploadBound = "true";
+
+  const mediaState = {
+    imageUrls: [],
+    videoUrls: [],
+  };
+
+  function revokeUrls(type) {
+    const key = type === "image" ? "imageUrls" : "videoUrls";
+    mediaState[key].forEach((url) => URL.revokeObjectURL(url));
+    mediaState[key] = [];
+  }
+
+  function toggleEmptyState(type, isEmpty) {
+    const emptyEl = type === "image" ? imageEmpty : videoEmpty;
+    const listEl = type === "image" ? imageList : videoList;
+
+    emptyEl.style.display = isEmpty ? "flex" : "none";
+    listEl.style.display = isEmpty ? "none" : "flex";
+  }
+
+  function createItem(name, previewNode) {
+    const item = document.createElement("div");
+    item.className = "media-item";
+
+    const nameEl = document.createElement("div");
+    nameEl.className = "media-name";
+    nameEl.title = name;
+    nameEl.textContent = name;
+
+    item.appendChild(previewNode);
+    item.appendChild(nameEl);
+    return item;
+  }
+
+  function renderImages(fileList) {
+    revokeUrls("image");
+    imageList.innerHTML = "";
+
+    const files = Array.from(fileList || []);
+    if (!files.length) {
+      toggleEmptyState("image", true);
+      return;
+    }
+
+    files.forEach((file) => {
+      const url = URL.createObjectURL(file);
+      mediaState.imageUrls.push(url);
+
+      const img = document.createElement("img");
+      img.className = "media-thumb";
+      img.alt = file.name || "Ảnh đã chọn";
+      img.src = url;
+
+      imageList.appendChild(createItem(file.name || "image", img));
+    });
+
+    toggleEmptyState("image", false);
+  }
+
+  function renderVideos(fileList) {
+    revokeUrls("video");
+    videoList.innerHTML = "";
+
+    const files = Array.from(fileList || []);
+    if (!files.length) {
+      toggleEmptyState("video", true);
+      return;
+    }
+
+    files.forEach((file) => {
+      const url = URL.createObjectURL(file);
+      mediaState.videoUrls.push(url);
+
+      const video = document.createElement("video");
+      video.className = "media-thumb";
+      video.src = url;
+      video.controls = true;
+      video.preload = "metadata";
+
+      videoList.appendChild(createItem(file.name || "video", video));
+    });
+
+    toggleEmptyState("video", false);
+  }
+
+  imageBtn.addEventListener("click", function () {
+    imageInput.value = "";
+    imageInput.click();
+  });
+
+  videoBtn.addEventListener("click", function () {
+    videoInput.value = "";
+    videoInput.click();
+  });
+
+  imageInput.addEventListener("change", function () {
+    renderImages(imageInput.files);
+  });
+
+  videoInput.addEventListener("change", function () {
+    renderVideos(videoInput.files);
+  });
+
+  form.addEventListener("reset", function () {
+    revokeUrls("image");
+    revokeUrls("video");
+    imageList.innerHTML = "";
+    videoList.innerHTML = "";
+    toggleEmptyState("image", true);
+    toggleEmptyState("video", true);
+  });
+
+  toggleEmptyState("image", true);
+  toggleEmptyState("video", true);
+}
+
 function initBookingConfirmFlow() {
   const form = document.getElementById("bookingForm");
   const bookingModalEl = document.getElementById("bookingModal");
   const confirmModalEl = document.getElementById("bookingConfirmModal");
+  const imageInput = document.getElementById("imageUploadInput");
+  const videoInput = document.getElementById("videoUploadInput");
+  const confirmImages = document.getElementById("confirmImages");
+  const confirmVideos = document.getElementById("confirmVideos");
+  const confirmMediaUrls = [];
+  const ORDER_CODE_PREFIX = "SXLD";
+  const ORDER_CODE_STORE_KEY = "sua_xe_luu_dong_order_codes";
+  const ORDER_CODE_TTL_MS = 24 * 60 * 60 * 1000;
+  let currentOrderCode = "";
+
+  function normalizeStoredOrderCodes(payload) {
+    const now = Date.now();
+
+    if (!Array.isArray(payload)) return [];
+
+    const normalized = payload
+      .map((item) => {
+        if (typeof item === "string") {
+          return { code: item, createdAt: now };
+        }
+
+        if (item && typeof item.code === "string") {
+          const createdAt = Number(item.createdAt || 0);
+          return {
+            code: item.code,
+            createdAt:
+              Number.isFinite(createdAt) && createdAt > 0 ? createdAt : now,
+          };
+        }
+
+        return null;
+      })
+      .filter(Boolean)
+      .filter((item) => now - item.createdAt < ORDER_CODE_TTL_MS);
+
+    const deduped = new Map();
+    normalized.forEach((item) => {
+      deduped.set(item.code, item);
+    });
+
+    return Array.from(deduped.values());
+  }
+
+  function readStoredOrderCodeEntries() {
+    try {
+      const raw = localStorage.getItem(ORDER_CODE_STORE_KEY);
+      const parsed = raw ? JSON.parse(raw) : [];
+      const cleaned = normalizeStoredOrderCodes(parsed);
+      localStorage.setItem(ORDER_CODE_STORE_KEY, JSON.stringify(cleaned));
+      return cleaned;
+    } catch (_err) {
+      return [];
+    }
+  }
+
+  function getStoredOrderCodes() {
+    return readStoredOrderCodeEntries().map((item) => item.code);
+  }
+
+  function saveOrderCode(orderCode) {
+    if (!orderCode) return;
+
+    const existingEntries = readStoredOrderCodeEntries();
+    if (existingEntries.some((item) => item.code === orderCode)) return;
+
+    existingEntries.push({
+      code: orderCode,
+      createdAt: Date.now(),
+    });
+
+    const trimmed = existingEntries.slice(-3000);
+    try {
+      localStorage.setItem(ORDER_CODE_STORE_KEY, JSON.stringify(trimmed));
+    } catch (_err) {
+      // Ignore localStorage failure (private mode / quota exceeded).
+    }
+  }
+
+  function createRandomOrderCode() {
+    const numberPart = String(Math.floor(Math.random() * 10000)).padStart(
+      4,
+      "0",
+    );
+    return `${ORDER_CODE_PREFIX}${numberPart}`;
+  }
+
+  function generateUniqueOrderCode() {
+    const existingCodes = new Set(getStoredOrderCodes());
+
+    for (let i = 0; i < 200; i += 1) {
+      const candidate = createRandomOrderCode();
+      if (!existingCodes.has(candidate)) {
+        saveOrderCode(candidate);
+        return candidate;
+      }
+    }
+
+    const fallback = `${ORDER_CODE_PREFIX}${Date.now().toString().slice(-4)}`;
+    saveOrderCode(fallback);
+    return fallback;
+  }
 
   if (!form || !bookingModalEl || !confirmModalEl) return;
   if (form.dataset.confirmFlowBound === "true") return;
@@ -1081,6 +1356,71 @@ function initBookingConfirmFlow() {
     return text || "-";
   }
 
+  function clearConfirmMedia() {
+    confirmMediaUrls.forEach((url) => URL.revokeObjectURL(url));
+    confirmMediaUrls.length = 0;
+
+    if (confirmImages) {
+      confirmImages.innerHTML = '<span class="confirm-media-empty">-</span>';
+    }
+    if (confirmVideos) {
+      confirmVideos.innerHTML = '<span class="confirm-media-empty">-</span>';
+    }
+  }
+
+  function createConfirmMediaItem(fileName, previewNode) {
+    const item = document.createElement("div");
+    item.className = "confirm-media-item";
+
+    const nameEl = document.createElement("div");
+    nameEl.className = "confirm-media-name";
+    nameEl.title = fileName;
+    nameEl.textContent = fileName;
+
+    item.appendChild(previewNode);
+    item.appendChild(nameEl);
+    return item;
+  }
+
+  function renderConfirmFileList(container, files, type) {
+    if (!container) return;
+
+    container.innerHTML = "";
+    const list = Array.from(files || []);
+
+    if (!list.length) {
+      container.innerHTML = '<span class="confirm-media-empty">-</span>';
+      return;
+    }
+
+    list.forEach((file) => {
+      const url = URL.createObjectURL(file);
+      confirmMediaUrls.push(url);
+
+      let previewNode;
+      if (type === "image") {
+        previewNode = document.createElement("img");
+        previewNode.alt = file.name || "Ảnh";
+      } else {
+        previewNode = document.createElement("video");
+        previewNode.controls = true;
+        previewNode.preload = "metadata";
+      }
+
+      previewNode.className = "confirm-media-thumb";
+      previewNode.src = url;
+      container.appendChild(
+        createConfirmMediaItem(file.name || type, previewNode),
+      );
+    });
+  }
+
+  function renderConfirmMedia() {
+    clearConfirmMedia();
+    renderConfirmFileList(confirmImages, imageInput?.files, "image");
+    renderConfirmFileList(confirmVideos, videoInput?.files, "video");
+  }
+
   function selectedText(select) {
     if (!select) return "";
     const option = select.options[select.selectedIndex];
@@ -1101,10 +1441,25 @@ function initBookingConfirmFlow() {
     return selectedText(itemSelect);
   }
 
+  function moneyOnlyText(value) {
+    const text = String(value || "").trim();
+    if (!text) return "";
+
+    // Keep only the amount part, remove any trailing notes like "(11.5 km)".
+    return text.split("(")[0].trim();
+  }
+
   function renderSummary() {
+    if (!currentOrderCode) {
+      currentOrderCode = generateUniqueOrderCode();
+    }
+
+    form.dataset.orderCode = currentOrderCode;
+
     const summary = {
       confirmName: document.getElementById("nameCustomer")?.value,
       confirmPhone: document.getElementById("phoneCustomer")?.value,
+      confirmOrderCode: currentOrderCode,
       confirmService: selectedText(serviceSelect),
       confirmVehicleType: selectedText(vehicleType),
       confirmBrand: selectedText(brandSelect),
@@ -1113,7 +1468,7 @@ function initBookingConfirmFlow() {
       confirmAddress: addressInput?.value,
       confirmPrice: priceInput?.value,
       confirmSurvey: surveyInput?.value,
-      confirmTransport: transportInput?.value,
+      confirmTransport: moneyOnlyText(transportInput?.value),
       confirmTotal: totalInput?.value,
       confirmNote: noteInput?.value,
     };
@@ -1124,6 +1479,98 @@ function initBookingConfirmFlow() {
     });
   }
 
+  function collectBookingData() {
+    if (!currentOrderCode) {
+      currentOrderCode = generateUniqueOrderCode();
+    }
+
+    const transportFee = moneyOnlyText(transportInput?.value);
+    const payload = {
+      service_group: "sua-xe-luu-dong",
+      name: document.getElementById("nameCustomer")?.value || "",
+      phone: document.getElementById("phoneCustomer")?.value || "",
+      order_code: currentOrderCode,
+      service_name: selectedText(serviceSelect),
+      vehicle_type: selectedText(vehicleType),
+      brand: selectedText(brandSelect),
+      item: selectedItemText(),
+      booking_time: datetimeInput?.value || "",
+      address: addressInput?.value || "",
+      price: priceInput?.value || "",
+      survey_fee: surveyInput?.value || "",
+      transport_fee: transportFee,
+      ship: transportFee,
+      total: totalInput?.value || "",
+      message: noteInput?.value || "",
+    };
+
+    return payload;
+  }
+
+  function parseJsonSafe(raw) {
+    try {
+      return raw ? JSON.parse(raw) : null;
+    } catch (_err) {
+      return null;
+    }
+  }
+
+  function handleConfirmSubmit() {
+    const payload = collectBookingData();
+    const originalText = confirmBtn.textContent;
+
+    if (!BOOKING_GOOGLE_SHEET_API) {
+      alert("Chưa cấu hình BOOKING_GOOGLE_SHEET_API để lưu dữ liệu.");
+      return;
+    }
+
+    confirmBtn.disabled = true;
+    confirmBtn.textContent = "Đang gửi...";
+
+    fetch(BOOKING_GOOGLE_SHEET_API, {
+      method: "POST",
+      headers: {
+        "Content-Type": "text/plain;charset=UTF-8",
+      },
+      body: JSON.stringify(payload),
+    })
+      .then((response) => {
+        return response.text().then((raw) => {
+          const result = parseJsonSafe(raw);
+          if (!response.ok || !result || result.success !== true) {
+            const serverMessage =
+              (result && result.error) || raw || "Gửi dữ liệu thất bại";
+            throw new Error(`HTTP ${response.status}: ${serverMessage}`);
+          }
+        });
+      })
+      .then(() => {
+        bootstrap.Modal.getOrCreateInstance(confirmModalEl).hide();
+        hideBookingStep();
+
+        alert(
+          `Cảm ơn bạn đã đặt dịch vụ! Chúng tôi sẽ liên hệ với bạn trong thời gian sớm nhất.\nMã đơn hàng của bạn: ${payload.order_code}`,
+        );
+
+        form.reset();
+        clearConfirmMedia();
+        currentOrderCode = "";
+        delete form.dataset.orderCode;
+
+        if (!isEmbeddedMode) {
+          showBookingStep();
+        }
+      })
+      .catch((err) => {
+        console.error("Lỗi gửi dữ liệu sửa xe:", err);
+        alert("Không thể lưu dữ liệu đặt lịch. Vui lòng thử lại.");
+      })
+      .finally(() => {
+        confirmBtn.disabled = false;
+        confirmBtn.textContent = originalText;
+      });
+  }
+
   function backToBookingModal() {
     bootstrap.Modal.getOrCreateInstance(confirmModalEl).hide();
     showBookingStep();
@@ -1132,6 +1579,7 @@ function initBookingConfirmFlow() {
   form.addEventListener("submit", function (e) {
     e.preventDefault();
     renderSummary();
+    renderConfirmMedia();
 
     hideBookingStep();
     bootstrap.Modal.getOrCreateInstance(confirmModalEl).show();
@@ -1150,19 +1598,13 @@ function initBookingConfirmFlow() {
   }
 
   if (confirmBtn) {
-    confirmBtn.addEventListener("click", function () {
-      bootstrap.Modal.getOrCreateInstance(confirmModalEl).hide();
-      hideBookingStep();
+    confirmBtn.addEventListener("click", handleConfirmSubmit);
+  }
 
-      alert(
-        "Cảm ơn bạn đã đặt dịch vụ! Chúng tôi sẽ liên hệ với bạn trong thời gian sớm nhất.",
-      );
-
-      form.reset();
-
-      if (!isEmbeddedMode) {
-        showBookingStep();
-      }
+  if (!confirmModalEl.dataset.mediaCleanupBound) {
+    confirmModalEl.dataset.mediaCleanupBound = "true";
+    confirmModalEl.addEventListener("hidden.bs.modal", function () {
+      clearConfirmMedia();
     });
   }
 }
