@@ -101,12 +101,12 @@ function canUseSessionStorage() {
   }
 }
 
-function savePendingBookingDraft(payload = buildPayload()) {
+function savePendingBookingDraft(payload = tao_du_lieu_gui()) {
   if (!canUseSessionStorage()) return false;
   try {
     const draft = {
       saved_at: Date.now(),
-      current_step: getCurrentStep(),
+      current_step: lay_buoc_hien_tai(),
       payload,
       had_uploads: getSelectedUploadFiles().length > 0,
     };
@@ -245,9 +245,6 @@ const VEHICLE_OPTIONS = Array.isArray(ORDER_FORM_CONFIG.loaixe)
 const PICKUP_SLOT_OPTIONS = Array.isArray(ORDER_FORM_CONFIG.khunggiolayhang)
   ? ORDER_FORM_CONFIG.khunggiolayhang
   : [];
-const DELIVERY_SLOT_OPTIONS = Array.isArray(ORDER_FORM_CONFIG.khunggionhanhang)
-  ? ORDER_FORM_CONFIG.khunggionhanhang
-  : [];
 const DEFAULT_DECLARED_VALUE_HELP =
   "Hàng có giá trị khai báo trên 1.000.000đ sẽ tính phí bảo hiểm 0,5%, tối thiểu 5.000đ.";
 const DECLARED_VALUE_HELP_SOURCE = String(
@@ -268,60 +265,55 @@ const DEFAULT_URGENT_CONDITION = {
 document.addEventListener("DOMContentLoaded", () => {
   weatherQuoteState = createDefaultWeatherQuoteState();
   initMap();
-  initAddressSearch("dia_chi_lay_hang", "sug-pickup", "pickup");
-  initAddressSearch("dia_chi_giao_hang", "sug-delivery", "delivery");
+  initAddressSearch("dia_chi_lay_hang", "goi_y_dia_chi_lay_hang", "pickup");
+  initAddressSearch("dia_chi_giao_hang", "goi_y_dia_chi_giao_hang", "delivery");
   initGeolocationButton();
   initPickupSlotOptions();
   initUrgentConditionOptions();
   initVehicleOptions();
   initPackageChoiceControls();
 
-  renderItems();
+  hien_thi_danh_sach_hang_hoa();
   bindInfoToggleInteractions();
-  document.getElementById("btn-add-item").addEventListener("click", addItem);
+  document
+    .getElementById("btn_them_hang_hoa")
+    .addEventListener("click", them_hang_hoa);
   document.getElementById("gia_tri_thu_ho_cod").addEventListener("input", () => {
-    renderItems();
-    if (getCurrentStep() >= 3) renderServiceCards();
+    hien_thi_danh_sach_hang_hoa();
+    if (lay_buoc_hien_tai() >= 3) renderServiceCards();
   });
 
   // Default date = today
   const today = formatDateValue(getCurrentDateTime());
   document.getElementById("ngay_lay_hang").value = today;
-  syncDesiredDeliveryWindow();
-  updateDesiredDeliveryHint();
-  updateScheduleTimingPanel();
   document.getElementById("phuong_tien_giao_hang").addEventListener("change", () => {
-    if (getCurrentStep() >= 3) renderServiceCards();
+    if (lay_buoc_hien_tai() >= 3) renderServiceCards();
   });
   document.getElementById("ngay_lay_hang").addEventListener("change", () => {
-    syncDesiredDeliveryWindow();
-    updateScheduleTimingPanel();
-    if (getCurrentStep() >= 3) renderServiceCards();
+    if (lay_buoc_hien_tai() >= 3) renderServiceCards();
   });
   document.getElementById("khung_gio_lay_hang").addEventListener("change", () => {
-    syncDesiredDeliveryWindow();
     syncUrgentConditionVisibility(selectedService && selectedService.serviceType);
-    updateScheduleTimingPanel();
-    if (getCurrentStep() >= 3) renderServiceCards();
+    if (lay_buoc_hien_tai() >= 3) renderServiceCards();
   });
   document
-    .getElementById("btn-1-to-2")
-    .addEventListener("click", () => validateStep1() && goToStep(2));
-  document.getElementById("btn-2-to-3").addEventListener("click", () => {
-    if (validateStep2()) {
+    .getElementById("btn_buoc_1_sang_2")
+    .addEventListener("click", () => xac_thuc_buoc_1() && chuyen_den_buoc(2));
+  document.getElementById("btn_buoc_2_sang_3").addEventListener("click", () => {
+    if (xac_thuc_buoc_2()) {
       renderServiceCards();
-      goToStep(3);
+      chuyen_den_buoc(3);
     }
   });
-  document.getElementById("btn-3-to-4").addEventListener("click", () => {
-    if (validateStep3()) {
-      goToStep(4);
+  document.getElementById("btn_buoc_3_sang_4").addEventListener("click", () => {
+    if (xac_thuc_buoc_3()) {
+      chuyen_den_buoc(4);
     }
   });
-  document.getElementById("btn-4-to-5").addEventListener("click", () => {
-    if (validateStep4()) {
-      prepareReview();
-      goToStep(5);
+  document.getElementById("btn_buoc_4_sang_5").addEventListener("click", () => {
+    if (xac_thuc_buoc_4()) {
+      chuan_bi_xac_nhan();
+      chuyen_den_buoc(5);
     }
   });
 
@@ -329,34 +321,34 @@ document.addEventListener("DOMContentLoaded", () => {
   document.querySelectorAll(".step-item").forEach((item, idx) => {
     item.addEventListener("click", () => {
       const step = idx + 1;
-      const currentStep = getCurrentStep();
+      const currentStep = lay_buoc_hien_tai();
       if (step < currentStep) {
-        goToStep(step);
+        chuyen_den_buoc(step);
       } else if (step > currentStep) {
         // Try to jump forward: must validate all steps in between
         let ok = true;
         for (let s = currentStep; s < step; s++) {
-          if (s === 1 && !validateStep1()) {
+          if (s === 1 && !xac_thuc_buoc_1()) {
             ok = false;
             break;
           }
-          if (s === 2 && !validateStep2()) {
+          if (s === 2 && !xac_thuc_buoc_2()) {
             ok = false;
             break;
           }
-          if (s === 3 && !validateStep3()) {
+          if (s === 3 && !xac_thuc_buoc_3()) {
             ok = false;
             break;
           }
-          if (s === 4 && !validateStep4()) {
+          if (s === 4 && !xac_thuc_buoc_4()) {
             ok = false;
             break;
           }
         }
         if (ok) {
           if (step === 3) renderServiceCards();
-          if (step === 5) prepareReview();
-          goToStep(step);
+          if (step === 5) chuan_bi_xac_nhan();
+          chuyen_den_buoc(step);
         }
       }
     });
@@ -374,9 +366,9 @@ document.addEventListener("DOMContentLoaded", () => {
   setDeliveryMode("scheduled", { render: false });
 });
 
-function getCurrentStep() {
+function lay_buoc_hien_tai() {
   for (let i = 1; i <= 5; i++) {
-    if (document.getElementById(`step-${i}`).classList.contains("active"))
+    if (document.getElementById(`buoc_${i}`).classList.contains("active"))
       return i;
   }
   return 1;
@@ -431,7 +423,7 @@ function initPackageChoiceControls() {
     const val = select.value;
     const mode = val === "instant" ? "instant" : "scheduled";
     setDeliveryMode(mode, { render: false });
-    if (getCurrentStep() >= 3) renderServiceCards();
+    if (lay_buoc_hien_tai() >= 3) renderServiceCards();
   });
 }
 
@@ -440,10 +432,7 @@ function setDeliveryMode(mode, options = {}) {
   const shouldRender = options.render !== false;
   deliveryMode = nextMode;
 
-  const hiddenInput = document.getElementById("delivery-mode-val");
-  if (hiddenInput) hiddenInput.value = nextMode;
-
-  const scheduledFlow = document.getElementById("scheduled-flow");
+  const scheduledFlow = document.getElementById("luong_lich_hen");
   if (scheduledFlow) scheduledFlow.classList.remove("is-hidden");
 
   if (nextMode === "instant") {
@@ -460,23 +449,15 @@ function setDeliveryMode(mode, options = {}) {
     selectedService = null;
   }
 
-  syncDesiredDeliveryWindow();
-  updateDesiredDeliveryHint();
-  updateScheduleTimingPanel();
-  updateInstantRealtimePanel();
   syncUrgentConditionVisibility(selectedService && selectedService.serviceType);
 
-  if (shouldRender && getCurrentStep() >= 3) {
+  if (shouldRender && lay_buoc_hien_tai() >= 3) {
     renderServiceCards();
   }
 }
 
 function getPickupSlotOptions() {
   return PICKUP_SLOT_OPTIONS;
-}
-
-function getDeliverySlotOptions() {
-  return DELIVERY_SLOT_OPTIONS;
 }
 
 function isInstantService(serviceType) {
@@ -507,39 +488,6 @@ function getCurrentDateTime() {
   return new Date();
 }
 
-function parseEstimateToHours(estimateText) {
-  const text = String(estimateText || "")
-    .trim()
-    .toLowerCase();
-  if (!text) return { minHours: 0, maxHours: 0 };
-  const rangeMatch = text.match(
-    /(\d+(?:[.,]\d+)?)\s*-\s*(\d+(?:[.,]\d+)?)\s*(phút|phut|p|giờ|gio|h|ngày|ngay|d)/i,
-  );
-  if (rangeMatch) {
-    const min = parseFloat(rangeMatch[1].replace(",", "."));
-    const max = parseFloat(rangeMatch[2].replace(",", "."));
-    const multiplier = /ngày|ngay|d/i.test(rangeMatch[3])
-      ? 24
-      : /phút|phut|p/i.test(rangeMatch[3])
-        ? 1 / 60
-        : 1;
-    return { minHours: min * multiplier, maxHours: max * multiplier };
-  }
-  const singleMatch = text.match(
-    /(\d+(?:[.,]\d+)?)\s*(phút|phut|p|giờ|gio|h|ngày|ngay|d)/i,
-  );
-  if (singleMatch) {
-    const value = parseFloat(singleMatch[1].replace(",", "."));
-    const multiplier = /ngày|ngay|d/i.test(singleMatch[2])
-      ? 24
-      : /phút|phut|p/i.test(singleMatch[2])
-        ? 1 / 60
-        : 1;
-    return { minHours: value * multiplier, maxHours: value * multiplier };
-  }
-  return { minHours: 0, maxHours: 0 };
-}
-
 function getInstantPricingWindow(date = getCurrentDateTime()) {
   if (typeof window.getDomesticInstantTimeConfig === "function") {
     const rule = window.getDomesticInstantTimeConfig(date);
@@ -564,117 +512,20 @@ function getInstantPricingWindow(date = getCurrentDateTime()) {
   };
 }
 
-function findDeliverySlotByMinuteTarget(targetMinutes) {
-  const options = getDeliverySlotOptions();
-  if (!options.length) return null;
-  return (
-    options.find((slot) => timeTextToMinutes(slot.end) >= targetMinutes) ||
-    options[options.length - 1]
-  );
-}
-
 function applyImmediateScheduleDefaults() {
   const now = getCurrentDateTime();
   const pickupDateInput = document.getElementById("ngay_lay_hang");
   const pickupSlotSelect = document.getElementById("khung_gio_lay_hang");
-  const deliveryDateInput = document.getElementById("delivery-date");
-  const deliverySlotSelect = document.getElementById("delivery-slot");
   const instantWindow = getInstantPricingWindow(now);
 
   if (pickupDateInput) pickupDateInput.value = formatDateValue(now);
   if (pickupSlotSelect && instantWindow) pickupSlotSelect.value = instantWindow.key;
-  if (deliveryDateInput) deliveryDateInput.value = formatDateValue(now);
-
-  const defaultDeliveryTargetMinutes = now.getHours() * 60 + now.getMinutes() + 120;
-  const deliverySlot = findDeliverySlotByMinuteTarget(defaultDeliveryTargetMinutes);
-  if (deliverySlotSelect && deliverySlot) {
-    deliverySlotSelect.value = deliverySlot.key;
-  }
-}
-
-function formatScheduleDuration(totalMinutes) {
-  const safeMinutes = Math.max(0, Math.round(totalMinutes || 0));
-  const days = Math.floor(safeMinutes / 1440);
-  const hours = Math.floor((safeMinutes % 1440) / 60);
-  const minutes = safeMinutes % 60;
-  const parts = [];
-  if (days) parts.push(`${days} ngày`);
-  if (hours) parts.push(`${hours} giờ`);
-  if (minutes || !parts.length) parts.push(`${minutes} phút`);
-  return parts.join(" ");
-}
-
-function getScheduleTimingInfo() {
-  if (getDeliveryMode() !== "scheduled") return null;
-  const pickupDate = document.getElementById("ngay_lay_hang")?.value || "";
-  const deliveryDate = document.getElementById("delivery-date")?.value || "";
-  const pickupSlot = getSelectedPickupSlot();
-  const deliverySlot = getSelectedDeliverySlot();
-  if (!pickupDate || !deliveryDate || !pickupSlot || !deliverySlot) return null;
-
-  const pickupAt = new Date(`${pickupDate}T${pickupSlot.start}`);
-  const deliveryAt = new Date(`${deliveryDate}T${deliverySlot.end}`);
-  if (
-    Number.isNaN(pickupAt.getTime()) ||
-    Number.isNaN(deliveryAt.getTime()) ||
-    deliveryAt < pickupAt
-  ) {
-    return null;
-  }
-
-  const totalMinutes = Math.round(
-    (deliveryAt.getTime() - pickupAt.getTime()) / (60 * 1000),
-  );
-  return {
-    pickupAt,
-    deliveryAt,
-    totalMinutes,
-    durationText: formatScheduleDuration(totalMinutes),
-  };
-}
-
-function updateScheduleTimingPanel() {
-  const panel = document.getElementById("turnaround-panel");
-  const display = document.getElementById("turnaround-display");
-  const hint = document.getElementById("turnaround-hint");
-  if (!panel || !display || !hint) return;
-
-  if (getDeliveryMode() !== "scheduled") {
-    panel.classList.add("is-hidden");
-    return;
-  }
-
-  const info = getScheduleTimingInfo();
-  if (!info) {
-    panel.classList.add("is-hidden");
-    display.textContent = "—";
-    hint.textContent =
-      "Hệ thống tính từ đầu khung lấy hàng đến cuối khung nhận mong muốn để đối chiếu thời gian giao dự kiến.";
-    return;
-  }
-  display.textContent = info.durationText;
-  hint.textContent =
-    "Khoảng này được dùng để đối chiếu thời gian giao dự kiến; hệ thống sẽ vô hiệu hóa các gói không thể giao kịp mốc nhận mong muốn.";
-  panel.classList.remove("is-hidden");
 }
 
 function initPickupSlotOptions() {
   const select = document.getElementById("khung_gio_lay_hang");
   if (!select) return;
   const options = getPickupSlotOptions();
-  if (!options.length) return;
-  select.innerHTML = options
-    .map((slot, index) => {
-      const selectedAttr = index === 0 ? " selected" : "";
-      return `<option value="${slot.key}" data-start="${slot.start}" data-end="${slot.end}"${selectedAttr}>${slot.label}</option>`;
-    })
-    .join("");
-}
-
-function initDeliverySlotOptions() {
-  const select = document.getElementById("delivery-slot");
-  if (!select) return;
-  const options = getDeliverySlotOptions();
   if (!options.length) return;
   select.innerHTML = options
     .map((slot, index) => {
@@ -705,14 +556,6 @@ function getSelectedPickupSlot() {
   return selected || null;
 }
 
-function getSelectedDeliverySlot() {
-  const select = document.getElementById("delivery-slot");
-  if (!select) return null;
-  const options = getDeliverySlotOptions();
-  const selected = options.find((slot) => slot.key === select.value);
-  return selected || null;
-}
-
 function getPickupAtDateTime() {
   const pickupDateValue = document.getElementById("ngay_lay_hang")?.value || "";
   const pickupSlot = getSelectedPickupSlot();
@@ -735,17 +578,17 @@ function getSelectedUrgentCondition() {
 }
 
 function syncUrgentConditionVisibility(serviceType) {
-  const panel = document.getElementById("weather-surcharge-panel");
+  const panel = document.getElementById("bang_phu_phi_thoi_tiet");
   if (!panel) return;
   panel.classList.remove("is-hidden");
   updateWeatherSurchargePanel(serviceType);
 }
 
 function updateWeatherSurchargePanel(serviceType) {
-  const desc = document.getElementById("weather-surcharge-desc");
-  const badge = document.getElementById("weather-surcharge-badge");
-  const meta = document.getElementById("weather-surcharge-meta");
-  const hint = document.getElementById("weather-surcharge-hint");
+  const desc = document.getElementById("mo_ta_phu_phi_thoi_tiet");
+  const badge = document.getElementById("huy_hieu_phu_phi_thoi_tiet");
+  const meta = document.getElementById("thong_tin_phu_phi_thoi_tiet");
+  const hint = document.getElementById("goi_y_phu_phi_thoi_tiet");
   if (!desc || !badge || !meta || !hint) return;
   const serviceLabels = {
     instant: "Giao ngay lập tức",
@@ -1070,36 +913,14 @@ async function requestWeatherQuote(force = false) {
   }
 
   updateWeatherSurchargePanel(selectedService && selectedService.serviceType);
-  if (getCurrentStep() >= 3) {
+  if (lay_buoc_hien_tai() >= 3) {
     renderServiceCards({ skipWeatherFetch: true });
   }
 }
 
-function findDeliverySlotForPickup(pickupSlot) {
-  const pickupStartMinutes = timeTextToMinutes(pickupSlot && pickupSlot.start);
-  const options = getDeliverySlotOptions();
-  if (pickupStartMinutes < 0 || !options.length) return null;
-  return (
-    options.find(
-      (slot) => timeTextToMinutes(slot && slot.end) > pickupStartMinutes,
-    ) ||
-    options[options.length - 1] ||
-    null
-  );
-}
-
-function syncDesiredDeliveryWindow() {
-  updateScheduleTimingPanel();
-  return false;
-}
-
-function updateDesiredDeliveryHint() {
-  // Tính năng ngày nhận hàng mong muốn trên giao diện đã bị ẩn.
-}
-
 // ========== UI HELPERS ==========
-function showError(step, message) {
-  const errBox = document.getElementById(`error-step-${step}`);
+function hien_thi_loi(step, message) {
+  const errBox = document.getElementById(`loi_buoc_${step}`);
   if (errBox) {
     errBox.querySelector(".error-text").textContent = message;
     errBox.style.display = "block";
@@ -1107,8 +928,8 @@ function showError(step, message) {
   }
 }
 
-function clearError(step) {
-  const errBox = document.getElementById(`error-step-${step}`);
+function xoa_loi(step) {
+  const errBox = document.getElementById(`loi_buoc_${step}`);
   if (errBox) errBox.style.display = "none";
 }
 
@@ -1206,7 +1027,7 @@ function bindInfoToggleInteractions(root = document) {
 
 // ========== MAP ==========
 function initMap() {
-  map = L.map("map").setView([10.762622, 106.660172], 12);
+  map = L.map("ban_do_giao_hang").setView([10.762622, 106.660172], 12);
   L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
     attribution: "&copy; OpenStreetMap contributors",
   }).addTo(map);
@@ -1267,7 +1088,7 @@ function initMap() {
 }
 
 function initGeolocationButton() {
-  const btn = document.getElementById("btn-get-location");
+  const btn = document.getElementById("btn_lay_vi_tri_hien_tai");
   if (!btn) return;
 
   btn.addEventListener("click", () => {
@@ -1276,7 +1097,7 @@ function initGeolocationButton() {
 }
 
 function setGeolocationButtonLoading(isLoading) {
-  const btn = document.getElementById("btn-get-location");
+  const btn = document.getElementById("btn_lay_vi_tri_hien_tai");
   if (!btn) return;
   if (!btn.dataset.originalHtml) {
     btn.dataset.originalHtml = btn.innerHTML;
@@ -1302,7 +1123,7 @@ function requestPickupCurrentLocation(options = {}) {
     return;
   }
 
-  clearError(1);
+  xoa_loi(1);
   isResolvingPickupLocation = true;
   setGeolocationButtonLoading(true);
 
@@ -1334,7 +1155,7 @@ function requestPickupCurrentLocation(options = {}) {
 }
 
 function showErrorMessage(message) {
-  showError(1, message);
+  hien_thi_loi(1, message);
 }
 
 function shouldAutoResolvePickupLocation() {
@@ -1366,7 +1187,7 @@ async function recalculateDistance() {
     khoang_cach_km = a.distanceTo(b) / 1000;
   }
   showDistance();
-  if (getCurrentStep() >= 3) {
+  if (lay_buoc_hien_tai() >= 3) {
     if (getDeliveryMode() === "instant") {
       requestWeatherQuote(true);
     }
@@ -1375,8 +1196,8 @@ async function recalculateDistance() {
 }
 
 function showDistance() {
-  const badge = document.getElementById("distance-badge");
-  document.getElementById("distance-km").textContent =
+  const badge = document.getElementById("thong_tin_khoang_cach");
+  document.getElementById("gia_tri_khoang_cach_km").textContent =
     khoang_cach_km.toFixed(2);
   badge.style.display = "inline-flex";
 }
@@ -1474,7 +1295,7 @@ function setOptionGroupValue(groupId, value) {
     `#${groupId} .option-btn[data-val="${value}"]`,
   );
   if (button) {
-    selectOption(groupId, button);
+    chon_tuy_chon(groupId, button);
   }
 }
 
@@ -1521,10 +1342,10 @@ function markReorderMode(orderCode) {
 function resetUploadsAfterDraftRestore(hadUploads) {
   const imageInput = document.getElementById("hinh_anh_hang_hoa");
   const videoInput = document.getElementById("video_hang_hoa");
-  const imageMeta = document.getElementById("image-upload-meta");
-  const videoMeta = document.getElementById("video-upload-meta");
-  const imagePreview = document.getElementById("preview-image");
-  const videoPreview = document.getElementById("preview-video");
+  const imageMeta = document.getElementById("thong_tin_tai_len_anh");
+  const videoMeta = document.getElementById("thong_tin_tai_len_video");
+  const imagePreview = document.getElementById("xem_truoc_anh_hang_hoa");
+  const videoPreview = document.getElementById("xem_truoc_video_hang_hoa");
   const restoreMessage = hadUploads
     ? "Media cũ không thể tự khôi phục sau khi đăng nhập. Vui lòng chọn lại."
     : "Chưa có tệp nào được chọn.";
@@ -1542,14 +1363,22 @@ function resetUploadsAfterDraftRestore(hadUploads) {
     videoPreview.load();
     videoPreview.style.display = "none";
   }
-  renderReviewUploads();
+  hien_thi_tai_len_xac_nhan();
 }
 
 async function applyStoredDraftMarkers(payload) {
-  const pickupLat = Number(payload.pickup_lat || 0);
-  const pickupLng = Number(payload.pickup_lng || 0);
-  const deliveryLat = Number(payload.delivery_lat || 0);
-  const deliveryLng = Number(payload.delivery_lng || 0);
+  const pickupLat = Number(
+    payload.vi_do_lay_hang || payload.pickup_lat || 0,
+  );
+  const pickupLng = Number(
+    payload.kinh_do_lay_hang || payload.pickup_lng || 0,
+  );
+  const deliveryLat = Number(
+    payload.vi_do_giao_hang || payload.delivery_lat || 0,
+  );
+  const deliveryLng = Number(
+    payload.kinh_do_giao_hang || payload.delivery_lng || 0,
+  );
   const hasPickupPoint = pickupLat && pickupLng;
   const hasDeliveryPoint = deliveryLat && deliveryLng;
 
@@ -1572,8 +1401,12 @@ async function applyStoredDraftMarkers(payload) {
     return;
   }
 
-  const pickupAddress = String(payload.search_pickup || "").trim();
-  const deliveryAddress = String(payload.search_delivery || "").trim();
+  const pickupAddress = String(
+    payload.dia_chi_lay_hang || payload.search_pickup || "",
+  ).trim();
+  const deliveryAddress = String(
+    payload.dia_chi_giao_hang || payload.search_delivery || "",
+  ).trim();
   if (pickupAddress && deliveryAddress) {
     await applyReorderAddresses({
       pickup_address: pickupAddress,
@@ -1587,61 +1420,69 @@ async function restorePendingBookingDraft() {
   if (!draft || !draft.payload) return false;
 
   const payload = draft.payload;
-  document.getElementById("nguoi_gui_ho_ten").value = payload.sender_name || "";
-  document.getElementById("nguoi_gui_so_dien_thoai").value = payload.sender_phone || "";
-  document.getElementById("nguoi_nhan_ho_ten").value = payload.receiver_name || "";
-  document.getElementById("nguoi_nhan_so_dien_thoai").value = payload.receiver_phone || "";
-  document.getElementById("dia_chi_lay_hang").value = payload.search_pickup || "";
+  document.getElementById("nguoi_gui_ho_ten").value =
+    payload.nguoi_gui_ho_ten || payload.sender_name || "";
+  document.getElementById("nguoi_gui_so_dien_thoai").value =
+    payload.nguoi_gui_so_dien_thoai || payload.sender_phone || "";
+  document.getElementById("nguoi_nhan_ho_ten").value =
+    payload.nguoi_nhan_ho_ten || payload.receiver_name || "";
+  document.getElementById("nguoi_nhan_so_dien_thoai").value =
+    payload.nguoi_nhan_so_dien_thoai || payload.receiver_phone || "";
+  document.getElementById("dia_chi_lay_hang").value =
+    payload.dia_chi_lay_hang || payload.search_pickup || "";
   document.getElementById("dia_chi_giao_hang").value =
-    payload.search_delivery || "";
-  document.getElementById("ghi_chu_tai_xe").value = payload.notes || "";
+    payload.dia_chi_giao_hang || payload.search_delivery || "";
+  document.getElementById("ghi_chu_tai_xe").value =
+    payload.ghi_chu_tai_xe || payload.notes || "";
   document.getElementById("gia_tri_thu_ho_cod").value =
-    parseFloat(payload.cod_value) || 0;
+    parseFloat(payload.gia_tri_thu_ho_cod || payload.cod_value) || 0;
 
-  setOptionGroupValue("payer-group", payload.fee_payer || "gui");
   setOptionGroupValue(
-    "payment-group",
-    payload.payment_method || "tien_mat",
+    "nhom_nguoi_tra_cuoc",
+    payload.nguoi_tra_cuoc || payload.fee_payer || "gui",
+  );
+  setOptionGroupValue(
+    "nhom_phuong_thuc_thanh_toan",
+    payload.phuong_thuc_thanh_toan || payload.payment_method || "tien_mat",
   );
 
-  orderItems = normalizeReorderItems(payload.items);
-  renderItems();
+  orderItems = normalizeReorderItems(payload.mat_hang || payload.items);
+  hien_thi_danh_sach_hang_hoa();
 
+  const dichVuNoiBo = getInternalServiceType(
+    payload.dich_vu || payload.service || "",
+  );
   const preferredMode =
-    payload.delivery_mode ||
-    (payload.service === "instant" ? "instant" : "scheduled");
+    dichVuNoiBo === "instant" ? "instant" : "scheduled";
   setDeliveryMode(preferredMode, { render: false });
 
   const pickupDateInput = document.getElementById("ngay_lay_hang");
   const pickupSlotSelect = document.getElementById("khung_gio_lay_hang");
-  const deliveryDateInput = document.getElementById("delivery-date");
-  const deliverySlotSelect = document.getElementById("delivery-slot");
   const vehicleSelect = document.getElementById("phuong_tien_giao_hang");
 
-  if (pickupDateInput && payload.pickup_date) {
-    pickupDateInput.value = payload.pickup_date;
+  const ngayLayHang = payload.ngay_lay_hang || payload.pickup_date || "";
+  const khungGioLayHang =
+    payload.khung_gio_lay_hang || payload.pickup_slot || "";
+  const phuongTien = payload.phuong_tien || payload.vehicle || "";
+
+  if (pickupDateInput && ngayLayHang) {
+    pickupDateInput.value = ngayLayHang;
   }
-  if (pickupSlotSelect && payload.pickup_slot) {
-    pickupSlotSelect.value = payload.pickup_slot;
+  if (pickupSlotSelect && khungGioLayHang) {
+    pickupSlotSelect.value = khungGioLayHang;
   }
-  if (deliveryDateInput && payload.delivery_date) {
-    deliveryDateInput.value = payload.delivery_date;
-  }
-  if (deliverySlotSelect && payload.delivery_slot) {
-    deliverySlotSelect.value = payload.delivery_slot;
-  }
-  if (vehicleSelect && payload.vehicle) {
+  if (vehicleSelect && phuongTien) {
     vehicleSelect.value = Array.from(vehicleSelect.options).some(
-      (option) => option.value === payload.vehicle,
+      (option) => option.value === phuongTien,
     )
-      ? payload.vehicle
+      ? phuongTien
       : "auto";
   }
 
   await applyStoredDraftMarkers(payload);
 
-  selectedService = payload.service ? { serviceType: payload.service } : null;
-  if (payload.service) {
+  selectedService = dichVuNoiBo ? { serviceType: dichVuNoiBo } : null;
+  if (dichVuNoiBo) {
     renderServiceCards();
   }
 
@@ -1655,16 +1496,16 @@ async function restorePendingBookingDraft() {
   }
 
   if (targetStep >= 5 && selectedService) {
-    prepareReview();
-    goToStep(5);
+    chuan_bi_xac_nhan();
+    chuyen_den_buoc(5);
   } else if (targetStep >= 4) {
-    goToStep(4);
+    chuyen_den_buoc(4);
   } else if (targetStep >= 3) {
-    goToStep(3);
+    chuyen_den_buoc(3);
   } else if (targetStep >= 2) {
-    goToStep(2);
+    chuyen_den_buoc(2);
   } else {
-    goToStep(1);
+    chuyen_den_buoc(1);
   }
 
   resetUploadsAfterDraftRestore(draft.had_uploads);
@@ -1732,11 +1573,11 @@ async function applyReorderPrefill(data) {
       : "auto";
   }
 
-  setOptionGroupValue("payer-group", data.fee_payer || "gui");
-  setOptionGroupValue("payment-group", data.payment_method || "tien_mat");
+  setOptionGroupValue("nhom_nguoi_tra_cuoc", data.fee_payer || "gui");
+  setOptionGroupValue("nhom_phuong_thuc_thanh_toan", data.payment_method || "tien_mat");
 
   orderItems = normalizeReorderItems(data.items);
-  renderItems();
+  hien_thi_danh_sach_hang_hoa();
 
   if (data.service_type) {
     selectedService = { serviceType: data.service_type };
@@ -1773,7 +1614,7 @@ async function initReorderPrefill() {
       console.log("ℹ️ [Hệ thống] Bỏ qua tải đơn cũ do máy chủ trả về HTML (có thể do chưa đăng nhập).");
     } else {
       console.error(error);
-      showError(1, error.message || "Không thể tải dữ liệu đơn cũ để đặt lại.");
+      hien_thi_loi(1, error.message || "Không thể tải dữ liệu đơn cũ để đặt lại.");
     }
   }
 }
@@ -1825,7 +1666,7 @@ async function initCustomerPrefill() {
 }
 
 // ========== ITEMS ==========
-function addItem() {
+function them_hang_hoa() {
   orderItems.push({
     loai_hang: "",
     ten_hang: "",
@@ -1836,22 +1677,22 @@ function addItem() {
     chieu_rong: 10,
     chieu_cao: 10,
   });
-  renderItems();
+  hien_thi_danh_sach_hang_hoa();
 }
 
-function removeItem(idx) {
+function xoa_hang_hoa(idx) {
   if (orderItems.length <= 1) return;
   orderItems.splice(idx, 1);
-  renderItems();
+  hien_thi_danh_sach_hang_hoa();
 }
 
-function handleLoaiHangChange(idx, val) {
+function xu_ly_thay_doi_loai_hang(idx, val) {
   orderItems[idx].loai_hang = val;
   orderItems[idx].ten_hang = "";
-  renderItems();
+  hien_thi_danh_sach_hang_hoa();
 }
 
-function updateItemField(idx, field, val) {
+function cap_nhat_truong_hang_hoa(idx, field, val) {
   if (field === "loai_hang" || field === "ten_hang") {
     orderItems[idx][field] = val;
   } else if (field === "so_luong") {
@@ -1859,11 +1700,11 @@ function updateItemField(idx, field, val) {
   } else {
     orderItems[idx][field] = parseFloat(val) || 0;
   }
-  updateWeightDisplay();
+  cap_nhat_tong_can_nang();
 }
 
-function renderItems() {
-  const container = document.getElementById("items-list");
+function hien_thi_danh_sach_hang_hoa() {
+  const container = document.getElementById("danh_sach_hang_hoa");
   container.innerHTML = "";
   orderItems.forEach((item, idx) => {
     const names = ITEM_NAMES_BY_TYPE[item.loai_hang] || [];
@@ -1888,18 +1729,18 @@ function renderItems() {
     div.dataset.itemIndex = String(idx);
     div.innerHTML = `
       <div class="item-row-num">Món hàng #${idx + 1}</div>
-      <button class="item-delete-btn" onclick="removeItem(${idx})" title="Xóa"><i class="fas fa-times"></i></button>
+      <button class="item-delete-btn" onclick="xoa_hang_hoa(${idx})" title="Xóa"><i class="fas fa-times"></i></button>
       <div class="form-grid" style="margin-bottom:10px;">
         <div class="form-group" style="margin:0;">
           <label style="font-size:12px;">Loại hàng</label>
-          <select class="form-control loai_hang" name="mat_hang[${idx}][loai_hang]" onchange="handleLoaiHangChange(${idx}, this.value)">
+          <select class="form-control loai_hang" name="mat_hang[${idx}][loai_hang]" onchange="xu_ly_thay_doi_loai_hang(${idx}, this.value)">
             <option value="">Chọn loại hàng...</option>
             ${typeOptions}
           </select>
         </div>
         <div class="form-group" style="margin:0;">
           <label style="font-size:12px;">Tên hàng cụ thể</label>
-          <select class="form-control ten_hang" name="mat_hang[${idx}][ten_hang]" onchange="updateItemField(${idx}, 'ten_hang', this.value)" ${isTypeChosen ? "" : "disabled"}>
+          <select class="form-control ten_hang" name="mat_hang[${idx}][ten_hang]" onchange="cap_nhat_truong_hang_hoa(${idx}, 'ten_hang', this.value)" ${isTypeChosen ? "" : "disabled"}>
             <option value="">${isTypeChosen ? "Chọn tên hàng..." : "Chọn loại hàng trước"}</option>
             ${nameOpts}
           </select>
@@ -1915,39 +1756,39 @@ function renderItems() {
               "field-help",
             )}
           </label>
-          <input type="number" class="form-control gia_tri_khai_bao" name="mat_hang[${idx}][gia_tri_khai_bao]" value="${item.gia_tri_khai_bao}" onchange="updateItemField(${idx},'gia_tri_khai_bao',this.value)" />
+          <input type="number" class="form-control gia_tri_khai_bao" name="mat_hang[${idx}][gia_tri_khai_bao]" value="${item.gia_tri_khai_bao}" onchange="cap_nhat_truong_hang_hoa(${idx},'gia_tri_khai_bao',this.value)" />
         </div>
         <div class="form-group" style="margin:0;">
           <label style="font-size:12px;">Số lượng</label>
-          <input type="number" class="form-control so_luong" name="mat_hang[${idx}][so_luong]" min="1" step="1" value="${item.so_luong || 1}" onchange="updateItemField(${idx},'so_luong',this.value)" />
+          <input type="number" class="form-control so_luong" name="mat_hang[${idx}][so_luong]" min="1" step="1" value="${item.so_luong || 1}" onchange="cap_nhat_truong_hang_hoa(${idx},'so_luong',this.value)" />
         </div>
       </div>
       <div class="item-grid item-grid-4">
         <div class="form-group" style="margin:0;">
           <label style="font-size:11px;">Cân nặng / kiện (kg)</label>
-          <input type="number" class="form-control can_nang" name="mat_hang[${idx}][can_nang]" step="0.1" value="${item.can_nang}" onchange="updateItemField(${idx},'can_nang',this.value)" />
+          <input type="number" class="form-control can_nang" name="mat_hang[${idx}][can_nang]" step="0.1" value="${item.can_nang}" onchange="cap_nhat_truong_hang_hoa(${idx},'can_nang',this.value)" />
         </div>
         <div class="form-group" style="margin:0;">
           <label style="font-size:11px;">Dài (cm)</label>
-          <input type="number" class="form-control chieu_dai" name="mat_hang[${idx}][chieu_dai]" value="${item.chieu_dai}" onchange="updateItemField(${idx},'chieu_dai',this.value)" />
+          <input type="number" class="form-control chieu_dai" name="mat_hang[${idx}][chieu_dai]" value="${item.chieu_dai}" onchange="cap_nhat_truong_hang_hoa(${idx},'chieu_dai',this.value)" />
         </div>
         <div class="form-group" style="margin:0;">
           <label style="font-size:11px;">Rộng (cm)</label>
-          <input type="number" class="form-control chieu_rong" name="mat_hang[${idx}][chieu_rong]" value="${item.chieu_rong}" onchange="updateItemField(${idx},'chieu_rong',this.value)" />
+          <input type="number" class="form-control chieu_rong" name="mat_hang[${idx}][chieu_rong]" value="${item.chieu_rong}" onchange="cap_nhat_truong_hang_hoa(${idx},'chieu_rong',this.value)" />
         </div>
         <div class="form-group" style="margin:0;">
           <label style="font-size:11px;">Cao (cm)</label>
-          <input type="number" class="form-control chieu_cao" name="mat_hang[${idx}][chieu_cao]" value="${item.chieu_cao}" onchange="updateItemField(${idx},'chieu_cao',this.value)" />
+          <input type="number" class="form-control chieu_cao" name="mat_hang[${idx}][chieu_cao]" value="${item.chieu_cao}" onchange="cap_nhat_truong_hang_hoa(${idx},'chieu_cao',this.value)" />
         </div>
       </div>
     `;
     container.appendChild(div);
   });
-  updateWeightDisplay();
+  cap_nhat_tong_can_nang();
   bindInfoToggleInteractions(container);
 }
 
-function updateWeightDisplay() {
+function cap_nhat_tong_can_nang() {
   let totalAct = 0,
     totalVol = 0;
   orderItems.forEach((it) => {
@@ -1957,7 +1798,7 @@ function updateWeightDisplay() {
       (it.so_luong || 1);
   });
   const billable = Math.max(totalAct, totalVol);
-  document.getElementById("total-weight-display").textContent =
+  document.getElementById("hien_thi_tong_can_nang").textContent =
     `${billable.toFixed(1)} kg`;
 }
 
@@ -1982,7 +1823,7 @@ function getPrimaryItemMeta() {
   );
 }
 
-function buildQuotePayload() {
+function tao_du_lieu_tinh_cuoc() {
   let totalCanNang = 0,
     totalKhaiGia = 0;
   let maxDai = 0,
@@ -2004,7 +1845,6 @@ function buildQuotePayload() {
   const instantWindow = isInstantMode ? getInstantPricingWindow(currentDate) : null;
   const pickupSlot = isInstantMode ? instantWindow : getSelectedPickupSlot();
   const urgentCondition = getSelectedUrgentCondition();
-  const scheduleInfo = getScheduleTimingInfo();
   const pickupPoint = markerPickup?.getLatLng?.() || null;
   const deliveryPoint = markerDelivery?.getLatLng?.() || null;
   const pickupDateValue = isInstantMode
@@ -2041,14 +1881,8 @@ function buildQuotePayload() {
     ten_khung_gio_nhan_hang: "",
     gio_bat_dau_nhan_hang: "",
     gio_ket_thuc_nhan_hang: "",
-    thoi_gian_xu_ly_phut:
-      isInstantMode
-        ? 0
-        : (scheduleInfo && scheduleInfo.totalMinutes) || 0,
-    ten_thoi_gian_xu_ly:
-      isInstantMode
-        ? "Điều phối realtime"
-        : (scheduleInfo && scheduleInfo.durationText) || "",
+    thoi_gian_xu_ly_phut: 0,
+    ten_thoi_gian_xu_ly: isInstantMode ? "Điều phối realtime" : "",
     dieu_kien_dich_vu:
       (urgentCondition && urgentCondition.key) || "macdinh",
     ten_dieu_kien_dich_vu:
@@ -2056,99 +1890,10 @@ function buildQuotePayload() {
   };
 }
 
-function getDesiredDeliveryStatus(estimateText) {
-  // Chức năng mốc giao hàng mong muốn đã bị tắt.
-  return "";
-}
-
-function getScheduledServiceAssessment(service) {
-  const scheduleInfo = getScheduleTimingInfo();
-  if (!scheduleInfo || !service) {
-    return {
-      fits: true,
-      reason: "",
-      shouldStorageNote: false,
-      scheduleInfo,
-    };
-  }
-  const parsed = parseEstimateToHours(service.estimate);
-  if (!parsed.maxHours) {
-    return {
-      fits: true,
-      reason: "",
-      shouldStorageNote: false,
-      scheduleInfo,
-    };
-  }
-  const requestedHours = scheduleInfo.totalMinutes / 60;
-  const fits = requestedHours >= parsed.maxHours;
-  const shouldStorageNote = fits && requestedHours > Math.max(parsed.maxHours + 24, parsed.maxHours * 2);
-  return {
-    fits,
-    reason: fits
-      ? ""
-      : `Thời gian dự kiến ${service.estimate} không kịp mốc bạn cần nhận trong ${scheduleInfo.durationText}.`,
-    shouldStorageNote,
-    scheduleInfo,
-  };
-}
-
 function updateStorageNote(services = []) {
-  const panel = document.getElementById("storage-note-panel");
-  const text = document.getElementById("storage-note-text");
-  if (!panel || !text) return;
-  if (getDeliveryMode() !== "scheduled") {
-    panel.classList.add("is-hidden");
-    return;
-  }
-  const shouldShow = services.some(
-    (service) => getScheduledServiceAssessment(service).shouldStorageNote,
-  );
-  if (!shouldShow) {
-    panel.classList.add("is-hidden");
-    return;
-  }
-  text.textContent =
-    "Mốc nhận đang cách khá xa thời điểm lấy hàng. Hệ thống vẫn cho đặt các gói phù hợp và có thể lưu kho để giao đúng ngày khách chờ.";
-  panel.classList.remove("is-hidden");
-}
-
-function updateInstantRealtimePanel(service = selectedService) {
-  const driverStatus = document.getElementById("instant-driver-status");
-  const pickupStatus = document.getElementById("instant-pickup-status");
-  const pickupNote = document.getElementById("instant-pickup-note");
-  const deliveryStatus = document.getElementById("instant-delivery-status");
-  const deliveryNote = document.getElementById("instant-delivery-note");
-  if (!driverStatus || !pickupStatus || !pickupNote || !deliveryStatus || !deliveryNote) {
-    return;
-  }
-
-  if (getDeliveryMode() !== "instant") return;
-
-  const now = getCurrentDateTime();
-  pickupStatus.textContent = `Ngay bây giờ (${now.toLocaleTimeString("vi-VN", {
-    hour: "2-digit",
-    minute: "2-digit",
-  })})`;
-  pickupNote.textContent =
-    "Hệ thống dùng thời điểm hiện tại để tính thời gian giao dự kiến realtime và phụ phí giờ đêm nếu có.";
-  deliveryStatus.textContent =
-    service && service.estimate
-      ? `Dự kiến giao trong: ${service.estimate}`
-      : "Đang tính thời gian giao dự kiến";
-  const weatherFee = Number(service?.breakdown?.conditionFee || 0);
-  deliveryNote.textContent =
-    weatherQuoteState?.isLoading
-      ? "Đang đồng bộ thời tiết và tìm tài xế gần nhất."
-      : weatherQuoteState?.conditionKey &&
-          weatherQuoteState.conditionKey !== "macdinh"
-        ? `Đã áp dụng ${weatherQuoteState.conditionLabel}: +${formatMoneyVnd(weatherFee)}.`
-        : "Phụ phí điều kiện giao sẽ tự động cập nhật nếu có phát sinh.";
-  driverStatus.innerHTML = `<i class="fas fa-satellite-dish"></i><span>${
-    weatherQuoteState?.isLoading
-      ? "Đang đồng bộ thời tiết và tìm tài xế"
-      : "Đang tìm tài xế gần nhất"
-  }</span>`;
+  const panel = document.getElementById("bang_goi_y_luu_kho");
+  if (!panel) return;
+  panel.classList.add("is-hidden");
 }
 
 function getInstantTimeFeeLabel(service) {
@@ -2161,13 +1906,12 @@ function getInstantWeatherFeeLabel(service) {
 
 // ========== SERVICE CARDS ==========
 function renderServiceCards(options = {}) {
-  const container = document.getElementById("service-list");
-  const btn5 = document.getElementById("btn-4-to-5");
-  const etaPanel = document.getElementById("eta-panel");
+  const container = document.getElementById("danh_sach_dich_vu");
+  const btn5 = document.getElementById("btn_buoc_4_sang_5");
+  const etaPanel = document.getElementById("bang_thoi_gian_giao_du_kien");
   const isInstantMode = getDeliveryMode() === "instant";
   etaPanel.classList.add("is-hidden");
-  document.getElementById("eta-display").textContent = "—";
-  updateInstantRealtimePanel();
+  document.getElementById("hien_thi_thoi_gian_giao_du_kien").textContent = "—";
 
   if (typeof window.calculateDomesticQuote !== "function") {
     container.innerHTML = `<div style="color:#ef4444;">Không tải được dữ liệu bảng giá.</div>`;
@@ -2184,9 +1928,8 @@ function renderServiceCards(options = {}) {
     requestWeatherQuote();
   }
 
-  const payload = buildQuotePayload();
+  const payload = tao_du_lieu_tinh_cuoc();
   const result = window.calculateDomesticQuote(payload);
-  const scheduleInfo = getScheduleTimingInfo();
 
   if (!result || !result.services || result.services.length === 0) {
     container.innerHTML = `<div style="color:#ef4444;">Không tìm thấy gói cước phù hợp.</div>`;
@@ -2194,7 +1937,7 @@ function renderServiceCards(options = {}) {
   }
 
   // Lấy gói cước được chọn từ Select Box
-  const packageChoice = document.getElementById("goi_cuoc");
+    const packageChoice = document.getElementById("goi_cuoc");
   const chosenType = packageChoice ? packageChoice.value : null;
 
   const filteredServices = result.services.filter((svc) =>
@@ -2212,9 +1955,7 @@ function renderServiceCards(options = {}) {
 
   // Luôn chọn đúng gói tương ứng với Select Box
   selectedService = filteredServices[0];
-  syncDesiredDeliveryWindow();
-  updateDesiredDeliveryHint();
-  updateStorageNote(filteredServices);
+  updateStorageNote();
   syncUrgentConditionVisibility(selectedService && selectedService.serviceType);
   btn5.disabled = !selectedService;
   if (selectedService) {
@@ -2226,46 +1967,21 @@ function renderServiceCards(options = {}) {
       selectedService.serviceType
     );
 
-    document.getElementById("eta-display").textContent =
+    document.getElementById("hien_thi_thoi_gian_giao_du_kien").textContent =
       selectedService.estimate;
     etaPanel.classList.remove("is-hidden");
   }
 
-  const chosenSvc = filteredServices[0];
-  const pkgLabels = {
-    instant: "Giao ngay lập tức",
-    fast: "Giao hàng nhanh",
-    standard: "Giao hàng tiêu chuẩn",
-    express: "Giao hàng hỏa tốc",
-  };
   container.innerHTML = "";
 
   filteredServices.forEach((svc) => {
     const bd = svc.breakdown || {};
-    const assessment = isInstantMode
-      ? { fits: true, reason: "", shouldStorageNote: false }
-      : getScheduledServiceAssessment(svc);
-    const isDisabled = !assessment.fits;
-    if (isDisabled && selectedService?.serviceType === svc.serviceType) {
-      selectedService = null;
-    }
-    const deadlineHint = isInstantMode
-      ? `<div class="service-deadline-badge good"><i class="fas fa-signal"></i> Thời gian giao dự kiến sẽ cập nhật ngay khi hệ thống điều phối</div>`
-      : getDesiredDeliveryStatus(svc.estimate);
-    const serviceStatusText = isInstantMode
-      ? ""
-      : isDisabled
-        ? "Không kịp mốc giao hiện tại."
-        : assessment.shouldStorageNote
-          ? "Có thể lưu kho để giao đúng hẹn."
-          : "Có thể đáp ứng mốc giao hiện tại.";
     const card = document.createElement("div");
     card.className =
       "service-card" +
       (selectedService && selectedService.serviceType === svc.serviceType
         ? " selected"
-        : "") +
-      (isDisabled ? " is-disabled" : "");
+        : "");
     card.innerHTML = `
       <div class="service-card-top">
         <div class="service-name"><i class="fas fa-truck-fast"></i> ${svc.serviceName}</div>
@@ -2273,11 +1989,6 @@ function renderServiceCards(options = {}) {
       </div>
       <div class="service-card-meta">
         <div class="service-eta"><i class="far fa-clock"></i> Thời gian giao dự kiến: ${svc.estimate}</div>
-        ${
-          !isInstantMode && scheduleInfo
-            ? `<div class="service-eta" style="color: #9a3412; font-weight: 700;"><i class="fas fa-stopwatch"></i> Từ lấy đến giao: ${scheduleInfo.durationText}</div>`
-            : ""
-        }
         <div class="service-eta" style="color: #16a34a; font-weight: 700;">
           <i class="fas fa-shipping-fast"></i>
           <span>Gợi ý: ${svc.vehicleSuggestion || "Xe máy"}</span>
@@ -2286,8 +1997,6 @@ function renderServiceCards(options = {}) {
           <i class="fas fa-truck-ramp-box"></i> Đang tính giá: ${svc.selectedVehicleLabel || svc.vehicleSuggestion || "Xe máy"}${svc.vehicleMultiplier > 1 ? ` (x${svc.vehicleMultiplier})` : ""}
         </div>
       </div>
-      ${deadlineHint}
-      ${serviceStatusText ? `<div class="service-card-note"><span>${serviceStatusText}</span></div>` : ""}
       <div class="service-breakdown">
         <div class="breakdown-row"><span>Phí vận chuyển</span><span>${(bd.basePrice || 0).toLocaleString()} ₫</span></div>
         <div class="breakdown-row"><span>Phí trọng lượng vượt mức</span><span>${(bd.overweightFee || 0).toLocaleString()} ₫</span></div>
@@ -2307,54 +2016,42 @@ function renderServiceCards(options = {}) {
         <div class="breakdown-row"><span>Tổng</span><span>${svc.total.toLocaleString()} ₫</span></div>
       </div>
     `;
-    if (isDisabled) {
-      container.appendChild(card);
-      return;
-    }
     card.addEventListener("click", () => {
       document
         .querySelectorAll(".service-card")
         .forEach((c) => c.classList.remove("selected"));
       card.classList.add("selected");
       selectedService = svc;
-      const scheduleChanged = syncDesiredDeliveryWindow();
-      updateDesiredDeliveryHint();
       syncUrgentConditionVisibility(svc.serviceType);
-      updateInstantRealtimePanel(svc);
-      if (scheduleChanged) {
-        renderServiceCards();
-        return;
-      }
       btn5.disabled = false;
       // Cập nhật ETA ở bước 3
-      document.getElementById("eta-display").textContent = svc.estimate;
+      document.getElementById("hien_thi_thoi_gian_giao_du_kien").textContent = svc.estimate;
       etaPanel.classList.remove("is-hidden");
     });
     container.appendChild(card);
   });
 
   btn5.disabled = !selectedService;
-  updateInstantRealtimePanel(selectedService);
   bindInfoToggleInteractions(container);
 }
 
 // ========== STEP NAVIGATION ==========
-function selectOption(groupId, btn) {
+function chon_tuy_chon(groupId, btn) {
   document
     .querySelectorAll(`#${groupId} .option-btn`)
     .forEach((b) => b.classList.remove("active"));
   btn.classList.add("active");
   const inputId =
-    groupId === "payer-group" ? "nguoi_tra_cuoc" : "phuong_thuc_thanh_toan";
+    groupId === "nhom_nguoi_tra_cuoc" ? "nguoi_tra_cuoc" : "phuong_thuc_thanh_toan";
   document.getElementById(inputId).value = btn.dataset.val;
 }
 
-function goToStep(step) {
+function chuyen_den_buoc(step) {
   if (step < 1 || step > 5) return;
   for (let i = 1; i <= 5; i++) {
-    clearError(i);
-    document.getElementById(`step-${i}`).classList.toggle("active", i === step);
-    const ind = document.getElementById(`ind-${i}`);
+    xoa_loi(i);
+    document.getElementById(`buoc_${i}`).classList.toggle("active", i === step);
+    const ind = document.getElementById(`chi_bao_buoc_${i}`);
     ind.className =
       "step-item" + (i < step ? " completed" : i === step ? " active" : "");
     if (i < step) {
@@ -2366,8 +2063,8 @@ function goToStep(step) {
   window.scrollTo({ top: 0, behavior: "smooth" });
 }
 
-function validateStep1() {
-  clearError(1);
+function xac_thuc_buoc_1() {
+  xoa_loi(1);
   const fields = [
     ["nguoi_gui_ho_ten", "Họ tên người gửi"],
     ["nguoi_gui_so_dien_thoai", "Số điện thoại người gửi"],
@@ -2379,12 +2076,12 @@ function validateStep1() {
   for (const [id, label] of fields) {
     const val = document.getElementById(id).value.trim();
     if (!val) {
-      showError(1, `Vui lòng điền: ${label}`);
+      hien_thi_loi(1, `Vui lòng điền: ${label}`);
       document.getElementById(id).focus();
       return false;
     }
-    if (id.includes("phone") && !isValidPhone(val)) {
-      showError(
+    if (id.includes("so_dien_thoai") && !isValidPhone(val)) {
+      hien_thi_loi(
         1,
         `${label} không đúng định dạng (10 số, bắt đầu bằng 03, 05, 07, 08, 09).`,
       );
@@ -2393,7 +2090,7 @@ function validateStep1() {
     }
   }
   if (!khoang_cach_km || khoang_cach_km <= 0) {
-    showError(
+    hien_thi_loi(
       1,
       "Vui lòng xác định vị trí trên bản đồ bằng cách tìm kiếm địa chỉ hoặc kéo ghim.",
     );
@@ -2403,7 +2100,7 @@ function validateStep1() {
     document.getElementById("dia_chi_lay_hang").value ===
     document.getElementById("dia_chi_giao_hang").value
   ) {
-    showError(
+    hien_thi_loi(
       1,
       "Địa chỉ lấy hàng và địa chỉ giao hàng không được trùng nhau.",
     );
@@ -2412,50 +2109,50 @@ function validateStep1() {
   return true;
 }
 
-function validateStep2() {
-  clearError(2);
+function xac_thuc_buoc_2() {
+  xoa_loi(2);
   if (orderItems.length === 0) {
-    showError(2, "Vui lòng thêm ít nhất một món hàng.");
+    hien_thi_loi(2, "Vui lòng thêm ít nhất một món hàng.");
     return false;
   }
   for (let i = 0; i < orderItems.length; i++) {
     const it = orderItems[i];
     if (!it.loai_hang) {
-      showError(2, `Vui lòng chọn loại hàng cho món hàng thứ ${i + 1}.`);
+      hien_thi_loi(2, `Vui lòng chọn loại hàng cho món hàng thứ ${i + 1}.`);
       return false;
     }
     if (!it.ten_hang) {
-      showError(2, `Vui lòng chọn hoặc nhập tên cho món hàng thứ ${i + 1}.`);
+      hien_thi_loi(2, `Vui lòng chọn hoặc nhập tên cho món hàng thứ ${i + 1}.`);
       return false;
     }
     if ((it.so_luong || 0) <= 0) {
-      showError(2, `Số lượng món hàng thứ ${i + 1} phải từ 1 trở lên.`);
+      hien_thi_loi(2, `Số lượng món hàng thứ ${i + 1} phải từ 1 trở lên.`);
       return false;
     }
     if (it.can_nang <= 0 || it.can_nang > 1000) {
-      showError(
+      hien_thi_loi(
         2,
         `Trọng lượng món hàng thứ ${i + 1} phải từ 0.1kg đến 1000kg.`,
       );
       return false;
     }
     if (it.chieu_dai <= 0 || it.chieu_rong <= 0 || it.chieu_cao <= 0) {
-      showError(2, `Kích thước món hàng thứ ${i + 1} phải > 0.`);
+      hien_thi_loi(2, `Kích thước món hàng thứ ${i + 1} phải > 0.`);
       return false;
     }
     if (it.gia_tri_khai_bao < 0) {
-      showError(2, `Giá trị khai báo món hàng thứ ${i + 1} không được âm.`);
+      hien_thi_loi(2, `Giá trị khai báo món hàng thứ ${i + 1} không được âm.`);
       return false;
     }
   }
   return true;
 }
 
-function validateStep3() {
-  clearError(3);
+function xac_thuc_buoc_3() {
+  xoa_loi(3);
   if (getDeliveryMode() === "instant") {
     if (!selectedService || selectedService.serviceType !== "instant") {
-      showError(3, "Vui lòng chọn gói Giao Ngay Lập Tức để tiếp tục.");
+      hien_thi_loi(3, "Vui lòng chọn gói Giao Ngay Lập Tức để tiếp tục.");
       return false;
     }
     return true;
@@ -2463,24 +2160,24 @@ function validateStep3() {
 
   const pDateVal = document.getElementById("ngay_lay_hang").value;
   if (!pDateVal) {
-    showError(3, "Vui lòng chọn ngày lấy hàng.");
+    hien_thi_loi(3, "Vui lòng chọn ngày lấy hàng.");
     return false;
   }
 
   const todayDate = formatDateValue(getCurrentDateTime());
   if (pDateVal < todayDate) {
-    showError(3, "Ngày lấy hàng không được ở trong quá khứ.");
+    hien_thi_loi(3, "Ngày lấy hàng không được ở trong quá khứ.");
     return false;
   }
 
   const pSlot = document.getElementById("khung_gio_lay_hang").value;
   if (!pSlot) {
-    showError(3, "Vui lòng chọn khung giờ lấy hàng.");
+    hien_thi_loi(3, "Vui lòng chọn khung giờ lấy hàng.");
     return false;
   }
   const pickupSlot = getSelectedPickupSlot();
   if (!pickupSlot) {
-    showError(3, "Khung giờ lấy hàng không hợp lệ. Vui lòng chọn lại.");
+    hien_thi_loi(3, "Khung giờ lấy hàng không hợp lệ. Vui lòng chọn lại.");
     return false;
   }
 
@@ -2491,7 +2188,7 @@ function validateStep3() {
     const endMinutes = timeTextToMinutes(pickupSlot.end || "");
 
     if (endMinutes >= 0 && currentMinutes >= endMinutes) {
-      showError(
+      hien_thi_loi(
         3,
         `Khung giờ ${pickupSlot.label} của ngày hôm nay đã trôi qua. Vui lòng chọn khung giờ khác.`,
       );
@@ -2499,14 +2196,14 @@ function validateStep3() {
     }
   }
   if (!selectedService) {
-    showError(3, "Vui lòng chọn một gói cước vận chuyển.");
+    hien_thi_loi(3, "Vui lòng chọn một gói cước vận chuyển.");
     return false;
   }
   return true;
 }
 
-function validateStep4() {
-  clearError(4);
+function xac_thuc_buoc_4() {
+  xoa_loi(4);
   return true;
 }
 
@@ -2543,23 +2240,23 @@ function formatDateToDDMMYYYY(dateString) {
 }
 
 // ========== REVIEW ==========
-function prepareReview() {
+function chuan_bi_xac_nhan() {
   if (!selectedService) return;
-  const payload = buildPayload();
+  const payload = tao_du_lieu_gui();
 
-  document.getElementById("rv-sender").textContent =
+  document.getElementById("xac_nhan_nguoi_gui").textContent =
     `${document.getElementById("nguoi_gui_ho_ten").value} — ${document.getElementById("nguoi_gui_so_dien_thoai").value}`;
-  document.getElementById("rv-receiver").textContent =
+  document.getElementById("xac_nhan_nguoi_nhan").textContent =
     `${document.getElementById("nguoi_nhan_ho_ten").value} — ${document.getElementById("nguoi_nhan_so_dien_thoai").value}`;
-  document.getElementById("rv-pickup-addr").textContent =
+  document.getElementById("xac_nhan_dia_chi_lay_hang").textContent =
     document.getElementById("dia_chi_lay_hang").value || "—";
-  document.getElementById("rv-delivery-addr").textContent =
+  document.getElementById("xac_nhan_dia_chi_giao_hang").textContent =
     document.getElementById("dia_chi_giao_hang").value || "—";
-  document.getElementById("rv-distance").textContent =
+  document.getElementById("xac_nhan_khoang_cach").textContent =
     `${khoang_cach_km.toFixed(2)} km`;
 
   // Items List (Phần 5: Hiển thị hàng hóa rõ ràng)
-  const list = document.getElementById("rv-items-container");
+  const list = document.getElementById("xac_nhan_danh_sach_hang_hoa");
   list.innerHTML = "";
   orderItems.forEach((it, idx) => {
     const div = document.createElement("div");
@@ -2582,31 +2279,28 @@ function prepareReview() {
     list.appendChild(div);
   });
 
-  document.getElementById("rv-cod").textContent = payload.phi_thu_ho
-    ? `${payload.phi_thu_ho.toLocaleString()} ₫`
+  document.getElementById("xac_nhan_gia_tri_thu_ho_cod").textContent = payload.gia_tri_thu_ho_cod
+    ? `${payload.gia_tri_thu_ho_cod.toLocaleString()} ₫`
     : "Không có";
-  document.getElementById("rv-notes").textContent =
+  document.getElementById("xac_nhan_ghi_chu_tai_xe").textContent =
     document.getElementById("ghi_chu_tai_xe").value || "Không có";
-  renderReviewUploads();
+  hien_thi_tai_len_xac_nhan();
 
   // Lịch trình (Phần 3: Thời gian và khoảng thời gian)
   const pDate = document.getElementById("ngay_lay_hang").value;
   const pSlot = getSelectedPickupSlot();
   const urgentCondition = getSelectedUrgentCondition();
-  const scheduleInfo = getScheduleTimingInfo();
-  
-  document.getElementById("rv-pickup-time").textContent =
+  document.getElementById("xac_nhan_thoi_gian_lay_hang").textContent =
     `${formatDateToDDMMYYYY(pDate)} | ${(pSlot && pSlot.label) || "—"}`;
-  document.getElementById("rv-eta").textContent = selectedService.estimate;
+  document.getElementById("xac_nhan_thoi_gian_giao_du_kien").textContent = selectedService.estimate;
 
   // Giá & Phương tiện (Phần 4: Phương tiện)
   const bd = selectedService.breakdown || {};
-  const rvPrice = document.getElementById("rv-price-breakdown");
+  const rvPrice = document.getElementById("xac_nhan_chi_tiet_gia");
   rvPrice.innerHTML = `
     <div class="rv-row"><span class="rv-label">Gói dịch vụ:</span><span class="rv-val" style="color:#ff7a00; font-weight:800;">${selectedService.serviceName}</span></div>
     <div class="rv-row"><span class="rv-label">Phương tiện gợi ý:</span><span class="rv-val">${selectedService.vehicleSuggestion || "Xe máy"}</span></div>
     <div class="rv-row"><span class="rv-label">Phương tiện đang tính giá:</span><span class="rv-val">${selectedService.selectedVehicleLabel || selectedService.vehicleSuggestion || "Xe máy"}</span></div>
-    ${scheduleInfo ? `<div class="rv-row"><span class="rv-label">Từ lấy đến giao:</span><span class="rv-val">${scheduleInfo.durationText}</span></div>` : ""}
     <div class="rv-row"><span class="rv-label">Điều kiện giao đang áp dụng:</span><span class="rv-val">${selectedService.serviceConditionLabel || (urgentCondition && urgentCondition.label) || "Điều kiện bình thường"}</span></div>
     <div class="rv-row"><span class="rv-label">Phí vận chuyển:</span><span class="rv-val">${(bd.basePrice || 0).toLocaleString()} ₫</span></div>
     <div class="rv-row"><span class="rv-label">Phí trọng lượng vượt mức:</span><span class="rv-val">${(bd.overweightFee || 0).toLocaleString()} ₫</span></div>
@@ -2622,7 +2316,7 @@ function prepareReview() {
     </div>
     <div class="rv-row"><span class="rv-label">Thanh toán:</span><span class="rv-val">${document.getElementById("phuong_thuc_thanh_toan").value === "tien_mat" ? "Tiền mặt" : "Chuyển khoản"}</span></div>
   `;
-  document.getElementById("rv-total").textContent =
+  document.getElementById("xac_nhan_tong_thanh_toan").textContent =
     `${selectedService.total.toLocaleString()} ₫`;
 }
 
@@ -2640,6 +2334,41 @@ function getSelectedUploadFiles() {
   ].filter((entry) => entry.file);
 }
 
+function doc_tep_base64(file) {
+  return new Promise((resolve, reject) => {
+    if (!file) {
+      reject(new Error("Không có tệp để đọc."));
+      return;
+    }
+
+    const reader = new FileReader();
+    reader.onload = () => {
+      const result = String(reader.result || "");
+      const base64 = result.includes(",") ? result.split(",")[1] : result;
+      resolve(base64);
+    };
+    reader.onerror = () => {
+      reject(new Error(`Không thể đọc tệp ${file.name || ""}.`));
+    };
+    reader.readAsDataURL(file);
+  });
+}
+
+async function tao_du_lieu_tai_len_google_sheets() {
+  const uploads = getSelectedUploadFiles();
+  if (!uploads.length) return [];
+
+  return Promise.all(
+    uploads.map(async (entry) => ({
+      loai: entry.type,
+      file_name: entry.file.name,
+      mime_type: entry.file.type || "application/octet-stream",
+      size: Number(entry.file.size || 0),
+      data_base64: await doc_tep_base64(entry.file),
+    })),
+  );
+}
+
 function clearReviewUploadObjectUrls() {
   reviewUploadObjectUrls.forEach((url) => {
     try {
@@ -2651,9 +2380,9 @@ function clearReviewUploadObjectUrls() {
   reviewUploadObjectUrls = [];
 }
 
-function renderReviewUploads() {
-  const host = document.getElementById("rv-upload-list");
-  const empty = document.getElementById("rv-upload-empty");
+function hien_thi_tai_len_xac_nhan() {
+  const host = document.getElementById("xac_nhan_danh_sach_media");
+  const empty = document.getElementById("xac_nhan_media_trong");
   if (!host || !empty) return;
 
   clearReviewUploadObjectUrls();
@@ -2735,6 +2464,16 @@ async function submitOrderToGoogleSheetsFallback(payload) {
   }
 
   const fallbackOrderCode = `GS-${Date.now()}`;
+  let uploadedFiles = [];
+  try {
+    uploadedFiles = await tao_du_lieu_tai_len_google_sheets();
+  } catch (error) {
+    throw new Error(
+      error?.message ||
+        "Không chuẩn bị được ảnh/video để gửi sang Google Drive qua Google Sheets.",
+    );
+  }
+
   let response;
   try {
     response = await fetch(webhookUrl, {
@@ -2749,7 +2488,11 @@ async function submitOrderToGoogleSheetsFallback(payload) {
         source: "frontend_google_sheets_fallback",
         order_code: fallbackOrderCode,
         created_at: new Date().toISOString(),
-        payload,
+        payload: {
+          ...payload,
+          order_code: fallbackOrderCode,
+        },
+        uploaded_files: uploadedFiles,
       }),
     });
   } catch (error) {
@@ -2796,7 +2539,7 @@ function renderSubmitSuccessState(orderCode, messageHtml) {
       >Tra cứu đơn hàng</a>
     `;
 
-  const container = document.getElementById("step-5");
+  const container = document.getElementById("buoc_5");
   container.innerHTML = `
     <div style="text-align: center; padding: 40px 20px;">
       <div style="width: 80px; height: 80px; background: #dcfce7; color: #16a34a; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 40px; margin: 0 auto 24px;">
@@ -2818,9 +2561,21 @@ function renderSubmitSuccessState(orderCode, messageHtml) {
 }
 
 function getServiceStorageValue(serviceType) {
-  return String(serviceType || "").toLowerCase() === "instant"
-    ? "giao_ngay_lap_tuc"
-    : "giao_dat_lich";
+  const normalized = String(serviceType || "").toLowerCase();
+  if (normalized === "instant") return "giao_ngay_lap_tuc";
+  if (normalized === "express") return "giao_hoa_toc";
+  if (normalized === "fast") return "giao_nhanh";
+  if (normalized === "standard") return "giao_tieu_chuan";
+  return normalized;
+}
+
+function getInternalServiceType(serviceValue) {
+  const normalized = String(serviceValue || "").toLowerCase();
+  if (normalized === "giao_ngay_lap_tuc") return "instant";
+  if (normalized === "giao_hoa_toc") return "express";
+  if (normalized === "giao_nhanh") return "fast";
+  if (normalized === "giao_tieu_chuan") return "standard";
+  return normalized;
 }
 
 function getWeatherSourceStorageValue(source) {
@@ -2837,10 +2592,72 @@ function getWeatherSourceStorageValue(source) {
     .replace(/^_+|_+$/g, "");
 }
 
-function previewUpload(type) {
+function tao_chi_tiet_gia_cuoc_luu_tru(breakdown = {}) {
+  return {
+    gia_co_ban: Number(breakdown.basePrice || 0),
+    phu_phi_qua_can: Number(breakdown.overweightFee || 0),
+    phi_the_tich: Number(breakdown.volumeFee || 0),
+    phi_trong_luong: Number(breakdown.weightFee || 0),
+    phu_phi_loai_hang: Number(breakdown.goodsFee || 0),
+    phu_phi_khung_gio: Number(breakdown.timeFee || 0),
+    phu_phi_thoi_tiet: Number(breakdown.conditionFee || 0),
+    phu_phi_dich_vu: Number(breakdown.serviceFee || 0),
+    ma_khung_gio: String(breakdown.timeSurchargeKey || ""),
+    ten_khung_gio: String(breakdown.timeSurchargeLabel || ""),
+    ma_dieu_kien_thoi_tiet: String(breakdown.conditionSurchargeKey || ""),
+    ten_dieu_kien_thoi_tiet: String(breakdown.conditionSurchargeLabel || ""),
+    phi_cod: Number(breakdown.codFee || 0),
+    phi_bao_hiem: Number(breakdown.insuranceFee || 0),
+    dieu_chinh_theo_xe: Number(breakdown.vehicleFee || 0),
+    can_nang_thuc_te: Number(breakdown.actualWeight || 0),
+    can_nang_quy_doi: Number(breakdown.volumetricWeight || 0),
+    can_nang_tinh_cuoc: Number(breakdown.billableWeight || 0),
+    can_nang_tinh_cuoc_moi_kien: Number(
+      breakdown.billableWeightPerPackage || 0,
+    ),
+    phi_khoi_luong_kich_thuoc: Number(breakdown.weightSizeFee || 0),
+    tong_phu_phi_loai_hang: Number(breakdown.goodsGroupFee || 0),
+    tong_phu_phi_dich_vu: Number(breakdown.serviceGroupFee || 0),
+    da_bao_gom_phi_khung_gio: Boolean(breakdown.includesTimeFee),
+    da_bao_gom_dieu_chinh_theo_xe: Boolean(breakdown.includesVehicleFee),
+  };
+}
+
+function tao_chi_tiet_gia_cuoc_php(chiTiet = {}) {
+  return {
+    basePrice: Number(chiTiet.gia_co_ban || 0),
+    overweightFee: Number(chiTiet.phu_phi_qua_can || 0),
+    volumeFee: Number(chiTiet.phi_the_tich || 0),
+    weightFee: Number(chiTiet.phi_trong_luong || 0),
+    goodsFee: Number(chiTiet.phu_phi_loai_hang || 0),
+    timeFee: Number(chiTiet.phu_phi_khung_gio || 0),
+    conditionFee: Number(chiTiet.phu_phi_thoi_tiet || 0),
+    serviceFee: Number(chiTiet.phu_phi_dich_vu || 0),
+    timeSurchargeKey: String(chiTiet.ma_khung_gio || ""),
+    timeSurchargeLabel: String(chiTiet.ten_khung_gio || ""),
+    conditionSurchargeKey: String(chiTiet.ma_dieu_kien_thoi_tiet || ""),
+    conditionSurchargeLabel: String(chiTiet.ten_dieu_kien_thoi_tiet || ""),
+    codFee: Number(chiTiet.phi_cod || 0),
+    insuranceFee: Number(chiTiet.phi_bao_hiem || 0),
+    vehicleFee: Number(chiTiet.dieu_chinh_theo_xe || 0),
+    actualWeight: Number(chiTiet.can_nang_thuc_te || 0),
+    volumetricWeight: Number(chiTiet.can_nang_quy_doi || 0),
+    billableWeight: Number(chiTiet.can_nang_tinh_cuoc || 0),
+    billableWeightPerPackage: Number(
+      chiTiet.can_nang_tinh_cuoc_moi_kien || 0,
+    ),
+    weightSizeFee: Number(chiTiet.phi_khoi_luong_kich_thuoc || 0),
+    goodsGroupFee: Number(chiTiet.tong_phu_phi_loai_hang || 0),
+    serviceGroupFee: Number(chiTiet.tong_phu_phi_dich_vu || 0),
+    includesTimeFee: Boolean(chiTiet.da_bao_gom_phi_khung_gio),
+    includesVehicleFee: Boolean(chiTiet.da_bao_gom_dieu_chinh_theo_xe),
+  };
+}
+
+function xem_truoc_tai_len(type) {
   const inputId = type === "video" ? "video_hang_hoa" : "hinh_anh_hang_hoa";
-  const previewId = type === "video" ? "preview-video" : "preview-image";
-  const metaId = type === "video" ? "video-upload-meta" : "image-upload-meta";
+  const previewId = type === "video" ? "xem_truoc_video_hang_hoa" : "xem_truoc_anh_hang_hoa";
+  const metaId = type === "video" ? "thong_tin_tai_len_video" : "thong_tin_tai_len_anh";
   const file = document.getElementById(inputId).files[0];
   if (!file) return;
   const preview = document.getElementById(previewId);
@@ -2860,24 +2677,25 @@ function previewUpload(type) {
   };
   reader.readAsDataURL(file);
 
-  if (getCurrentStep() >= 5) {
-    renderReviewUploads();
+  if (lay_buoc_hien_tai() >= 5) {
+    hien_thi_tai_len_xac_nhan();
   }
 }
 
 // ========== SUBMIT ==========
-async function submitOrder() {
-  const btn = document.getElementById("btn-submit-order");
+async function gui_don_hang() {
+  const btn = document.getElementById("btn_gui_don_hang");
   const originalText = btn.innerHTML;
   btn.disabled = true;
   btn.innerHTML = `<i class="fas fa-spinner fa-spin"></i> Đang xử lý...`;
 
-  const payload = buildPayload();
-  clearError(5);
+  const payload = tao_du_lieu_gui();
+  const payloadPhp = tao_payload_php_tuong_thich(payload);
+  xoa_loi(5);
 
   try {
     const formData = new FormData();
-    formData.append("payload", JSON.stringify(payload));
+    formData.append("payload", JSON.stringify(payloadPhp));
     getSelectedUploadFiles().forEach((entry) => {
       formData.append("goods_media[]", entry.file, entry.file.name);
     });
@@ -2899,7 +2717,7 @@ async function submitOrder() {
             : "Đơn đã được lưu thành công ngay cả khi chưa đăng nhập. Hãy lưu lại mã đơn để tra cứu sau.",
       );
     } else if (response.status === 401) {
-      showError(
+      hien_thi_loi(
         5,
         result.message || "Phiên đăng nhập đã hết hạn. Vui lòng thử lại.",
       );
@@ -2913,7 +2731,7 @@ async function submitOrder() {
         return;
       } catch (sheetsError) {
         console.error(sheetsError);
-        showError(
+        hien_thi_loi(
           5,
           sheetsError.message || result.message || "Không lưu được đơn hàng.",
         );
@@ -2933,7 +2751,7 @@ async function submitOrder() {
         return;
       } catch (sheetsError) {
         console.error(sheetsError);
-        showError(
+        hien_thi_loi(
           5,
           sheetsError.message ||
             "Database chưa lưu được và Google Sheets cũng chưa nhận được dữ liệu.",
@@ -2944,7 +2762,7 @@ async function submitOrder() {
       }
     }
 
-    showError(
+    hien_thi_loi(
       5,
       error.message ||
         "Có lỗi xảy ra khi gửi yêu cầu. Vui lòng kiểm tra kết nối mạng.",
@@ -2954,11 +2772,12 @@ async function submitOrder() {
   }
 }
 
-function buildPayload() {
-  const scheduleInfo = getScheduleTimingInfo();
-  const quotePayload = buildQuotePayload();
+function tao_du_lieu_gui() {
+  const quotePayload = tao_du_lieu_tinh_cuoc();
   const serviceType = selectedService.serviceType;
-  const weatherSourceCode = weatherQuoteState?.source || "";
+  const chiTietGiaCuoc = tao_chi_tiet_gia_cuoc_luu_tru(
+    selectedService.breakdown || {},
+  );
   const nguoi_gui_ho_ten = document.getElementById("nguoi_gui_ho_ten").value;
   const nguoi_gui_so_dien_thoai = document.getElementById("nguoi_gui_so_dien_thoai").value;
   const nguoi_nhan_ho_ten = document.getElementById("nguoi_nhan_ho_ten").value;
@@ -2972,88 +2791,78 @@ function buildPayload() {
     document.getElementById("phuong_thuc_thanh_toan").value;
   const nguoi_tra_cuoc = document.getElementById("nguoi_tra_cuoc").value;
   return {
-    reorder_id:
-      reorderContext && reorderContext.source_order_id
-        ? reorderContext.source_order_id
-        : null,
-    sender_name: nguoi_gui_ho_ten,
-    sender_phone: nguoi_gui_so_dien_thoai,
-    receiver_name: nguoi_nhan_ho_ten,
-    receiver_phone: nguoi_nhan_so_dien_thoai,
     nguoi_gui_ho_ten,
     nguoi_gui_so_dien_thoai,
     nguoi_nhan_ho_ten,
     nguoi_nhan_so_dien_thoai,
-    delivery_mode: getDeliveryMode(),
-    search_pickup: dia_chi_lay_hang,
-    search_delivery: dia_chi_giao_hang,
     dia_chi_lay_hang,
     dia_chi_giao_hang,
-    pickup_date: quotePayload.ngay_lay_hang || "",
-    pickup_slot: quotePayload.khung_gio_lay_hang || "",
-    pickup_slot_label: quotePayload.ten_khung_gio_lay_hang || "",
     ngay_lay_hang: quotePayload.ngay_lay_hang || "",
     khung_gio_lay_hang: quotePayload.khung_gio_lay_hang || "",
     ten_khung_gio_lay_hang: quotePayload.ten_khung_gio_lay_hang || "",
-    delivery_date: quotePayload.ngay_nhan_mong_muon || "",
-    delivery_slot: quotePayload.khung_gio_nhan_hang || "",
-    delivery_slot_label: quotePayload.ten_khung_gio_nhan_hang || "",
-    turnaround_minutes:
-      getDeliveryMode() === "instant"
-        ? 0
-        : (scheduleInfo && scheduleInfo.totalMinutes) || 0,
-    turnaround_label:
-      getDeliveryMode() === "instant"
-        ? "Điều phối realtime"
-        : (scheduleInfo && scheduleInfo.durationText) || "",
-    notes: ghi_chu_tai_xe,
+    du_kien_giao_hang: selectedService.estimate,
     ghi_chu_tai_xe,
-    cod_value: gia_tri_thu_ho_cod,
     gia_tri_thu_ho_cod,
-    payment_method: phuong_thuc_thanh_toan,
     phuong_thuc_thanh_toan,
-    fee_payer: nguoi_tra_cuoc,
     nguoi_tra_cuoc,
-    service: serviceType,
-    service_name: selectedService.serviceName,
-    service_code: serviceType,
     dich_vu: getServiceStorageValue(serviceType),
     ten_dich_vu: selectedService.serviceName,
-    estimated_eta: selectedService.estimate,
-    du_kien_giao_hang: selectedService.estimate,
-    vehicle: selectedService.selectedVehicleKey || "",
-    vehicle_label:
-      selectedService.selectedVehicleLabel || selectedService.vehicleSuggestion,
-    vehicle_suggestion: selectedService.vehicleSuggestion || "",
     phuong_tien: selectedService.selectedVehicleKey || "",
     ten_phuong_tien:
       selectedService.selectedVehicleLabel || selectedService.vehicleSuggestion,
-    goi_y_phuong_tien: selectedService.vehicleSuggestion || "",
-    total_fee: selectedService.total,
-    pricing_breakdown: selectedService.breakdown || {},
     tong_cuoc: selectedService.total,
-    chi_tiet_gia_cuoc: selectedService.breakdown || {},
-    pickup_lat: quotePayload.pickup_lat || 0,
-    pickup_lng: quotePayload.pickup_lng || 0,
-    delivery_lat: quotePayload.delivery_lat || 0,
-    delivery_lng: quotePayload.delivery_lng || 0,
+    chi_tiet_gia_cuoc: chiTietGiaCuoc,
     vi_do_lay_hang: quotePayload.pickup_lat || 0,
     kinh_do_lay_hang: quotePayload.pickup_lng || 0,
     vi_do_giao_hang: quotePayload.delivery_lat || 0,
     kinh_do_giao_hang: quotePayload.delivery_lng || 0,
-    service_condition_key:
-      selectedService.serviceConditionKey ||
-      (getSelectedUrgentCondition() && getSelectedUrgentCondition().key) ||
-      "macdinh",
-    service_condition_label:
-      selectedService.serviceConditionLabel ||
-      (getSelectedUrgentCondition() && getSelectedUrgentCondition().label) ||
-      "Bình thường",
-    weather_source: getWeatherSourceStorageValue(weatherSourceCode),
-    weather_source_code: weatherSourceCode,
-    weather_note: weatherQuoteState?.note || "",
     khoang_cach_km: khoang_cach_km,
     mat_hang: orderItems,
-    items: orderItems,
+  };
+}
+
+function tao_payload_php_tuong_thich(du_lieu_gui) {
+  const dieuKienDichVu =
+    selectedService.serviceConditionKey ||
+    (getSelectedUrgentCondition() && getSelectedUrgentCondition().key) ||
+    "macdinh";
+  const nhanDienThoiTiet = weatherQuoteState?.source || "";
+
+  return {
+    reorder_id:
+      reorderContext && reorderContext.source_order_id
+        ? reorderContext.source_order_id
+        : null,
+    sender_name: du_lieu_gui.nguoi_gui_ho_ten,
+    sender_phone: du_lieu_gui.nguoi_gui_so_dien_thoai,
+    receiver_name: du_lieu_gui.nguoi_nhan_ho_ten,
+    receiver_phone: du_lieu_gui.nguoi_nhan_so_dien_thoai,
+    search_pickup: du_lieu_gui.dia_chi_lay_hang,
+    search_delivery: du_lieu_gui.dia_chi_giao_hang,
+    pickup_date: du_lieu_gui.ngay_lay_hang,
+    pickup_slot: du_lieu_gui.khung_gio_lay_hang,
+    pickup_slot_label: du_lieu_gui.ten_khung_gio_lay_hang,
+    notes: du_lieu_gui.ghi_chu_tai_xe,
+    cod_value: du_lieu_gui.gia_tri_thu_ho_cod,
+    payment_method: du_lieu_gui.phuong_thuc_thanh_toan,
+    fee_payer: du_lieu_gui.nguoi_tra_cuoc,
+    service: getInternalServiceType(du_lieu_gui.dich_vu),
+    service_name: du_lieu_gui.ten_dich_vu,
+    estimated_eta: du_lieu_gui.du_kien_giao_hang,
+    vehicle: du_lieu_gui.phuong_tien,
+    vehicle_label: du_lieu_gui.ten_phuong_tien,
+    total_fee: du_lieu_gui.tong_cuoc,
+    pricing_breakdown: tao_chi_tiet_gia_cuoc_php(
+      du_lieu_gui.chi_tiet_gia_cuoc || {},
+    ),
+    pickup_lat: du_lieu_gui.vi_do_lay_hang,
+    pickup_lng: du_lieu_gui.kinh_do_lay_hang,
+    delivery_lat: du_lieu_gui.vi_do_giao_hang,
+    delivery_lng: du_lieu_gui.kinh_do_giao_hang,
+    service_condition_key: dieuKienDichVu,
+    weather_source: getWeatherSourceStorageValue(nhanDienThoiTiet),
+    weather_note: weatherQuoteState?.note || "",
+    khoang_cach_km: du_lieu_gui.khoang_cach_km,
+    items: du_lieu_gui.mat_hang || [],
   };
 }

@@ -1,15 +1,5 @@
 /* ===== DASHBOARD PAGES (Customer/Shipper) ===== */
 
-/* Price Preview Box */
-#price-preview {
-  margin-top: 20px;
-  padding: 15px;
-  background: #e8f4f8;
-  border-left: 4px solid #0a2a66;
-  border-radius: 4px;
-  font-size: 16px;
-}
-
 /* Order Detail Info Rows */
 .info-row {
   display: flex;
