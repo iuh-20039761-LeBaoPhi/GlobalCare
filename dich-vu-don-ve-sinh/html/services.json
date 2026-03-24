@@ -1,0 +1,148 @@
+[
+  {
+    "id": 1,
+    "name": "Tổng Vệ Sinh Nhà Ở Toàn Diện",
+    "image": "assets/tong-ve-sinh.png",
+    "alt": "Dich vu tong ve sinh nha o can ho chung cu nha pho",
+    "description": "Gói vệ sinh chuyên sâu từ A-Z, tẩy sạch các vết bẩn lâu ngày, trả lại không gian sống sạch bóng, thơm tho cho gia đình bạn.",
+    "includes": [
+      "Quét mạng nhện trần nhà, lau hệ thống đèn, quạt trần và điều hòa",
+      "Vệ sinh kính mặt trong và mặt ngoài, khung cửa, ban công",
+      "Tẩy sạch vết bẩn trên tường, lau công tắc, ổ điện và các vật dụng trang trí",
+      "Vệ sinh toàn bộ khu bếp: lau tủ bếp trên/dưới, kiềng bếp ga, máy hút mùi, bồn rửa",
+      "Cọ rửa, tẩy cặn canxi nhà tắm: bồn cầu, gương soi, vòi sen, vách kính, lavabo",
+      "Hút bụi nệm, thay ga giường và sắp xếp nội thất phòng ngủ gọn gàng",
+      "Đánh sàn bằng máy công nghiệp hoặc lau sàn chuyên dụng, khử mùi toàn bộ nhà"
+    ],
+    "pricing": [
+      {
+        "label": "Gói nhà phố/chung cư",
+        "value": 1500000,
+        "hours": 8,
+        "type": "package"
+      },
+      {
+        "label": "Biệt thự/Diện tích lớn",
+        "value": 2500000,
+        "hours": 12,
+        "type": "package"
+      }
+    ]
+  },
+  {
+    "id": 2,
+    "name": "Vệ Sinh Nhà Sau Xây Dựng & Sửa Chữa",
+    "image": "assets/ve-sinh-sau-xay-dung.png",
+    "alt": "Dich vu ve sinh nha moi xay xong hoac vua sua chua",
+    "description": "Xử lý triệt để bụi xi măng, vết sơn, keo dán và rác xây dựng dư thừa, giúp gia chủ có thể dọn vào ở ngay lập tức.",
+    "includes": [
+      "Thu gom và vận chuyển rác thải xây dựng, xà bần còn sót lại",
+      "Sử dụng hóa chất chuyên dụng tẩy vết sơn, băng keo trên sàn và cửa kính",
+      "Hút bụi công nghiệp toàn bộ ngóc ngách, kẽ cửa và tủ âm tường",
+      "Vệ sinh chi tiết hệ thống thang bộ, tay vịn và các thiết bị vệ sinh mới lắp đặt",
+      "Chà sàn bằng máy đánh sàn công nghiệp để loại bỏ hoàn toàn bụi vôi, xi măng",
+      "Khử mùi sơn mới và kiểm tra an toàn hệ thống điện nước cơ bản"
+    ],
+    "pricing": [
+      {
+        "label": "Dưới 100m2",
+        "value": 2000000,
+        "hours": 10,
+        "type": "fixed"
+      },
+      {
+        "label": "Trên 100m2",
+        "value": 20000,
+        "hours": 1,
+        "type": "per_m2"
+      }
+    ]
+  },
+  {
+    "id": 3,
+    "name": "Vệ Sinh Văn Phòng & Cửa Hàng",
+    "image": "assets/ve-sinh-van-phong.png",
+    "alt": "Dich vu don dep van phong cong ty cua hang kinh doanh",
+    "description": "Duy trì môi trường làm việc chuyên nghiệp, sạch sẽ, giúp nâng cao năng suất và tạo ấn tượng tốt với khách hàng.",
+    "includes": [
+      "Lau sạch bụi bẩn trên bàn làm việc, tủ hồ sơ, máy tính và thiết bị văn phòng",
+      "Vệ sinh khu vực tiếp tân, sảnh chờ và phòng họp",
+      "Lau cửa kính mặt tiền, cửa ra vào và các vách ngăn kính",
+      "Thu gom rác tại các bàn làm việc và thay túi rác mới",
+      "Cọ rửa khu vực pantry (bếp chung) và nhà vệ sinh định kỳ",
+      "Hút bụi thảm văn phòng hoặc lau sàn gạch sạch sẽ hàng ngày"
+    ],
+    "pricing": [
+      {
+        "label": "Dọn định kỳ (tháng)",
+        "value": 4000000,
+        "hours": 44,
+        "type": "monthly"
+      },
+      {
+        "label": "Dọn lẻ theo buổi",
+        "value": 500000,
+        "hours": 4,
+        "type": "shift"
+      }
+    ]
+  },
+  {
+    "id": 4,
+    "name": "Dọn Dẹp Căn Hộ Dịch Vụ & Homestay",
+    "image": "assets/ve-sinh-homestay.png",
+    "alt": "Dich vu don dep airbnb homestay can ho cho thue",
+    "description": "Giải pháp dọn phòng nhanh gọn, chuẩn khách sạn cho các chủ homestay, Airbnb sau khi khách trả phòng.",
+    "includes": [
+      "Thu gom vỏ chai, rác thải và kiểm tra đồ đạc khách để quên",
+      "Thay mới bộ chăn ga gối nệm, mang đồ bẩn đi giặt sấy",
+      "Vệ sinh sạch sẽ phòng tắm, bổ sung vật dụng cá nhân (khăn, bàn chải...)",
+      "Lau dọn khu vực bếp, rửa bát đĩa và kiểm tra các thiết bị điện",
+      "Quét lau sàn nhà, ban công và sắp xếp đồ trang trí về vị trí cũ",
+      "Xịt khoáng khử mùi hoặc tinh dầu tạo hương thơm dễ chịu cho khách mới"
+    ],
+    "pricing": [
+      {
+        "label": "Căn 1 PN",
+        "value": 250000,
+        "hours": 2,
+        "type": "turn"
+      },
+      {
+        "label": "Căn 2-3 PN",
+        "value": 450000,
+        "hours": 4,
+        "type": "turn"
+      }
+    ]
+  },
+  {
+    "id": 5,
+    "name": "Giúp Việc Gia Đình Theo Giờ",
+    "image": "assets/giup-viec-theo-gio.png",
+    "alt": "Dich vu giup viec nha theo gio linh hoat",
+    "description": "Dịch vụ linh hoạt theo yêu cầu, hỗ trợ các công việc nội trợ cơ bản hàng ngày cho những người bận rộn.",
+    "includes": [
+      "Quét dọn, lau sàn và sắp xếp đồ đạc trong nhà ngăn nắp",
+      "Rửa chén bát, dọn dẹp khu vực bếp sau khi nấu nướng",
+      "Giặt quần áo bằng máy, phơi và gấp đồ gọn gàng",
+      "Hỗ trợ đi chợ, sơ chế thực phẩm hoặc nấu các món ăn gia đình cơ bản",
+      "Lau bụi các bề mặt nội thất dễ thấy và đổ rác hàng ngày",
+      "Làm các công việc vặt khác theo hướng dẫn trực tiếp của chủ nhà"
+    ],
+    "pricing": [
+      {
+        "label": "Gói lẻ (1h)",
+        "value": 70000,
+        "hours": 1,
+        "type": "hourly"
+      },
+      {
+        "label": "Gói ưu đãi (>=4h)",
+        "value": 60000,
+        "hours": 1,
+        "type": "hourly"
+      }
+    ]
+  }
+]
