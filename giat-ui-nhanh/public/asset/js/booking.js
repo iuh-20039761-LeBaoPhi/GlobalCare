@@ -2,7 +2,7 @@ const BOOKING_MODAL_SOURCE = "dat-dich-vu.html";
 const BOOKING_MODAL_STYLE_ID = "bookingModalInlineStyles";
 const BOOKING_MODAL_EMBED_FIX_STYLE_ID = "bookingModalEmbedFixStyles";
 const BOOKING_GOOGLE_SHEET_API =
-  "https://script.google.com/macros/s/AKfycbymckLzBtoZko6KHLm_zyXG2Hg5exBkt_umbjLwdUu-kwCj1iDCbB7VrQjeETdY2Gwrkw/exec";
+  "https://script.google.com/macros/s/AKfycbzGk9VOSebrVPRhBtXpOZyBpXaYZpzbvPD3hQ5oQ7uIGnn2HXBv2bBqJ6ouOpZ3g_kENA/exec";
 let bookingModalLoadPromise = null;
 
 function getBookingTimeInput() {
