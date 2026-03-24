@@ -1,0 +1,480 @@
+[
+  {
+    "ma_dich_vu": "chuyen_nha",
+    "slug_dich_vu": "chuyen_nha",
+    "ten_dich_vu": "Chuyển Nhà Trọn Gói",
+    "gia_tu": "Từ 300.000/chuyến",
+    "cong_thuc_hien_thi": "Giá tham khảo = Phần cơ bản (xe vận chuyển + quãng đường phát sinh) + Phần chỉ cộng khi phát sinh (nhân công, đóng gói, tháo lắp, điều kiện mặt bằng, thời gian, thời tiết)",
+    "hang_muc_hien_thi": [
+      {
+        "ten_hang_muc": "Xe tải vận chuyển",
+        "khoang_gia": "300.000 – 800.000",
+        "don_vi": "chuyến",
+        "ghi_chu": "Hệ thống xe tải đa dạng từ 500kg đến 2 tấn, phù hợp với mọi ngõ ngách và khối lượng đồ đạc."
+      },
+      {
+        "ten_hang_muc": "Nhân công bốc xếp",
+        "khoang_gia": "200.000 – 400.000",
+        "don_vi": "người",
+        "ghi_chu": "Đội ngũ nhân viên khỏe mạnh, tháo vát và có trách nhiệm cao trong công việc."
+      },
+      {
+        "ten_hang_muc": "Đóng gói đồ đạc",
+        "khoang_gia": "100.000 – 300.000",
+        "don_vi": "gói",
+        "ghi_chu": "Sử dụng vật liệu bảo vệ chuyên dụng: thùng carton, màng PE, xốp chống sốc."
+      },
+      {
+        "ten_hang_muc": "Tháo lắp nội thất",
+        "khoang_gia": "150.000 – 350.000",
+        "don_vi": "món",
+        "ghi_chu": "Xử lý tủ quần áo, giường ngủ, bàn gỗ tự nhiên và gỗ công nghiệp đúng kỹ thuật."
+      },
+      {
+        "ten_hang_muc": "Hỗ trợ tháo lắp kỹ thuật",
+        "khoang_gia": "150.000 – 350.000",
+        "don_vi": "bộ",
+        "ghi_chu": "Tháo lắp máy lạnh, bình nóng lạnh, tivi treo tường đúng kỹ thuật và an toàn."
+      },
+      {
+        "ten_hang_muc": "Sắp xếp tại nhà mới",
+        "khoang_gia": "Hỗ trợ miễn phí",
+        "don_vi": "lần",
+        "ghi_chu": "Hỗ trợ lắp đặt và sắp xếp đồ đạc vào đúng vị trí theo yêu cầu của gia chủ."
+      }
+    ],
+    "lua_chon_xe": [
+      {
+        "gia_tri": "xe_van_500kg",
+        "ten_hien_thi": "Xe Van 500kg",
+        "gia_co_ban": 300000,
+        "km_co_ban": 4,
+        "gia_moi_km_tiep": 20000
+      },
+      {
+        "gia_tri": "xe_tai_1_5_tan",
+        "ten_hien_thi": "Xe Tải 1.5 Tấn",
+        "gia_co_ban": 500000,
+        "km_co_ban": 4,
+        "gia_moi_km_tiep": 28000
+      },
+      {
+        "gia_tri": "xe_tai_2_5_tan",
+        "ten_hien_thi": "Xe Tải 2.5 Tấn",
+        "gia_co_ban": 800000,
+        "km_co_ban": 4,
+        "gia_moi_km_tiep": 35000
+      }
+    ],
+    "hang_muc_cong_them": [
+      {
+        "ma_hang_muc": "nhan_cong",
+        "ten_hang_muc": "Nhân công bốc xếp",
+        "don_vi": "người",
+        "don_gia": 300000,
+        "truong_du_lieu": "so_nhan_cong_du_kien"
+      },
+      {
+        "ma_hang_muc": "dong_goi",
+        "ten_hang_muc": "Đóng gói đồ đạc",
+        "don_vi": "gói",
+        "don_gia": 200000,
+        "truong_du_lieu": "so_goi_dong_goi"
+      },
+      {
+        "ma_hang_muc": "thao_lap",
+        "ten_hang_muc": "Tháo lắp thiết bị",
+        "don_vi": "bộ",
+        "don_gia": 250000,
+        "truong_du_lieu": "so_bo_thao_lap"
+      }
+    ],
+    "phu_phi": {
+      "khung_gio": {
+        "buoi_toi": 100000,
+        "ban_dem": 200000
+      },
+      "thoi_tiet": {
+        "troi_mua": 50000
+      },
+      "dieu_kien_tiep_can": [
+        {
+          "ma_muc": "xe_tai_do_xa_diem_di",
+          "ten_muc": "Xe tải đỗ xa ở điểm đi",
+          "so_tien": 50000
+        },
+        {
+          "ma_muc": "co_thang_bo_hep",
+          "ten_muc": "Cầu thang bộ hẹp",
+          "so_tien": 50000
+        },
+        {
+          "ma_muc": "can_trung_chuyen",
+          "ten_muc": "Cần trung chuyển",
+          "so_tien": 80000
+        }
+      ],
+      "dac_thu": [
+        {
+          "ma_muc": "co_do_de_vo",
+          "ten_muc": "Có đồ dễ vỡ",
+          "so_tien": 50000
+        },
+        {
+          "ma_muc": "co_do_cong_kenh",
+          "ten_muc": "Có đồ cồng kềnh",
+          "so_tien": 80000
+        },
+        {
+          "ma_muc": "co_do_gia_tri_cao",
+          "ten_muc": "Có đồ giá trị cao",
+          "so_tien": 150000
+        }
+      ]
+    },
+    "nguoi_dung_tu_nhap": [
+      "loai_xe",
+      "dia_chi_di",
+      "dia_chi_den",
+      "ngay_thuc_hien",
+      "khung_gio_thuc_hien",
+      "thoi_tiet_du_kien",
+      "so_tang_diem_di",
+      "so_tang_diem_den",
+      "so_nhan_cong_du_kien",
+      "so_goi_dong_goi",
+      "so_bo_thao_lap"
+    ],
+    "he_thong_tu_tinh": [
+      "km_thuc_te",
+      "phi_km_vuot",
+      "phu_phi_khung_gio",
+      "phu_phi_thoi_tiet",
+      "tong_tam_tinh"
+    ]
+  },
+  {
+    "ma_dich_vu": "chuyen_van_phong",
+    "slug_dich_vu": "chuyen_van_phong",
+    "ten_dich_vu": "Chuyển Văn Phòng Công Ty",
+    "gia_tu": "Từ 500.000/chuyến",
+    "cong_thuc_hien_thi": "Giá tham khảo = Phần cơ bản (xe vận chuyển + quãng đường phát sinh) + Phần chỉ cộng khi phát sinh (đóng gói hồ sơ, bảo vệ thiết bị IT, tháo lắp nội thất, thiết bị nặng, điều kiện mặt bằng, thời gian, thời tiết)",
+    "hang_muc_hien_thi": [
+      {
+        "ten_hang_muc": "Cung cấp xe tải",
+        "khoang_gia": "500.000 – 1.500.000",
+        "don_vi": "chuyến",
+        "ghi_chu": "Đội xe tải đa dạng tải trọng, có thùng kín bảo vệ tài sản, phù hợp mọi quy mô."
+      },
+      {
+        "ten_hang_muc": "Đóng gói hồ sơ, tài liệu",
+        "khoang_gia": "150.000 – 400.000",
+        "don_vi": "thùng",
+        "ghi_chu": "Phân loại, đóng thùng và niêm phong tài liệu theo từng phòng ban bảo mật."
+      },
+      {
+        "ten_hang_muc": "Bảo vệ thiết bị IT",
+        "khoang_gia": "250.000 – 500.000",
+        "don_vi": "bộ máy",
+        "ghi_chu": "Đóng gói máy tính, màn hình, server bằng xốp nổ và vật tư chuyên dụng."
+      },
+      {
+        "ten_hang_muc": "Tháo lắp nội thất văn phòng",
+        "khoang_gia": "150.000 – 350.000",
+        "don_vi": "món",
+        "ghi_chu": "Kỹ thuật tháo lắp bàn làm việc, tủ hồ sơ, vách ngăn văn phòng chuyên nghiệp."
+      },
+      {
+        "ten_hang_muc": "Vận chuyển thiết bị nặng",
+        "khoang_gia": "500.000 – 2.000.000",
+        "don_vi": "máy",
+        "ghi_chu": "Di dời két sắt, máy photocopy, tủ server bằng công cụ chuyên dụng an toàn."
+      },
+      {
+        "ten_hang_muc": "Lắp đặt tại văn phòng mới",
+        "khoang_gia": "Hỗ trợ miễn phí",
+        "don_vi": "lần",
+        "ghi_chu": "Lắp đặt lại bàn ghế, hệ thống máy tính theo sơ đồ bố trí để làm việc ngay."
+      }
+    ],
+    "lua_chon_xe": [
+      {
+        "gia_tri": "xe_van_500kg",
+        "ten_hien_thi": "Xe Van 500kg (VP)",
+        "gia_co_ban": 500000,
+        "km_co_ban": 4,
+        "gia_moi_km_tiep": 25000
+      },
+      {
+        "gia_tri": "xe_tai_1_5_tan",
+        "ten_hien_thi": "Xe Tải 1.5 Tấn (VP)",
+        "gia_co_ban": 800000,
+        "km_co_ban": 4,
+        "gia_moi_km_tiep": 32000
+      },
+      {
+        "gia_tri": "xe_tai_2_5_tan",
+        "ten_hien_thi": "Xe Tải 2.5 Tấn (VP)",
+        "gia_co_ban": 1500000,
+        "km_co_ban": 4,
+        "gia_moi_km_tiep": 40000
+      }
+    ],
+    "hang_muc_cong_them": [
+      {
+        "ma_hang_muc": "dong_goi_ho_so",
+        "ten_hang_muc": "Đóng gói hồ sơ",
+        "don_vi": "thùng",
+        "don_gia": 200000,
+        "truong_du_lieu": "so_thung_ho_so"
+      },
+      {
+        "ma_hang_muc": "bao_ve_it",
+        "ten_hang_muc": "Bảo vệ thiết bị IT",
+        "don_vi": "bộ máy",
+        "don_gia": 300000,
+        "truong_du_lieu": "so_bo_may_it"
+      },
+      {
+        "ma_hang_muc": "thao_lap_van_phong",
+        "ten_hang_muc": "Tháo lắp nội thất văn phòng",
+        "don_vi": "món",
+        "don_gia": 250000,
+        "truong_du_lieu": "so_mon_noi_that_van_phong"
+      },
+      {
+        "ma_hang_muc": "thiet_bi_nang",
+        "ten_hang_muc": "Thiết bị nặng",
+        "don_vi": "máy",
+        "don_gia": 500000,
+        "truong_du_lieu": "so_thiet_bi_nang"
+      }
+    ],
+    "phu_phi": {
+      "khung_gio": {
+        "buoi_toi": 150000,
+        "ban_dem": 300000
+      },
+      "thoi_tiet": {
+        "troi_mua": 100000
+      },
+      "dieu_kien_tiep_can": [
+        {
+          "ma_muc": "xe_tai_do_xa_diem_di",
+          "ten_muc": "Xe tải đỗ xa ở điểm đi",
+          "so_tien": 70000
+        },
+        {
+          "ma_muc": "duong_cam_tai",
+          "ten_muc": "Đường cấm tải / giới hạn xe",
+          "so_tien": 120000
+        },
+        {
+          "ma_muc": "co_thang_bo_hep",
+          "ten_muc": "Cầu thang bộ hẹp",
+          "so_tien": 70000
+        },
+        {
+          "ma_muc": "can_trung_chuyen",
+          "ten_muc": "Cần trung chuyển",
+          "so_tien": 100000
+        }
+      ],
+      "dac_thu": [
+        {
+          "ma_muc": "can_bao_mat_tai_lieu",
+          "ten_muc": "Bảo mật tài liệu",
+          "so_tien": 200000
+        },
+        {
+          "ma_muc": "can_di_doi_server",
+          "ten_muc": "Di dời server / thiết bị IT",
+          "so_tien": 300000
+        },
+        {
+          "ma_muc": "can_thuc_hien_cuoi_tuan",
+          "ten_muc": "Cần làm cuối tuần",
+          "so_tien": 150000
+        }
+      ]
+    },
+    "nguoi_dung_tu_nhap": [
+      "loai_xe",
+      "dia_chi_di",
+      "dia_chi_den",
+      "ngay_thuc_hien",
+      "khung_gio_thuc_hien",
+      "thoi_tiet_du_kien",
+      "so_tang_diem_di",
+      "so_tang_diem_den",
+      "so_cho_ngoi",
+      "so_phong_ban",
+      "so_thung_ho_so",
+      "so_bo_may_it",
+      "so_mon_noi_that_van_phong",
+      "so_thiet_bi_nang"
+    ],
+    "he_thong_tu_tinh": [
+      "km_thuc_te",
+      "phi_km_vuot",
+      "phu_phi_khung_gio",
+      "phu_phi_thoi_tiet",
+      "tong_tam_tinh"
+    ]
+  },
+  {
+    "ma_dich_vu": "chuyen_kho_bai",
+    "slug_dich_vu": "chuyen_kho_bai",
+    "ten_dich_vu": "Chuyển Kho Bãi",
+    "gia_tu": "Từ 800.000/chuyến",
+    "cong_thuc_hien_thi": "Giá tham khảo = Phần cơ bản (xe vận chuyển + quãng đường phát sinh) + Phần chỉ cộng khi phát sinh (pallet, xe nâng hoặc xe cẩu, bốc xếp nặng, gia cố hàng, điều kiện mặt bằng, thời gian, thời tiết)",
+    "hang_muc_hien_thi": [
+      {
+        "ten_hang_muc": "Xe tải & xe thùng kín",
+        "khoang_gia": "800.000 – 2.500.000",
+        "don_vi": "chuyến",
+        "ghi_chu": "Xe tải hạng nặng từ 2 tấn đến 10 tấn, phù hợp di dời kho xưởng quy mô lớn."
+      },
+      {
+        "ten_hang_muc": "Luân chuyển pallet",
+        "khoang_gia": "150.000 – 300.000",
+        "don_vi": "pallet",
+        "ghi_chu": "Bốc xếp, cố định hàng hóa trên pallet và luân chuyển hàng loạt an toàn."
+      },
+      {
+        "ten_hang_muc": "Thuê xe nâng - xe cẩu",
+        "khoang_gia": "1.500.000 – 3.500.000",
+        "don_vi": "ca",
+        "ghi_chu": "Hỗ trợ nâng hạ máy móc nặng, kệ kho và các kiện hàng cồng kềnh đặc thù."
+      },
+      {
+        "ten_hang_muc": "Nhân công bốc xếp nặng",
+        "khoang_gia": "300.000 – 600.000",
+        "don_vi": "người",
+        "ghi_chu": "Đội ngũ nhân sự chuyên trách bốc xếp hàng kho xưởng, kiện hàng nặng."
+      },
+      {
+        "ten_hang_muc": "Đóng gói & Gia cố",
+        "khoang_gia": "200.000 – 500.000",
+        "don_vi": "đơn vị",
+        "ghi_chu": "Gia cố kiện hàng, chống rung lắc, bảo vệ máy móc khi di chuyển đường dài."
+      },
+      {
+        "ten_hang_muc": "Kiểm kê & Bàn giao",
+        "khoang_gia": "Miễn phí",
+        "don_vi": "lần",
+        "ghi_chu": "Đối soát 100% số lượng hàng hóa, thiết bị trước và sau khi di dời kho bãi."
+      }
+    ],
+    "lua_chon_xe": [
+      {
+        "gia_tri": "xe_tai_1_5_tan",
+        "ten_hien_thi": "Xe Tải 1.5 Tấn (Kho)",
+        "gia_co_ban": 800000,
+        "km_co_ban": 10,
+        "gia_moi_km_tiep": 45000
+      },
+      {
+        "gia_tri": "xe_tai_2_5_tan",
+        "ten_hien_thi": "Xe Tải 2.5 Tấn (Kho)",
+        "gia_co_ban": 1500000,
+        "km_co_ban": 10,
+        "gia_moi_km_tiep": 55000
+      },
+      {
+        "gia_tri": "xe_tai_5_tan",
+        "ten_hien_thi": "Xe Tải 5 Tấn (Kho)",
+        "gia_co_ban": 2500000,
+        "km_co_ban": 10,
+        "gia_moi_km_tiep": 75000
+      }
+    ],
+    "hang_muc_cong_them": [
+      {
+        "ma_hang_muc": "pallet",
+        "ten_hang_muc": "Luân chuyển pallet",
+        "don_vi": "pallet",
+        "don_gia": 250000,
+        "truong_du_lieu": "so_pallet"
+      },
+      {
+        "ma_hang_muc": "xe_nang",
+        "ten_hang_muc": "Xe nâng",
+        "don_vi": "ca",
+        "don_gia": 2500000,
+        "truong_du_lieu": "so_ca_xe_nang"
+      },
+      {
+        "ma_hang_muc": "xe_cau",
+        "ten_hang_muc": "Xe cẩu",
+        "don_vi": "ca",
+        "don_gia": 2500000,
+        "truong_du_lieu": "so_ca_xe_cau"
+      },
+      {
+        "ma_hang_muc": "nhan_su_boc_xep",
+        "ten_hang_muc": "Nhân sự bốc xếp",
+        "don_vi": "người",
+        "don_gia": 450000,
+        "truong_du_lieu": "so_nhan_su_boc_xep"
+      },
+      {
+        "ma_hang_muc": "gia_co",
+        "ten_hang_muc": "Gia cố hàng",
+        "don_vi": "đơn vị",
+        "don_gia": 250000,
+        "truong_du_lieu": "so_don_vi_gia_co"
+      }
+    ],
+    "phu_phi": {
+      "khung_gio": {
+        "buoi_toi": 300000,
+        "ban_dem": 500000
+      },
+      "thoi_tiet": {
+        "troi_mua": 200000
+      },
+      "dieu_kien_tiep_can": [
+        {
+          "ma_muc": "duong_cam_tai",
+          "ten_muc": "Đường cấm tải / giới hạn xe",
+          "so_tien": 150000
+        },
+        {
+          "ma_muc": "can_trung_chuyen",
+          "ten_muc": "Cần trung chuyển",
+          "so_tien": 150000
+        }
+      ],
+      "dac_thu": [
+        {
+          "ma_muc": "can_kiem_ke_hang_hoa",
+          "ten_muc": "Kiểm kê trước và sau chuyển",
+          "so_tien": 200000
+        }
+      ]
+    },
+    "nguoi_dung_tu_nhap": [
+      "loai_xe",
+      "dia_chi_di",
+      "dia_chi_den",
+      "ngay_thuc_hien",
+      "khung_gio_thuc_hien",
+      "thoi_tiet_du_kien",
+      "khoi_luong_hang_hoa",
+      "loai_hang_hoa",
+      "so_pallet",
+      "so_ca_xe_nang",
+      "so_ca_xe_cau",
+      "so_nhan_su_boc_xep",
+      "so_don_vi_gia_co"
+    ],
+    "he_thong_tu_tinh": [
+      "km_thuc_te",
+      "phi_km_vuot",
+      "phu_phi_khung_gio",
+      "phu_phi_thoi_tiet",
+      "tong_tam_tinh"
+    ]
+  }
+]

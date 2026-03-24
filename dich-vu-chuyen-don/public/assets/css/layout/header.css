@@ -16,8 +16,6 @@
   text-decoration: none;
 }
 
-
-
 /* ===== RESPONSIVE HEADER ===== */
 @media (max-width: 768px) {
   #header {
@@ -27,8 +25,6 @@
     overflow: visible !important;
     z-index: 1000;
   }
-
-
 
   .logo h1 {
     font-size: 20px;

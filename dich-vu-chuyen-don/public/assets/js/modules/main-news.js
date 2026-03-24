@@ -1,4 +1,39 @@
 (function (window, document) {
+  if (window.__fastGoNewsInitDone) return;
+  window.__fastGoNewsInitDone = true;
+
+  const currentPath = String(window.location.pathname || "").replace(/\\/g, "/");
+  const currentPathLower = currentPath.toLowerCase();
+  const projectMarker = "/dich-vu-chuyen-don/";
+  const projectMarkerIndex = currentPathLower.lastIndexOf(projectMarker);
+  const core = window.FastGoCore || {};
+  const projectBase =
+    core.projectBase ||
+    (projectMarkerIndex !== -1
+      ? currentPath.slice(0, projectMarkerIndex + projectMarker.length)
+      : "./");
+  const publicBase = core.publicBase || `${projectBase}public/`;
+  const articleListUrl = `${projectBase}cam-nang.html`;
+  const articleDetailBaseUrl = `${publicBase}trang/noi-dung/cam-nang-chi-tiet.html`;
+  const movingHouseUrl = `${publicBase}trang/dich-vu/chuyen-nha.html`;
+  const movingOfficeUrl = `${publicBase}trang/dich-vu/chuyen-van-phong.html`;
+  const movingWarehouseUrl = `${publicBase}trang/dich-vu/chuyen-kho-bai.html`;
+
+  function toPublicUrl(path) {
+    if (!path) return path;
+    if (/^(?:[a-z]+:)?\/\//i.test(path) || String(path).startsWith("/")) return path;
+    return core.toPublicUrl ? core.toPublicUrl(path) : `${publicBase}${String(path).replace(/^\.?\//, "")}`;
+  }
+
+  function getArticleDetailUrl(id) {
+    return `${articleDetailBaseUrl}?id=${id}`;
+  }
+
+  function normalizeArticleContent(content) {
+    return String(content || "")
+      .replace(/(src=|href=)(["'])assets\//gi, `$1$2${publicBase}assets/`);
+  }
+
   /**
    * Lớp quản lý dữ liệu bài viết (Model)
    * Đọc dữ liệu từ file JSON thay vì biến toàn cục.
@@ -8,9 +43,7 @@
 
     fetchData: function () {
       if (this._cache) return Promise.resolve(this._cache);
-      // Xác định đường dẫn tương đối đến file JSON
-      const inPublicDir = window.location.pathname.toLowerCase().includes('/public/');
-      const jsonPath = inPublicDir ? 'assets/js/data/news-data.json' : 'public/assets/js/data/news-data.json';
+      const jsonPath = toPublicUrl("assets/js/data/news-data.json");
       return fetch(jsonPath)
         .then(function (res) { return res.json(); })
         .then((data) => { NewsService._cache = data; return data; });
@@ -66,19 +99,19 @@
           (item) => `
         <article class="news-card">
           <div class="news-thumb">
-            <a href="cam-nang-chi-tiet.html?id=${item.id}">
-              <img src="${item.img}" alt="${item.title}" loading="lazy">
+            <a href="${getArticleDetailUrl(item.id)}">
+              <img src="${toPublicUrl(item.img)}" alt="${item.title}" loading="lazy">
             </a>
           </div>
           <div class="news-content">
             <span class="news-date">📅 ${item.date}</span>
             <h3 class="news-title">
-              <a href="cam-nang-chi-tiet.html?id=${item.id}" style="color: inherit; text-decoration: none;">
+              <a href="${getArticleDetailUrl(item.id)}" style="color: inherit; text-decoration: none;">
                 ${item.title}
               </a>
             </h3>
             <p class="news-summary">${item.description}</p>
-            <a href="cam-nang-chi-tiet.html?id=${item.id}" class="news-link">Xem chi tiết →</a>
+            <a href="${getArticleDetailUrl(item.id)}" class="news-link">Xem chi tiết →</a>
           </div>
         </article>
       `,
@@ -159,9 +192,9 @@
                           .map(
                             (item) => `
                             <li class="related-item">
-                                <img src="${item.img}" alt="${item.title}" class="related-thumb">
+                                <img src="${toPublicUrl(item.img)}" alt="${item.title}" class="related-thumb">
                                 <div class="related-title">
-                                    <a href="cam-nang-chi-tiet.html?id=${item.id}">${item.title}</a>
+                                    <a href="${getArticleDetailUrl(item.id)}">${item.title}</a>
                                     <span class="related-date">${item.date}</span>
                                 </div>
                             </li>
@@ -174,9 +207,9 @@
                 <div class="sidebar-widget">
                     <h3 class="widget-title">Dịch vụ nổi bật</h3>
                     <div class="service-tags">
-                        <a href="chuyen-nha.html" class="tag-btn">Chuyển nhà</a>
-                        <a href="chuyen-van-phong.html" class="tag-btn">Chuyển văn phòng</a>
-                        <a href="chuyen-kho-bai.html" class="tag-btn">Chuyển kho bãi</a>
+                        <a href="${movingHouseUrl}" class="tag-btn">Chuyển nhà</a>
+                        <a href="${movingOfficeUrl}" class="tag-btn">Chuyển văn phòng</a>
+                        <a href="${movingWarehouseUrl}" class="tag-btn">Chuyển kho bãi</a>
                         <a href="#site-footer" class="tag-btn tag-btn-accent">Đặt lịch ngay</a>
                     </div>
                 </div>
@@ -205,13 +238,13 @@
                   .map(
                     (item) => `
                     <div class="bg-white border border-slate-200 rounded-lg overflow-hidden hover:shadow-md transition-shadow duration-300 flex flex-col">
-                        <a href="cam-nang-chi-tiet.html?id=${item.id}" class="block h-48 overflow-hidden relative group">
-                            <img src="${item.img}" alt="${item.title}" class="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105" loading="lazy">
+                        <a href="${getArticleDetailUrl(item.id)}" class="block h-48 overflow-hidden relative group">
+                            <img src="${toPublicUrl(item.img)}" alt="${item.title}" class="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105" loading="lazy">
                         </a>
                         <div class="p-4 flex flex-col flex-grow">
                             <div class="text-xs text-slate-500 mb-2">📅 ${item.date}</div>
                             <h4 class="font-bold text-slate-800 text-base mb-3 line-clamp-2 hover:text-primary transition-colors flex-grow">
-                                <a href="cam-nang-chi-tiet.html?id=${item.id}">${item.title}</a>
+                                <a href="${getArticleDetailUrl(item.id)}">${item.title}</a>
                             </h4>
                         </div>
                     </div>
@@ -229,7 +262,7 @@
           <div class="article-not-found">
             <h2>Không tìm thấy bài viết</h2>
             <p>Nội dung bạn đang tìm có thể đã bị thay đổi hoặc không còn tồn tại.</p>
-            <a href="cam-nang.html" class="btn-primary">Quay lại trang cẩm nang</a>
+            <a href="${articleListUrl}" class="btn-primary">Quay lại trang cẩm nang</a>
           </div>`;
         return;
       }
@@ -249,21 +282,16 @@
       const ogImage = document.querySelector('meta[property="og:image"]');
       // Lưu ý: Đường dẫn ảnh cần tuyệt đối (có domain) để chia sẻ tốt nhất, ở đây dùng tương đối tạm thời
       if (ogImage) {
-        // Chuyển đổi đường dẫn gốc tương đối (/public/...) thành URL tuyệt đối (https://...)
         ogImage.setAttribute(
           "content",
-          new URL(article.img, window.location.href).href,
+          new URL(toPublicUrl(article.img), window.location.origin).href,
         );
       }
 
       // Cập nhật Canonical URL
       const canonicalLink = document.querySelector('link[rel="canonical"]');
       if (canonicalLink) {
-        // Tạo URL tuyệt đối dựa trên vị trí trang hiện tại để đảm bảo tính di động
-        const absoluteUrl = new URL(
-          `cam-nang-chi-tiet.html?id=${article.id}`,
-          window.location.href,
-        ).href;
+        const absoluteUrl = new URL(getArticleDetailUrl(article.id), window.location.origin).href;
         canonicalLink.setAttribute("href", absoluteUrl);
       }
 
@@ -274,7 +302,7 @@
           "@context": "https://schema.org",
           "@type": "Article",
           headline: article.title,
-          image: new URL(article.img, window.location.href).href, // Cần URL tuyệt đối
+          image: new URL(toPublicUrl(article.img), window.location.origin).href,
           datePublished: new Date(
             article.date.split("/").reverse().join("-"),
           ).toISOString(),
@@ -295,7 +323,7 @@
       const html = `
         <div class="article-detail-shell">
           <!-- Back button replacement for Breadcrumb -->
-          <a href="cam-nang.html" class="inline-flex items-center text-sm text-slate-500 hover:text-primary mb-6 transition-colors group">
+          <a href="${articleListUrl}" class="inline-flex items-center text-sm text-slate-500 hover:text-primary mb-6 transition-colors group">
             <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 mr-1 group-hover:-translate-x-1 transition-transform" fill="none" viewBox="0 0 24 24" stroke="currentColor">
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7" />
             </svg>
@@ -306,7 +334,7 @@
             <div class="article-layout">
                 <div class="main-content">
                     <header class="article-hero">
-                        <img src="${article.img}" alt="${article.title}" class="article-hero-image">
+                        <img src="${toPublicUrl(article.img)}" alt="${article.title}" class="article-hero-image">
                         <div class="article-hero-content">
                             <span class="article-category-badge">${article.category || "Cẩm nang"}</span>
                             <h1 class="article-title">${article.title}</h1>
@@ -319,11 +347,11 @@
                     
                     <div class="article-content-card">
                         <div class="article-body">
-                            ${article.content}
+                            ${normalizeArticleContent(article.content)}
                         </div>
 
                         <div class="article-footer-nav">
-                            <a href="cam-nang.html" class="back-link">
+                            <a href="${articleListUrl}" class="back-link">
                                 <span aria-hidden="true">←</span>
                                 <span>Quay lại danh sách cẩm nang</span>
                             </a>
