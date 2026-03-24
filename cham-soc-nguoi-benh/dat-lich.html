@@ -383,8 +383,9 @@
                     </div>
                     <div class="d-flex justify-content-between small mb-1">
                       <span>Phí di chuyển</span>
-                      <span id="travelFee">50.000 đ</span>
+                      <span id="travelFee">0 đ</span>
                     </div>
+                    <div id="distanceInfo" class="small text-muted mb-1">Quãng đường và phí di chuyển sẽ được tính tự động sau khi chọn vị trí.</div>
                     <hr class="my-2" />
                   </div>
                 </div>
@@ -619,6 +620,7 @@
 
       var mapPickerMap = null;
       var mapPickerMarker = null;
+      var CUSTOMER_LOCATION = null;
 
       function buildAddressFromNominatim(data, lat, lng) {
         if (data && data.address) {
@@ -638,6 +640,7 @@
       async function setPickedLocation(lat, lng) {
         var $address = $('#customerAddress');
         $address.attr('placeholder', 'Đang tải địa chỉ...');
+        CUSTOMER_LOCATION = { lat: Number(lat), lng: Number(lng) };
 
         if (mapPickerMap) {
           if (mapPickerMarker) mapPickerMap.removeLayer(mapPickerMarker);
@@ -659,6 +662,9 @@
         }
 
         $address.attr('placeholder', "Bấm 'Lấy vị trí của tôi'");
+        if (typeof window.recalculateDistanceAndPrice === 'function') {
+          window.recalculateDistanceAndPrice();
+        }
       }
 
       function ensureMapPickerInit() {
@@ -745,6 +751,106 @@
           images: [],
           videos: []
         };
+        // Fixed coordinates for SBI Building - Quang Trung Software Park.
+        // Using fixed lat/lng avoids Nominatim geocode failures that make distance return 0.
+        var OFFICE_COORDS = { lat: 10.853880, lng: 106.629830 };
+        var DISTANCE_KM = 0;
+        var DISTANCE_REQUEST_ID = 0;
+
+        function renderDistanceInfo(message, isError) {
+          var $distanceInfo = $('#distanceInfo');
+          if (!$distanceInfo.length) return;
+          $distanceInfo
+            .text(message)
+            .toggleClass('text-danger', !!isError)
+            .toggleClass('text-muted', !isError);
+        }
+
+        function haversineKm(from, to) {
+          var R = 6371;
+          var dLat = (to.lat - from.lat) * Math.PI / 180;
+          var dLng = (to.lng - from.lng) * Math.PI / 180;
+          var a =
+            Math.sin(dLat / 2) * Math.sin(dLat / 2) +
+            Math.cos(from.lat * Math.PI / 180) * Math.cos(to.lat * Math.PI / 180) *
+            Math.sin(dLng / 2) * Math.sin(dLng / 2);
+          var c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+          return R * c;
+        }
+
+        function isValidCoordinate(value) {
+          return typeof value === 'number' && Number.isFinite(value);
+        }
+
+        async function getRouteDistanceKm(origin, destination) {
+          var routeUrl =
+            'https://router.project-osrm.org/route/v1/driving/' +
+            origin.lng +
+            ',' +
+            origin.lat +
+            ';' +
+            destination.lng +
+            ',' +
+            destination.lat +
+            '?overview=false&alternatives=false&steps=false';
+          var response = await fetch(routeUrl);
+          if (!response.ok) throw new Error('Route API lỗi: ' + response.status);
+          var data = await response.json();
+          if (data && Array.isArray(data.routes) && data.routes.length) {
+            return Number(data.routes[0].distance || 0) / 1000;
+          }
+          throw new Error('Không lấy được dữ liệu tuyến đường.');
+        }
+
+        async function recalculateDistanceAndPrice() {
+          var requestId = ++DISTANCE_REQUEST_ID;
+
+          if (!CUSTOMER_LOCATION) {
+            DISTANCE_KM = 0;
+            renderDistanceInfo('Quãng đường và phí di chuyển sẽ được tính tự động sau khi chọn vị trí.');
+            updateTotalPrice();
+            return;
+          }
+
+          renderDistanceInfo('Đang tính quãng đường thực tế từ vị trí nhân sự đến địa chỉ của bạn...');
+
+          try {
+            var office = OFFICE_COORDS;
+            if (!office || !isValidCoordinate(office.lat) || !isValidCoordinate(office.lng)) {
+              throw new Error('Thiếu tọa độ vị trí công ty.');
+            }
+            if (!isValidCoordinate(CUSTOMER_LOCATION.lat) || !isValidCoordinate(CUSTOMER_LOCATION.lng)) {
+              throw new Error('Thiếu tọa độ vị trí khách hàng.');
+            }
+
+            var distanceKm;
+            try {
+              distanceKm = await getRouteDistanceKm(office, CUSTOMER_LOCATION);
+            } catch (routeError) {
+              distanceKm = haversineKm(office, CUSTOMER_LOCATION);
+            }
+
+            if (requestId !== DISTANCE_REQUEST_ID) return;
+
+            DISTANCE_KM = Number(distanceKm.toFixed(2));
+            renderDistanceInfo(
+              'Quãng đường ước tính: ' +
+                DISTANCE_KM.toLocaleString('vi-VN', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) +
+                ' km. Phí di chuyển: ' +
+                formatMoney(DISTANCE_KM * 5000) +
+                '.'
+            );
+          } catch (error) {
+            if (requestId !== DISTANCE_REQUEST_ID) return;
+
+            DISTANCE_KM = 0;
+            renderDistanceInfo('Không thể tính quãng đường tự động lúc này. Tạm tính phí di chuyển = 0 đ.', true);
+          }
+
+          updateTotalPrice();
+        }
+
+        window.recalculateDistanceAndPrice = recalculateDistanceAndPrice;
 
         function isUserLoggedIn() {
           try {
@@ -779,7 +885,8 @@
           $('#holidayRow').removeClass('d-flex').addClass('d-none');
           $('#basePrice').text('0 đ');
           $('#totalPrice').val('0 đ');
-          $('#travelFee').text('50.000 đ');
+          $('#travelFee').text('0 đ');
+          renderDistanceInfo('Quãng đường và phí di chuyển sẽ được tính tự động sau khi chọn vị trí.');
         }
 
         function applyShiftHints() {
@@ -996,6 +1103,7 @@
           if (!selectedPackage.length || selectedJobCount === 0 || hours === 0 || days === 0) {
             $('#totalPrice').val('0 đ');
             $('#basePrice').text('0 đ');
+            $('#travelFee').text('0 đ');
             $('#calcDetailRow').addClass('d-none');
             return;
           }
@@ -1009,7 +1117,6 @@
           var baseTotal = jobPrice * selectedJobCount * hours * days;
 
           $('#basePrice').text(formatMoney(baseTotal));
-
           $('#calcDetailText').text(
             formatMoney(price) +
               '/' +
@@ -1024,7 +1131,9 @@
               hours.toFixed(1) +
               'h × ' +
               days +
-              ' ngày'
+              ' ngày; quãng đường ' +
+              Number(DISTANCE_KM || 0).toFixed(2) +
+              'km'
           );
           $('#calcDetailRow').removeClass('d-none');
 
@@ -1046,7 +1155,7 @@
             $('#holidayRow').addClass('d-none');
           }
 
-          var travelFee = 50000;
+          var travelFee = Number(DISTANCE_KM || 0) * 5000;
           $('#travelFee').text(formatMoney(travelFee));
           $('#totalPrice').val(formatMoney(baseTotal + nightFee + holidayFee + travelFee));
         }
@@ -1207,6 +1316,7 @@
             totalHours: getHours(),
             extraRequest: $('#extraRequest').val(),
             price: $('#totalPrice').val(),
+            distanceKm: Number(DISTANCE_KM || 0),
             note: $('#customerNote').val().trim()
           };
         }
@@ -1228,9 +1338,23 @@
           $('#customerPhone').val(data.phone || '');
           $('#customerEmail').val(data.email || '');
           $('#customerAddress').val(data.address || '');
+          CUSTOMER_LOCATION = null;
           $('#extraRequest').val(data.extraRequest || '');
           $('#customerNote').val(data.note || '');
-
+          if (data.distanceKm !== undefined && data.distanceKm !== null && data.distanceKm !== '') {
+            DISTANCE_KM = Number(data.distanceKm) || 0;
+            if (DISTANCE_KM > 0) {
+              renderDistanceInfo(
+                'Quãng đường ước tính: ' +
+                  DISTANCE_KM.toLocaleString('vi-VN', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) +
+                  ' km. Phí di chuyển: ' +
+                  formatMoney(DISTANCE_KM * 5000) +
+                  '.'
+              );
+            } else {
+              renderDistanceInfo('Quãng đường và phí di chuyển sẽ được tính tự động sau khi chọn vị trí.');
+            }
+          }
           if (data.packageValue) {
             var $pkg = $('.package-check[value="' + data.packageValue + '"]');
             if ($pkg.length) {
@@ -1629,6 +1753,9 @@
 
         $('#btnResetBooking').on('click', function () {
           $('#bookingForm')[0].reset();
+          CUSTOMER_LOCATION = null;
+          DISTANCE_KM = 0;
+          renderDistanceInfo('Quãng đường và phí di chuyển sẽ được tính tự động sau khi chọn vị trí.');
           resetQuickAttachments();
           resetFormState();
           if (CURRENT_SERVICE) {
