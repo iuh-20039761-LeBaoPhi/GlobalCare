@@ -63,7 +63,7 @@
       articles: `${projectBase}cam-nang.html`,
 
       "svc-giao-hang-nhanh": `${projectBase}dich-vu-giao-hang.html`,
-      "svc-dich-vu-chuyen-don": `${parentBase}dich-vu-chuyen-don/`,
+      "svc-dich-vu-chuyen-don": `${parentBase}dich-vu-chuyen-don/dich-vu-chuyen-don.html`,
       "svc-lau-don-ve-sinh": `${parentBase}dich-vu-don-ve-sinh/demo/services.html`,
       "svc-cham-soc-me-be": `${parentBase}cham-soc-me-va-be/dich-vu-cham-soc-me-be.html`,
       "svc-cham-soc-vuon": `${parentBase}cham-soc-vuon-nha/dichvu.html`,

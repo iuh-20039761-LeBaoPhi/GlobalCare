@@ -2,21 +2,24 @@
   if (window.__fastGoMainBootstrapLoaded) return;
   window.__fastGoMainBootstrapLoaded = true;
 
-  // Xác định đường dẫn đến thư mục JS một cách linh hoạt
-  const inPublicDir = window.location.pathname.toLowerCase().includes("/public/");
-  const scriptBase = inPublicDir ? "assets/js/" : "public/assets/js/";
+  const core = window.FastGoCore || {};
+  const current = document.currentScript;
+  const scriptBase =
+    current && current.src
+      ? current.src.replace(/main\.js(?:\?.*)?$/i, "")
+      : core.toAssetsUrl
+        ? core.toAssetsUrl("js/")
+        : "public/assets/js/";
   const modulePaths = [
     "main-core.js",
-    "shared-modals.js",
     "modules/main-navigation.js",
-    "modules/main-order.js",
     "modules/main-landing.js",
     "modules/main-news.js",
     "modules/main-pricing.js",
-    "modules/moving-booking.js",
+    "modules/main-transparent-pricing.js",
+    "modules/main-forms.js",
   ];
 
-  const current = document.currentScript;
   const versionSuffix =
     current && current.src && current.src.includes("?")
       ? "?" + current.src.split("?")[1]

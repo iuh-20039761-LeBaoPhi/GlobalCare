@@ -1,91 +1,141 @@
-# Dịch vụ Chuyển Dọn - Giải Pháp Di Dời Trọn Gói
+# Dịch Vụ Chuyển Dọn
 
-Website giới thiệu dịch vụ vận chuyển và di dời chuyên nghiệp tại TP.HCM, bao gồm chuyển nhà, chuyển văn phòng và chuyển kho bãi.
+Website giới thiệu dịch vụ chuyển dọn tại TP.HCM, tập trung vào 3 nhóm chính:
+- Chuyển nhà trọn gói
+- Chuyển văn phòng công ty
+- Chuyển kho bãi
 
----
+Project hiện ưu tiên `UI / CSS / nội dung / SEO / điều hướng`. Phần khảo sát và đặt lịch đã được tách thành trang riêng ở mức giao diện, chưa nối backend xử lý yêu cầu thật.
 
-## 🚀 Tính Năng Chính
+## Phạm vi hiện tại
 
-- **Chuyển nhà trọn gói:** Tháo lắp nội thất, đóng gói bảo vệ đồ dễ vỡ, vận chuyển và sắp xếp tại nhà mới.
-- **Chuyển văn phòng:** Di dời thiết bị IT, hồ sơ bảo mật, tháo lắp nội thất, triển khai ngoài giờ hành chính giảm gián đoạn.
-- **Chuyển kho bãi:** Xử lý hàng pallet, hàng nặng, máy móc với xe nâng và xe cẩu chuyên dụng, kiểm kê nghiệm thu.
-- **Tính toán báo giá nhanh:** Ước tính chi phí vận chuyển ngay trên web.
-- **Đặt lịch trực tuyến:** Biểu mẫu đặt dịch vụ tích hợp modal trên mọi trang.
-- **Tra cứu đơn hàng:** Theo dõi trạng thái đơn hàng theo mã.
+- Landing page riêng cho chuyển dọn
+- Trang hub dịch vụ riêng
+- 3 trang dịch vụ chi tiết
+- Cụm cẩm nang và trang chi tiết bài viết
+- Trang chính sách
+- Trang khảo sát riêng
+- Trang đặt lịch riêng
 
----
+## Cấu trúc thư mục
 
-## 📂 Cấu Trúc Thư Mục
-
-```
-Vanchuyen/
-├── index.html                  # Trang chủ
+```text
+dich-vu-chuyen-don/
+├── index.html
+├── dich-vu-chuyen-don.html
+├── cam-nang.html
+├── khao-sat.html
+├── dat-lich.html
+├── chinh-sach-va-dieu-khoan.html
 ├── includes/
-│   ├── header.html             # Header dùng chung
-│   └── footer.html             # Footer dùng chung
+│   ├── header.html
+│   └── footer.html
 └── public/
-    ├── chuyen-nha.html         # Trang dịch vụ chuyển nhà
-    ├── chuyen-van-phong.html   # Trang dịch vụ chuyển văn phòng
-    ├── chuyen-kho-bai.html     # Trang dịch vụ chuyển kho bãi
-    ├── chinh-sach-va-dieu-khoan.html # Trang chính sách
+    ├── trang/
+    │   ├── dich-vu/
+    │   │   ├── chuyen-nha.html
+    │   │   ├── chuyen-van-phong.html
+    │   │   └── chuyen-kho-bai.html
+    │   └── noi-dung/
+    │       └── cam-nang-chi-tiet.html
     └── assets/
         ├── css/
-        │   ├── styles.css              # Entry point CSS (import các module)
-        │   ├── base/                   # CSS reset, typography, variables
-        │   ├── components/             # Button, card, modal, badge, ...
-        │   ├── layout/                 # Header, footer, grid, section
-        │   ├── pages/
-        │   │   ├── landing.css         # CSS trang chủ
-        │   │   └── moving-house.css    # CSS trang dịch vụ chuyển dọn
+        │   ├── styles.css
+        │   ├── base/
+        │   ├── components/
+        │   ├── layout/
+        │   └── pages/
+        │       ├── landing.css
+        │       ├── moving-house.css
+        │       ├── news.css
+        │       ├── services-hub.css
+        │       └── forms-standalone.css
         ├── js/
-        │   ├── shared-layout.js        # Load header/footer động
-        │   ├── shared-modals.js        # Modal đặt dịch vụ & tra cứu đơn
-        │   ├── main.js                 # Khởi tạo chung, load modules
+        │   ├── main.js
+        │   ├── main-core.js
+        │   ├── shared-layout.js
         │   ├── data/
-        │   │   └── news-data.json      # Dữ liệu cho trang cẩm nang
-        │   └── modules/                # Các module chức năng
-        │       ├── main-landing.js     # Logic trang chủ
-        │       ├── main-navigation.js  # Navigation & scroll behavior
-        │       ├── main-order.js       # Logic tính phí & đặt đơn hàng
-        │       └── main-news.js        # Logic trang cẩm nang
-        ├── images/                     # Hình ảnh hero, dịch vụ, nhân sự
-        └── partials/
-            └── shared-modals.html      # Template HTML cho các modal
+        │   │   ├── news-data.json
+        │   │   └── pricing-reference.json
+        │   └── modules/
+        │       ├── main-landing.js
+        │       ├── main-navigation.js
+        │       ├── main-pricing.js
+        │       ├── main-news.js
+        │       └── main-forms.js
+        ├── partials/
+        │   └── bieu-mau/
+        │       ├── form-khao-sat.html
+        │       └── form-dat-lich.html
+        └── images/
 ```
 
----
+## Các trang chính
 
-## 🛠 Công Nghệ Sử Dụng
+| Trang | Vai trò |
+|---|---|
+| `index.html` | Landing page của dịch vụ chuyển dọn |
+| `dich-vu-chuyen-don.html` | Trang hub dịch vụ, dẫn về 3 nhóm dịch vụ |
+| `khao-sat.html` | Trang khảo sát riêng |
+| `dat-lich.html` | Trang đặt lịch riêng |
+| `cam-nang.html` | Danh sách cẩm nang |
+| `chinh-sach-va-dieu-khoan.html` | Trang chính sách và điều khoản |
+| `public/trang/dich-vu/chuyen-nha.html` | Trang chi tiết chuyển nhà |
+| `public/trang/dich-vu/chuyen-van-phong.html` | Trang chi tiết chuyển văn phòng công ty |
+| `public/trang/dich-vu/chuyen-kho-bai.html` | Trang chi tiết chuyển kho bãi |
+| `public/trang/noi-dung/cam-nang-chi-tiet.html` | Trang chi tiết bài viết |
 
-- **Frontend:** HTML5, CSS3 (Vanilla CSS + Tailwind CSS CDN), JavaScript ES6+
-- **CSS Architecture:** Modular CSS chia theo `base / components / layout / pages`
-- **Thư viện JS:** SwiperJS (slider đánh giá khách hàng)
-- **Icons:** SVG inline (không phụ thuộc thư viện ngoài)
-- **Fonts:** Google Fonts — Poppins, Inter
+## Form khảo sát
 
----
+`khao-sat.html` dùng partial [form-khao-sat.html](e:\Thực tập Keri\Task\GlobalCare\dich-vu-chuyen-don\public\assets\partials\bieu-mau\form-khao-sat.html) và module [main-forms.js](e:\Thực tập Keri\Task\GlobalCare\dich-vu-chuyen-don\public\assets\js\modules\main-forms.js).
 
-## 📄 Các Trang
+Hiện đã có:
+- Form chia section theo ngữ cảnh nghiệp vụ
+- Hiện/ẩn trường theo loại dịch vụ
+- `id`, `class`, `name`, `data-*` dùng tiếng Việt không dấu
+- Bản đồ khảo sát dùng Leaflet
+- 2 ghim cố định cho điểm khảo sát và điểm đến
+- Tự lấy vị trí hiện tại cho điểm khảo sát
+- Box tóm tắt nhanh trước khi gửi
 
-| Trang | Mô tả |
-|-------|-------|
-| `index.html` | Trang chủ: hero, giới thiệu dịch vụ, quy trình, cước phí, đánh giá, liên hệ |
-| `chuyen-nha.html` | Dịch vụ chuyển nhà: 6 hạng mục dịch vụ có ảnh, quy trình 4 bước, lưu ý báo giá |
-| `chuyen-van-phong.html` | Dịch vụ chuyển văn phòng: 6 hạng mục, lưu ý về IT & tầng cao |
-| `chuyen-kho-bai.html` | Dịch vụ chuyển kho bãi: 6 hạng mục, lưu ý xe nâng & kiểm kê |
-| `chinh-sach-va-dieu-khoan.html` | Chính sách dịch vụ, điều khoản sử dụng |
-| `public/cam-nang.html` | Trang cẩm nang: danh sách bài viết, bộ lọc, phân trang |
-| `public/cam-nang-chi-tiet.html` | Trang chi tiết cẩm nang |
+Chưa có:
+- Gửi dữ liệu thật lên backend
+- Lưu yêu cầu khảo sát
+- Logic xử lý nghiệp vụ sau submit
 
----
+## Form đặt lịch
 
-## 📞 Thông Tin Liên Hệ
+`dat-lich.html` dùng partial [form-dat-lich.html](e:\Thực tập Keri\Task\GlobalCare\dich-vu-chuyen-don\public\assets\partials\bieu-mau\form-dat-lich.html).
 
-- **Thương hiệu:** Dịch vụ Chuyển Dọn
-- **Email:** [dichvuquanhta.vn@gmail.com](mailto:dichvuquanhta.vn@gmail.com)
-- **Hotline:** 0775 472 347
-- **Địa chỉ:** TP. Hồ Chí Minh
+Hiện đã có:
+- Form đặt lịch riêng khỏi landing
+- Nhịp bố cục đồng bộ với form khảo sát
+- Hiện/ẩn chi tiết theo từng loại dịch vụ
+- Summary cuối form
 
----
+Chưa có:
+- Submit thật
+- Đồng bộ dữ liệu backend
+- Tính giá / xác nhận đơn
 
-© 2026 Dịch vụ Chuyển Dọn. Bảo lưu mọi quyền.
+## Ghi chú kỹ thuật
+
+- Header và footer được load động qua [shared-layout.js](e:\Thực tập Keri\Task\GlobalCare\dich-vu-chuyen-don\public\assets\js\shared-layout.js)
+- Logic khởi tạo chung nằm ở [main.js](e:\Thực tập Keri\Task\GlobalCare\dich-vu-chuyen-don\public\assets\js\main.js)
+- CSS đang đi theo hướng `base / components / layout / pages`
+- Tất cả HTML user-facing đều đã có `ga.js`
+
+## Trạng thái hiện tại
+
+- Cấu trúc thư mục đã được sắp lại
+- Menu `Dịch vụ` trỏ sang `dich-vu-chuyen-don.html`
+- Footer đã dọn bớt link không cần thiết
+- Mobile cho form đã được tinh lại theo hướng đầy màn hình hơn
+- Form khảo sát đang là phần được đầu tư UI nhiều nhất
+
+## Liên hệ
+
+- Thương hiệu: Dịch Vụ Chuyển Dọn
+- Hotline: `0775 472 347`
+- Email: `dichvuquanhta.vn@gmail.com`
+- Khu vực phục vụ chính: TP. Hồ Chí Minh

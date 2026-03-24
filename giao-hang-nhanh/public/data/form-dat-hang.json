@@ -10,14 +10,14 @@
     { "key": "cong-kenh", "label": "Hàng cồng kềnh" }
   ],
   "tenhangtheoloai": {
-    "thuong": ["Quần áo/vải vóc", "Giày dép/túi xách", "Sách vở/văn phòng phẩm", "Đồ chơi nhựa", "Đồ gia dụng nhựa/inox", "Phụ kiện điện tử đơn giản"],
-    "gia-tri-cao": ["Điện thoại/máy tính bảng", "Laptop/máy ảnh", "Đồng hồ thông minh/tai nghe cao cấp", "Mỹ phẩm chính hãng", "Nước hoa", "Trang sức/đá quý"],
-    "de-vo": ["Đồ gốm sứ/chén dĩa", "Bình thủy tinh", "Màn hình TV/máy tính", "Gương soi", "Tượng đá/đồ thủ công mỹ nghệ", "Đèn trang trí"],
-    "mui-hoi": ["Mắm tôm/nước mắm đặc biệt", "Sầu riêng/chôm chôm", "Hải sản mắm", "Thực phẩm lên men", "Phân bón", "Hóa chất"],
-    "chat-long": ["Dầu ăn/nước mắm", "Mật ong/rượu vang", "Sữa nước/đồ uống đóng chai", "Sơn/dung môi", "Dầu nhớt"],
-    "pin-lithium": ["Sạc dự phòng", "Pin xe máy điện", "Xe điện", "Quạt tích điện", "Đèn pin"],
-    "dong-lanh": ["Thịt/cá/hải sản tươi sống", "Thực phẩm đông lạnh", "Rau củ/trái cây tươi", "Vaccine", "Dược phẩm bảo quản lạnh"],
-    "cong-kenh": ["Sofa/tủ quần áo/giường gỗ", "Lốp xe tải", "Máy móc công trình", "Bồn nước inox", "Cuộn cáp điện"]
+    "thuong": ["Áo thun", "Quần jean", "Giày thể thao", "Túi xách thời trang", "Sách giáo khoa", "Tài liệu văn phòng", "Đồ chơi nhựa", "Nồi inox"],
+    "gia-tri-cao": ["Điện thoại", "Máy tính bảng", "Laptop", "Máy ảnh", "Đồng hồ cao cấp", "Tai nghe cao cấp", "Trang sức", "Nước hoa cao cấp"],
+    "de-vo": ["Ly thủy tinh", "Chén sứ", "Bình gốm", "Gương treo tường", "Đèn trang trí thủy tinh", "Màn hình máy tính", "Tivi", "Khung ảnh kính"],
+    "mui-hoi": ["Sầu riêng", "Mắm tôm", "Mắm cá", "Khô mực", "Cá khô", "Nước mắm nguyên chất", "Thực phẩm lên men", "Hải sản khô"],
+    "chat-long": ["Dầu ăn", "Nước mắm chai", "Sữa nước", "Nước giặt", "Nước rửa chén", "Dầu gội", "Mật ong", "Rượu vang"],
+    "pin-lithium": ["Pin dự phòng", "Điện thoại", "Máy tính bảng", "Laptop", "Loa Bluetooth", "Tai nghe không dây", "Camera hành trình", "Máy hút bụi cầm tay"],
+    "dong-lanh": ["Thịt đông lạnh", "Cá đông lạnh", "Hải sản đông lạnh", "Kem hộp", "Sữa chua", "Phô mai", "Rau củ bảo quản lạnh", "Trái cây bảo quản lạnh"],
+    "cong-kenh": ["Ghế gaming", "Máy lọc nước", "Quạt điều hòa", "Vali cỡ lớn", "Lốp xe máy", "Bồn nhựa", "Cây cảnh cỡ lớn", "Thùng hàng cỡ lớn"]
   },
   "loaixe": [
     { "key": "auto", "label": "Để hệ thống tự đề xuất" },

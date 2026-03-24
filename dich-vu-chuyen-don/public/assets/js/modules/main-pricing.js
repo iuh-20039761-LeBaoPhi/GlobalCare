@@ -26,7 +26,7 @@
     if (!grid) return;
 
     try {
-      const resp = await fetch("assets/js/data/pricing-reference.json");
+      const resp = await fetch(core.toPublicUrl("assets/js/data/pricing-reference.json"));
       if (!resp.ok) throw new Error("Thất bại khi tải file JSON");
       const data = await resp.json();
 
@@ -50,7 +50,7 @@
       card.className = "group flex flex-col bg-white rounded-twelve overflow-hidden border border-slate-200 soft-shadow hover:-translate-y-1 transition-all duration-300";
       
       const iconPath = item.icon_svg || "M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z";
-      const imageSrc = item.hinh_anh || "assets/images/chuyendon-tron-goi.png";
+      const imageSrc = core.toPublicUrl(item.hinh_anh || "assets/images/chuyendon-tron-goi.png");
 
       card.innerHTML = `
         <div class="relative h-56 w-full overflow-hidden">

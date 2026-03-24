@@ -1,0 +1,250 @@
+.trang-dich-vu {
+  background:
+    radial-gradient(circle at top right, rgba(255, 183, 3, 0.14), transparent 24%),
+    linear-gradient(180deg, #f7fbf8 0%, #ffffff 24%, #f4f8f6 100%);
+}
+
+.hero-dich-vu {
+  padding: 56px 0 40px;
+  color: #fff;
+  background: linear-gradient(135deg, #15382a 0%, #1b4332 48%, #2d6a4f 100%);
+}
+
+.hero-dich-vu-noi-dung {
+  max-width: 820px;
+}
+
+.hero-dich-vu h1 {
+  margin: 18px 0 14px;
+  font-size: clamp(2.2rem, 4vw, 3.7rem);
+  line-height: 1.08;
+  color: #fff;
+}
+
+.hero-dich-vu p {
+  max-width: 680px;
+  color: rgba(255, 255, 255, 0.88);
+  font-size: 18px;
+  line-height: 1.75;
+}
+
+.hero-dich-vu-hanh-dong,
+.cta-dich-vu-hanh-dong {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 14px;
+  margin-top: 28px;
+}
+
+.trang-dich-vu-noi-bat {
+  padding: 56px 0 24px;
+}
+
+.trang-dich-vu #services .moving-service-grid {
+  max-width: 1120px;
+  margin-left: auto;
+  margin-right: auto;
+  align-items: stretch;
+}
+
+.trang-dich-vu #services .moving-card {
+  border-radius: 16px;
+  padding: 28px 24px;
+  text-align: left;
+  box-shadow: 0 10px 28px rgba(27, 67, 50, 0.07);
+}
+
+.trang-dich-vu #services .moving-card-head {
+  margin-bottom: 16px;
+}
+
+.trang-dich-vu #services .moving-card-head h3 {
+  line-height: 1.25;
+}
+
+.trang-dich-vu #services .moving-card-slogan {
+  margin-bottom: 18px;
+  line-height: 1.55;
+  text-align: left;
+}
+
+.trang-dich-vu #services .moving-card-details {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.trang-dich-vu #services .moving-card-details li {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  padding-left: 0;
+  margin-bottom: 0;
+  text-align: left;
+}
+
+.trang-dich-vu #services .moving-card-details li::before {
+  position: static;
+  flex: 0 0 auto;
+  line-height: 1.6;
+}
+
+.trang-dich-vu #services .moving-card-details li strong {
+  min-width: 132px;
+  flex: 0 0 132px;
+}
+
+.trang-dich-vu #services .moving-card-details li span {
+  flex: 1 1 0;
+  min-width: 0;
+  line-height: 1.6;
+}
+
+.trang-dich-vu #services .service-card-actions {
+  margin-top: 24px;
+}
+
+.bang-so-sanh-dich-vu {
+  padding: 20px 0 40px;
+}
+
+.tieu-de-khoi {
+  max-width: 760px;
+  margin: 0 auto 26px;
+  text-align: center;
+}
+
+.tieu-de-khoi h2 {
+  margin: 0 0 10px;
+  font-size: clamp(1.8rem, 3vw, 2.6rem);
+  color: #173528;
+}
+
+.tieu-de-khoi p {
+  margin: 0;
+  color: #5f776c;
+  line-height: 1.8;
+}
+
+.luoi-so-sanh {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 18px;
+}
+
+.the-so-sanh {
+  padding: 24px;
+  border-radius: 24px;
+  background: #fff;
+  border: 1px solid rgba(27, 67, 50, 0.08);
+  box-shadow: 0 20px 50px rgba(17, 24, 39, 0.06);
+}
+
+.the-so-sanh h3 {
+  margin: 0 0 14px;
+  color: #173528;
+  font-size: 1.2rem;
+}
+
+.the-so-sanh p {
+  margin: 0;
+  color: #587166;
+  line-height: 1.8;
+}
+
+.the-so-sanh p + p {
+  margin-top: 10px;
+}
+
+.cta-dich-vu {
+  padding: 12px 0 70px;
+}
+
+.khung-cta-dich-vu {
+  display: grid;
+  grid-template-columns: minmax(0, 1.3fr) auto;
+  gap: 20px;
+  align-items: center;
+  padding: 28px;
+  border-radius: 28px;
+  background: linear-gradient(135deg, #183d2e 0%, #1b4332 45%, #2d6a4f 100%);
+  color: #fff;
+  box-shadow: 0 28px 60px rgba(27, 67, 50, 0.16);
+}
+
+.khung-cta-dich-vu h2 {
+  margin: 10px 0 12px;
+  font-size: clamp(1.8rem, 3vw, 2.5rem);
+  color: #fff;
+}
+
+.khung-cta-dich-vu p {
+  margin: 0;
+  color: rgba(255, 255, 255, 0.88);
+  line-height: 1.8;
+}
+
+.khung-cta-dich-vu .toi {
+  border-color: rgba(255, 255, 255, 0.24);
+}
+
+@media (max-width: 1024px) {
+  .luoi-so-sanh,
+  .khung-cta-dich-vu {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 768px) {
+  .hero-dich-vu {
+    padding-top: 42px;
+  }
+
+  .hero-dich-vu-hanh-dong,
+  .cta-dich-vu-hanh-dong {
+    flex-direction: column;
+  }
+
+  .hero-dich-vu-hanh-dong .nut-hanh-dong,
+  .cta-dich-vu-hanh-dong .nut-hanh-dong {
+    width: 100%;
+  }
+
+  .khung-cta-dich-vu {
+    padding: 22px;
+  }
+
+  .trang-dich-vu #services .moving-card {
+    padding: 22px 18px;
+  }
+
+  .trang-dich-vu #services .moving-card-details li {
+    gap: 10px;
+  }
+
+  .trang-dich-vu #services .moving-card-details li strong {
+    min-width: 110px;
+    flex-basis: 110px;
+  }
+}
+
+@media (max-width: 480px) {
+  .trang-dich-vu #services .moving-card-details li {
+    display: grid;
+    grid-template-columns: 18px 1fr;
+    gap: 6px 10px;
+  }
+
+  .trang-dich-vu #services .moving-card-details li::before {
+    grid-column: 1;
+    grid-row: 1 / span 2;
+    margin-top: 2px;
+  }
+
+  .trang-dich-vu #services .moving-card-details li strong,
+  .trang-dich-vu #services .moving-card-details li span {
+    grid-column: 2;
+    min-width: 0;
+    flex: none;
+  }
+}
