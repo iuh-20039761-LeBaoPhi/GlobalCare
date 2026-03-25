@@ -9,8 +9,55 @@
 
   var projectBase = getProjectBase();
 
+  var isInSiteNavigation = false;
+
   function apiUrl(path) {
     return new URL('api/' + path, projectBase).href;
+  }
+
+  function markInSiteNavigation(target) {
+    var link = target && target.closest ? target.closest('a[href]') : null;
+    if (!link) return;
+
+    var href = link.getAttribute('href') || '';
+    if (!href || href.charAt(0) === '#') return;
+    if (href.indexOf('javascript:') === 0) return;
+    if (link.target && String(link.target).toLowerCase() === '_blank') return;
+
+    try {
+      var targetUrl = new URL(href, window.location.href);
+      if (targetUrl.origin !== window.location.origin) return;
+      isInSiteNavigation = true;
+    } catch (e) {
+      // Ignore malformed links.
+    }
+  }
+
+  function autoLogoutOnClose() {
+    var hasUser = false;
+    try {
+      hasUser = !!localStorage.getItem('currentUser');
+    } catch (e) {
+      hasUser = false;
+    }
+    if (!hasUser || isInSiteNavigation) return;
+
+    try {
+      localStorage.removeItem('currentUser');
+    } catch (e) {
+      // Ignore storage errors.
+    }
+
+    var logoutUrl = apiUrl('logout.php');
+    try {
+      if (navigator.sendBeacon) {
+        navigator.sendBeacon(logoutUrl, new Blob([], { type: 'application/x-www-form-urlencoded;charset=UTF-8' }));
+      } else {
+        fetch(logoutUrl, { method: 'GET', keepalive: true });
+      }
+    } catch (e) {
+      // Ignore unload errors.
+    }
   }
 
   function assetUrl(path) {
@@ -22,6 +69,8 @@
   function getEl(id) {
     return document.getElementById(id);
   }
+
+  var hasSyncedSession = false;
 
   function setLoggedOut() {
     var loginNavItem = getEl('loginNavItem');
@@ -72,7 +121,10 @@
     }
   }
 
-  document.addEventListener('DOMContentLoaded', function () {
+  function initNavState() {
+    var hasNavTargets = !!(getEl('loginNavItem') || getEl('userMenuContainer'));
+    if (!hasNavTargets) return;
+
     var cachedUser = null;
     try {
       cachedUser = JSON.parse(localStorage.getItem('currentUser') || 'null');
@@ -86,7 +138,27 @@
       setLoggedOut();
     }
 
-    syncFromSession();
+    if (!hasSyncedSession) {
+      hasSyncedSession = true;
+      syncFromSession();
+    }
+  }
+
+  document.addEventListener('DOMContentLoaded', function () {
+    initNavState();
+  });
+
+  // Mark normal in-site link navigation so close-tab logout does not run.
+  document.addEventListener('click', function (event) {
+    markInSiteNavigation(event.target);
+  }, true);
+
+  // Auto logout when the user closes/leaves the page.
+  window.addEventListener('beforeunload', autoLogoutOnClose);
+  window.addEventListener('pagehide', autoLogoutOnClose);
+
+  document.addEventListener('siteLayout:ready', function () {
+    initNavState();
   });
 
   window.addEventListener('auth:login-success', function (event) {
