@@ -1060,7 +1060,7 @@ function renderCarDetail(carType, availableCars) {
             const addonLines = bookingData.addon_services.length ? `<br><strong>Dịch vụ đi kèm:</strong> ${bookingData.addon_services.join(', ')}` : '';
             const selectedCar = (STATIC_DATA.cars || []).find(c => c.id === bookingData.car_id);
             // Trang static — không gọi API với static ID (ID không khớp DB)
-            const IS_LOCAL = false;
+            const IS_LOCAL = true;
             if (IS_LOCAL) {
                 try {
                     const res = await fetch('controllers/booking-controller.php?action=create', {
