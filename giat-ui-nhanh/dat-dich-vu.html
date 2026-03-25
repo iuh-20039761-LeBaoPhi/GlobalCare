@@ -73,6 +73,10 @@
         opacity: 1;
       }
 
+      body.booking-standalone #bookingModal .modal-dialog {
+        transform: none !important;
+      }
+
       #bookingModal .modal-content,
       #bookingConfirmModal .modal-content {
         border: 0;
@@ -776,6 +780,7 @@
               type="button"
               class="btn-close"
               id="confirmCloseBtn"
+              data-bs-dismiss="modal"
               aria-label="Close"
             ></button>
           </div>
