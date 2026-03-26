@@ -135,6 +135,42 @@
         document.getElementById('sodienthoai').addEventListener('keydown', e => { if (e.key === 'Enter') document.getElementById('password').focus(); });
         document.getElementById('loginBtn').addEventListener('click', login);
 
+        function isLiveServerRuntime() {
+            return ['5500', '5501', '5502', '5503', '5504'].includes(window.location.port);
+        }
+
+        function resolveAppBase() {
+            const path = window.location.pathname || '';
+            const hasGlobalCare = path.toLowerCase().includes('/globalcare/thue-xe/');
+            const hasThueXeOnly = path.toLowerCase().includes('/thue-xe/');
+
+            if (isLiveServerRuntime()) {
+                if (hasGlobalCare) return 'http://localhost/GlobalCare/thue-xe/';
+                if (hasThueXeOnly) return 'http://localhost/thue-xe/';
+                return 'http://localhost/GlobalCare/thue-xe/';
+            }
+
+            return document.querySelector('base')?.href || (window.location.origin + '/GlobalCare/thue-xe/');
+        }
+
+        const APP_BASE = resolveAppBase();
+
+        function ensureApacheRuntime() {
+            if (!isLiveServerRuntime()) return;
+            const target = new URL('views/pages/provider/dang-nhap.html', APP_BASE).toString();
+            if (window.location.href !== target) {
+                window.location.replace(target);
+            }
+        }
+
+        ensureApacheRuntime();
+
+        function buildApiUrl(action) {
+            const endpoint = new URL('controllers/provider/auth-controller.php', APP_BASE);
+            endpoint.searchParams.set('action', action);
+            return endpoint.toString();
+        }
+
         function login() {
             const phone    = document.getElementById('sodienthoai').value.trim();
             const password = document.getElementById('password').value;
@@ -150,27 +186,43 @@
             btn.innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span>Đang đăng nhập...';
             msg.innerHTML = '';
 
-            fetch('controllers/provider/auth-controller.php?action=login', {
+            fetch(buildApiUrl('login'), {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ phone, password })
             })
-            .then(r => r.json())
+            .then(async (r) => {
+                const raw = await r.text();
+                let parsed;
+                try {
+                    parsed = JSON.parse(raw);
+                } catch {
+                    throw new Error(raw || 'Phản hồi không hợp lệ từ server');
+                }
+
+                if (!r.ok) {
+                    throw new Error(parsed.message || 'Server trả về lỗi HTTP ' + r.status);
+                }
+                return parsed;
+            })
             .then(res => {
                 if (res.success) {
                     localStorage.setItem('provider_logged_in', 'true');
                     localStorage.setItem('provider_name', res.name);
                     localStorage.setItem('provider_company', res.company);
                     msg.innerHTML = '<span class="text-success"><i class="fas fa-check-circle me-1"></i>Đăng nhập thành công!</span>';
-                    setTimeout(() => window.location.href = 'views/pages/provider/bang-dieu-khien.html', 700);
+                    setTimeout(() => {
+                        window.location.href = new URL('views/pages/provider/bang-dieu-khien.html', APP_BASE).toString();
+                    }, 700);
                 } else {
                     msg.innerHTML = '<span class="text-danger"><i class="fas fa-times-circle me-1"></i>' + (res.message || 'Đăng nhập thất bại') + '</span>';
                     btn.disabled = false;
                     btn.innerHTML = '<i class="fas fa-sign-in-alt me-2"></i>Đăng nhập';
                 }
             })
-            .catch(() => {
-                msg.innerHTML = '<span class="text-danger"><i class="fas fa-wifi me-1"></i>Không kết nối được server</span>';
+            .catch((error) => {
+                const detail = (error && error.message) ? `: ${error.message}` : '';
+                msg.innerHTML = '<span class="text-danger"><i class="fas fa-wifi me-1"></i>Không kết nối được server' + detail + '</span>';
                 btn.disabled = false;
                 btn.innerHTML = '<i class="fas fa-sign-in-alt me-2"></i>Đăng nhập';
             });

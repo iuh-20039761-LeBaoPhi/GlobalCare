@@ -37,13 +37,9 @@ define('BOOKING_SELECT', "
     dichvuthem            AS addon_services,
     tiendichvuthem        AS addon_total,
     tamtinh               AS subtotal,
-    tiengiamgia           AS discount_amount,
     tienvat               AS tax_amount,
     tiendatcoc            AS deposit_amount,
-    phuphi                AS surcharge_amount,
-    phicuoituan           AS weekend_surcharge_amount,
     tongcuoi              AS final_total,
-    gioratre              AS late_return_hours,
     trangthai             AS status,
     ngaytao               AS created_at");
 
