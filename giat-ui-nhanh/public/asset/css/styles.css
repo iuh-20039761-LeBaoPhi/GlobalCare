@@ -1095,7 +1095,9 @@ footer {
     box-shadow 0.2s ease,
     filter 0.2s ease;
 }
-
+.navbar .nav-link.login-btn::after {
+  display: none;
+}
 .login-btn:hover,
 .login-btn:focus-visible {
   transform: translateY(-2px);
@@ -1167,7 +1169,9 @@ footer {
   .nav-link {
     color: #3346e6;
   }
-
+  .nav-link.login-btn {
+    color: #fff;
+  }
   .nav-link:hover {
     color: #fbbf24;
   }

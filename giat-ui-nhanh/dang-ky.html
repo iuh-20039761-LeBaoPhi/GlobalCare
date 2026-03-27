@@ -16,326 +16,7 @@
       rel="stylesheet"
     />
     <link href="public/asset/css/bootstrap.min.css" rel="stylesheet" />
-
-    <style>
-      :root {
-        --bg-start: #e6f6ef;
-        --bg-end: #eaf3ff;
-        --surface: #ffffff;
-        --text-main: #132238;
-        --text-sub: #597089;
-        --line: #dce7f2;
-        --brand-green: #0fa26d;
-        --brand-blue: #1f7be8;
-        --brand-orange: #ff7a1a;
-        --focus-ring: rgba(31, 123, 232, 0.32);
-        --shadow-soft: 0 18px 50px rgba(17, 68, 120, 0.12);
-        --shadow-card: 0 10px 30px rgba(14, 55, 96, 0.1);
-      }
-
-      * {
-        box-sizing: border-box;
-      }
-
-      html,
-      body {
-        margin: 0;
-        width: 100%;
-        max-width: 100%;
-        overflow-x: hidden;
-      }
-
-      body {
-        font-family: "Be Vietnam Pro", sans-serif;
-        color: var(--text-main);
-        background: linear-gradient(140deg, #4a00e0, #8e2de2);
-        min-height: 100vh;
-      }
-
-      .auth-page {
-        position: relative;
-        min-height: 100vh;
-        padding: 20px 14px;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-      }
-
-      .auth-shell {
-        position: relative;
-        z-index: 1;
-        width: min(560px, 100%);
-        /* border-radius: 28px; */
-        overflow: hidden;
-        /* background: var(--surface);
-        box-shadow: var(--shadow-soft); */
-        animation: enter-card 0.65s ease both;
-      }
-
-      .auth-form-wrap {
-        padding: 22px 16px;
-      }
-
-      .auth-form-card {
-        border: 1px solid var(--line);
-        border-radius: 20px;
-        padding: 22px 16px;
-        box-shadow: var(--shadow-card);
-        background: #fff;
-      }
-
-      .brand-logo {
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        gap: 8px;
-        margin-bottom: 16px;
-        text-decoration: none;
-      }
-
-      .brand-logo img {
-        width: 42px;
-        height: 42px;
-        object-fit: contain;
-      }
-
-      .brand-logo span {
-        color: var(--text-main);
-        font-size: 1.05rem;
-        font-weight: 800;
-        line-height: 1;
-      }
-
-      .auth-title {
-        margin: 0 0 6px;
-        font-size: clamp(1.4rem, 1.1rem + 1.6vw, 1.9rem);
-        font-weight: 800;
-        text-align: center;
-      }
-
-      .auth-subtitle {
-        margin: 0 0 20px;
-        color: var(--text-sub);
-        font-size: 0.95rem;
-        text-align: center;
-      }
-
-      .form-label {
-        font-weight: 600;
-        font-size: 0.94rem;
-      }
-
-      .form-control {
-        border-radius: 12px;
-        border: 1px solid #cdddec;
-        height: 46px;
-      }
-
-      .form-control:focus {
-        border-color: var(--brand-blue);
-        box-shadow: 0 0 0 4px var(--focus-ring);
-      }
-
-      .password-group {
-        position: relative;
-      }
-
-      .toggle-password {
-        position: absolute;
-        top: 50%;
-        right: 10px;
-        transform: translateY(-50%);
-        border: 0;
-        background: #eef5ff;
-        color: var(--brand-blue);
-        font-weight: 600;
-        border-radius: 8px;
-        font-size: 0.8rem;
-        padding: 6px 9px;
-      }
-
-      .toggle-password:hover {
-        background: #ddeaff;
-      }
-
-      .toggle-password:focus-visible {
-        outline: 3px solid var(--focus-ring);
-        outline-offset: 2px;
-      }
-
-      .field-error {
-        display: block;
-        min-height: 20px;
-        margin-top: 4px;
-        font-size: 0.83rem;
-        color: #d93025;
-      }
-
-      .agreement-wrap {
-        display: flex;
-        gap: 10px;
-        align-items: flex-start;
-        margin-top: 8px;
-        margin-bottom: 6px;
-      }
-
-      .agreement-wrap .form-check-label {
-        font-size: 0.9rem;
-        color: var(--text-sub);
-      }
-
-      .btn-login {
-        width: 100%;
-        border: 0;
-        border-radius: 12px;
-        padding: 12px 16px;
-        font-weight: 700;
-        color: #fff;
-        background: linear-gradient(
-          135deg,
-          var(--brand-green),
-          var(--brand-blue)
-        );
-        box-shadow: 0 12px 24px rgba(15, 162, 109, 0.28);
-        transition:
-          transform 0.2s ease,
-          box-shadow 0.2s ease,
-          filter 0.2s ease;
-      }
-
-      .btn-login:hover {
-        transform: translateY(-1px);
-        filter: saturate(1.07);
-        box-shadow: 0 15px 28px rgba(31, 123, 232, 0.26);
-      }
-
-      .btn-login:focus-visible {
-        outline: 3px solid var(--focus-ring);
-        outline-offset: 2px;
-      }
-
-      .btn-login:disabled {
-        opacity: 0.88;
-        cursor: not-allowed;
-      }
-
-      .divider {
-        display: flex;
-        align-items: center;
-        gap: 10px;
-        color: #7a8ea3;
-        margin: 18px 0 14px;
-        font-size: 0.86rem;
-      }
-
-      .divider::before,
-      .divider::after {
-        content: "";
-        height: 1px;
-        background: #d9e6f3;
-        flex: 1;
-      }
-
-      .social-grid {
-        display: grid;
-        grid-template-columns: 1fr 1fr;
-        gap: 10px;
-      }
-
-      .btn-social {
-        border: 1px solid #cfe0ef;
-        background: #fff;
-        color: #234;
-        border-radius: 12px;
-        padding: 10px;
-        font-weight: 600;
-        display: inline-flex;
-        align-items: center;
-        justify-content: center;
-        gap: 8px;
-      }
-
-      .btn-social:hover {
-        background: #f5faff;
-      }
-
-      .btn-social:focus-visible {
-        outline: 3px solid var(--focus-ring);
-        outline-offset: 2px;
-      }
-
-      .auth-footer {
-        margin-top: 15px;
-        text-align: center;
-        color: var(--text-sub);
-        font-size: 0.9rem;
-      }
-
-      .auth-footer a {
-        color: var(--brand-orange);
-        font-weight: 700;
-        text-decoration: none;
-      }
-
-      .auth-footer a:hover {
-        text-decoration: underline;
-      }
-
-      .policy-links {
-        margin-top: 10px;
-        font-size: 0.82rem;
-      }
-
-      .policy-links a {
-        color: #617d98;
-        text-decoration: none;
-      }
-
-      .policy-links a:hover {
-        text-decoration: underline;
-      }
-
-      .auth-alert {
-        margin-top: 12px;
-        border-radius: 12px;
-      }
-
-      @media (min-width: 768px) {
-        .auth-page {
-          padding: 34px;
-        }
-
-        .auth-form-wrap {
-          padding: 30px;
-        }
-
-        .auth-form-card {
-          padding: 30px;
-        }
-      }
-
-      @media (prefers-reduced-motion: reduce) {
-        *,
-        *::before,
-        *::after {
-          animation: none !important;
-          transition: none !important;
-          scroll-behavior: auto !important;
-        }
-      }
-
-      @keyframes enter-card {
-        from {
-          opacity: 0;
-          transform: translateY(14px);
-        }
-
-        to {
-          opacity: 1;
-          transform: translateY(0);
-        }
-      }
-    </style>
+    <link href="public/asset/css/auth.css" rel="stylesheet" />
   </head>
   <body>
     <main class="auth-page">
@@ -363,82 +44,115 @@
               Điền thông tin để tạo tài khoản mới nhanh chóng.
             </p>
 
-            <form id="registerForm" novalidate>
+            <div
+              class="account-tabs"
+              role="tablist"
+              aria-label="Loại tài khoản"
+            >
+              <button
+                id="showCustomerBtn"
+                class="account-tab is-active"
+                type="button"
+                role="tab"
+                aria-selected="true"
+                aria-controls="customerForm"
+              >
+                Khách hàng
+              </button>
+              <button
+                id="showProviderBtn"
+                class="account-tab"
+                type="button"
+                role="tab"
+                aria-selected="false"
+                aria-controls="providerForm"
+              >
+                Nhà cung cấp
+              </button>
+            </div>
+
+            <form id="customerForm" class="account-form" novalidate>
               <div class="mb-2">
-                <label for="fullName" class="form-label">Họ và tên</label>
+                <label for="customerFullName" class="form-label"
+                  >Họ và tên</label
+                >
                 <input
-                  id="fullName"
+                  id="customerFullName"
                   name="fullName"
                   type="text"
                   class="form-control"
                   placeholder="Nguyễn Văn A"
                   autocomplete="name"
-                  aria-describedby="fullNameError"
+                  aria-describedby="customerFullNameError"
                   required
                 />
                 <small
-                  id="fullNameError"
+                  id="customerFullNameError"
                   class="field-error"
                   aria-live="polite"
                 ></small>
               </div>
 
               <div class="mb-2">
-                <label for="phone" class="form-label">Số điện thoại</label>
+                <label for="customerPhone" class="form-label"
+                  >Số điện thoại</label
+                >
                 <input
-                  id="phone"
+                  id="customerPhone"
                   name="phone"
                   type="text"
                   class="form-control"
                   placeholder="09xxxxxxxx"
                   autocomplete="tel"
-                  aria-describedby="phoneError"
+                  aria-describedby="customerPhoneError"
                   required
                 />
                 <small
-                  id="phoneError"
+                  id="customerPhoneError"
                   class="field-error"
                   aria-live="polite"
                 ></small>
               </div>
 
               <div class="mb-2">
-                <label for="email" class="form-label">Email</label>
+                <label for="customerEmail" class="form-label">Email</label>
                 <input
-                  id="email"
+                  id="customerEmail"
                   name="email"
                   type="email"
                   class="form-control"
                   placeholder="tenban@email.com"
                   autocomplete="email"
-                  aria-describedby="emailError"
+                  aria-describedby="customerEmailError"
                   required
                 />
                 <small
-                  id="emailError"
+                  id="customerEmailError"
                   class="field-error"
                   aria-live="polite"
                 ></small>
               </div>
 
               <div class="mb-1">
-                <label for="password" class="form-label">Mật khẩu</label>
+                <label for="customerPassword" class="form-label"
+                  >Mật khẩu</label
+                >
                 <div class="password-group">
                   <input
-                    id="password"
+                    id="customerPassword"
                     name="password"
                     type="password"
                     class="form-control pe-5"
                     placeholder="Nhập mật khẩu"
                     autocomplete="current-password"
-                    aria-describedby="passwordError"
+                    aria-describedby="customerPasswordError"
                     required
                   />
                   <button
                     type="button"
                     class="toggle-password"
                     data-toggle-password
-                    data-target="password"
+                    data-target="customerPassword"
                     aria-label="Hiện mật khẩu"
                     aria-pressed="false"
                   >
@@ -446,32 +160,32 @@
                   </button>
                 </div>
                 <small
-                  id="passwordError"
+                  id="customerPasswordError"
                   class="field-error"
                   aria-live="polite"
                 ></small>
               </div>
 
               <div class="mb-1">
-                <label for="confirmPassword" class="form-label"
+                <label for="customerConfirmPassword" class="form-label"
                   >Xác nhận mật khẩu</label
                 >
                 <div class="password-group">
                   <input
-                    id="confirmPassword"
+                    id="customerConfirmPassword"
                     name="confirmPassword"
                     type="password"
                     class="form-control pe-5"
                     placeholder="Nhập lại mật khẩu"
                     autocomplete="new-password"
-                    aria-describedby="confirmPasswordError"
+                    aria-describedby="customerConfirmPasswordError"
                     required
                   />
                   <button
                     type="button"
                     class="toggle-password"
                     data-toggle-password
-                    data-target="confirmPassword"
+                    data-target="customerConfirmPassword"
                     aria-label="Hiện mật khẩu"
                     aria-pressed="false"
                   >
@@ -479,7 +193,7 @@
                   </button>
                 </div>
                 <small
-                  id="confirmPasswordError"
+                  id="customerConfirmPasswordError"
                   class="field-error"
                   aria-live="polite"
                 ></small>
@@ -490,52 +204,411 @@
                   <input
                     class="form-check-input"
                     type="checkbox"
-                    id="agreePolicy"
+                    id="customerAgreePolicy"
                   />
-                  <label class="form-check-label" for="agreePolicy">
+                  <label class="form-check-label" for="customerAgreePolicy">
                     Tôi đồng ý với điều khoản sử dụng và chính sách bảo mật.
                   </label>
                 </div>
               </div>
               <small
-                id="agreeError"
+                id="customerAgreeError"
                 class="field-error"
                 aria-live="polite"
               ></small>
 
-              <button id="submitBtn" type="submit" class="btn-login mt-2">
-                <span class="btn-text">Tạo tài khoản</span>
+              <button
+                id="customerSubmitBtn"
+                type="submit"
+                class="btn-login mt-2"
+              >
+                <span class="btn-text">Tạo tài khoản khách hàng</span>
               </button>
 
               <div
-                id="loginStatus"
+                id="customerStatus"
                 class="alert alert-success auth-alert d-none"
                 role="status"
                 aria-live="polite"
               >
-                Đăng ký thành công! Chào mừng bạn đến với Giặt Ủi Nhanh.
+                Đăng ký khách hàng thành công!
+              </div>
+            </form>
+
+            <form id="providerForm" class="account-form d-none" novalidate>
+              <div class="mb-2">
+                <label for="providerFullName" class="form-label"
+                  >Họ và tên</label
+                >
+                <input
+                  id="providerFullName"
+                  name="fullName"
+                  type="text"
+                  class="form-control"
+                  placeholder="Nguyễn Văn B"
+                  autocomplete="name"
+                  aria-describedby="providerFullNameError"
+                  required
+                />
+                <small
+                  id="providerFullNameError"
+                  class="field-error"
+                  aria-live="polite"
+                ></small>
               </div>
 
-              <!-- <div class="divider">Hoặc đăng nhập bằng</div>
+              <div class="mb-2">
+                <label for="providerPhone" class="form-label"
+                  >Số điện thoại</label
+                >
+                <input
+                  id="providerPhone"
+                  name="phone"
+                  type="text"
+                  class="form-control"
+                  placeholder="09xxxxxxxx"
+                  autocomplete="tel"
+                  aria-describedby="providerPhoneError"
+                  required
+                />
+                <small
+                  id="providerPhoneError"
+                  class="field-error"
+                  aria-live="polite"
+                ></small>
+              </div>
 
-              <div class="social-grid">
-                <button
-                  type="button"
-                  class="btn-social"
-                  aria-label="Đăng nhập nhà cung cấp"
+              <div class="mb-2">
+                <label for="providerEmail" class="form-label">Email</label>
+                <input
+                  id="providerEmail"
+                  name="email"
+                  type="email"
+                  class="form-control"
+                  placeholder="ncc@email.com"
+                  autocomplete="email"
+                  aria-describedby="providerEmailError"
+                  required
+                />
+                <small
+                  id="providerEmailError"
+                  class="field-error"
+                  aria-live="polite"
+                ></small>
+              </div>
+
+              <div class="mb-1">
+                <label for="providerPassword" class="form-label"
+                  >Mật khẩu</label
                 >
-                  <i class="fas fa-user-alt"></i>
-                  Nhà cung cấp
-                </button>
-                <button
-                  type="button"
-                  class="btn-social"
-                  aria-label="Đăng nhập admin"
+                <div class="password-group">
+                  <input
+                    id="providerPassword"
+                    name="password"
+                    type="password"
+                    class="form-control pe-5"
+                    placeholder="Nhập mật khẩu"
+                    autocomplete="new-password"
+                    aria-describedby="providerPasswordError"
+                    required
+                  />
+                  <button
+                    type="button"
+                    class="toggle-password"
+                    data-toggle-password
+                    data-target="providerPassword"
+                    aria-label="Hiện mật khẩu"
+                    aria-pressed="false"
+                  >
+                    Hiện
+                  </button>
+                </div>
+                <small
+                  id="providerPasswordError"
+                  class="field-error"
+                  aria-live="polite"
+                ></small>
+              </div>
+
+              <div class="mb-1">
+                <label for="providerConfirmPassword" class="form-label"
+                  >Xác nhận mật khẩu</label
                 >
-                  <i class="fas fa-shield-alt"></i>
-                  Admin
-                </button>
-              </div> -->
+                <div class="password-group">
+                  <input
+                    id="providerConfirmPassword"
+                    name="confirmPassword"
+                    type="password"
+                    class="form-control pe-5"
+                    placeholder="Nhập lại mật khẩu"
+                    autocomplete="new-password"
+                    aria-describedby="providerConfirmPasswordError"
+                    required
+                  />
+                  <button
+                    type="button"
+                    class="toggle-password"
+                    data-toggle-password
+                    data-target="providerConfirmPassword"
+                    aria-label="Hiện mật khẩu"
+                    aria-pressed="false"
+                  >
+                    Hiện
+                  </button>
+                </div>
+                <small
+                  id="providerConfirmPasswordError"
+                  class="field-error"
+                  aria-live="polite"
+                ></small>
+              </div>
+
+              <section id="providerPanel" class="provider-panel">
+                <h2 class="provider-title">Thông tin dịch vụ</h2>
+
+                <div class="mb-2">
+                  <label for="serviceName" class="form-label"
+                    >Tên cửa hàng / Đội thợ
+                    <span class="required-mark" aria-hidden="true">*</span>
+                  </label>
+                  <input
+                    id="serviceName"
+                    name="serviceName"
+                    type="text"
+                    class="form-control"
+                    placeholder="Thợ Điện Nước Minh Tâm"
+                    aria-describedby="serviceNameError"
+                  />
+                  <small
+                    id="serviceNameError"
+                    class="field-error"
+                    aria-live="polite"
+                  ></small>
+                </div>
+
+                <div class="mb-2">
+                  <label for="serviceAddress" class="form-label"
+                    >Địa chỉ hoạt động</label
+                  >
+                  <input
+                    id="serviceAddress"
+                    name="serviceAddress"
+                    type="text"
+                    class="form-control"
+                    placeholder="Quận Bình Thạnh, TP.HCM"
+                  />
+                </div>
+
+                <div class="mb-2">
+                  <label for="serviceIntro" class="form-label"
+                    >Giới thiệu về dịch vụ</label
+                  >
+                  <textarea
+                    id="serviceIntro"
+                    name="serviceIntro"
+                    class="form-control form-textarea"
+                    placeholder="Mô tả kinh nghiệm, chuyên môn và các dịch vụ bạn cung cấp..."
+                  ></textarea>
+                </div>
+
+                <h2 class="provider-title mt-3">Ảnh & giấy tờ</h2>
+                <div class="upload-grid" id="uploadNote">
+                  <div>
+                    <input
+                      type="file"
+                      id="avatarFile"
+                      class="visually-hidden"
+                      accept="image/jpeg,image/png"
+                      aria-describedby="avatarError uploadHelp"
+                    />
+                    <div class="upload-card-wrap">
+                      <button
+                        type="button"
+                        id="avatarCard"
+                        class="upload-card"
+                        data-upload-trigger="avatarFile"
+                      >
+                        <img
+                          id="avatarPreview"
+                          class="upload-thumb d-none"
+                          alt="Xem trước ảnh đại diện"
+                        />
+                        <span id="avatarIcon" class="upload-icon"
+                          ><i class="fas fa-camera"></i
+                        ></span>
+                        <span id="avatarLabel" class="upload-label"
+                          >Ảnh đại diện</span
+                        >
+                        <span id="avatarFileName" class="upload-file-name"
+                          >Chọn ảnh</span
+                        >
+                      </button>
+                      <button
+                        type="button"
+                        id="avatarRemove"
+                        class="upload-remove d-none"
+                        data-upload-clear="avatarFile"
+                        aria-label="Xóa ảnh đại diện"
+                      >
+                        <i class="fas fa-times" aria-hidden="true"></i>
+                      </button>
+                    </div>
+                    <small
+                      id="avatarError"
+                      class="field-error"
+                      aria-live="polite"
+                    ></small>
+                  </div>
+
+                  <div>
+                    <input
+                      type="file"
+                      id="cccdFront"
+                      class="visually-hidden"
+                      accept="image/jpeg,image/png"
+                      aria-describedby="cccdFrontError uploadHelp"
+                    />
+                    <div class="upload-card-wrap">
+                      <button
+                        type="button"
+                        id="cccdFrontCard"
+                        class="upload-card"
+                        data-upload-trigger="cccdFront"
+                      >
+                        <img
+                          id="cccdFrontPreview"
+                          class="upload-thumb d-none"
+                          alt="Xem trước CCCD mặt trước"
+                        />
+                        <span id="cccdFrontIcon" class="upload-icon"
+                          ><i class="far fa-id-card"></i
+                        ></span>
+                        <span id="cccdFrontLabel" class="upload-label"
+                          >CCCD mặt trước
+                          <span class="required-mark" aria-hidden="true"
+                            >*</span
+                          ></span
+                        >
+                        <span id="cccdFrontFileName" class="upload-file-name"
+                          >Tải ảnh</span
+                        >
+                      </button>
+                      <button
+                        type="button"
+                        id="cccdFrontRemove"
+                        class="upload-remove d-none"
+                        data-upload-clear="cccdFront"
+                        aria-label="Xóa CCCD mặt trước"
+                      >
+                        <i class="fas fa-times" aria-hidden="true"></i>
+                      </button>
+                    </div>
+                    <small
+                      id="cccdFrontError"
+                      class="field-error"
+                      aria-live="polite"
+                    ></small>
+                  </div>
+
+                  <div>
+                    <input
+                      type="file"
+                      id="cccdBack"
+                      class="visually-hidden"
+                      accept="image/jpeg,image/png"
+                      aria-describedby="cccdBackError uploadHelp"
+                    />
+                    <div class="upload-card-wrap">
+                      <button
+                        type="button"
+                        id="cccdBackCard"
+                        class="upload-card"
+                        data-upload-trigger="cccdBack"
+                      >
+                        <img
+                          id="cccdBackPreview"
+                          class="upload-thumb d-none"
+                          alt="Xem trước CCCD mặt sau"
+                        />
+                        <span id="cccdBackIcon" class="upload-icon"
+                          ><i class="far fa-id-card"></i
+                        ></span>
+                        <span id="cccdBackLabel" class="upload-label"
+                          >CCCD mặt sau
+                          <span class="required-mark" aria-hidden="true"
+                            >*</span
+                          ></span
+                        >
+                        <span id="cccdBackFileName" class="upload-file-name"
+                          >Tải ảnh</span
+                        >
+                      </button>
+                      <button
+                        type="button"
+                        id="cccdBackRemove"
+                        class="upload-remove d-none"
+                        data-upload-clear="cccdBack"
+                        aria-label="Xóa CCCD mặt sau"
+                      >
+                        <i class="fas fa-times" aria-hidden="true"></i>
+                      </button>
+                    </div>
+                    <small
+                      id="cccdBackError"
+                      class="field-error"
+                      aria-live="polite"
+                    ></small>
+                  </div>
+                </div>
+                <p id="uploadHelp" class="upload-note">
+                  <i class="fas fa-info-circle me-1" aria-hidden="true"></i>Chấp
+                  nhận JPG, PNG. Tối đa 5MB mỗi ảnh. CCCD bắt buộc để xét duyệt.
+                </p>
+              </section>
+
+              <div class="provider-review-note" role="note" aria-live="polite">
+                <i class="fas fa-clock" aria-hidden="true"></i>
+                <span
+                  >Sau khi đăng ký, tài khoản của bạn sẽ được
+                  <strong>admin xét duyệt</strong> trước khi có thể đăng nhập.
+                  Thường trong vòng 24 giờ.</span
+                >
+              </div>
+
+              <div class="agreement-wrap">
+                <div class="form-check">
+                  <input
+                    class="form-check-input"
+                    type="checkbox"
+                    id="providerAgreePolicy"
+                  />
+                  <label class="form-check-label" for="providerAgreePolicy">
+                    Tôi đồng ý với điều khoản sử dụng và chính sách bảo mật.
+                  </label>
+                </div>
+              </div>
+              <small
+                id="providerAgreeError"
+                class="field-error"
+                aria-live="polite"
+              ></small>
+
+              <button
+                id="providerSubmitBtn"
+                type="submit"
+                class="btn-login mt-2"
+              >
+                <span class="btn-text">Tạo tài khoản nhà cung cấp</span>
+              </button>
+
+              <div
+                id="providerStatus"
+                class="alert alert-success auth-alert d-none"
+                role="status"
+                aria-live="polite"
+              >
+                Đăng ký nhà cung cấp thành công!
+              </div>
             </form>
 
             <div class="auth-footer">
@@ -578,26 +651,113 @@
     </script>
     <script>
       (function () {
-        var form = document.getElementById("registerForm");
-        var fullNameInput = document.getElementById("fullName");
-        var phoneInput = document.getElementById("phone");
-        var emailInput = document.getElementById("email");
-        var passwordInput = document.getElementById("password");
-        var confirmPasswordInput = document.getElementById("confirmPassword");
-        var agreePolicyInput = document.getElementById("agreePolicy");
-        var fullNameError = document.getElementById("fullNameError");
-        var phoneError = document.getElementById("phoneError");
-        var emailError = document.getElementById("emailError");
-        var passwordError = document.getElementById("passwordError");
-        var confirmPasswordError = document.getElementById(
-          "confirmPasswordError",
+        var showCustomerBtn = document.getElementById("showCustomerBtn");
+        var showProviderBtn = document.getElementById("showProviderBtn");
+        var customerForm = document.getElementById("customerForm");
+        var providerForm = document.getElementById("providerForm");
+
+        var customerFullNameInput = document.getElementById("customerFullName");
+        var customerPhoneInput = document.getElementById("customerPhone");
+        var customerEmailInput = document.getElementById("customerEmail");
+        var customerPasswordInput = document.getElementById("customerPassword");
+        var customerConfirmPasswordInput = document.getElementById(
+          "customerConfirmPassword",
         );
-        var agreeError = document.getElementById("agreeError");
+        var customerAgreePolicyInput = document.getElementById(
+          "customerAgreePolicy",
+        );
+        var customerFullNameError = document.getElementById(
+          "customerFullNameError",
+        );
+        var customerPhoneError = document.getElementById("customerPhoneError");
+        var customerEmailError = document.getElementById("customerEmailError");
+        var customerPasswordError = document.getElementById(
+          "customerPasswordError",
+        );
+        var customerConfirmPasswordError = document.getElementById(
+          "customerConfirmPasswordError",
+        );
+        var customerAgreeError = document.getElementById("customerAgreeError");
+        var customerSubmitBtn = document.getElementById("customerSubmitBtn");
+        var customerStatus = document.getElementById("customerStatus");
+
+        var providerFullNameInput = document.getElementById("providerFullName");
+        var providerPhoneInput = document.getElementById("providerPhone");
+        var providerEmailInput = document.getElementById("providerEmail");
+        var providerPasswordInput = document.getElementById("providerPassword");
+        var providerConfirmPasswordInput = document.getElementById(
+          "providerConfirmPassword",
+        );
+        var providerAgreePolicyInput = document.getElementById(
+          "providerAgreePolicy",
+        );
+        var serviceNameInput = document.getElementById("serviceName");
+        var serviceNameError = document.getElementById("serviceNameError");
+        var avatarFileInput = document.getElementById("avatarFile");
+        var cccdFrontInput = document.getElementById("cccdFront");
+        var cccdBackInput = document.getElementById("cccdBack");
+        var avatarError = document.getElementById("avatarError");
+        var cccdFrontError = document.getElementById("cccdFrontError");
+        var cccdBackError = document.getElementById("cccdBackError");
+        var providerFullNameError = document.getElementById(
+          "providerFullNameError",
+        );
+        var providerPhoneError = document.getElementById("providerPhoneError");
+        var providerEmailError = document.getElementById("providerEmailError");
+        var providerPasswordError = document.getElementById(
+          "providerPasswordError",
+        );
+        var providerConfirmPasswordError = document.getElementById(
+          "providerConfirmPasswordError",
+        );
+        var providerAgreeError = document.getElementById("providerAgreeError");
         var togglePasswordButtons = document.querySelectorAll(
           "[data-toggle-password]",
         );
-        var submitBtn = document.getElementById("submitBtn");
-        var loginStatus = document.getElementById("loginStatus");
+        var providerSubmitBtn = document.getElementById("providerSubmitBtn");
+        var providerStatus = document.getElementById("providerStatus");
+        var MAX_UPLOAD_SIZE = 5 * 1024 * 1024;
+        var ACCEPTED_IMAGE_TYPES = ["image/jpeg", "image/png"];
+        var activeForm = "customer";
+
+        var uploadConfigs = {
+          avatarFile: {
+            input: avatarFileInput,
+            card: document.getElementById("avatarCard"),
+            preview: document.getElementById("avatarPreview"),
+            icon: document.getElementById("avatarIcon"),
+            label: document.getElementById("avatarLabel"),
+            fileName: document.getElementById("avatarFileName"),
+            removeBtn: document.getElementById("avatarRemove"),
+            error: avatarError,
+            defaultFileName: "Chọn ảnh",
+            required: false,
+          },
+          cccdFront: {
+            input: cccdFrontInput,
+            card: document.getElementById("cccdFrontCard"),
+            preview: document.getElementById("cccdFrontPreview"),
+            icon: document.getElementById("cccdFrontIcon"),
+            label: document.getElementById("cccdFrontLabel"),
+            fileName: document.getElementById("cccdFrontFileName"),
+            removeBtn: document.getElementById("cccdFrontRemove"),
+            error: cccdFrontError,
+            defaultFileName: "Tải ảnh",
+            required: true,
+          },
+          cccdBack: {
+            input: cccdBackInput,
+            card: document.getElementById("cccdBackCard"),
+            preview: document.getElementById("cccdBackPreview"),
+            icon: document.getElementById("cccdBackIcon"),
+            label: document.getElementById("cccdBackLabel"),
+            fileName: document.getElementById("cccdBackFileName"),
+            removeBtn: document.getElementById("cccdBackRemove"),
+            error: cccdBackError,
+            defaultFileName: "Tải ảnh",
+            required: true,
+          },
+        };
 
         function isPhoneVN(value) {
           return /^(?:\+84|84|0)(?:3|5|7|8|9)\d{8}$/.test(value);
@@ -607,118 +767,425 @@
           return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value);
         }
 
-        function validateFullName() {
-          var value = fullNameInput.value.trim();
-          fullNameError.textContent = "";
-          fullNameInput.setAttribute("aria-invalid", "false");
+        function isStrongEnoughPassword(value) {
+          return value && value.trim() && value.length >= 6;
+        }
+
+        function clearError(input, errorElement) {
+          errorElement.textContent = "";
+          input.setAttribute("aria-invalid", "false");
+        }
+
+        function setError(input, errorElement, message) {
+          errorElement.textContent = message;
+          input.setAttribute("aria-invalid", "true");
+          return false;
+        }
+
+        function validateServiceName() {
+          var value = serviceNameInput.value.trim();
+          clearError(serviceNameInput, serviceNameError);
 
           if (!value) {
-            fullNameError.textContent = "Vui lòng nhập họ và tên.";
-            fullNameInput.setAttribute("aria-invalid", "true");
-            return false;
+            return setError(
+              serviceNameInput,
+              serviceNameError,
+              "Vui lòng nhập tên cửa hàng hoặc đội thợ.",
+            );
           }
 
           if (value.length < 2) {
-            fullNameError.textContent = "Họ tên cần từ 2 ký tự trở lên.";
-            fullNameInput.setAttribute("aria-invalid", "true");
-            return false;
+            return setError(
+              serviceNameInput,
+              serviceNameError,
+              "Tên dịch vụ cần từ 2 ký tự trở lên.",
+            );
           }
 
           return true;
         }
 
-        function validatePhone() {
-          var value = phoneInput.value.trim();
-          phoneError.textContent = "";
-          phoneInput.setAttribute("aria-invalid", "false");
+        function validateRequiredText(input, errorElement, message) {
+          clearError(input, errorElement);
+          if (!input.value.trim()) {
+            return setError(input, errorElement, message);
+          }
+          return true;
+        }
 
-          if (!value) {
-            phoneError.textContent = "Vui lòng nhập số điện thoại.";
-            phoneInput.setAttribute("aria-invalid", "true");
-            return false;
+        function validatePhoneField(input, errorElement) {
+          clearError(input, errorElement);
+
+          if (!input.value.trim()) {
+            return setError(
+              input,
+              errorElement,
+              "Vui lòng nhập số điện thoại.",
+            );
           }
 
-          if (!isPhoneVN(value)) {
-            phoneError.textContent =
-              "Định dạng chưa đúng. Hãy nhập số điện thoại hợp lệ.";
-            phoneInput.setAttribute("aria-invalid", "true");
-            return false;
+          if (!isPhoneVN(input.value.trim())) {
+            return setError(
+              input,
+              errorElement,
+              "Định dạng chưa đúng. Hãy nhập số điện thoại hợp lệ.",
+            );
           }
 
           return true;
         }
 
-        function validateEmail() {
-          var value = emailInput.value.trim();
-          emailError.textContent = "";
-          emailInput.setAttribute("aria-invalid", "false");
+        function validateEmailField(input, errorElement) {
+          clearError(input, errorElement);
 
-          if (!value) {
-            emailError.textContent = "Vui lòng nhập email.";
-            emailInput.setAttribute("aria-invalid", "true");
-            return false;
+          if (!input.value.trim()) {
+            return setError(input, errorElement, "Vui lòng nhập email.");
           }
 
-          if (!isEmail(value)) {
-            emailError.textContent = "Định dạng email chưa hợp lệ.";
-            emailInput.setAttribute("aria-invalid", "true");
-            return false;
-          }
-
-          return true;
-        }
-
-        function validatePassword() {
-          var value = passwordInput.value;
-          passwordError.textContent = "";
-          passwordInput.setAttribute("aria-invalid", "false");
-
-          if (!value.trim()) {
-            passwordError.textContent = "Vui lòng nhập mật khẩu.";
-            passwordInput.setAttribute("aria-invalid", "true");
-            return false;
-          }
-
-          if (value.length < 6) {
-            passwordError.textContent = "Mật khẩu cần tối thiểu 6 ký tự.";
-            passwordInput.setAttribute("aria-invalid", "true");
-            return false;
+          if (!isEmail(input.value.trim())) {
+            return setError(
+              input,
+              errorElement,
+              "Định dạng email chưa hợp lệ.",
+            );
           }
 
           return true;
         }
 
-        function validateConfirmPassword() {
-          var value = confirmPasswordInput.value;
-          confirmPasswordError.textContent = "";
-          confirmPasswordInput.setAttribute("aria-invalid", "false");
+        function validatePasswordField(input, errorElement) {
+          clearError(input, errorElement);
 
-          if (!value.trim()) {
-            confirmPasswordError.textContent = "Vui lòng xác nhận mật khẩu.";
-            confirmPasswordInput.setAttribute("aria-invalid", "true");
-            return false;
-          }
-
-          if (value !== passwordInput.value) {
-            confirmPasswordError.textContent = "Mật khẩu xác nhận chưa khớp.";
-            confirmPasswordInput.setAttribute("aria-invalid", "true");
-            return false;
+          if (!isStrongEnoughPassword(input.value)) {
+            return setError(
+              input,
+              errorElement,
+              "Mật khẩu cần tối thiểu 6 ký tự.",
+            );
           }
 
           return true;
         }
 
-        function validateAgreePolicy() {
-          agreeError.textContent = "";
-          agreePolicyInput.setAttribute("aria-invalid", "false");
+        function validateConfirmPasswordField(
+          passwordInput,
+          confirmInput,
+          errorElement,
+        ) {
+          clearError(confirmInput, errorElement);
 
-          if (!agreePolicyInput.checked) {
-            agreeError.textContent = "Bạn cần đồng ý điều khoản để tiếp tục.";
-            agreePolicyInput.setAttribute("aria-invalid", "true");
-            return false;
+          if (!confirmInput.value.trim()) {
+            return setError(
+              confirmInput,
+              errorElement,
+              "Vui lòng xác nhận mật khẩu.",
+            );
+          }
+
+          if (confirmInput.value !== passwordInput.value) {
+            return setError(
+              confirmInput,
+              errorElement,
+              "Mật khẩu xác nhận chưa khớp.",
+            );
           }
 
           return true;
+        }
+
+        function validateAgreePolicyField(input, errorElement) {
+          clearError(input, errorElement);
+
+          if (!input.checked) {
+            return setError(
+              input,
+              errorElement,
+              "Bạn cần đồng ý điều khoản để tiếp tục.",
+            );
+          }
+
+          return true;
+        }
+
+        function resetUploadPreview(config) {
+          if (config.preview.dataset.url) {
+            URL.revokeObjectURL(config.preview.dataset.url);
+            config.preview.dataset.url = "";
+          }
+          config.preview.removeAttribute("src");
+          config.preview.classList.add("d-none");
+          config.card.classList.remove("is-filled");
+          config.icon.classList.remove("d-none");
+          config.label.classList.remove("d-none");
+          config.fileName.textContent = config.defaultFileName;
+          config.fileName.classList.remove("d-none");
+          config.removeBtn.classList.add("d-none");
+        }
+
+        function renderUploadPreview(config) {
+          var file = config.input.files[0];
+          if (!file) {
+            resetUploadPreview(config);
+            return;
+          }
+
+          if (config.preview.dataset.url) {
+            URL.revokeObjectURL(config.preview.dataset.url);
+          }
+
+          var objectUrl = URL.createObjectURL(file);
+          config.preview.src = objectUrl;
+          config.preview.dataset.url = objectUrl;
+          config.preview.classList.remove("d-none");
+          config.card.classList.add("is-filled");
+          config.icon.classList.add("d-none");
+          config.label.classList.add("d-none");
+          config.fileName.textContent = file.name;
+          config.fileName.classList.add("d-none");
+          config.removeBtn.classList.remove("d-none");
+        }
+
+        function clearUpload(fileKey) {
+          var config = uploadConfigs[fileKey];
+          if (!config) {
+            return;
+          }
+
+          config.input.value = "";
+          clearError(config.input, config.error);
+          resetUploadPreview(config);
+        }
+
+        // Validate ảnh tải lên theo định dạng và giới hạn dung lượng.
+        function validateUpload(config) {
+          var file = config.input.files[0];
+          clearError(config.input, config.error);
+
+          if (!file) {
+            if (config.required) {
+              return setError(
+                config.input,
+                config.error,
+                "Trường này là bắt buộc.",
+              );
+            }
+            return true;
+          }
+
+          if (ACCEPTED_IMAGE_TYPES.indexOf(file.type) === -1) {
+            return setError(
+              config.input,
+              config.error,
+              "Chỉ chấp nhận JPG hoặc PNG.",
+            );
+          }
+
+          if (file.size > MAX_UPLOAD_SIZE) {
+            return setError(
+              config.input,
+              config.error,
+              "Ảnh vượt quá 5MB. Vui lòng chọn ảnh nhỏ hơn.",
+            );
+          }
+
+          return true;
+        }
+
+        function resetProviderState() {
+          clearError(providerFullNameInput, providerFullNameError);
+          clearError(providerPhoneInput, providerPhoneError);
+          clearError(providerEmailInput, providerEmailError);
+          clearError(providerPasswordInput, providerPasswordError);
+          clearError(
+            providerConfirmPasswordInput,
+            providerConfirmPasswordError,
+          );
+          clearError(providerAgreePolicyInput, providerAgreeError);
+          clearError(serviceNameInput, serviceNameError);
+
+          Object.keys(uploadConfigs).forEach(function (key) {
+            var config = uploadConfigs[key];
+            config.input.value = "";
+            clearError(config.input, config.error);
+            resetUploadPreview(config);
+          });
+        }
+
+        function resetCustomerState() {
+          clearError(customerFullNameInput, customerFullNameError);
+          clearError(customerPhoneInput, customerPhoneError);
+          clearError(customerEmailInput, customerEmailError);
+          clearError(customerPasswordInput, customerPasswordError);
+          clearError(
+            customerConfirmPasswordInput,
+            customerConfirmPasswordError,
+          );
+          clearError(customerAgreePolicyInput, customerAgreeError);
+        }
+
+        function syncFormView() {
+          var isCustomer = activeForm === "customer";
+
+          customerForm.classList.toggle("d-none", !isCustomer);
+          providerForm.classList.toggle("d-none", isCustomer);
+
+          showCustomerBtn.classList.toggle("is-active", isCustomer);
+          showProviderBtn.classList.toggle("is-active", !isCustomer);
+          showProviderBtn.classList.toggle("provider-active", !isCustomer);
+
+          showCustomerBtn.setAttribute(
+            "aria-selected",
+            isCustomer ? "true" : "false",
+          );
+          showProviderBtn.setAttribute(
+            "aria-selected",
+            isCustomer ? "false" : "true",
+          );
+        }
+
+        function validateCustomerForm() {
+          var validName = validateRequiredText(
+            customerFullNameInput,
+            customerFullNameError,
+            "Vui lòng nhập họ và tên.",
+          );
+          var validPhone = validatePhoneField(
+            customerPhoneInput,
+            customerPhoneError,
+          );
+          var validEmail = validateEmailField(
+            customerEmailInput,
+            customerEmailError,
+          );
+          var validPassword = validatePasswordField(
+            customerPasswordInput,
+            customerPasswordError,
+          );
+          var validConfirm = validateConfirmPasswordField(
+            customerPasswordInput,
+            customerConfirmPasswordInput,
+            customerConfirmPasswordError,
+          );
+          var validAgree = validateAgreePolicyField(
+            customerAgreePolicyInput,
+            customerAgreeError,
+          );
+
+          return (
+            validName &&
+            validPhone &&
+            validEmail &&
+            validPassword &&
+            validConfirm &&
+            validAgree
+          );
+        }
+
+        function validateProviderForm() {
+          var validName = validateRequiredText(
+            providerFullNameInput,
+            providerFullNameError,
+            "Vui lòng nhập họ và tên.",
+          );
+          var validPhone = validatePhoneField(
+            providerPhoneInput,
+            providerPhoneError,
+          );
+          var validEmail = validateEmailField(
+            providerEmailInput,
+            providerEmailError,
+          );
+          var validPassword = validatePasswordField(
+            providerPasswordInput,
+            providerPasswordError,
+          );
+          var validConfirm = validateConfirmPasswordField(
+            providerPasswordInput,
+            providerConfirmPasswordInput,
+            providerConfirmPasswordError,
+          );
+          var validAgree = validateAgreePolicyField(
+            providerAgreePolicyInput,
+            providerAgreeError,
+          );
+
+          var validServiceName = validateServiceName();
+          var validFront = validateUpload(uploadConfigs.cccdFront);
+          var validBack = validateUpload(uploadConfigs.cccdBack);
+          var validAvatar = validateUpload(uploadConfigs.avatarFile);
+
+          return (
+            validName &&
+            validPhone &&
+            validEmail &&
+            validPassword &&
+            validConfirm &&
+            validAgree &&
+            validServiceName &&
+            validFront &&
+            validBack &&
+            validAvatar
+          );
+        }
+
+        function buildCustomerPayload() {
+          return {
+            fullName: customerFullNameInput.value.trim(),
+            phone: customerPhoneInput.value.trim(),
+            email: customerEmailInput.value.trim(),
+            password: customerPasswordInput.value,
+            agreePolicy: customerAgreePolicyInput.checked,
+          };
+        }
+
+        function buildProviderPayload() {
+          return {
+            fullName: providerFullNameInput.value.trim(),
+            phone: providerPhoneInput.value.trim(),
+            email: providerEmailInput.value.trim(),
+            password: providerPasswordInput.value,
+            agreePolicy: providerAgreePolicyInput.checked,
+            serviceName: serviceNameInput.value.trim(),
+            serviceAddress: document
+              .getElementById("serviceAddress")
+              .value.trim(),
+            serviceIntro: document.getElementById("serviceIntro").value.trim(),
+            avatarFile: uploadConfigs.avatarFile.input.files[0] || null,
+            cccdFront: uploadConfigs.cccdFront.input.files[0] || null,
+            cccdBack: uploadConfigs.cccdBack.input.files[0] || null,
+          };
+        }
+
+        function submitCustomer(customerPayload) {
+          customerSubmitBtn.disabled = true;
+          customerSubmitBtn.innerHTML =
+            '<span class="spinner-border spinner-border-sm me-2" aria-hidden="true"></span><span class="btn-text">Đang xử lý...</span>';
+
+          setTimeout(function () {
+            customerSubmitBtn.disabled = false;
+            customerSubmitBtn.innerHTML =
+              '<span class="btn-text">Tạo tài khoản khách hàng</span>';
+            customerStatus.classList.remove("d-none");
+            customerForm.reset();
+            resetCustomerState();
+            console.log("customerPayload", customerPayload);
+          }, 1200);
+        }
+
+        function submitProvider(providerPayload) {
+          providerSubmitBtn.disabled = true;
+          providerSubmitBtn.innerHTML =
+            '<span class="spinner-border spinner-border-sm me-2" aria-hidden="true"></span><span class="btn-text">Đang xử lý...</span>';
+
+          setTimeout(function () {
+            providerSubmitBtn.disabled = false;
+            providerSubmitBtn.innerHTML =
+              '<span class="btn-text">Tạo tài khoản nhà cung cấp</span>';
+            providerStatus.classList.remove("d-none");
+            providerForm.reset();
+            resetProviderState();
+            console.log("providerPayload", providerPayload);
+          }, 1200);
         }
 
         togglePasswordButtons.forEach(function (button) {
@@ -737,52 +1204,131 @@
           });
         });
 
-        fullNameInput.addEventListener("blur", validateFullName);
-        phoneInput.addEventListener("blur", validatePhone);
-        emailInput.addEventListener("blur", validateEmail);
-        passwordInput.addEventListener("blur", validatePassword);
-        confirmPasswordInput.addEventListener("blur", validateConfirmPassword);
-        agreePolicyInput.addEventListener("change", validateAgreePolicy);
+        showCustomerBtn.addEventListener("click", function () {
+          activeForm = "customer";
+          customerStatus.classList.add("d-none");
+          providerStatus.classList.add("d-none");
+          syncFormView();
+        });
 
-        form.addEventListener("submit", function (event) {
+        showProviderBtn.addEventListener("click", function () {
+          activeForm = "provider";
+          customerStatus.classList.add("d-none");
+          providerStatus.classList.add("d-none");
+          syncFormView();
+        });
+
+        customerFullNameInput.addEventListener("blur", function () {
+          validateRequiredText(
+            customerFullNameInput,
+            customerFullNameError,
+            "Vui lòng nhập họ và tên.",
+          );
+        });
+        customerPhoneInput.addEventListener("blur", function () {
+          validatePhoneField(customerPhoneInput, customerPhoneError);
+        });
+        customerEmailInput.addEventListener("blur", function () {
+          validateEmailField(customerEmailInput, customerEmailError);
+        });
+        customerPasswordInput.addEventListener("blur", function () {
+          validatePasswordField(customerPasswordInput, customerPasswordError);
+        });
+        customerConfirmPasswordInput.addEventListener("blur", function () {
+          validateConfirmPasswordField(
+            customerPasswordInput,
+            customerConfirmPasswordInput,
+            customerConfirmPasswordError,
+          );
+        });
+        customerAgreePolicyInput.addEventListener("change", function () {
+          validateAgreePolicyField(
+            customerAgreePolicyInput,
+            customerAgreeError,
+          );
+        });
+
+        providerFullNameInput.addEventListener("blur", function () {
+          validateRequiredText(
+            providerFullNameInput,
+            providerFullNameError,
+            "Vui lòng nhập họ và tên.",
+          );
+        });
+        providerPhoneInput.addEventListener("blur", function () {
+          validatePhoneField(providerPhoneInput, providerPhoneError);
+        });
+        providerEmailInput.addEventListener("blur", function () {
+          validateEmailField(providerEmailInput, providerEmailError);
+        });
+        providerPasswordInput.addEventListener("blur", function () {
+          validatePasswordField(providerPasswordInput, providerPasswordError);
+        });
+        providerConfirmPasswordInput.addEventListener("blur", function () {
+          validateConfirmPasswordField(
+            providerPasswordInput,
+            providerConfirmPasswordInput,
+            providerConfirmPasswordError,
+          );
+        });
+        providerAgreePolicyInput.addEventListener("change", function () {
+          validateAgreePolicyField(
+            providerAgreePolicyInput,
+            providerAgreeError,
+          );
+        });
+        serviceNameInput.addEventListener("blur", validateServiceName);
+
+        document
+          .querySelectorAll("[data-upload-trigger]")
+          .forEach(function (button) {
+            button.addEventListener("click", function () {
+              var targetId = button.getAttribute("data-upload-trigger");
+              var targetInput = document.getElementById(targetId);
+              targetInput.click();
+            });
+          });
+
+        Object.keys(uploadConfigs).forEach(function (key) {
+          var config = uploadConfigs[key];
+          config.input.addEventListener("change", function () {
+            // Cập nhật ảnh xem trước ngay khi người dùng chọn file mới.
+            renderUploadPreview(config);
+            validateUpload(config);
+          });
+
+          config.removeBtn.addEventListener("click", function (event) {
+            event.preventDefault();
+            clearUpload(key);
+          });
+        });
+
+        customerForm.addEventListener("submit", function (event) {
           event.preventDefault();
-          loginStatus.classList.add("d-none");
+          customerStatus.classList.add("d-none");
 
-          var isFullNameValid = validateFullName();
-          var isPhoneValid = validatePhone();
-          var isEmailValid = validateEmail();
-          var isPasswordValid = validatePassword();
-          var isConfirmPasswordValid = validateConfirmPassword();
-          var isAgreeValid = validateAgreePolicy();
-
-          if (
-            !isFullNameValid ||
-            !isPhoneValid ||
-            !isEmailValid ||
-            !isPasswordValid ||
-            !isConfirmPasswordValid ||
-            !isAgreeValid
-          ) {
+          if (!validateCustomerForm()) {
             return;
           }
 
-          submitBtn.disabled = true;
-          submitBtn.innerHTML =
-            '<span class="spinner-border spinner-border-sm me-2" aria-hidden="true"></span><span class="btn-text">Đang xử lý...</span>';
-
-          setTimeout(function () {
-            submitBtn.disabled = false;
-            submitBtn.innerHTML = '<span class="btn-text">Tạo tài khoản</span>';
-            loginStatus.classList.remove("d-none");
-            form.reset();
-            togglePasswordButtons.forEach(function (button) {
-              button.textContent = "Hiện";
-              button.setAttribute("aria-pressed", "false");
-            });
-            passwordInput.type = "password";
-            confirmPasswordInput.type = "password";
-          }, 1200);
+          var customerPayload = buildCustomerPayload();
+          submitCustomer(customerPayload);
         });
+
+        providerForm.addEventListener("submit", function (event) {
+          event.preventDefault();
+          providerStatus.classList.add("d-none");
+
+          if (!validateProviderForm()) {
+            return;
+          }
+
+          // Payload sẵn sàng map sang endpoint riêng cho nhà cung cấp.
+          var providerPayload = buildProviderPayload();
+          submitProvider(providerPayload);
+        });
+
+        syncFormView();
       })();
     </script>
   </body>
