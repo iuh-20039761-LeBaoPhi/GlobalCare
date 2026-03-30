@@ -1,9 +1,9 @@
 <?php
 session_start();
-require_once __DIR__ . '/../../config/db.php';
+require_once __DIR__ . '/../config/db.php';
 
 if (!isset($_SESSION['user_id']) || $_SESSION['role'] !== 'admin') {
-    header("Location: index.php");
+    header("Location: login.php");
     exit;
 }
 
@@ -15,7 +15,7 @@ $error = "";
 
 if ($id > 0) {
     $is_edit = true;
-    $res = $conn->query("SELECT * FROM users WHERE id = $id");
+    $res = $conn->query("SELECT id, ten_dang_nhap AS username, ho_ten AS fullname, email, so_dien_thoai AS phone, vai_tro AS role, loai_phuong_tien AS vehicle_type, bi_khoa AS is_locked FROM nguoi_dung WHERE id = $id");
     if ($res->num_rows > 0) $user = $res->fetch_assoc();
     else die("Người dùng không tồn tại.");
 }
@@ -33,26 +33,26 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     if (empty($username)) $errs[] = "Tên đăng nhập không được để trống.";
     if (empty($email)) $errs[] = "Email không được để trống.";
 
-    $check_sql = "SELECT id FROM users WHERE (username = '$username' OR email = '$email') AND id != $id";
+    $check_sql = "SELECT id FROM nguoi_dung WHERE (ten_dang_nhap = '$username' OR email = '$email') AND id != $id";
     if ($conn->query($check_sql)->num_rows > 0) $errs[] = "Tên đăng nhập hoặc Email đã tồn tại.";
 
     if (empty($errs)) {
         if ($is_edit) {
-            $sql = "UPDATE users SET fullname=?, email=?, phone=?, role=?, vehicle_type=? WHERE id=?";
+            $sql = "UPDATE nguoi_dung SET ho_ten=?, email=?, so_dien_thoai=?, vai_tro=?, loai_phuong_tien=? WHERE id=?";
             $stmt = $conn->prepare($sql);
             $stmt->bind_param("sssssi", $fullname, $email, $phone, $role, $vehicle_type, $id);
             $stmt->execute();
             if (!empty($password)) {
                 $hash = password_hash($password, PASSWORD_DEFAULT);
-                $conn->query("UPDATE users SET password = '$hash' WHERE id = $id");
+                $conn->query("UPDATE nguoi_dung SET mat_khau = '$hash' WHERE id = $id");
             }
             $msg = "Cập nhật tài khoản thành công!";
-            $user = $conn->query("SELECT * FROM users WHERE id = $id")->fetch_assoc();
+            $user = $conn->query("SELECT id, ten_dang_nhap AS username, ho_ten AS fullname, email, so_dien_thoai AS phone, vai_tro AS role, loai_phuong_tien AS vehicle_type, bi_khoa AS is_locked FROM nguoi_dung WHERE id = $id")->fetch_assoc();
         } else {
             if (empty($password)) $error = "Mật khẩu là bắt buộc khi tạo mới.";
             else {
                 $hash = password_hash($password, PASSWORD_DEFAULT);
-                $sql = "INSERT INTO users (username, password, fullname, email, phone, role, vehicle_type) VALUES (?, ?, ?, ?, ?, ?, ?)";
+                $sql = "INSERT INTO nguoi_dung (ten_dang_nhap, mat_khau, ho_ten, email, so_dien_thoai, vai_tro, loai_phuong_tien) VALUES (?, ?, ?, ?, ?, ?, ?)";
                 $stmt = $conn->prepare($sql);
                 $stmt->bind_param("sssssss", $username, $hash, $fullname, $email, $phone, $role, $vehicle_type);
                 if ($stmt->execute()) {
@@ -70,11 +70,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     <meta charset="UTF-8">
     <title><?php echo $is_edit ? 'Chỉnh sửa' : 'Thêm mới'; ?> người dùng | Admin</title>
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <link rel="stylesheet" href="../assets/css/admin.css?v=<?php echo time(); ?>">
+    <link rel="stylesheet" href="assets/css/admin.css?v=<?php echo time(); ?>">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
 </head>
 <body>
-    <?php include __DIR__ . '/../../includes/header_admin.php'; ?>
+    <?php include __DIR__ . '/../includes/header_admin.php'; ?>
     <main class="admin-container">
         <div class="page-header">
             <h2 class="page-title"><?php echo $is_edit ? 'Chỉnh sửa thành viên' : 'Đăng ký thành viên mới'; ?></h2>
@@ -142,7 +142,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             </form>
         </div>
     </main>
-    <?php include __DIR__ . '/../../includes/footer.php'; ?>
+    <?php include __DIR__ . '/../includes/footer.php'; ?>
     <script>
         function toggleVehicle(role) {
             document.getElementById('vehicle-group').style.display = (role === 'shipper' ? 'block' : 'none');
@@ -150,4 +150,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     </script>
 </body>
 </html>
+
+
 

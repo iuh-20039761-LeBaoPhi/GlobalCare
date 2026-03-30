@@ -1,30 +1,30 @@
 <?php
 session_start();
-require_once __DIR__ . '/../../config/db.php';
+require_once __DIR__ . '/../config/db.php';
 
 if (!isset($_SESSION['user_id']) || $_SESSION['role'] !== 'admin') {
-    header("Location: index.php");
+    header("Location: login.php");
     exit;
 }
 
 $id = isset($_GET['id']) ? intval($_GET['id']) : 0;
-$user_res = $conn->query("SELECT * FROM users WHERE id = $id");
+$user_res = $conn->query("SELECT id, ten_dang_nhap AS username, ho_ten AS fullname, email, so_dien_thoai AS phone, vai_tro AS role FROM nguoi_dung WHERE id = $id");
 if ($user_res->num_rows == 0) die("User not found");
 $user = $user_res->fetch_assoc();
 
 $orders = [];
 if ($user['role'] == 'customer') {
-    $sql_orders = "SELECT * FROM orders WHERE user_id = $id ORDER BY created_at DESC LIMIT 20";
+    $sql_orders = "SELECT id, ma_don_hang AS order_code, trang_thai AS status, tao_luc AS created_at FROM don_hang WHERE nguoi_dung_id = $id ORDER BY tao_luc DESC LIMIT 20";
 } elseif ($user['role'] == 'shipper') {
-    $sql_orders = "SELECT * FROM orders WHERE shipper_id = $id ORDER BY created_at DESC LIMIT 20";
+    $sql_orders = "SELECT id, ma_don_hang AS order_code, trang_thai AS status, tao_luc AS created_at FROM don_hang WHERE shipper_id = $id ORDER BY tao_luc DESC LIMIT 20";
 } else {
-    $sql_orders = "SELECT * FROM orders WHERE 1=0";
+    $sql_orders = "SELECT id, ma_don_hang AS order_code, trang_thai AS status, tao_luc AS created_at FROM don_hang WHERE 1=0";
 }
 $res_orders = $conn->query($sql_orders);
 while ($r = $res_orders->fetch_assoc()) $orders[] = $r;
 
 $logs = [];
-$sql_logs = "SELECT l.*, o.order_code FROM order_logs l JOIN orders o ON l.order_id = o.id WHERE l.user_id = $id ORDER BY l.created_at DESC LIMIT 20";
+$sql_logs = "SELECT l.don_hang_id AS order_id, l.trang_thai_cu AS old_status, l.trang_thai_moi AS new_status, l.tao_luc AS created_at, o.ma_don_hang AS order_code FROM nhat_ky_don_hang l JOIN don_hang o ON l.don_hang_id = o.id WHERE l.nguoi_dung_id = $id ORDER BY l.tao_luc DESC LIMIT 20";
 $res_logs = $conn->query($sql_logs);
 while ($r = $res_logs->fetch_assoc()) $logs[] = $r;
 ?>
@@ -34,11 +34,11 @@ while ($r = $res_logs->fetch_assoc()) $logs[] = $r;
     <meta charset="UTF-8">
     <title>Lịch sử: <?php echo htmlspecialchars($user['fullname']); ?> | Admin</title>
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <link rel="stylesheet" href="../assets/css/admin.css?v=<?php echo time(); ?>">
+    <link rel="stylesheet" href="assets/css/admin.css?v=<?php echo time(); ?>">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
 </head>
 <body>
-    <?php include __DIR__ . '/../../includes/header_admin.php'; ?>
+    <?php include __DIR__ . '/../includes/header_admin.php'; ?>
     <main class="admin-container">
         <div class="page-header">
             <h2 class="page-title">Lịch sử hoạt động: <span style="color:#0a2a66"><?php echo htmlspecialchars($user['fullname']); ?></span></h2>
@@ -115,7 +115,9 @@ while ($r = $res_logs->fetch_assoc()) $logs[] = $r;
             </div>
         </div>
     </main>
-    <?php include __DIR__ . '/../../includes/footer.php'; ?>
+    <?php include __DIR__ . '/../includes/footer.php'; ?>
 </body>
 </html>
+
+
 

@@ -3,7 +3,7 @@ session_start();
 
 // Kiểm tra quyền Admin
 if (!isset($_SESSION['user_id']) || ($_SESSION['role'] ?? '') !== 'admin') {
-    header("Location: index.php");
+    header("Location: login.php");
     exit;
 }
 
@@ -15,7 +15,7 @@ $shipper_id = isset($_GET['id']) ? intval($_GET['id']) : 0;
     <meta charset="UTF-8">
     <title>Hồ sơ Shipper | Admin</title>
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <link rel="stylesheet" href="../assets/css/admin.css?v=<?php echo time(); ?>">
+    <link rel="stylesheet" href="assets/css/admin.css?v=<?php echo time(); ?>">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
     <style>
         .shipper-profile-card {
@@ -78,7 +78,7 @@ $shipper_id = isset($_GET['id']) ? intval($_GET['id']) : 0;
     </style>
 </head>
 <body>
-    <?php include __DIR__ . '/../../includes/header_admin.php'; ?>
+    <?php include __DIR__ . '/../includes/header_admin.php'; ?>
     <main class="admin-container" id="main-content">
         <div class="page-header">
             <h2 class="page-title">Hồ sơ hiệu suất Shipper</h2>
@@ -148,12 +148,12 @@ $shipper_id = isset($_GET['id']) ? intval($_GET['id']) : 0;
             </div>
         </div>
     </main>
-    <?php include __DIR__ . '/../../includes/footer.php'; ?>
+    <?php include __DIR__ . '/../includes/footer.php'; ?>
 
     <script>
         (function() {
             const shipperId = <?php echo $shipper_id; ?>;
-            const apiUrl = `../../admin-giaohang/api/shipper_detail.php?id=${shipperId}`;
+            const apiUrl = `../api/shipper_detail.php?id=${shipperId}`;
             
             const content = document.getElementById('shipper-content');
             const errorBox = document.getElementById('error-box');
@@ -268,4 +268,6 @@ $shipper_id = isset($_GET['id']) ? intval($_GET['id']) : 0;
     </script>
 </body>
 </html>
+
+
 
