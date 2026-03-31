@@ -1,6 +1,6 @@
 <?php
 session_start();
-require_once __DIR__ . '/../../config/db.php';
+require_once __DIR__ . '/../config/db.php';
 
 function base_path(): string
 {
@@ -86,8 +86,69 @@ function status_text(string $status): string
 
 function service_text(string $serviceType): string
 {
-    $map = ['slow' => 'Chậm', 'standard' => 'Tiêu chuẩn', 'fast' => 'Nhanh', 'express' => 'Hỏa tốc', 'instant' => 'Ngay lập tức', 'intl_economy' => 'Tiêu chuẩn quốc tế', 'intl_express' => 'Hỏa tốc quốc tế'];
+    $map = [
+        'giao_tieu_chuan' => 'Tiêu chuẩn',
+        'giao_nhanh' => 'Nhanh',
+        'giao_hoa_toc' => 'Hỏa tốc',
+        'giao_ngay_lap_tuc' => 'Ngay lập tức',
+        'so_luong_lon' => 'Số lượng lớn',
+        'quoc_te_tiet_kiem' => 'Tiêu chuẩn quốc tế',
+        'quoc_te_hoa_toc' => 'Hỏa tốc quốc tế',
+    ];
     return $map[$serviceType] ?? $serviceType;
+}
+
+function get_allowed_status_transitions(string $currentStatus): array
+{
+    $normalized = strtolower(trim($currentStatus));
+    $map = [
+        'pending' => ['pending', 'shipping', 'cancelled'],
+        'shipping' => ['shipping', 'completed', 'cancelled'],
+        'completed' => ['completed'],
+        'cancelled' => ['cancelled'],
+    ];
+
+    return $map[$normalized] ?? [$normalized];
+}
+
+function status_option_text(string $status): string
+{
+    $map = [
+        'pending' => 'Chờ xử lý',
+        'shipping' => 'Đang giao hàng',
+        'completed' => 'Giao thành công',
+        'cancelled' => 'Đã hủy đơn',
+    ];
+
+    return $map[$status] ?? $status;
+}
+
+function insert_order_log(mysqli $conn, int $orderId, int $userId, string $oldStatus, string $newStatus, string $note = ''): void
+{
+    $stmt = $conn->prepare('INSERT INTO nhat_ky_don_hang (don_hang_id, nguoi_dung_id, trang_thai_cu, trang_thai_moi, ghi_chu) VALUES (?, ?, ?, ?, ?)');
+    if (!$stmt) {
+        return;
+    }
+
+    $stmt->bind_param('iisss', $orderId, $userId, $oldStatus, $newStatus, $note);
+    $stmt->execute();
+    $stmt->close();
+}
+
+function notify_order_owner(mysqli $conn, int $userId, int $orderId, string $message, string $link): void
+{
+    if ($userId <= 0 || trim($message) === '') {
+        return;
+    }
+
+    $stmt = $conn->prepare('INSERT INTO thong_bao (nguoi_dung_id, don_hang_id, noi_dung, duong_dan) VALUES (?, ?, ?, ?)');
+    if (!$stmt) {
+        return;
+    }
+
+    $stmt->bind_param('iiss', $userId, $orderId, $message, $link);
+    $stmt->execute();
+    $stmt->close();
 }
 
 function payment_method_text(string $paymentMethod): string
@@ -114,7 +175,7 @@ function payer_label(array $order, array $payload): string
 }
 
 if (!isset($_SESSION['user_id']) || ($_SESSION['role'] ?? '') !== 'admin') {
-    header('Location: ../../index.html');
+    header('Location: login.php');
     exit;
 }
 
@@ -129,7 +190,7 @@ $error = '';
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['save_admin_note'])) {
     $adminNote = trim((string) ($_POST['admin_note'] ?? ''));
-    $stmt = $conn->prepare('UPDATE orders SET admin_note = ? WHERE id = ?');
+    $stmt = $conn->prepare('UPDATE don_hang SET ghi_chu_quan_tri = ? WHERE id = ?');
     $stmt->bind_param('si', $adminNote, $id);
     $msg = $stmt->execute() ? 'Đã lưu ghi chú nội bộ.' : '';
     $error = $msg === '' ? 'Không thể lưu ghi chú admin.' : '';
@@ -138,7 +199,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['save_admin_note'])) {
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['update_payment_status'])) {
     $paymentStatus = trim((string) ($_POST['payment_status'] ?? ''));
-    $stmt = $conn->prepare('UPDATE orders SET payment_status = ? WHERE id = ?');
+    $stmt = $conn->prepare('UPDATE don_hang SET trang_thai_thanh_toan = ? WHERE id = ?');
     $stmt->bind_param('si', $paymentStatus, $id);
     $msg = $stmt->execute() ? 'Đã cập nhật trạng thái thanh toán.' : $msg;
     $error = !$stmt->affected_rows && $msg === '' ? 'Không thể cập nhật thanh toán.' : $error;
@@ -147,20 +208,68 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['update_payment_status
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['assign_shipper'])) {
     $shipperId = (int) ($_POST['shipper_id'] ?? 0);
-    if ($shipperId > 0) {
-        $stmt = $conn->prepare('UPDATE orders SET shipper_id = ? WHERE id = ?');
-        $stmt->bind_param('ii', $shipperId, $id);
+    $adminId = (int) $_SESSION['user_id'];
+    $currentStmt = $conn->prepare('SELECT nguoi_dung_id AS user_id, ma_don_hang AS order_code, shipper_id, trang_thai AS status FROM don_hang WHERE id = ? LIMIT 1');
+    if ($currentStmt) {
+        $currentStmt->bind_param('i', $id);
+        $currentStmt->execute();
+        $currentOrder = $currentStmt->get_result()->fetch_assoc();
+        $currentStmt->close();
     } else {
-        $stmt = $conn->prepare('UPDATE orders SET shipper_id = NULL WHERE id = ?');
-        $stmt->bind_param('i', $id);
+        $currentOrder = null;
     }
-    if ($stmt && $stmt->execute()) {
-        $msg = $shipperId > 0 ? 'Đã phân công shipper.' : 'Đã hủy phân công shipper.';
+
+    if (!$currentOrder) {
+        $error = 'Không tìm thấy đơn hàng để cập nhật phân công.';
     } else {
-        $error = 'Không thể cập nhật shipper.';
-    }
-    if ($stmt) {
-        $stmt->close();
+        $oldShipperId = (int) ($currentOrder['shipper_id'] ?? 0);
+        $currentStatus = (string) ($currentOrder['status'] ?? 'pending');
+        $statusAfterUpdate = $currentStatus;
+
+        if ($shipperId > 0) {
+            $stmt = $conn->prepare('UPDATE don_hang SET shipper_id = ? WHERE id = ?');
+            $stmt->bind_param('ii', $shipperId, $id);
+        } else {
+            if (in_array($currentStatus, ['pending', 'shipping'], true)) {
+                $statusAfterUpdate = 'pending';
+                $stmt = $conn->prepare('UPDATE don_hang SET shipper_id = NULL, trang_thai = ? WHERE id = ?');
+                $stmt->bind_param('si', $statusAfterUpdate, $id);
+            } else {
+                $stmt = $conn->prepare('UPDATE don_hang SET shipper_id = NULL WHERE id = ?');
+                $stmt->bind_param('i', $id);
+            }
+        }
+
+        if ($stmt && $stmt->execute()) {
+            if ($shipperId > 0) {
+                $msg = $oldShipperId > 0 ? 'Đã cập nhật shipper phụ trách đơn.' : 'Đã phân công shipper.';
+                $logNote = $oldShipperId > 0
+                    ? "Admin đã đổi nhà cung cấp phụ trách sang ID {$shipperId}."
+                    : "Admin đã phân công nhà cung cấp ID {$shipperId}.";
+                $customerMessage = $oldShipperId > 0
+                    ? "Đơn hàng #{$currentOrder['order_code']} của bạn đã được cập nhật nhà cung cấp phụ trách."
+                    : "Đơn hàng #{$currentOrder['order_code']} của bạn đã được phân công nhà cung cấp phụ trách.";
+            } else {
+                $msg = 'Đã hủy phân công shipper.';
+                $logNote = 'Admin đã hủy phân công nhà cung cấp hiện tại.';
+                $customerMessage = "Đơn hàng #{$currentOrder['order_code']} của bạn đang chờ phân công lại nhà cung cấp.";
+            }
+
+            insert_order_log($conn, $id, $adminId, $currentStatus, $statusAfterUpdate, $logNote);
+            notify_order_owner(
+                $conn,
+                (int) ($currentOrder['user_id'] ?? 0),
+                $id,
+                $customerMessage,
+                base_path() . "khach-hang/chi-tiet-don-hang.html?id={$id}"
+            );
+        } else {
+            $error = 'Không thể cập nhật shipper.';
+        }
+
+        if ($stmt) {
+            $stmt->close();
+        }
     }
 }
 
@@ -168,38 +277,27 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['update_status'])) {
     $newStatus = trim((string) ($_POST['status'] ?? ''));
     $override = isset($_POST['override_status']);
 
-    $checkStmt = $conn->prepare('SELECT status FROM orders WHERE id = ?');
+    $checkStmt = $conn->prepare('SELECT trang_thai AS status FROM don_hang WHERE id = ?');
     $checkStmt->bind_param('i', $id);
     $checkStmt->execute();
     $current = $checkStmt->get_result()->fetch_assoc();
     $checkStmt->close();
 
     $oldStatus = (string) ($current['status'] ?? '');
-    $allowed = ($override || $oldStatus === $newStatus);
-    if (!$allowed) {
-        if ($oldStatus === 'pending' && in_array($newStatus, ['shipping', 'cancelled'], true)) {
-            $allowed = true;
-        } elseif ($oldStatus === 'shipping' && in_array($newStatus, ['completed', 'cancelled'], true)) {
-            $allowed = true;
-        }
-    }
+    $allowed = $override || in_array($newStatus, get_allowed_status_transitions($oldStatus), true);
 
     if (!$allowed) {
         $error = "Chuyển trạng thái không hợp lệ. Hãy tick 'Cho phép sửa bất kỳ'.";
     } else {
-        $stmt = $conn->prepare('UPDATE orders SET status = ? WHERE id = ?');
+        $stmt = $conn->prepare('UPDATE don_hang SET trang_thai = ? WHERE id = ?');
         $stmt->bind_param('si', $newStatus, $id);
         if ($stmt->execute()) {
             $msg = 'Đã cập nhật trạng thái đơn.';
             $adminId = (int) $_SESSION['user_id'];
-            $logStmt = $conn->prepare('INSERT INTO order_logs (order_id, user_id, old_status, new_status) VALUES (?, ?, ?, ?)');
-            if ($logStmt) {
-                $logStmt->bind_param('iiss', $id, $adminId, $oldStatus, $newStatus);
-                $logStmt->execute();
-                $logStmt->close();
-            }
+            $logNote = $override ? 'Admin cập nhật trạng thái với quyền override.' : 'Admin cập nhật trạng thái đơn.';
+            insert_order_log($conn, $id, $adminId, $oldStatus, $newStatus, $logNote);
 
-            $infoStmt = $conn->prepare('SELECT user_id, order_code FROM orders WHERE id = ?');
+            $infoStmt = $conn->prepare('SELECT nguoi_dung_id AS user_id, ma_don_hang AS order_code FROM don_hang WHERE id = ?');
             $infoStmt->bind_param('i', $id);
             $infoStmt->execute();
             $orderInfo = $infoStmt->get_result()->fetch_assoc();
@@ -214,12 +312,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['update_status'])) {
                 ];
                 $notifMessage = "Đơn hàng #{$orderInfo['order_code']} của bạn " . ($statusMap[$newStatus] ?? 'đã được cập nhật') . '.';
                 $notifLink = base_path() . "khach-hang/chi-tiet-don-hang.html?id={$id}";
-                $notifStmt = $conn->prepare('INSERT INTO notifications (user_id, order_id, message, link) VALUES (?, ?, ?, ?)');
-                if ($notifStmt) {
-                    $notifStmt->bind_param('iiss', $orderInfo['user_id'], $id, $notifMessage, $notifLink);
-                    $notifStmt->execute();
-                    $notifStmt->close();
-                }
+                notify_order_owner($conn, (int) $orderInfo['user_id'], $id, $notifMessage, $notifLink);
             }
         } else {
             $error = 'Không thể cập nhật trạng thái đơn.';
@@ -231,17 +324,51 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['update_status'])) {
 $orderStmt = $conn->prepare(
     "SELECT
         o.*,
-        u.username AS customer_username,
-        u.fullname AS customer_fullname,
-        u.phone AS customer_phone,
+        o.ma_don_hang AS order_code,
+        o.ma_don_hang_khach AS client_order_code,
+        o.loai_dich_vu AS service_type,
+        o.loai_goi_hang AS package_type,
+        o.loai_phuong_tien AS vehicle_type,
+        o.thoi_gian_giao_hang_du_kien AS estimated_delivery,
+        o.dia_chi_lay_hang AS pickup_address,
+        o.dia_chi_giao_hang AS delivery_address,
+        o.ten_nguoi_gui AS name,
+        o.so_dien_thoai_nguoi_gui AS phone,
+        o.ten_nguoi_nhan AS receiver_name,
+        o.so_dien_thoai_nguoi_nhan AS receiver_phone,
+        o.phi_van_chuyen AS shipping_fee,
+        o.so_tien_cod AS cod_amount,
+        o.trang_thai AS status,
+        o.trang_thai_thanh_toan AS payment_status,
+        o.phuong_thuc_thanh_toan AS payment_method,
+        o.ghi_chu AS note,
+        o.ghi_chu_quan_tri AS admin_note,
+        o.ghi_chu_shipper AS shipper_note,
+        o.ly_do_huy AS cancel_reason,
+        o.danh_gia_so_sao AS rating,
+        o.phan_hoi AS feedback,
+        o.anh_xac_nhan_giao_hang AS pod_image,
+        o.du_lieu_dich_vu_json AS service_meta_json,
+        o.chi_tiet_gia_json AS pricing_breakdown_json,
+        o.du_lieu_dat_lich_json AS booking_payload_json,
+        o.tao_luc AS created_at,
+        o.email_cong_ty AS company_email,
+        o.ma_so_thue_cong_ty AS company_tax_code,
+        o.dia_chi_cong_ty AS company_address,
+        o.thong_tin_ngan_hang_cong_ty AS company_bank_info,
+        o.la_doanh_nghiep AS is_corporate,
+        o.nguon_thoi_tiet AS weather_source,
+        u.ten_dang_nhap AS customer_username,
+        u.ho_ten AS customer_fullname,
+        u.so_dien_thoai AS customer_phone,
         u.email AS customer_email,
-        s.fullname AS shipper_name,
-        s.phone AS shipper_phone,
+        s.ho_ten AS shipper_name,
+        s.so_dien_thoai AS shipper_phone,
         s.email AS shipper_email,
-        s.vehicle_type AS shipper_vehicle
-    FROM orders o
-    LEFT JOIN users u ON o.user_id = u.id
-    LEFT JOIN users s ON o.shipper_id = s.id
+        s.loai_phuong_tien AS shipper_vehicle
+    FROM don_hang o
+    LEFT JOIN nguoi_dung u ON o.nguoi_dung_id = u.id
+    LEFT JOIN nguoi_dung s ON o.shipper_id = s.id
     WHERE o.id = ?
     LIMIT 1"
 );
@@ -259,7 +386,7 @@ $serviceMeta = decode_json_safe($order['service_meta_json'] ?? null);
 $feeBreakdown = decode_json_safe($order['pricing_breakdown_json'] ?? null);
 $payload = decode_json_safe($order['booking_payload_json'] ?? null);
 $items = [];
-$itemStmt = $conn->prepare('SELECT item_name, quantity, weight, length, width, height, declared_value FROM order_items WHERE order_id = ? ORDER BY id ASC');
+$itemStmt = $conn->prepare('SELECT ten_mat_hang AS item_name, so_luong AS quantity, can_nang AS weight, chieu_dai AS length, chieu_rong AS width, chieu_cao AS height, gia_tri_khai_bao AS declared_value FROM don_hang_mat_hang WHERE don_hang_id = ? ORDER BY id ASC');
 if ($itemStmt) {
     $itemStmt->bind_param('i', $id);
     $itemStmt->execute();
@@ -275,6 +402,13 @@ $shipperReports = collect_files(upload_root() . '/shipper_reports/' . $order['or
 $customerFeedbackMedia = collect_files(upload_root() . '/customer-feedback/' . $order['order_code'], '../uploads/customer-feedback/' . rawurlencode((string) $order['order_code']));
 $podImage = !empty($order['pod_image']) ? '../uploads/' . ltrim((string) $order['pod_image'], '/') : '';
 $customerNote = clean_customer_note($order['note'] ?? '');
+$statusOptions = [
+    'pending' => status_option_text('pending'),
+    'shipping' => status_option_text('shipping'),
+    'completed' => status_option_text('completed'),
+    'cancelled' => status_option_text('cancelled'),
+];
+$allowedStatusTransitions = get_allowed_status_transitions((string) ($order['status'] ?? 'pending'));
 ?>
 <!DOCTYPE html>
 <html lang="vi">
@@ -282,7 +416,7 @@ $customerNote = clean_customer_note($order['note'] ?? '');
     <meta charset="UTF-8">
     <title>Chi tiết #<?php echo htmlspecialchars((string) $order['order_code']); ?> | Admin</title>
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <link rel="stylesheet" href="../assets/css/admin.css?v=<?php echo time(); ?>">
+    <link rel="stylesheet" href="assets/css/admin.css?v=<?php echo time(); ?>">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
     <style>
         .detail-layout { display:grid; grid-template-columns:minmax(0,2fr) 340px; gap:24px; }
@@ -330,7 +464,7 @@ $customerNote = clean_customer_note($order['note'] ?? '');
     </style>
 </head>
 <body>
-    <?php include __DIR__ . '/../../includes/header_admin.php'; ?>
+    <?php include __DIR__ . '/../includes/header_admin.php'; ?>
     <main class="admin-container">
         <div class="page-header">
             <h2 class="page-title">Chi tiết đơn hàng</h2>
@@ -546,10 +680,15 @@ $customerNote = clean_customer_note($order['note'] ?? '');
                     <form method="POST" action="?id=<?php echo $id; ?>">
                         <label style="display:block; margin-bottom:8px; font-size:12px; font-weight:800; text-transform:uppercase; color:#8aa0c5;">Trạng thái đơn hàng</label>
                         <select name="status" class="admin-select" style="width:100%; margin-bottom:14px;">
-                            <option value="pending" <?php echo ($order['status'] ?? '') === 'pending' ? 'selected' : ''; ?>>Chờ lấy hàng</option>
-                            <option value="shipping" <?php echo ($order['status'] ?? '') === 'shipping' ? 'selected' : ''; ?>>Đang giao hàng</option>
-                            <option value="completed" <?php echo ($order['status'] ?? '') === 'completed' ? 'selected' : ''; ?>>Giao thành công</option>
-                            <option value="cancelled" <?php echo ($order['status'] ?? '') === 'cancelled' ? 'selected' : ''; ?>>Đã hủy đơn</option>
+                            <?php foreach ($statusOptions as $statusValue => $statusLabel): ?>
+                                <option
+                                    value="<?php echo htmlspecialchars($statusValue); ?>"
+                                    <?php echo ($order['status'] ?? '') === $statusValue ? 'selected' : ''; ?>
+                                    <?php echo !in_array($statusValue, $allowedStatusTransitions, true) ? 'data-requires-override="1" hidden' : ''; ?>
+                                >
+                                    <?php echo htmlspecialchars($statusLabel); ?>
+                                </option>
+                            <?php endforeach; ?>
                         </select>
                         <label style="display:flex; align-items:center; gap:8px; margin-bottom:14px; font-size:13px; color:#b91c1c;"><input type="checkbox" name="override_status"> Cho phép sửa bất kỳ</label>
                         <button type="submit" name="update_status" class="btn-primary" style="width:100%; justify-content:center;">Cập nhật trạng thái</button>
@@ -597,12 +736,14 @@ $customerNote = clean_customer_note($order['note'] ?? '');
         </div>
     </main>
 
-    <?php include __DIR__ . '/../../includes/footer.php'; ?>
+    <?php include __DIR__ . '/../includes/footer.php'; ?>
 
     <script>
         document.addEventListener('DOMContentLoaded', function () {
             const buttons = Array.from(document.querySelectorAll('[data-tab-target]'));
             const panels = Array.from(document.querySelectorAll('[data-tab-panel]'));
+            const overrideCheckbox = document.querySelector('input[name="override_status"]');
+            const statusSelect = document.querySelector('select[name="status"]');
             buttons.forEach((button) => {
                 button.addEventListener('click', function () {
                     const target = button.dataset.tabTarget;
@@ -610,7 +751,28 @@ $customerNote = clean_customer_note($order['note'] ?? '');
                     panels.forEach((panel) => panel.classList.toggle('is-active', panel.dataset.tabPanel === target));
                 });
             });
+
+            function syncStatusOptions() {
+                if (!overrideCheckbox || !statusSelect) return;
+                const allowAll = overrideCheckbox.checked;
+                Array.from(statusSelect.options).forEach((option) => {
+                    const requiresOverride = option.dataset.requiresOverride === '1';
+                    option.hidden = requiresOverride && !allowAll;
+                });
+
+                if (statusSelect.selectedOptions.length && statusSelect.selectedOptions[0].hidden) {
+                    const fallback = Array.from(statusSelect.options).find((option) => !option.hidden);
+                    if (fallback) statusSelect.value = fallback.value;
+                }
+            }
+
+            if (overrideCheckbox) {
+                overrideCheckbox.addEventListener('change', syncStatusOptions);
+                syncStatusOptions();
+            }
         });
     </script>
 </body>
 </html>
+
+

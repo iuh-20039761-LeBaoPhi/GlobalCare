@@ -1,10 +1,10 @@
 <?php
 session_start();
-require_once __DIR__ . '/../../config/db.php';
+require_once __DIR__ . '/../config/db.php';
 
 // Kiểm tra quyền Admin
 if (!isset($_SESSION['user_id']) || $_SESSION['role'] !== 'admin') {
-    header("Location: index.php");
+    header("Location: login.php");
     exit;
 }
 
@@ -16,7 +16,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['update_status'])) {
     $status = intval($_POST['status']);
     $note = trim($_POST['note_admin']);
 
-    $stmt = $conn->prepare("UPDATE contact_messages SET status = ?, note_admin = ? WHERE id = ?");
+    $stmt = $conn->prepare("UPDATE lien_he SET trang_thai = ?, ghi_chu_quan_tri = ? WHERE id = ?");
     $stmt->bind_param("isi", $status, $note, $id);
     if ($stmt->execute()) {
         $msg = "Đã cập nhật trạng thái tin nhắn thành công!";
@@ -25,11 +25,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['update_status'])) {
 
 // Lấy danh sách tin nhắn
 $filter_status = $_GET['status'] ?? 'all';
-$sql = "SELECT * FROM contact_messages";
+$sql = "SELECT id, ten AS name, email, chu_de AS subject, noi_dung AS message, trang_thai AS status, ghi_chu_quan_tri AS note_admin, tao_luc AS created_at FROM lien_he";
 if ($filter_status !== 'all') {
-    $sql .= " WHERE status = " . intval($filter_status);
+    $sql .= " WHERE trang_thai = " . intval($filter_status);
 }
-$sql .= " ORDER BY created_at DESC";
+$sql .= " ORDER BY tao_luc DESC";
 
 $messages = [];
 $res = $conn->query($sql);
@@ -51,7 +51,7 @@ $status_map = [
     <meta charset="UTF-8">
     <title>Hòm thư liên hệ | Admin</title>
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <link rel="stylesheet" href="../assets/css/admin.css?v=<?php echo time(); ?>">
+    <link rel="stylesheet" href="assets/css/admin.css?v=<?php echo time(); ?>">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
     <style>
         .message-card {
@@ -97,7 +97,7 @@ $status_map = [
     </style>
 </head>
 <body>
-    <?php include __DIR__ . '/../../includes/header_admin.php'; ?>
+    <?php include __DIR__ . '/../includes/header_admin.php'; ?>
     <main class="admin-container">
         <div class="page-header">
             <h2 class="page-title">Hòm thư & Khiếu nại</h2>
@@ -166,7 +166,9 @@ $status_map = [
             </div>
         <?php endif; ?>
     </main>
-    <?php include __DIR__ . '/../../includes/footer.php'; ?>
+    <?php include __DIR__ . '/../includes/footer.php'; ?>
 </body>
 </html>
+
+
 

@@ -1,9 +1,9 @@
 <?php
 session_start();
-require_once __DIR__ . '/../../config/db.php';
+require_once __DIR__ . '/../config/db.php';
 
 if (!isset($_SESSION['user_id']) || $_SESSION['role'] !== 'admin') {
-    header("Location: index.php");
+    header("Location: login.php");
     exit;
 }
 
@@ -12,7 +12,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['update_settings'])) {
     $settings_data = $_POST['settings'] ?? [];
 
     foreach ($settings_data as $key => $value) {
-        $stmt = $conn->prepare("UPDATE system_settings SET setting_value = ? WHERE setting_key = ?");
+        $stmt = $conn->prepare("UPDATE cai_dat_he_thong SET gia_tri_cai_dat = ? WHERE khoa_cai_dat = ?");
         $stmt->bind_param("ss", $value, $key);
         $stmt->execute();
         $stmt->close();
@@ -23,7 +23,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['update_settings'])) {
 
 // Lấy tất cả cài đặt
 $settings = [];
-$result = $conn->query("SELECT * FROM system_settings ORDER BY id ASC");
+$result = $conn->query("SELECT id, khoa_cai_dat AS setting_key, gia_tri_cai_dat AS setting_value FROM cai_dat_he_thong ORDER BY id ASC");
 if ($result) {
     while ($row = $result->fetch_assoc()) {
         $settings[$row['setting_key']] = $row;
@@ -37,11 +37,11 @@ if ($result) {
     <meta charset="UTF-8">
     <title>Cài đặt hệ thống | Admin</title>
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <link rel="stylesheet" href="../assets/css/admin.css?v=<?php echo time(); ?>">
+    <link rel="stylesheet" href="assets/css/admin.css?v=<?php echo time(); ?>">
 </head>
 
 <body>
-    <?php include __DIR__ . '/../../includes/header_admin.php'; ?>
+    <?php include __DIR__ . '/../includes/header_admin.php'; ?>
 
     <main class="admin-container">
         <div class="page-header">
@@ -141,14 +141,6 @@ if ($result) {
                         </div>
 
                         <div class="form-group">
-                            <label for="openweather_api_key">OpenWeatherMap API Key</label>
-                            <input type="text" id="openweather_api_key" name="settings[openweather_api_key]"
-                                value="<?php echo htmlspecialchars($settings['openweather_api_key']['setting_value'] ?? ''); ?>"
-                                placeholder="Dùng để tự động tính phụ phí thời tiết" class="admin-input">
-                            <small style="color:#64748b; font-size:12px;">Ưu tiên đọc từ biến môi trường <code>OPENWEATHERMAP_API_KEY</code>, nếu không có sẽ lấy từ cài đặt này.</small>
-                        </div>
-
-                        <div class="form-group">
                             <label for="google_sheets_webhook_url">Google Sheets Webhook URL</label>
                             <input type="text" id="google_sheets_webhook_url" name="settings[google_sheets_webhook_url]"
                                 value="<?php echo htmlspecialchars($settings['google_sheets_webhook_url']['setting_value'] ?? ''); ?>"
@@ -181,7 +173,7 @@ if ($result) {
         </form>
     </main>
 
-    <?php include __DIR__ . '/../../includes/footer.php'; ?>
+    <?php include __DIR__ . '/../includes/footer.php'; ?>
 
     <script>
         function previewQR() {
@@ -204,4 +196,6 @@ if ($result) {
 </body>
 
 </html>
+
+
 

@@ -1,10 +1,10 @@
 <?php
 session_start();
-require_once __DIR__ . '/../../config/db.php';
+require_once __DIR__ . '/../config/db.php';
 
 // 1. Security check for admin
 if (!isset($_SESSION['user_id']) || $_SESSION['role'] !== 'admin') {
-    header("Location: ../../index.html");
+    header("Location: login.php");
     exit;
 }
 
@@ -13,22 +13,31 @@ $date_from = $_GET['date_from'] ?? '';
 $date_to = $_GET['date_to'] ?? '';
 
 // 3. Build SQL query
-$sql = "SELECT o.*, u.fullname as customer_name 
-        FROM orders o 
-        LEFT JOIN users u ON o.user_id = u.id 
-        WHERE o.payment_status = 'refunded'";
+$sql = "SELECT
+            o.id,
+            o.nguoi_dung_id AS user_id,
+            o.ma_don_hang AS order_code,
+            o.ten_nguoi_gui AS name,
+            o.phi_van_chuyen AS shipping_fee,
+            o.so_tien_cod AS cod_amount,
+            o.ghi_chu_quan_tri AS admin_note,
+            o.tao_luc AS created_at,
+            u.ho_ten AS customer_name
+        FROM don_hang o
+        LEFT JOIN nguoi_dung u ON o.nguoi_dung_id = u.id
+        WHERE o.trang_thai_thanh_toan = 'refunded'";
 
 $params = [];
 $types = "";
 
 if (!empty($date_from) && !empty($date_to)) {
-    $sql .= " AND DATE(o.created_at) BETWEEN ? AND ?";
+    $sql .= " AND DATE(o.tao_luc) BETWEEN ? AND ?";
     $params[] = $date_from;
     $params[] = $date_to;
     $types .= "ss";
 }
 
-$sql .= " ORDER BY o.created_at DESC";
+$sql .= " ORDER BY o.tao_luc DESC";
 
 $stmt = $conn->prepare($sql);
 if (!empty($params)) {
@@ -72,11 +81,11 @@ if (isset($_GET['export']) && $_GET['export'] === 'csv') {
     <meta charset="UTF-8">
     <title>Báo cáo Đơn hàng Hoàn tiền | Admin</title>
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <link rel="stylesheet" href="../assets/css/admin.css?v=<?php echo time(); ?>">
+    <link rel="stylesheet" href="assets/css/admin.css?v=<?php echo time(); ?>">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
 </head>
 <body>
-    <?php include __DIR__ . '/../../includes/header_admin.php'; ?>
+    <?php include __DIR__ . '/../includes/header_admin.php'; ?>
     <main class="admin-container">
         <div class="page-header">
             <h2 class="page-title">Báo cáo Hoàn tiền</h2>
@@ -155,7 +164,9 @@ if (isset($_GET['export']) && $_GET['export'] === 'csv') {
             </div>
         </div>
     </main>
-    <?php include __DIR__ . '/../../includes/footer.php'; ?>
+    <?php include __DIR__ . '/../includes/footer.php'; ?>
 </body>
 </html>
+
+
 

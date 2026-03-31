@@ -2,7 +2,7 @@
 session_start();
 
 if (!isset($_SESSION['user_id']) || ($_SESSION['role'] ?? '') !== 'admin') {
-    header('Location: ../../index.html');
+    header('Location: login.php');
     exit;
 }
 ?>
@@ -12,7 +12,7 @@ if (!isset($_SESSION['user_id']) || ($_SESSION['role'] ?? '') !== 'admin') {
     <meta charset="UTF-8">
     <title>Quản lý người dùng | Admin</title>
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <link rel="stylesheet" href="../assets/css/admin.css?v=<?php echo time(); ?>">
+    <link rel="stylesheet" href="assets/css/admin.css?v=<?php echo time(); ?>">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
     <style>
         .users-shell {
@@ -298,7 +298,7 @@ if (!isset($_SESSION['user_id']) || ($_SESSION['role'] ?? '') !== 'admin') {
     </style>
 </head>
 <body>
-    <?php include __DIR__ . '/../../includes/header_admin.php'; ?>
+    <?php include __DIR__ . '/../includes/header_admin.php'; ?>
     <main class="admin-container">
         <div class="page-header">
             <h2 class="page-title">Quản lý người dùng</h2>
@@ -405,13 +405,13 @@ if (!isset($_SESSION['user_id']) || ($_SESSION['role'] ?? '') !== 'admin') {
         </div>
     </main>
 
-    <?php include __DIR__ . '/../../includes/footer.php'; ?>
+    <?php include __DIR__ . '/../includes/footer.php'; ?>
 
     <div id="users-toast" class="users-toast"></div>
 
     <script>
         (function () {
-            const apiUrl = "../../admin-giaohang/api/users.php";
+            const apiUrl = "../api/users.php";
             const currentAdminId = <?php echo (int) $_SESSION['user_id']; ?>;
             const tbody = document.getElementById("users-table-body");
             const summary = document.getElementById("users-summary");
@@ -720,3 +720,5 @@ if (!isset($_SESSION['user_id']) || ($_SESSION['role'] ?? '') !== 'admin') {
     </script>
 </body>
 </html>
+
+

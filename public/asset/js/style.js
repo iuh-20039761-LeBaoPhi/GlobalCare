@@ -16,14 +16,17 @@ document.querySelectorAll(".service-card").forEach((card) => {
 });
 
 document.addEventListener("DOMContentLoaded", function () {
-  const navLinks = document.querySelectorAll("#navbarNav .nav-link");
   const navbarCollapse = document.getElementById("navbarNav");
+  const closeMenuLinks = document.querySelectorAll(
+    "#navbarNav .nav-link:not(.dropdown-toggle), #navbarNav .dropdown-item"
+  );
 
-  navLinks.forEach(function (link) {
+  closeMenuLinks.forEach(function (link) {
     link.addEventListener("click", function () {
-      const bsCollapse = new bootstrap.Collapse(navbarCollapse, {
-        toggle: false,
-      });
+      if (!navbarCollapse || !navbarCollapse.classList.contains("show")) {
+        return;
+      }
+      const bsCollapse = bootstrap.Collapse.getOrCreateInstance(navbarCollapse);
       bsCollapse.hide();
     });
   });

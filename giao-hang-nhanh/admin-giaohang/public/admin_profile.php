@@ -1,10 +1,10 @@
 <?php
 session_start();
-require_once __DIR__ . '/../../config/db.php';
+require_once __DIR__ . '/../config/db.php';
 
 // Kiểm tra quyền Admin
 if (!isset($_SESSION['user_id']) || $_SESSION['role'] !== 'admin') {
-    header("Location: index.php");
+    header("Location: login.php");
     exit;
 }
 
@@ -15,63 +15,85 @@ $error = "";
 // Xử lý cập nhật thông tin
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     if (isset($_POST['update_info'])) {
-        $fullname = trim($_POST['fullname']);
-        $email = trim($_POST['email']);
-        $phone = trim($_POST['phone']);
+        $fullname = trim((string) ($_POST['ho_ten'] ?? ($_POST['fullname'] ?? '')));
+        $email = trim((string) ($_POST['email'] ?? ''));
+        $phone = trim((string) ($_POST['so_dien_thoai'] ?? ($_POST['phone'] ?? '')));
 
         if (empty($fullname) || empty($email)) {
             $error = "Họ tên và Email không được để trống.";
         } else {
-            $stmt = $conn->prepare("UPDATE users SET fullname = ?, email = ?, phone = ? WHERE id = ?");
-            $stmt->bind_param("sssi", $fullname, $email, $phone, $user_id);
-            if ($stmt->execute()) {
-                $msg = "Cập nhật thông tin thành công!";
+            $stmt = $conn->prepare("UPDATE nguoi_dung SET ho_ten = ?, email = ?, so_dien_thoai = ? WHERE id = ?");
+            if ($stmt) {
+                $stmt->bind_param("sssi", $fullname, $email, $phone, $user_id);
+                if ($stmt->execute()) {
+                    $msg = "Cập nhật thông tin thành công!";
+                } else {
+                    $error = "Lỗi: " . $conn->error;
+                }
+                $stmt->close();
             } else {
-                $error = "Lỗi: " . $conn->error;
+                $error = "Không thể chuẩn bị truy vấn cập nhật hồ sơ.";
             }
-            $stmt->close();
         }
     } elseif (isset($_POST['change_password'])) {
-        $current_pass = $_POST['current_password'];
-        $new_pass = $_POST['new_password'];
-        $confirm_pass = $_POST['confirm_password'];
+        $current_pass = (string) ($_POST['mat_khau_hien_tai'] ?? ($_POST['current_password'] ?? ''));
+        $new_pass = (string) ($_POST['mat_khau_moi'] ?? ($_POST['new_password'] ?? ''));
+        $confirm_pass = (string) ($_POST['xac_nhan_mat_khau_moi'] ?? ($_POST['confirm_password'] ?? ''));
 
         if (empty($current_pass) || empty($new_pass) || empty($confirm_pass)) {
             $error = "Vui lòng nhập đầy đủ thông tin mật khẩu.";
         } elseif ($new_pass !== $confirm_pass) {
             $error = "Mật khẩu mới không khớp.";
         } else {
-            // Verify current password
-            $stmt = $conn->prepare("SELECT password FROM users WHERE id = ?");
-            $stmt->bind_param("i", $user_id);
-            $stmt->execute();
-            $res = $stmt->get_result();
-            $user_pass = $res->fetch_assoc();
-            $stmt->close();
-
-            if ($user_pass && password_verify($current_pass, $user_pass['password'])) {
-                $hashed_new = password_hash($new_pass, PASSWORD_DEFAULT);
-                $stmt = $conn->prepare("UPDATE users SET password = ? WHERE id = ?");
-                $stmt->bind_param("si", $hashed_new, $user_id);
-                if ($stmt->execute()) {
-                    $msg = "Đổi mật khẩu thành công!";
-                } else {
-                    $error = "Lỗi hệ thống.";
-                }
+            $stmt = $conn->prepare("SELECT mat_khau AS password FROM nguoi_dung WHERE id = ?");
+            if ($stmt) {
+                $stmt->bind_param("i", $user_id);
+                $stmt->execute();
+                $res = $stmt->get_result();
+                $user_pass = $res->fetch_assoc();
                 $stmt->close();
+
+                if ($user_pass && password_verify($current_pass, (string) $user_pass['password'])) {
+                    $hashed_new = password_hash($new_pass, PASSWORD_DEFAULT);
+                    $stmt = $conn->prepare("UPDATE nguoi_dung SET mat_khau = ? WHERE id = ?");
+                    $stmt->bind_param("si", $hashed_new, $user_id);
+                    if ($stmt->execute()) {
+                        $msg = "Đổi mật khẩu thành công!";
+                    } else {
+                        $error = "Lỗi hệ thống.";
+                    }
+                    $stmt->close();
+                } else {
+                    $error = "Mật khẩu hiện tại không đúng.";
+                }
             } else {
-                $error = "Mật khẩu hiện tại không đúng.";
+                $error = "Không thể chuẩn bị truy vấn đổi mật khẩu.";
             }
         }
     }
 }
 
 // Lấy thông tin user hiện tại để hiển thị lên form
-$stmt = $conn->prepare("SELECT * FROM users WHERE id = ?");
-$stmt->bind_param("i", $user_id);
-$stmt->execute();
-$user = $stmt->get_result()->fetch_assoc();
-$stmt->close();
+$user = null;
+try {
+    $stmt = $conn->prepare("SELECT id, ten_dang_nhap AS username, ho_ten AS fullname, email, so_dien_thoai AS phone, vai_tro AS role FROM nguoi_dung WHERE id = ?");
+    $stmt->bind_param("i", $user_id);
+    $stmt->execute();
+    $user = $stmt->get_result()->fetch_assoc();
+    $stmt->close();
+} catch (Throwable $exception) {
+    $error = $exception->getMessage();
+}
+
+if (!$user) {
+    $user = [
+        'username' => '',
+        'fullname' => '',
+        'email' => '',
+        'phone' => '',
+        'role' => 'admin',
+    ];
+}
 ?>
 <!DOCTYPE html>
 <html lang="vi">
@@ -80,11 +102,11 @@ $stmt->close();
     <meta charset="UTF-8">
     <title>Hồ sơ Admin | Giao Hàng Nhanh</title>
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <link rel="stylesheet" href="../assets/css/admin.css?v=<?php echo time(); ?>">
+    <link rel="stylesheet" href="assets/css/admin.css?v=<?php echo time(); ?>">
 </head>
 
 <body>
-    <?php include __DIR__ . '/../../includes/header_admin.php'; ?>
+    <?php include __DIR__ . '/../includes/header_admin.php'; ?>
 
     <main class="admin-container">
         <div class="page-header">
@@ -119,15 +141,15 @@ $stmt->close();
                         </div>
                         <div class="form-group">
                             <label>Họ và tên</label>
-                            <input type="text" name="fullname" value="<?php echo htmlspecialchars($user['fullname']); ?>" class="admin-input" required>
+                            <input type="text" name="ho_ten" value="<?php echo htmlspecialchars((string) ($user['fullname'] ?? '')); ?>" class="admin-input" required>
                         </div>
                         <div class="form-group">
                             <label>Email liên lạc</label>
-                            <input type="email" name="email" value="<?php echo htmlspecialchars($user['email']); ?>" class="admin-input" required>
+                            <input type="email" name="email" value="<?php echo htmlspecialchars((string) ($user['email'] ?? '')); ?>" class="admin-input" required>
                         </div>
                         <div class="form-group">
                             <label>Số điện thoại</label>
-                            <input type="text" name="phone" value="<?php echo htmlspecialchars($user['phone']); ?>" class="admin-input">
+                            <input type="text" name="so_dien_thoai" value="<?php echo htmlspecialchars((string) ($user['phone'] ?? '')); ?>" class="admin-input">
                         </div>
                         <div class="form-group">
                             <label>Vai trò hệ thống</label>
@@ -157,15 +179,15 @@ $stmt->close();
                         <div class="form-grid" style="grid-template-columns: 1fr;">
                             <div class="form-group">
                                 <label>Mật khẩu hiện tại</label>
-                                <input type="password" name="current_password" class="admin-input" required placeholder="••••••••">
+                                <input type="password" name="mat_khau_hien_tai" class="admin-input" required placeholder="••••••••">
                             </div>
                             <div class="form-group">
                                 <label>Mật khẩu mới</label>
-                                <input type="password" name="new_password" class="admin-input" required placeholder="Tối thiểu 6 ký tự">
+                                <input type="password" name="mat_khau_moi" class="admin-input" required placeholder="Tối thiểu 6 ký tự">
                             </div>
                             <div class="form-group">
                                 <label>Xác nhận mật khẩu</label>
-                                <input type="password" name="confirm_password" class="admin-input" required placeholder="Nhập lại mật khẩu mới">
+                                <input type="password" name="xac_nhan_mat_khau_moi" class="admin-input" required placeholder="Nhập lại mật khẩu mới">
                             </div>
                         </div>
                         
@@ -189,8 +211,10 @@ $stmt->close();
         </div>
     </main>
 
-    <?php include __DIR__ . '/../../includes/footer.php'; ?>
+    <?php include __DIR__ . '/../includes/footer.php'; ?>
 </body>
 
 </html>
+
+
 

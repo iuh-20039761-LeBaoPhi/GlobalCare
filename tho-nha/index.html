@@ -39,56 +39,48 @@
     <meta name="twitter:description" content="Dịch vụ sửa chữa nhà uy tín tại TP.HCM. Thợ chuyên nghiệp, bảo hành 6-12 tháng, hotline 24/7: 0775 472 347.">
     <meta name="twitter:image"       content="https://iuh-20039761-lebaophi.github.io/GlobalCare/tho-nha/image/tho-nha-hero-banner-tho-sua-chua-chuyen-nghiep.jpg">
 
-    <!-- ===== Schema.org JSON-LD: LocalBusiness ===== -->
     <script type="application/ld+json">
     {
-        "@context": "https://schema.org",
-        "@type": "HomeAndConstructionBusiness",
-        "@id": "https://iuh-20039761-lebaophi.github.io/GlobalCare/tho-nha/",
-        "name": "Thợ Nhà",
-        "description": "Dịch vụ sửa chữa, bảo trì và cải tạo nhà cửa chuyên nghiệp tại TP.HCM",
-        "url": "https://iuh-20039761-lebaophi.github.io/GlobalCare/tho-nha/",
-        "logo": "https://iuh-20039761-lebaophi.github.io/GlobalCare/tho-nha/image/tho-nha-logo-thuong-hieu-cropped.jpg",
-        "image": "https://iuh-20039761-lebaophi.github.io/GlobalCare/tho-nha/image/tho-nha-hero-banner-tho-sua-chua-chuyen-nghiep.jpg",
-        "telephone": "+84775472347",
-        "email": "dichvuquanhta.vn@gmail.com",
-        "address": {
-            "@type": "PostalAddress",
-            "streetAddress": "Công Viên Phần Mềm Quang Trung, Phường Tân Chánh Hiệp, Quận 12",
-            "addressLocality": "Thành phố Hồ Chí Minh",
-            "addressCountry": "VN",
-            "postalCode": "729500"
+    "@context": "https://schema.org",
+    "@graph": [
+    {
+    "@type": "LocalBusiness",
+    "@id": "https://dichvuquanhta.vn/#business",
+    "name": "Dịch Vụ Quanh Ta",
+    "url": "https://dichvuquanhta.vn",
+    "telephone": "0775472347"
+    },
+    {
+    "@type": "Service",
+    "name": "Thợ nhà",
+    "url": "https://dichvuquanhta.vn/tho-nha/",
+    "description": "Dịch vụ thợ sửa chữa tại nhà, điện nước, lắp đặt nhanh chóng tại TP.HCM",
+    "areaServed": {
+        "@type": "Place",
+        "name": "TP.HCM"
+    },
+    "provider": {
+        "@id": "https://dichvuquanhta.vn/#business"
+    }
+    },
+    {
+    "@type": "BreadcrumbList",
+    "itemListElement": [
+        {
+        "@type": "ListItem",
+        "position": 1,
+        "name": "Trang chủ",
+        "item": "https://dichvuquanhta.vn"
         },
-        "openingHoursSpecification": [{
-            "@type": "OpeningHoursSpecification",
-            "dayOfWeek": ["Monday","Tuesday","Wednesday","Thursday","Friday","Saturday","Sunday"],
-            "opens": "07:00",
-            "closes": "22:00"
-        }],
-        "priceRange": "₫₫",
-        "currenciesAccepted": "VND",
-        "paymentAccepted": "Cash, Bank Transfer",
-        "areaServed": { "@type": "City", "name": "Thành phố Hồ Chí Minh" },
-        "aggregateRating": {
-            "@type": "AggregateRating",
-            "ratingValue": "4.9",
-            "reviewCount": "5000",
-            "bestRating": "5"
-        },
-        "hasOfferCatalog": {
-            "@type": "OfferCatalog",
-            "name": "Dịch Vụ Sửa Chữa Nhà",
-            "itemListElement": [
-                { "@type": "Offer", "itemOffered": { "@type": "Service", "name": "Sửa Máy Lạnh",      "url": "https://iuh-20039761-lebaophi.github.io/GlobalCare/tho-nha/chi-tiet-dich-vu.html?id=1" } },
-                { "@type": "Offer", "itemOffered": { "@type": "Service", "name": "Sửa Máy Giặt",      "url": "https://iuh-20039761-lebaophi.github.io/GlobalCare/tho-nha/chi-tiet-dich-vu.html?id=2" } },
-                { "@type": "Offer", "itemOffered": { "@type": "Service", "name": "Sửa Nhà Vệ Sinh",   "url": "https://iuh-20039761-lebaophi.github.io/GlobalCare/tho-nha/chi-tiet-dich-vu.html?id=3" } },
-                { "@type": "Offer", "itemOffered": { "@type": "Service", "name": "Sửa Điện - Nước",   "url": "https://iuh-20039761-lebaophi.github.io/GlobalCare/tho-nha/chi-tiet-dich-vu.html?id=4" } },
-                { "@type": "Offer", "itemOffered": { "@type": "Service", "name": "Sửa Tủ Lạnh",       "url": "https://iuh-20039761-lebaophi.github.io/GlobalCare/tho-nha/chi-tiet-dich-vu.html?id=5" } },
-                { "@type": "Offer", "itemOffered": { "@type": "Service", "name": "Sửa Tivi",           "url": "https://iuh-20039761-lebaophi.github.io/GlobalCare/tho-nha/chi-tiet-dich-vu.html?id=6" } },
-                { "@type": "Offer", "itemOffered": { "@type": "Service", "name": "Sửa Bếp Từ",         "url": "https://iuh-20039761-lebaophi.github.io/GlobalCare/tho-nha/chi-tiet-dich-vu.html?id=7" } },
-                { "@type": "Offer", "itemOffered": { "@type": "Service", "name": "Cải Tạo Nhà",        "url": "https://iuh-20039761-lebaophi.github.io/GlobalCare/tho-nha/chi-tiet-dich-vu.html?id=8" } }
-            ]
+        {
+        "@type": "ListItem",
+        "position": 2,
+        "name": "Thợ nhà",
+        "item": "https://dichvuquanhta.vn/tho-nha/"
         }
+    ]
+    }
+    ]
     }
     </script>
 
