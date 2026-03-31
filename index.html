@@ -34,10 +34,74 @@
     <script type="application/ld+json">
       {
         "@context": "https://schema.org",
-        "@type": "Organization",
-        "name": "Dịch Vụ Quanh Ta",
-        "url": "https://dichvuquanhta.vn",
-        "logo": "https://dichvuquanhta.vn/logo.png"
+        "@graph": [
+          {
+            "@type": "LocalBusiness",
+            "@id": "https://dichvuquanhta.vn/#business",
+            "name": "Dịch Vụ Quanh Ta",
+            "url": "https://dichvuquanhta.vn",
+            "telephone": "0775472347",
+            "address": {
+              "@type": "PostalAddress",
+              "addressLocality": "TP.HCM",
+              "addressCountry": "VN"
+            }
+          },
+          {
+            "@type": "ItemList",
+            "name": "Danh sách dịch vụ",
+            "itemListElement": [
+              {
+                "@type": "ListItem",
+                "position": 1,
+                "name": "Giao hàng nhanh",
+                "url": "https://dichvuquanhta.vn/giao-hang-nhanh/"
+              },
+              {
+                "@type": "ListItem",
+                "position": 2,
+                "name": "Chuyển dọn",
+                "url": "https://dichvuquanhta.vn/dich-vu-chuyen-don/"
+              },
+              {
+                "@type": "ListItem",
+                "position": 3,
+                "name": "Giặt ủi nhanh",
+                "url": "https://dichvuquanhta.vn/giat-ui-nhanh/"
+              },
+              {
+                "@type": "ListItem",
+                "position": 4,
+                "name": "Chăm sóc người bệnh",
+                "url": "https://dichvuquanhta.vn/cham-soc-nguoi-benh/"
+              },
+              {
+                "@type": "ListItem",
+                "position": 5,
+                "name": "Chăm sóc người già",
+                "url": "https://dichvuquanhta.vn/cham-soc-nguoi-gia/"
+              },
+              {
+                "@type": "ListItem",
+                "position": 6,
+                "name": "Dọn vệ sinh",
+                "url": "https://dichvuquanhta.vn/dich-vu-don-ve-sinh/"
+              },
+              {
+                "@type": "ListItem",
+                "position": 7,
+                "name": "Thợ nhà",
+                "url": "https://dichvuquanhta.vn/tho-nha/"
+              },
+              {
+                "@type": "ListItem",
+                "position": 8,
+                "name": "Sửa xe lưu động",
+                "url": "https://dichvuquanhta.vn/sua-xe-luu-dong/"
+              }
+            ]
+          }
+        ]
       }
     </script>
     <style>
