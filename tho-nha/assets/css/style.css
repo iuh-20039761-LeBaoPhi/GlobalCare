@@ -1715,6 +1715,26 @@ body {
     gap: 6px;
 }
 
+#brandOptionsContainer {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+.brand-service-group {
+    border: 1px dashed #d1fae5;
+    border-radius: 10px;
+    padding: 9px 10px;
+    background: linear-gradient(180deg, #f8fffc 0%, #f0fdf9 100%);
+}
+
+.brand-service-title {
+    font-size: 0.78rem;
+    font-weight: 700;
+    color: #0f766e;
+    margin-bottom: 6px;
+}
+
 .brand-option {
     border: 1.5px solid #cbd5e1;
     background: white;
@@ -1739,6 +1759,12 @@ body {
     border-color: var(--primary);
     color: white;
     box-shadow: 0 2px 6px rgba(17,153,142,0.25);
+}
+
+.brand-option-price {
+    font-size: 0.74rem;
+    font-weight: 600;
+    opacity: 0.92;
 }
 
 /* Badge đếm số dịch vụ đã chọn */
@@ -2304,6 +2330,20 @@ body {
     flex-shrink: 0;
     margin-top: 1px;
 }
+
+.cfm-svc-brand {
+    display: inline-flex;
+    align-items: center;
+    margin-left: 6px;
+    border-radius: 999px;
+    border: 1px solid rgba(17,153,142,0.22);
+    background: #e8f8f5;
+    color: #0f766e;
+    font-size: 0.72rem;
+    font-weight: 700;
+    padding: 1px 8px;
+    white-space: nowrap;
+}
 .cfm-cost-total-row {
     display: flex;
     justify-content: space-between;
@@ -2544,17 +2584,17 @@ body {
 
 /* Mobile: bottom-sheet style */
 @media (max-width: 575.98px) {
-    #bookingModal .modal-dialog {
+    :is(#bookingModal, #bpModal) .modal-dialog {
         margin: 0;
         max-width: 100%;
         min-height: auto;
         align-items: flex-end;
     }
-    #bookingModal .modal-content {
+    :is(#bookingModal, #bpModal) .modal-content {
         border-radius: var(--radius-xl) var(--radius-xl) 0 0;
         max-height: 95vh;
     }
-    #bookingModal .modal-body {
+    :is(#bookingModal, #bpModal) .modal-body {
         overflow-y: auto;
         overflow-x: hidden;
         max-height: calc(95vh - 62px);
@@ -2578,5 +2618,58 @@ body {
     }
     .bk-submit-wrap {
         margin-top: 14px;
+    }
+
+    /* Mobile: shrink confirm action buttons inside booking modal (overlay mode) */
+    body:not(.dat-lich-standalone) :is(#bookingModal, #bpModal) #bookingConfirm .cfm-actions {
+        gap: 8px;
+        margin-top: 2px;
+    }
+    body:not(.dat-lich-standalone) :is(#bookingModal, #bpModal) #bookingConfirm .cfm-btn-back,
+    body:not(.dat-lich-standalone) :is(#bookingModal, #bpModal) #bookingConfirm .cfm-btn-submit {
+        padding: 10px 10px !important;
+        border-radius: 10px !important;
+        font-size: 0.82rem !important;
+        line-height: 1.25 !important;
+        min-height: auto !important;
+        gap: 6px !important;
+    }
+    body:not(.dat-lich-standalone) :is(#bookingModal, #bpModal) #bookingConfirm .cfm-btn-back {
+        flex: 1;
+    }
+    body:not(.dat-lich-standalone) :is(#bookingModal, #bpModal) #bookingConfirm .cfm-btn-submit {
+        flex: 1.35;
+        box-shadow: 0 4px 14px rgba(17,153,142,0.3);
+    }
+    body:not(.dat-lich-standalone) :is(#bookingModal, #bpModal) #bookingConfirm .cfm-btn-back i,
+    body:not(.dat-lich-standalone) :is(#bookingModal, #bpModal) #bookingConfirm .cfm-btn-submit i {
+        font-size: 0.75rem;
+    }
+}
+
+@media (min-width: 576px) and (max-width: 767.98px) {
+    body:not(.dat-lich-standalone) :is(#bookingModal, #bpModal) #bookingConfirm .cfm-actions {
+        gap: 8px;
+        margin-top: 1px;
+    }
+    body:not(.dat-lich-standalone) :is(#bookingModal, #bpModal) #bookingConfirm .cfm-btn-back,
+    body:not(.dat-lich-standalone) :is(#bookingModal, #bpModal) #bookingConfirm .cfm-btn-submit {
+        padding: 10px 10px;
+        border-radius: 10px;
+        font-size: 0.82rem;
+        line-height: 1.25;
+        min-height: auto;
+        gap: 6px;
+    }
+    body:not(.dat-lich-standalone) :is(#bookingModal, #bpModal) #bookingConfirm .cfm-btn-back {
+        flex: 1;
+    }
+    body:not(.dat-lich-standalone) :is(#bookingModal, #bpModal) #bookingConfirm .cfm-btn-submit {
+        flex: 1.35;
+        box-shadow: 0 4px 14px rgba(17,153,142,0.3);
+    }
+    body:not(.dat-lich-standalone) :is(#bookingModal, #bpModal) #bookingConfirm .cfm-btn-back i,
+    body:not(.dat-lich-standalone) :is(#bookingModal, #bpModal) #bookingConfirm .cfm-btn-submit i {
+        font-size: 0.75rem;
     }
 }

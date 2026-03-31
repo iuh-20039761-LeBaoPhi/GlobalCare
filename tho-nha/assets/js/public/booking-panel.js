@@ -20,6 +20,7 @@
     var _loaded       = false;
     var _initialized  = false;
     var _pendingClick = null;
+    var _prefillMeta  = null;
     var _services     = null; // cache services.json
 
     /* ------------------------------------------------------------------ */
@@ -77,7 +78,6 @@
             '        <div class="bk-header-center">',
             '          <img src="' + logoL + '" alt="Dịch Vụ Quanh Ta" class="bk-header-logo">',
             '          <h5 class="modal-title fw-bold mb-0" id="bpModalTitle">',
-            '            <i class="fas fa-calendar-check me-1" style="color:var(--primary);"></i>',
             '            Đặt Lịch Dịch Vụ',
             '          </h5>',
             '          <img src="' + logoR + '" alt="Thợ Nhà" class="bk-header-logo">',
@@ -120,6 +120,39 @@
     /* ------------------------------------------------------------------ */
     /*  jQuery .load() nội dung form từ dat-lich.html                      */
     /* ------------------------------------------------------------------ */
+    function _loadBookingMarkup(url, serviceName) {
+        var $body = jQuery('#bpModalBody');
+
+        // Chuẩn mới: load từ div dùng chung; fallback selector cũ để tương thích
+        $body.load(url + ' #bookingSharedContent', function (_response, status) {
+            var loadedSomething = $body.children().length > 0;
+
+            if (status === 'error' || !loadedSomething) {
+                $body.load(url + ' #bookingModal .modal-body', function (_resp2, status2) {
+                    if (status2 === 'error') {
+                        $body.html(
+                            '<p class="text-danger p-4">' +
+                            '<i class="fas fa-exclamation-triangle me-2"></i>' +
+                            'Không thể tải form đặt lịch. Vui lòng thử lại.' +
+                            '</p>'
+                        );
+                        return;
+                    }
+                    _loaded = true;
+                    _ensureMap(function () {
+                        _initForm(serviceName);
+                    });
+                });
+                return;
+            }
+
+            _loaded = true;
+            _ensureMap(function () {
+                _initForm(serviceName);
+            });
+        });
+    }
+
     function _loadContent(serviceName) {
         var base = window.BD_BASE || '../../';
         var url  = base + 'partials/dat-lich.html';
@@ -132,22 +165,7 @@
             '</div>'
         );
 
-        // Load chỉ phần .modal-body của dat-lich.html (form + confirm, không header/footer)
-        $body.load(url + ' #bookingModal .modal-body', function (_response, status) {
-            if (status === 'error') {
-                $body.html(
-                    '<p class="text-danger p-4">' +
-                    '<i class="fas fa-exclamation-triangle me-2"></i>' +
-                    'Không thể tải form đặt lịch. Vui lòng thử lại.' +
-                    '</p>'
-                );
-                return;
-            }
-            _loaded = true;
-            _ensureMap(function () {
-                _initForm(serviceName);
-            });
-        });
+        _loadBookingMarkup(url, serviceName);
     }
 
     /* ------------------------------------------------------------------ */
@@ -186,8 +204,56 @@
     /*  Prefill dịch vụ vào form                                           */
     /* ------------------------------------------------------------------ */
     function _prefillServiceInForm(name) {
-        if (!name) return;
+        if (!name && !_prefillMeta) return;
         var base = window.BD_BASE || '../../';
+
+        function applyMetaOverrides() {
+            if (!_prefillMeta) return;
+
+            var priceEl = document.getElementById('giadichvu');
+            if (typeof _prefillMeta.price === 'number' && !isNaN(_prefillMeta.price)) {
+                if (priceEl) {
+                    priceEl.value = _prefillMeta.price > 0
+                        ? _prefillMeta.price.toLocaleString('vi-VN') + 'đ'
+                        : 'Miễn phí dịch vụ (chỉ tính phí di chuyển)';
+                }
+                if (typeof _bdSetBreakdown === 'function') {
+                    _bdSetBreakdown(
+                        _prefillMeta.price,
+                        _prefillMeta.travelFee || null,
+                        _prefillMeta.surveyFee || null
+                    );
+                }
+            }
+
+            if (_prefillMeta.brand) {
+                setTimeout(function () {
+                    var wanted = String(_prefillMeta.brand || '').trim().toLowerCase();
+                    if (!wanted) return;
+
+                    var preferredService = String(name || '').trim().toLowerCase();
+                    var btns = document.querySelectorAll('#brandOptionsContainer .brand-option');
+                    var candidate = null;
+
+                    for (var i = 0; i < btns.length; i++) {
+                        var btn = btns[i];
+                        var btnBrand = String(btn.getAttribute('data-brand') || '').trim().toLowerCase();
+                        if (btnBrand !== wanted) continue;
+
+                        var svc = String(btn.getAttribute('data-service-name') || '').trim().toLowerCase();
+                        if (preferredService && svc === preferredService) {
+                            candidate = btn;
+                            break;
+                        }
+                        if (!candidate) candidate = btn;
+                    }
+
+                    if (candidate && !candidate.classList.contains('active')) {
+                        candidate.click();
+                    }
+                }, 60);
+            }
+        }
 
         function doFetch(cb) {
             if (_services) { cb(_services); return; }
@@ -197,13 +263,18 @@
                 .catch(function () {});
         }
 
-        // Đợi dropdown #mainService được populate (polling tối đa 2s)
+        // Đợi dropdown #loaidichvu được populate (polling tối đa 2s)
         var attempts = 0;
         var timer = setInterval(function () {
-            var mainSel = document.getElementById('mainService');
+            var mainSel = document.getElementById('loaidichvu');
             if (!mainSel || (mainSel.options.length <= 1 && attempts++ < 20)) return;
             clearInterval(timer);
             if (!mainSel || mainSel.options.length <= 1) return;
+
+            if (!name) {
+                applyMetaOverrides();
+                return;
+            }
 
             doFetch(function (services) {
                 var nameLower = name.toLowerCase();
@@ -213,6 +284,7 @@
                     if (services[i].name.toLowerCase() === nameLower) {
                         mainSel.value = services[i].id;
                         mainSel.dispatchEvent(new Event('change'));
+                        setTimeout(applyMetaOverrides, 80);
                         return;
                     }
                 }
@@ -235,11 +307,14 @@
                                         break;
                                     }
                                 }
+                                applyMetaOverrides();
                             }, 80);
                             return;
                         }
                     }
                 }
+
+                applyMetaOverrides();
             });
         }, 100);
     }
@@ -250,7 +325,7 @@
     function _initForm(serviceName) {
         if (_initialized) {
             // Form đã init, chỉ prefill lại nếu có service
-            if (serviceName) _prefillServiceInForm(serviceName);
+            if (serviceName || _prefillMeta) _prefillServiceInForm(serviceName);
             return;
         }
         _initialized = true;
@@ -260,7 +335,7 @@
         }
 
         // Prefill sau khi _bdLoadStandaloneServices chạy xong
-        if (serviceName) _prefillServiceInForm(serviceName);
+        if (serviceName || _prefillMeta) _prefillServiceInForm(serviceName);
 
         // Khi modal đóng: reset form về trạng thái ban đầu
         var modalEl = document.getElementById('bpModal');
@@ -270,8 +345,22 @@
                 var confirm = document.getElementById('bookingConfirm');
                 if (form) { form.reset(); form.style.display = ''; }
                 if (confirm) confirm.style.display = 'none';
+                var mainSel = document.getElementById('loaidichvu');
+                if (mainSel) mainSel.value = '';
+                var subWrap = document.getElementById('subServiceWrap');
+                if (subWrap) subWrap.style.display = 'none';
+                var subBtns = document.getElementById('subServiceBtns');
+                if (subBtns) subBtns.innerHTML = '';
+                var subCount = document.getElementById('subServiceCount');
+                if (subCount) { subCount.textContent = ''; subCount.style.display = 'none'; }
+                var subHidden = document.getElementById('dichvucuthe');
+                if (subHidden) subHidden.value = '';
+                var priceInput = document.getElementById('giadichvu');
+                if (priceInput) priceInput.value = '';
+                if (typeof _bdClearBrandSelectorUi === 'function') _bdClearBrandSelectorUi();
                 if (typeof _bdHideBreakdown === 'function') _bdHideBreakdown(true);
                 if (typeof _bdClearMedia === 'function') _bdClearMedia();
+                _prefillMeta = null;
             });
         }
     }
@@ -287,6 +376,31 @@
         e.stopImmediatePropagation(); // ngăn booking-detail.js mở modal cũ
 
         var serviceName = btn.getAttribute('data-service-name') || '';
+        var card = btn.closest('.service-item-card');
+        var activeBrand = card ? card.querySelector('.brand-option.active') : null;
+        var rawPrice = btn.getAttribute('data-service-price');
+        var rawTravel = btn.getAttribute('data-travel-fee');
+        var rawSurvey = btn.getAttribute('data-survey-fee');
+
+        _prefillMeta = null;
+        if (activeBrand || rawPrice || rawTravel || rawSurvey) {
+            _prefillMeta = {};
+            if (activeBrand) {
+                _prefillMeta.brand = activeBrand.getAttribute('data-brand') || '';
+            }
+            if (rawPrice !== null && rawPrice !== '') {
+                var parsedPrice = parseInt(rawPrice, 10);
+                if (!isNaN(parsedPrice)) {
+                    _prefillMeta.price = parsedPrice;
+                }
+            }
+            if (rawTravel) {
+                try { _prefillMeta.travelFee = JSON.parse(rawTravel); } catch (_e) {}
+            }
+            if (rawSurvey) {
+                try { _prefillMeta.surveyFee = JSON.parse(rawSurvey); } catch (_e2) {}
+            }
+        }
 
         if (_ready) {
             _openModal(serviceName);

@@ -45,7 +45,7 @@
             '        <div class="tx-bk-center">',
             '          <img src="assets/images/logo-dich-vu-quanh-ta.jpg" alt="Dịch Vụ Quanh Ta" class="tx-bk-logo">',
             '          <h5 class="modal-title mb-0 fw-bold" style="color:#1e293b;">',
-            '            <i class="fas fa-clipboard-list me-1" style="color:var(--color-primary);"></i>Thông Tin Đặt Xe',
+            '            Thông Tin Đặt Xe',
             '          </h5>',
             '          <img src="assets/images/thue-xe-logo-header-navigation.jpg" alt="Thuê Xe" class="tx-bk-logo">',
             '        </div>',

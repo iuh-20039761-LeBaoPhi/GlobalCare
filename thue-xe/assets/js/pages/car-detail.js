@@ -389,7 +389,38 @@ function displayBookingForm(car) {
 async function openBookingModal() {
     // Đảm bảo modal đã load xong trước khi mở
     if (bookingModalSetupPromise) await bookingModalSetupPromise;
+    syncQuickDateTimeToModal();
     bootstrap.Modal.getOrCreateInstance(document.getElementById('bookingModal')).show();
+}
+
+function syncQuickDateTimeToModal() {
+    const quickForm = document.getElementById('quickBookingForm');
+    const modalForm = document.getElementById('bookingFormFull');
+    if (!quickForm || !modalForm) return;
+
+    const quickPickup = quickForm.querySelector('#pickupDate');
+    const quickReturn = quickForm.querySelector('#returnDate');
+    const quickPickupTime = quickForm.querySelector('#pickupTime');
+    const quickReturnTime = quickForm.querySelector('#returnTime');
+
+    const modalPickup = modalForm.querySelector('#pickupDate');
+    const modalReturn = modalForm.querySelector('#returnDate');
+    const modalPickupTime = modalForm.querySelector('#pickupTime');
+    const modalReturnTime = modalForm.querySelector('#returnTime');
+    if (!modalPickup || !modalReturn) return;
+
+    const today = getTodayDate();
+    modalPickup.min = quickPickup && quickPickup.min ? quickPickup.min : today;
+    modalReturn.min = quickReturn && quickReturn.min ? quickReturn.min : today;
+
+    if (quickPickup && quickPickup.value) modalPickup.value = quickPickup.value;
+    if (quickReturn && quickReturn.value) modalReturn.value = quickReturn.value;
+    if (quickPickupTime && quickPickupTime.value && modalPickupTime) modalPickupTime.value = quickPickupTime.value;
+    if (quickReturnTime && quickReturnTime.value && modalReturnTime) modalReturnTime.value = quickReturnTime.value;
+
+    if (modalPickup.value) {
+        modalReturn.min = modalPickup.value;
+    }
 }
 
 function setupDateCalculation(pricePerDay) {
@@ -432,6 +463,7 @@ async function setupBookingModal(car) {
         cb.addEventListener('change', () => recalcAddonSummary(car.price_per_day));
     });
     document.getElementById('bookingModal').addEventListener('show.bs.modal', () => {
+        syncQuickDateTimeToModal();
         recalcAddonSummary(car.price_per_day);
         bookingAutoFillTX();
     });
@@ -501,14 +533,14 @@ async function showTxBookingConfirm(car) {
         return;
     }
 
-    const phone    = formData.get('customer_phone');
-    const email    = formData.get('customer_email');
-    const idNumber = formData.get('id_number');
+    const phone    = (formData.get('customer_phone') || '').trim();
+    const email    = (formData.get('customer_email') || '').trim();
+    const idNumber = (formData.get('id_number') || '').trim();
     if (!/^0[3-9][0-9]{8}$/.test(phone)) {
         showBookingAlert('Số điện thoại không hợp lệ! Vui lòng nhập 10 chữ số bắt đầu bằng 03x / 05x / 07x / 08x / 09x.', 'danger');
         return;
     }
-    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+    if (email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
         showBookingAlert('Email không hợp lệ!', 'danger');
         return;
     }
@@ -558,11 +590,18 @@ async function showTxBookingConfirm(car) {
     // Điền vào bảng xác nhận
     document.getElementById('tx-cf-name').textContent  = _txPendingData.customer_name;
     document.getElementById('tx-cf-phone').textContent = phone;
-    document.getElementById('tx-cf-email').textContent = email;
+    document.getElementById('tx-cf-email').textContent = email || 'Không cung cấp';
 
     const idRow = document.getElementById('tx-cf-id-row');
-    if (idNumber) { document.getElementById('tx-cf-id').textContent = idNumber; idRow.style.display = ''; }
-    else idRow.style.display = 'none';
+    if (idRow) {
+        if (idNumber) {
+            const idEl = document.getElementById('tx-cf-id');
+            if (idEl) idEl.textContent = idNumber;
+            idRow.style.display = '';
+        } else {
+            idRow.style.display = 'none';
+        }
+    }
 
     const addressRow = document.getElementById('tx-cf-address-row');
     const addressEl = document.getElementById('tx-cf-address');

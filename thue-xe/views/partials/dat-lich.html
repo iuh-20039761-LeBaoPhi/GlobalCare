@@ -15,6 +15,36 @@
   <link rel="stylesheet" href="assets/css/style.css" />
   <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
   <style>
+    #txBookingHero {
+      padding: 26px 0 5px !important;
+    }
+    #txBookingHero .hero-content {
+      margin-top: 0;
+    }
+    #txBookingHero .hero-content h1 {
+      margin-bottom: 8px;
+      line-height: 1.15;
+    }
+    #txBookingHero .hero-content p {
+      margin-bottom: 5px;
+    }
+    #standaloneBookingPage {
+      padding-top: 5px;
+      margin-top: 0;
+    }
+    @media (max-width: 768px) {
+      #txBookingHero {
+        padding: 16px 0 5px !important;
+      }
+      #txBookingHero .hero-content h1 {
+        margin-bottom: 6px;
+      }
+    }
+    @media (max-width: 576px) {
+      #txBookingHero {
+        padding: 12px 0 5px !important;
+      }
+    }
     .sc-search-dropdown {
       position: relative;
       width: 100%;
@@ -99,7 +129,7 @@ loadHeader();
 <!-- ===== STANDALONE PAGE CONTENT ===== -->
 <!-- Phần này chỉ hiển thị khi truy cập trực tiếp URL.
      Khi chi-tiet-xe.html fetch file này, chỉ #bookingFormContent được trích xuất. -->
-<section class="hero-section" style="padding: 80px 0;">
+<section class="hero-section" id="txBookingHero">
   <div class="container">
     <div class="row align-items-center">
       <div class="col-lg-12 text-center hero-content">
@@ -110,7 +140,7 @@ loadHeader();
   </div>
 </section>
 
-<section class="py-5" id="standaloneBookingPage" style="min-height:70vh; background:#f1f5f9;">
+<section class="pb-5" id="standaloneBookingPage" style="min-height:70vh; background:#f1f5f9;">
   <div class="container">
     <div class="row justify-content-center">
       <div class="col-lg-8">
@@ -144,45 +174,6 @@ loadHeader();
           </div>
         </div>
 
-        <!-- Date picker (standalone-only; IDs pickupDate/returnDate used by booking logic) -->
-        <div class="card border-0 shadow-sm mb-4">
-          <div class="card-body">
-            <h6 class="fw-bold mb-3"><i class="fas fa-calendar-alt text-primary me-2"></i>Thời gian thuê xe</h6>
-            <div class="row g-3">
-              <div class="col-md-6">
-                <label class="form-label">Ngày nhận xe *</label>
-                <div class="row g-1">
-                  <div class="col-7">
-                    <input type="date" class="form-control" id="pickupDate" required />
-                  </div>
-                  <div class="col-5">
-                    <input type="time" class="form-control" id="pickupTime" value="08:00" title="Giờ nhận xe" />
-                  </div>
-                </div>
-              </div>
-              <div class="col-md-6">
-                <label class="form-label">Ngày trả xe *</label>
-                <div class="row g-1">
-                  <div class="col-7">
-                    <input type="date" class="form-control" id="returnDate" required />
-                  </div>
-                  <div class="col-5">
-                    <input type="time" class="form-control" id="returnTime" value="08:00" title="Giờ trả xe" />
-                  </div>
-                </div>
-              </div>
-            </div>
-            <div id="standalonePriceCalc" class="mt-3 p-3 bg-light rounded" style="display:none;">
-              <div class="d-flex justify-content-between mb-1">
-                <span>Số ngày:</span><strong id="standaloneTotalDays">0</strong>
-              </div>
-              <div class="d-flex justify-content-between">
-                <span>Tiền thuê xe:</span><strong class="text-primary" id="standaloneTotalPrice">0đ</strong>
-              </div>
-            </div>
-          </div>
-        </div>
-
         <!-- Booking form card -->
         <div class="card border-0 shadow-sm">
           <div class="card-header booking-modal-header">
@@ -190,7 +181,7 @@ loadHeader();
             <div class="tx-bk-center">
               <img src="assets/images/logo-dich-vu-quanh-ta.jpg" alt="Dịch Vụ Quanh Ta" class="tx-bk-logo">
               <h5 class="mb-0 text-dark fw-bold">
-                <i class="fas fa-clipboard-list me-1"></i>Thông Tin Đặt Xe
+                Thông Tin Đặt Xe
               </h5>
               <img src="assets/images/thue-xe-logo-header-navigation.jpg" alt="Thuê Xe" class="tx-bk-logo">
             </div>
@@ -221,21 +212,71 @@ loadHeader();
                     <div class="invalid-feedback">Số điện thoại phải gồm 10 chữ số, bắt đầu bằng 03x / 05x / 07x / 08x / 09x</div>
                   </div>
                   <div class="col-12 col-md-6">
-                    <label class="form-label">Email *</label>
-                    <input type="email" class="form-control" name="customer_email" required>
+                    <label class="form-label">Email</label>
+                    <input type="email" class="form-control" name="customer_email">
                     <div class="invalid-feedback">Email không hợp lệ</div>
                   </div>
-                  <div class="col-12 col-md-6">
-                    <label class="form-label">CMND/CCCD</label>
-                    <input type="text" class="form-control" name="id_number"
-                           pattern="^[0-9]{9}$|^[0-9]{12}$"
-                           maxlength="12">
-                    <div class="invalid-feedback">CMND gồm 9 số hoặc CCCD gồm 12 số</div>
+                </div>
+                <input type="hidden" name="id_number" value="">
+              </div>
+
+              <!-- SECTION 2: Thời gian thuê xe -->
+              <div class="bk-tx-section">
+                <div class="bk-tx-section-title"><i class="fas fa-calendar-alt"></i> Thời gian thuê xe</div>
+                <div class="row g-3">
+                  <div class="col-md-6">
+                    <label class="form-label">Ngày nhận xe *</label>
+                    <div class="row g-1">
+                      <div class="col-7">
+                        <input type="date" class="form-control" id="pickupDate" required />
+                      </div>
+                      <div class="col-5">
+                        <input type="time" class="form-control" id="pickupTime" value="08:00" title="Giờ nhận xe" />
+                      </div>
+                    </div>
+                  </div>
+                  <div class="col-md-6">
+                    <label class="form-label">Ngày trả xe *</label>
+                    <div class="row g-1">
+                      <div class="col-7">
+                        <input type="date" class="form-control" id="returnDate" required />
+                      </div>
+                      <div class="col-5">
+                        <input type="time" class="form-control" id="returnTime" value="08:00" title="Giờ trả xe" />
+                      </div>
+                    </div>
+                  </div>
+                </div>
+                <div id="standalonePriceCalc" class="mt-3 p-3 bg-light rounded" style="display:none;">
+                  <div class="d-flex justify-content-between mb-1">
+                    <span>Số ngày:</span><strong id="standaloneTotalDays">0</strong>
+                  </div>
+                  <div class="d-flex justify-content-between">
+                    <span>Tiền thuê xe:</span><strong class="text-primary" id="standaloneTotalPrice">0đ</strong>
                   </div>
                 </div>
               </div>
 
-              <!-- SECTION 2: Dịch vụ đi kèm -->
+              <!-- SECTION 3: Địa chỉ -->
+              <div class="bk-tx-section">
+                <div class="bk-tx-section-title"><i class="fas fa-map-marker-alt"></i> Địa chỉ</div>
+                <label class="form-label">Địa chỉ *</label>
+                <textarea class="form-control" id="customerAddress" name="customer_address" rows="2" required></textarea>
+                <div class="mt-2 booking-map-actions">
+                  <button type="button" class="btn-map-picker booking-touch-btn" id="mapBtnAddr" onclick="CarMapPicker.toggle('addr')">
+                    <i class="fas fa-map-marker-alt me-1"></i> Chọn trên bản đồ
+                  </button>
+                  <button type="button" class="btn-map-picker btn-map-gps booking-touch-btn" onclick="CarMapPicker.gps('addr')">
+                    <i class="fas fa-location-arrow me-1"></i> Vị trí của tôi
+                  </button>
+                </div>
+                <div id="mapBoxAddr" class="map-picker-box" style="display:none; margin-top:10px;">
+                  <div id="mapElAddr" class="map-el"></div>
+                  <p class="text-muted small mt-1 mb-0"><i class="fas fa-info-circle me-1"></i>Nhấp vào bản đồ để chọn vị trí — địa chỉ sẽ tự động điền</p>
+                </div>
+              </div>
+
+              <!-- SECTION 4: Dịch vụ đi kèm -->
               <div class="bk-tx-section">
                 <div class="bk-tx-section-title"><i class="fas fa-concierge-bell"></i> Dịch vụ đi kèm <small class="text-muted fw-normal">(không bắt buộc)</small></div>
                 <p class="text-muted small mb-2">Nhấn vào toàn bộ thẻ để chọn dịch vụ phù hợp.</p>
@@ -244,7 +285,7 @@ loadHeader();
                 </div>
               </div>
 
-              <!-- SECTION 3: Ghi chú & Đính kèm -->
+              <!-- SECTION 5: Ghi chú & Đính kèm -->
               <div class="bk-tx-section">
                 <div class="bk-tx-section-title"><i class="fas fa-comment-dots"></i> Ghi chú & Đính kèm <small class="text-muted fw-normal">(tùy chọn)</small></div>
                 <div class="mb-3">
@@ -273,25 +314,6 @@ loadHeader();
                       </div>
                     </div>
                   </div>
-                </div>
-              </div>
-
-              <!-- SECTION 4: Địa chỉ -->
-              <div class="bk-tx-section">
-                <div class="bk-tx-section-title"><i class="fas fa-map-marker-alt"></i> Địa chỉ</div>
-                <label class="form-label">Địa chỉ *</label>
-                <textarea class="form-control" id="customerAddress" name="customer_address" rows="2" required></textarea>
-                <div class="mt-2 booking-map-actions">
-                  <button type="button" class="btn-map-picker booking-touch-btn" id="mapBtnAddr" onclick="CarMapPicker.toggle('addr')">
-                    <i class="fas fa-map-marker-alt me-1"></i> Chọn trên bản đồ
-                  </button>
-                  <button type="button" class="btn-map-picker btn-map-gps booking-touch-btn" onclick="CarMapPicker.gps('addr')">
-                    <i class="fas fa-location-arrow me-1"></i> Vị trí của tôi
-                  </button>
-                </div>
-                <div id="mapBoxAddr" class="map-picker-box" style="display:none; margin-top:10px;">
-                  <div id="mapElAddr" class="map-el"></div>
-                  <p class="text-muted small mt-1 mb-0"><i class="fas fa-info-circle me-1"></i>Nhấp vào bản đồ để chọn vị trí — địa chỉ sẽ tự động điền</p>
                 </div>
               </div>
 
@@ -382,6 +404,46 @@ loadHeader();
     'use strict';
     const fmt = n => new Intl.NumberFormat('vi-VN').format(n);
     const today = () => new Date().toISOString().split('T')[0];
+  const TX_GSHEET_URL = window.GSHEET_URL || 'https://script.google.com/macros/s/AKfycbx8J5infIIqf-VOFCNq89L7W1xRfluTU0Dt4R8Vijl81zhid59aql3vURdT01dwaaKgPQ/exec';
+
+  function txSendStandaloneToSheet(data, days, orderCode) {
+    if (!TX_GSHEET_URL) return;
+    const now = new Date();
+    const rentalCost = (data.price_per_day || 0) * (days || 0);
+    const addonCost = data.addon_total || 0;
+    const payload = {
+      sheet_name: 'DatXe',
+      order_code: orderCode || ('TX' + Date.now()),
+      name: data.customer_name || '',
+      phone: data.customer_phone || '',
+      email: data.customer_email || '',
+      car: data.car_name || '',
+      pickup_date: data.pickup_date || '',
+      return_date: data.return_date || '',
+      pickup_time: data.pickup_time || '',
+      return_time: data.return_time || '',
+      days: days || 0,
+      price_per_day: data.price_per_day || 0,
+      address: data.customer_address || '',
+      addon_services: (data.addon_services || []).join(', '),
+      rental_cost: rentalCost,
+      addon_cost: addonCost,
+      total_price: rentalCost + addonCost,
+      note: data.notes || '',
+      status: 'new',
+      created_at: now.toLocaleString('vi-VN', { hour12: false }),
+    };
+
+    // Keep compatibility for existing Apps Script columns if CMND/CCCD still exists on sheet.
+    payload.id_number = data.id_number || '';
+
+    fetch(TX_GSHEET_URL, {
+      method: 'POST',
+      mode: 'no-cors',
+      headers: { 'Content-Type': 'text/plain' },
+      body: JSON.stringify(payload),
+    }).catch(() => {});
+  }
 
     // Set min dates
     const pickupEl = document.getElementById('pickupDate');
@@ -869,6 +931,7 @@ loadHeader();
         const bookingFormEl = document.getElementById('bookingFormFull');
         if (bookingFormEl) bookingFormEl.addEventListener('submit', function (e) {
             e.preventDefault();
+          const carSelectorEl = document.getElementById('standaloneCarSelector');
             if (!_standaloneCarType) {
                 showAlert('Vui lòng chọn xe thuê!', 'danger');
                 document.getElementById('standaloneCarSelector')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
@@ -883,7 +946,8 @@ loadHeader();
             const form      = e.target;
             const phone     = form.querySelector('[name="customer_phone"]').value.trim();
             const email     = form.querySelector('[name="customer_email"]').value.trim();
-            const idNumber  = form.querySelector('[name="id_number"]').value.trim();
+            const idNumberEl = form.querySelector('[name="id_number"]');
+            const idNumber  = idNumberEl ? idNumberEl.value.trim() : '';
             const pickupTime = document.getElementById('pickupTime')?.value || '08:00';
             const returnTime = document.getElementById('returnTime')?.value || '08:00';
             if (returnEl.value === pickupEl.value && returnTime <= pickupTime) {
@@ -892,7 +956,7 @@ loadHeader();
             if (!/^0[3-9][0-9]{8}$/.test(phone)) {
                 showAlert('Số điện thoại không hợp lệ! Phải gồm 10 chữ số bắt đầu bằng 03x / 05x / 07x / 08x / 09x.', 'danger'); return;
             }
-            if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+            if (email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
                 showAlert('Email không hợp lệ!', 'danger'); return;
             }
             if (idNumber && !/^[0-9]{9}$|^[0-9]{12}$/.test(idNumber)) {
@@ -926,7 +990,7 @@ loadHeader();
                 type_id:          typeId || null,
                 car_name:         _standaloneCarType ? _standaloneCarType.name : 'Chưa chọn xe',
                 customer_name:    form.querySelector('[name="customer_name"]').value.trim(),
-                customer_phone:   phone, customer_email: email, id_number: idNumber,
+              customer_phone:   phone, customer_email: email, id_number: idNumber || '',
                 customer_address: form.querySelector('[name="customer_address"]')?.value.trim() || '',
                 pickup_date: pickupEl.value, return_date: returnEl.value,
                 pickup_time: pickupTime,     return_time: returnTime,
@@ -938,9 +1002,17 @@ loadHeader();
             // Điền bảng xác nhận
             document.getElementById('tx-cf-name').textContent  = _standalonePending.customer_name;
             document.getElementById('tx-cf-phone').textContent = phone;
-            document.getElementById('tx-cf-email').textContent = email;
+            document.getElementById('tx-cf-email').textContent = email || 'Không cung cấp';
             const idRow = document.getElementById('tx-cf-id-row');
-            if (idNumber) { document.getElementById('tx-cf-id').textContent = idNumber; idRow.style.display = ''; } else idRow.style.display = 'none';
+            if (idRow) {
+              if (idNumber) {
+                const idValueEl = document.getElementById('tx-cf-id');
+                if (idValueEl) idValueEl.textContent = idNumber;
+                idRow.style.display = '';
+              } else {
+                idRow.style.display = 'none';
+              }
+            }
             const addressRow = document.getElementById('tx-cf-address-row');
             const addressEl2 = document.getElementById('tx-cf-address');
             if (addressRow && addressEl2) {
@@ -994,6 +1066,7 @@ loadHeader();
             document.getElementById('bookingFormFull').style.display  = 'none';
             document.getElementById('addonSummary').style.display     = 'none';
             document.getElementById('txBookingConfirm').style.display = '';
+            if (carSelectorEl) carSelectorEl.style.display = 'none';
             document.getElementById('txBookingConfirm').scrollIntoView({ behavior: 'smooth', block: 'start' });
         });
 
@@ -1002,6 +1075,8 @@ loadHeader();
         if (backBtn) backBtn.addEventListener('click', () => {
             document.getElementById('txBookingConfirm').style.display = 'none';
             document.getElementById('bookingFormFull').style.display  = '';
+          const carSelectorEl = document.getElementById('standaloneCarSelector');
+          if (carSelectorEl) carSelectorEl.style.display = '';
             _standalonePending = null;
         });
 
@@ -1014,34 +1089,49 @@ loadHeader();
             const resetBtn = () => { confirmBtn.disabled = false; confirmBtn.innerHTML = '<i class="fas fa-check me-2"></i> Xác nhận đặt xe'; };
             const { _days: days, _totalPrice: totalPrice, ...bookingData } = _standalonePending;
             const addonLines = bookingData.addon_services.length ? '<br><strong>Dịch vụ đi kèm:</strong> ' + bookingData.addon_services.join(', ') : '';
-            const IS_LOCAL = ['localhost', '127.0.0.1', ''].includes(window.location.hostname);
+          const backendFlag = String(window.TX_ENABLE_BACKEND || '').toLowerCase();
+          const tryBackend = backendFlag === '1' || backendFlag === 'true' || backendFlag === 'yes';
+          let backendBookingId = null;
+          let backendMessage = '';
 
-            if (IS_LOCAL) {
-                try {
-                    const res    = await fetch('controllers/booking-controller.php?action=create', {
-                        method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(bookingData)
-                    });
-                    const result = await res.json();
-                    document.getElementById('txBookingConfirm').style.display = 'none';
-                    document.getElementById('bookingFormFull').style.display  = '';
-                    if (result.success) {
-                        showAlert(`<i class="fas fa-check-circle me-2"></i><strong>Đặt xe thành công!</strong><br>Mã đơn: <strong>#${result.booking_id}</strong> – Xe: <strong>${bookingData.car_name}</strong>.${addonLines}<br><strong>Tổng tiền: ${fmt(totalPrice)}đ</strong><br>Chúng tôi sẽ liên hệ xác nhận sớm nhất.`, 'success');
-                        document.getElementById('bookingFormFull').reset();
-                        _standaloneMediaFiles = []; ['txMediaPhotoPreviewContainer','txMediaVideoPreviewContainer'].forEach(id => { const el = document.getElementById(id); if (el) el.innerHTML = ''; });
-                    } else {
-                        showAlert(`<i class="fas fa-times-circle me-2"></i><strong>Lỗi:</strong> ${result.message || 'Gửi đặt xe thất bại. Vui lòng thử lại!'}`, 'danger');
-                    }
-                } catch {
-                    document.getElementById('txBookingConfirm').style.display = 'none';
-                    document.getElementById('bookingFormFull').style.display  = '';
-                    showAlert('<i class="fas fa-times-circle me-2"></i>Không thể kết nối server. Vui lòng kiểm tra XAMPP và thử lại.', 'danger');
-                }
-            } else {
-                await new Promise(r => setTimeout(r, 600));
-                document.getElementById('txBookingConfirm').style.display = 'none';
-                document.getElementById('bookingFormFull').style.display  = '';
-                showAlert(`<i class="fas fa-check-circle me-2"></i><strong>Đặt xe thành công! (Demo)</strong><br>Cảm ơn bạn đã quan tâm đến <strong>${bookingData.car_name}</strong>.${addonLines}<br><strong>Tổng tiền ước tính: ${fmt(totalPrice)}đ</strong><br>Để hoàn tất, vui lòng gọi hotline <strong>0775 472 347</strong> – hỗ trợ 24/7.`, 'success');
+          if (tryBackend) {
+            try {
+              const res = await fetch('controllers/booking-controller.php?action=create', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(bookingData)
+              });
+              const result = await res.json();
+              if (result && result.success && result.booking_id) {
+                backendBookingId = result.booking_id;
+              } else if (result && result.message) {
+                backendMessage = result.message;
+              }
+            } catch {
+              backendMessage = 'Không thể kết nối backend nội bộ. Đơn vẫn được lưu lên Google Sheet.';
             }
+          }
+
+          const orderCode = backendBookingId ? ('TX' + backendBookingId) : ('TX' + Date.now());
+          txSendStandaloneToSheet(bookingData, days, orderCode);
+
+          await new Promise(r => setTimeout(r, 400));
+          document.getElementById('txBookingConfirm').style.display = 'none';
+          document.getElementById('bookingFormFull').style.display  = '';
+          const carSelectorEl = document.getElementById('standaloneCarSelector');
+          if (carSelectorEl) carSelectorEl.style.display = '';
+
+          const backendNote = tryBackend && backendMessage
+            ? `<br><small class="text-muted">${backendMessage}</small>`
+            : '';
+
+          showAlert(`<i class="fas fa-check-circle me-2"></i><strong>Đặt xe thành công!</strong><br>Mã đơn: <strong>#${orderCode}</strong> – Xe: <strong>${bookingData.car_name}</strong>.${addonLines}<br><strong>Tổng tiền ước tính: ${fmt(totalPrice)}đ</strong><br>Thông tin đã được gửi lên Google Sheet.${backendNote}`, 'success');
+          document.getElementById('bookingFormFull').reset();
+          _standaloneMediaFiles = [];
+          ['txMediaPhotoPreviewContainer','txMediaVideoPreviewContainer'].forEach(id => {
+            const el = document.getElementById(id);
+            if (el) el.innerHTML = '';
+          });
             _standalonePending = null;
             resetBtn();
         });
