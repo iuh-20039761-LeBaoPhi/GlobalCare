@@ -31,6 +31,79 @@
     />
     <link rel="stylesheet" href="public/asset/css/style.css" />
     <script src="/ga.js"></script>
+    <script type="application/ld+json">
+      {
+        "@context": "https://schema.org",
+        "@graph": [
+          {
+            "@type": "LocalBusiness",
+            "@id": "https://dichvuquanhta.vn/#business",
+            "name": "Dịch Vụ Quanh Ta",
+            "url": "https://dichvuquanhta.vn",
+            "telephone": "0775472347",
+            "address": {
+              "@type": "PostalAddress",
+              "addressLocality": "TP.HCM",
+              "addressCountry": "VN"
+            }
+          },
+          {
+            "@type": "ItemList",
+            "name": "Danh sách dịch vụ",
+            "itemListElement": [
+              {
+                "@type": "ListItem",
+                "position": 1,
+                "name": "Giao hàng nhanh",
+                "url": "https://dichvuquanhta.vn/giao-hang-nhanh/"
+              },
+              {
+                "@type": "ListItem",
+                "position": 2,
+                "name": "Chuyển dọn",
+                "url": "https://dichvuquanhta.vn/dich-vu-chuyen-don/"
+              },
+              {
+                "@type": "ListItem",
+                "position": 3,
+                "name": "Giặt ủi nhanh",
+                "url": "https://dichvuquanhta.vn/giat-ui-nhanh/"
+              },
+              {
+                "@type": "ListItem",
+                "position": 4,
+                "name": "Chăm sóc người bệnh",
+                "url": "https://dichvuquanhta.vn/cham-soc-nguoi-benh/"
+              },
+              {
+                "@type": "ListItem",
+                "position": 5,
+                "name": "Chăm sóc người già",
+                "url": "https://dichvuquanhta.vn/cham-soc-nguoi-gia/"
+              },
+              {
+                "@type": "ListItem",
+                "position": 6,
+                "name": "Dọn vệ sinh",
+                "url": "https://dichvuquanhta.vn/dich-vu-don-ve-sinh/"
+              },
+              {
+                "@type": "ListItem",
+                "position": 7,
+                "name": "Thợ nhà",
+                "url": "https://dichvuquanhta.vn/tho-nha/"
+              },
+              {
+                "@type": "ListItem",
+                "position": 8,
+                "name": "Sửa xe lưu động",
+                "url": "https://dichvuquanhta.vn/sua-xe-luu-dong/"
+              }
+            ]
+          }
+        ]
+      }
+    </script>
     <style>
       /* ===== Welcome Popup ===== */
 
@@ -123,51 +196,6 @@
         backdrop-filter: blur(6px);
         background: rgba(0, 0, 0, 0.6);
       }
-
-      .footer-services-toggle {
-        /* width: 100%; */
-        border: 0;
-        background: transparent;
-        color: inherit;
-        padding: 0;
-        margin-bottom: 0.5rem;
-        /* display: flex; */
-        align-items: center;
-        justify-content: space-between;
-        text-align: left;
-        font-weight: 600;
-      }
-
-      .footer-services-toggle:focus-visible {
-        outline: 2px solid #0d6efd;
-        outline-offset: 3px;
-        border-radius: 4px;
-      }
-
-      .footer-services-arrow {
-        display: inline-flex;
-        font-size: 0.7rem;
-        transition: transform 0.25s ease;
-      }
-
-      .footer-services-toggle[aria-expanded="true"] .footer-services-arrow {
-        transform: rotate(180deg);
-      }
-
-      .footer-services-list {
-        max-height: 0;
-        opacity: 0;
-        overflow: hidden;
-        transition:
-          max-height 0.35s ease,
-          opacity 0.25s ease;
-      }
-
-      .footer-services-list.is-open {
-        max-height: 520px;
-        opacity: 1;
-      }
-
       /* ===== Mobile ===== */
       @media (max-width: 768px) {
         .welcome-modal {
@@ -215,12 +243,94 @@
           <i data-lucide="menu"></i>
         </button>
         <div class="collapse navbar-collapse" id="navbarNav">
-          <ul class="navbar-nav ms-auto align-items-center">
+          <ul class="navbar-nav ms-auto">
             <li class="nav-item">
               <a class="nav-link" href="index.html">Trang Chủ</a>
             </li>
-            <li class="nav-item">
-              <a class="nav-link" href="#services">Dịch Vụ</a>
+            <li class="nav-item dropdown">
+              <a
+                class="nav-link dropdown-toggle"
+                href="#"
+                id="servicesDropdown"
+                role="button"
+                data-bs-toggle="dropdown"
+                aria-expanded="false"
+              >
+                Dịch Vụ
+              </a>
+              <ul class="dropdown-menu" aria-labelledby="servicesDropdown">
+                <li>
+                  <a
+                    class="dropdown-item"
+                    href="cham-soc-me-va-be/dich-vu-cham-soc-me-be.html"
+                    >Chăm Sóc Mẹ &amp; Bé</a
+                  >
+                </li>
+                <li>
+                  <a
+                    class="dropdown-item"
+                    href="cham-soc-nguoi-gia/dich-vu-cham-soc-nguoi-gia.html"
+                    >Chăm Sóc Người Già</a
+                  >
+                </li>
+                <li>
+                  <a
+                    class="dropdown-item"
+                    href="cham-soc-nguoi-benh/dich-vu-cham-soc-nguoi-benh.html"
+                    >Chăm Sóc Bệnh Nhân</a
+                  >
+                </li>
+                <li>
+                  <a
+                    class="dropdown-item"
+                    href="dich-vu-don-ve-sinh/dich-vu.html"
+                    >Dịch Vụ Vệ Sinh</a
+                  >
+                </li>
+                <li>
+                  <a class="dropdown-item" href="cham-soc-vuon-nha/dichvu.html"
+                    >Chăm Sóc Vườn Nhà</a
+                  >
+                </li>
+                <li>
+                  <a class="dropdown-item" href="giat-ui-nhanh/dich-vu.html"
+                    >Giặt Ủi Nhanh</a
+                  >
+                </li>
+                <li>
+                  <a
+                    class="dropdown-item"
+                    href="giao-hang-nhanh/dich-vu-giao-hang.html"
+                    >Giao Hàng Nhanh</a
+                  >
+                </li>
+                <li>
+                  <a
+                    class="dropdown-item"
+                    href="dich-vu-chuyen-don/dich-vu-chuyen-don.html"
+                    >Dịch Vụ Chuyển Dọn</a
+                  >
+                </li>
+                <li>
+                  <a
+                    class="dropdown-item"
+                    href="thue-xe/views/pages/public/dich-vu.html"
+                    >Thuê Xe</a
+                  >
+                </li>
+                <li>
+                  <a class="dropdown-item" href="sua-xe-luu-dong/dich-vu.html"
+                    >Sửa Xe Lưu Động</a
+                  >
+                </li>
+                <li>
+                  <a
+                    class="dropdown-item"
+                    href="tho-nha/pages/public/dich-vu.html"
+                    >Thợ Nhà</a
+                  >
+                </li>
+              </ul>
             </li>
             <li class="nav-item">
               <a class="nav-link" href="#about">Về Chúng Tôi</a>
@@ -585,7 +695,16 @@
                 class="card-body"
                 style="background: linear-gradient(to bottom, #eff6ff, white)"
               >
-                <h3 class="h5 card-title text-primary">Giặt Ủi Nhanh</h3>
+                <div
+                  class="d-flex align-items-center justify-content-between gap-2 mb-2"
+                >
+                  <h3 class="h5 card-title text-primary mb-0">Giặt Ủi Nhanh</h3>
+                  <a
+                    class="btn btn-primary btn-sm rounded-pill px-3 py-1"
+                    onclick="loadPage('giat-ui-nhanh/dat-dich-vu.html', this)"
+                    >Đặt lịch</a
+                  >
+                </div>
                 <p class="text-muted small mb-4 flex-grow-1">
                   Công nghệ giặt là tiên tiến, xử lý vết bẩn hiệu quả, giao nhận
                   tận nơi nhanh chóng.
@@ -799,7 +918,18 @@
                 class="card-body"
                 style="background: linear-gradient(to right, #3a6073, #16222a)"
               >
-                <h3 class="h5 card-title text-warning">Sửa Xe Lưu Động</h3>
+                <div
+                  class="d-flex align-items-center justify-content-between gap-2 mb-2"
+                >
+                  <h3 class="h5 card-title text-warning mb-0">
+                    Sửa Xe Lưu Động
+                  </h3>
+                  <a
+                    class="btn btn-warning btn-sm rounded-pill px-3 py-1"
+                    onclick="loadPage('sua-xe-luu-dong/dat-dich-vu.html', this)"
+                    >Đặt lịch</a
+                  >
+                </div>
                 <p class="text-light small mb-4 flex-grow-1">
                   Sửa chữa, vá lốp - thay lốp xe tại chỗ đảm bảo tiết kiệm thời
                   gian và chi phí kéo xe.
@@ -906,6 +1036,7 @@
           </div>
         </div>
       </div>
+      <div id="bookingForm"></div>
     </section>
 
     <!-- Features Section -->
@@ -1249,22 +1380,8 @@
           </div>
 
           <div class="col-md-6 col-lg-3">
-            <button
-              type="button"
-              class="footer-services-toggle h6"
-              id="footerServicesToggle"
-              aria-expanded="false"
-              aria-controls="footerServicesList"
-            >
-              <span>Dịch Vụ</span>
-              <span class="footer-services-arrow" aria-hidden="true"
-                >&#9662;</span
-              >
-            </button>
-            <ul
-              class="list-unstyled small footer-services-list"
-              id="footerServicesList"
-            >
+            <h5 class="h6">Dịch Vụ</h5>
+            <ul class="list-unstyled small">
               <li>
                 <a href="cham-soc-me-va-be/dich-vu-cham-soc-me-be.html"
                   >Chăm Sóc Mẹ & Bé</a
@@ -1371,42 +1488,60 @@
           const modal = new bootstrap.Modal(modalElement);
           modal.show();
           localStorage.setItem(STORAGE_KEY, today);
-
-          // tự đóng sau 6 giây
-          // setTimeout(() => {
-          //   modal.hide();
-          // }, 6000);
         }, 300);
       });
-
-      (function () {
-        const toggleButton = document.getElementById("footerServicesToggle");
-        const servicesList = document.getElementById("footerServicesList");
-
-        if (!toggleButton || !servicesList) {
+    </script>
+    <script>
+      function loadPage(page, triggerEl = null) {
+        const container = document.getElementById("bookingForm");
+        if (!container) {
+          console.error("Không tìm thấy #bookingForm");
           return;
         }
 
-        const setExpandedState = function (isExpanded) {
-          toggleButton.setAttribute("aria-expanded", String(isExpanded));
-          servicesList.classList.toggle("is-open", isExpanded);
-        };
+        const currentIframe = container.querySelector("iframe");
+        if (
+          currentIframe &&
+          currentIframe.dataset.loadedPage &&
+          currentIframe.dataset.loadedPage === page
+        ) {
+          currentIframe.src = "about:blank";
+          container.innerHTML = "";
+          if (triggerEl) {
+            triggerEl.textContent = "Đặt lịch";
+          }
+          return;
+        }
 
-        setExpandedState(false);
+        if (currentIframe) {
+          currentIframe.src = "about:blank";
+        }
 
-        toggleButton.addEventListener("click", function () {
-          const isExpanded =
-            toggleButton.getAttribute("aria-expanded") === "true";
-          setExpandedState(!isExpanded);
-        });
+        const iframe = document.createElement("iframe");
+        iframe.src = page;
+        iframe.dataset.loadedPage = page;
+        iframe.title = "Đặt lịch Giặt Ủi Nhanh";
+        iframe.loading = "lazy";
+        iframe.style.width = "100%";
+        iframe.style.minHeight = "1100px";
+        iframe.style.border = "0";
+        iframe.style.borderRadius = "0px";
+        iframe.style.background = "#fff";
 
-        toggleButton.addEventListener("keydown", function (event) {
-          if (event.key === "Enter" || event.key === " ") {
-            event.preventDefault();
-            toggleButton.click();
+        iframe.addEventListener("error", () => {
+          container.innerHTML = "Lỗi load trang";
+          if (triggerEl) {
+            triggerEl.textContent = "Đặt lịch";
           }
         });
-      })();
+
+        container.innerHTML = "";
+        container.appendChild(iframe);
+        if (triggerEl) {
+          triggerEl.textContent = "Tắt đặt lịch";
+        }
+        container.scrollIntoView({ behavior: "smooth", block: "start" });
+      }
     </script>
     <!-- Bootstrap JS Bundle with Popper -->
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
