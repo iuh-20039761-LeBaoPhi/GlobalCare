@@ -31,6 +31,15 @@
     />
     <link rel="stylesheet" href="public/asset/css/style.css" />
     <script src="/ga.js"></script>
+    <script type="application/ld+json">
+      {
+        "@context": "https://schema.org",
+        "@type": "Organization",
+        "name": "Dịch Vụ Quanh Ta",
+        "url": "https://dichvuquanhta.vn",
+        "logo": "https://dichvuquanhta.vn/logo.png"
+      }
+    </script>
     <style>
       /* ===== Welcome Popup ===== */
 
@@ -123,51 +132,6 @@
         backdrop-filter: blur(6px);
         background: rgba(0, 0, 0, 0.6);
       }
-
-      .footer-services-toggle {
-        /* width: 100%; */
-        border: 0;
-        background: transparent;
-        color: inherit;
-        padding: 0;
-        margin-bottom: 0.5rem;
-        /* display: flex; */
-        align-items: center;
-        justify-content: space-between;
-        text-align: left;
-        font-weight: 600;
-      }
-
-      .footer-services-toggle:focus-visible {
-        outline: 2px solid #0d6efd;
-        outline-offset: 3px;
-        border-radius: 4px;
-      }
-
-      .footer-services-arrow {
-        display: inline-flex;
-        font-size: 0.7rem;
-        transition: transform 0.25s ease;
-      }
-
-      .footer-services-toggle[aria-expanded="true"] .footer-services-arrow {
-        transform: rotate(180deg);
-      }
-
-      .footer-services-list {
-        max-height: 0;
-        opacity: 0;
-        overflow: hidden;
-        transition:
-          max-height 0.35s ease,
-          opacity 0.25s ease;
-      }
-
-      .footer-services-list.is-open {
-        max-height: 520px;
-        opacity: 1;
-      }
-
       /* ===== Mobile ===== */
       @media (max-width: 768px) {
         .welcome-modal {
@@ -215,12 +179,94 @@
           <i data-lucide="menu"></i>
         </button>
         <div class="collapse navbar-collapse" id="navbarNav">
-          <ul class="navbar-nav ms-auto align-items-center">
+          <ul class="navbar-nav ms-auto">
             <li class="nav-item">
               <a class="nav-link" href="index.html">Trang Chủ</a>
             </li>
-            <li class="nav-item">
-              <a class="nav-link" href="#services">Dịch Vụ</a>
+            <li class="nav-item dropdown">
+              <a
+                class="nav-link dropdown-toggle"
+                href="#"
+                id="servicesDropdown"
+                role="button"
+                data-bs-toggle="dropdown"
+                aria-expanded="false"
+              >
+                Dịch Vụ
+              </a>
+              <ul class="dropdown-menu" aria-labelledby="servicesDropdown">
+                <li>
+                  <a
+                    class="dropdown-item"
+                    href="cham-soc-me-va-be/dich-vu-cham-soc-me-be.html"
+                    >Chăm Sóc Mẹ &amp; Bé</a
+                  >
+                </li>
+                <li>
+                  <a
+                    class="dropdown-item"
+                    href="cham-soc-nguoi-gia/dich-vu-cham-soc-nguoi-gia.html"
+                    >Chăm Sóc Người Già</a
+                  >
+                </li>
+                <li>
+                  <a
+                    class="dropdown-item"
+                    href="cham-soc-nguoi-benh/dich-vu-cham-soc-nguoi-benh.html"
+                    >Chăm Sóc Bệnh Nhân</a
+                  >
+                </li>
+                <li>
+                  <a
+                    class="dropdown-item"
+                    href="dich-vu-don-ve-sinh/dich-vu.html"
+                    >Dịch Vụ Vệ Sinh</a
+                  >
+                </li>
+                <li>
+                  <a class="dropdown-item" href="cham-soc-vuon-nha/dichvu.html"
+                    >Chăm Sóc Vườn Nhà</a
+                  >
+                </li>
+                <li>
+                  <a class="dropdown-item" href="giat-ui-nhanh/dich-vu.html"
+                    >Giặt Ủi Nhanh</a
+                  >
+                </li>
+                <li>
+                  <a
+                    class="dropdown-item"
+                    href="giao-hang-nhanh/dich-vu-giao-hang.html"
+                    >Giao Hàng Nhanh</a
+                  >
+                </li>
+                <li>
+                  <a
+                    class="dropdown-item"
+                    href="dich-vu-chuyen-don/dich-vu-chuyen-don.html"
+                    >Dịch Vụ Chuyển Dọn</a
+                  >
+                </li>
+                <li>
+                  <a
+                    class="dropdown-item"
+                    href="thue-xe/views/pages/public/dich-vu.html"
+                    >Thuê Xe</a
+                  >
+                </li>
+                <li>
+                  <a class="dropdown-item" href="sua-xe-luu-dong/dich-vu.html"
+                    >Sửa Xe Lưu Động</a
+                  >
+                </li>
+                <li>
+                  <a
+                    class="dropdown-item"
+                    href="tho-nha/pages/public/dich-vu.html"
+                    >Thợ Nhà</a
+                  >
+                </li>
+              </ul>
             </li>
             <li class="nav-item">
               <a class="nav-link" href="#about">Về Chúng Tôi</a>
@@ -1249,22 +1295,8 @@
           </div>
 
           <div class="col-md-6 col-lg-3">
-            <button
-              type="button"
-              class="footer-services-toggle h6"
-              id="footerServicesToggle"
-              aria-expanded="false"
-              aria-controls="footerServicesList"
-            >
-              <span>Dịch Vụ</span>
-              <span class="footer-services-arrow" aria-hidden="true"
-                >&#9662;</span
-              >
-            </button>
-            <ul
-              class="list-unstyled small footer-services-list"
-              id="footerServicesList"
-            >
+            <h5 class="h6">Dịch Vụ</h5>
+            <ul class="list-unstyled small">
               <li>
                 <a href="cham-soc-me-va-be/dich-vu-cham-soc-me-be.html"
                   >Chăm Sóc Mẹ & Bé</a
@@ -1378,35 +1410,6 @@
           // }, 6000);
         }, 300);
       });
-
-      (function () {
-        const toggleButton = document.getElementById("footerServicesToggle");
-        const servicesList = document.getElementById("footerServicesList");
-
-        if (!toggleButton || !servicesList) {
-          return;
-        }
-
-        const setExpandedState = function (isExpanded) {
-          toggleButton.setAttribute("aria-expanded", String(isExpanded));
-          servicesList.classList.toggle("is-open", isExpanded);
-        };
-
-        setExpandedState(false);
-
-        toggleButton.addEventListener("click", function () {
-          const isExpanded =
-            toggleButton.getAttribute("aria-expanded") === "true";
-          setExpandedState(!isExpanded);
-        });
-
-        toggleButton.addEventListener("keydown", function (event) {
-          if (event.key === "Enter" || event.key === " ") {
-            event.preventDefault();
-            toggleButton.click();
-          }
-        });
-      })();
     </script>
     <!-- Bootstrap JS Bundle with Popper -->
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
