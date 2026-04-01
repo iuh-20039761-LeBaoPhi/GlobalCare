@@ -15,7 +15,7 @@
 <div 
     x-data="{ invoices: [] }"
     x-init="
-        fetch('http://localhost:8080/dichvuquanhta/cham-soc-me-va-be/api/test.php')
+        fetch('http://localhost/dichvuquanhta/cham-soc-me-va-be/api/test.php')
         .then(r => r.json())
         .then(d => invoices = d.invoices)
     "
