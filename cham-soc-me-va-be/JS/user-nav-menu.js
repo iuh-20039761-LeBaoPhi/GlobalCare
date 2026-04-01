@@ -11,10 +11,6 @@
 
   var isInSiteNavigation = false;
 
-  function apiUrl(path) {
-    return new URL('api/' + path, projectBase).href;
-  }
-
   function markInSiteNavigation(target) {
     var link = target && target.closest ? target.closest('a[href]') : null;
     if (!link) return;
@@ -42,7 +38,7 @@
   function autoLogoutOnClose() {
     var hasUser = false;
     try {
-      hasUser = !!localStorage.getItem('currentUser');
+      hasUser = !!(localStorage.getItem('currentUser') || localStorage.getItem('customer_logged_in'));
     } catch (e) {
       hasUser = false;
     }
@@ -50,19 +46,11 @@
 
     try {
       localStorage.removeItem('currentUser');
+      localStorage.removeItem('customer_logged_in');
+      localStorage.removeItem('customer_name');
+      localStorage.removeItem('profile');
     } catch (e) {
       // Ignore storage errors.
-    }
-
-    var logoutUrl = apiUrl('logout.php');
-    try {
-      if (navigator.sendBeacon) {
-        navigator.sendBeacon(logoutUrl, new Blob([], { type: 'application/x-www-form-urlencoded;charset=UTF-8' }));
-      } else {
-        fetch(logoutUrl, { method: 'GET', keepalive: true });
-      }
-    } catch (e) {
-      // Ignore unload errors.
     }
   }
 
@@ -130,37 +118,74 @@
     setMenuLinksByRole(user);
   }
 
-  async function syncFromSession() {
-    try {
-      var response = await fetch(apiUrl('get_profile.php'));
-      var data = await response.json();
+  function normalizeStoredUser(rawUser) {
+    if (!rawUser || typeof rawUser !== 'object') return null;
 
-      if (data.success && data.user) {
-        try {
-          localStorage.setItem('currentUser', JSON.stringify(data.user));
-        } catch (e) {
-          // Ignore storage errors.
-        }
-        setLoggedIn(data.user);
-      } else {
-        setLoggedOut();
-      }
+    return {
+      ten: rawUser.ten || rawUser.hovaten || rawUser.ho_ten || rawUser.name || rawUser.customer_name || 'Tài khoản',
+      vai_tro: rawUser.vai_tro || rawUser.role || 'khach_hang',
+      anh_dai_dien: rawUser.anh_dai_dien || rawUser.avatar || rawUser.image || '',
+      sodienthoai: rawUser.sodienthoai || rawUser.so_dien_thoai || rawUser.phone || '',
+      dia_chi: rawUser.dia_chi || rawUser.address || ''
+    };
+  }
+
+  function getUserFromStorage() {
+    var currentUser = null;
+    var profile = null;
+    var customerName = '';
+    var customerLoggedIn = false;
+
+    try {
+      currentUser = JSON.parse(localStorage.getItem('currentUser') || 'null');
     } catch (e) {
-      setLoggedOut();
+      currentUser = null;
     }
+
+    try {
+      profile = JSON.parse(localStorage.getItem('profile') || 'null');
+    } catch (e) {
+      profile = null;
+    }
+
+    try {
+      customerName = localStorage.getItem('customer_name') || '';
+      customerLoggedIn = localStorage.getItem('customer_logged_in') === 'true';
+    } catch (e) {
+      customerName = '';
+      customerLoggedIn = false;
+    }
+
+    if (currentUser) {
+      return normalizeStoredUser(currentUser);
+    }
+
+    if (profile || customerLoggedIn || customerName) {
+      return normalizeStoredUser({
+        ten: (profile && (profile.name || profile.ten)) || customerName,
+        sodienthoai: profile && profile.phone ? profile.phone : '',
+        dia_chi: profile && profile.address ? profile.address : '',
+        vai_tro: 'khach_hang'
+      });
+    }
+
+    return null;
+  }
+
+  function syncFromSession() {
+    var user = getUserFromStorage();
+    if (user) {
+      setLoggedIn(user);
+      return;
+    }
+    setLoggedOut();
   }
 
   function initNavState() {
     var hasNavTargets = !!(getEl('loginNavItem') || getEl('userMenuContainer'));
     if (!hasNavTargets) return;
 
-    var cachedUser = null;
-    try {
-      cachedUser = JSON.parse(localStorage.getItem('currentUser') || 'null');
-    } catch (e) {
-      cachedUser = null;
-    }
-
+    var cachedUser = getUserFromStorage();
     if (cachedUser) {
       setLoggedIn(cachedUser);
     } else {

@@ -25,10 +25,21 @@
         /* Standalone mode: hiện #bookingModal dạng inline, không phải overlay */
         body.dat-lich-standalone .modal {
             position: static; display: block; opacity: 1; background: none;
+            height: auto;
+            overflow: visible;
+            margin-top: 5px;
         }
         body.dat-lich-standalone .modal-dialog {
             max-width: 100%; margin: 0; transform: none;
             align-self: unset;
+        }
+        body.dat-lich-standalone .modal.fade .modal-dialog {
+            transform: none !important;
+            transition: none;
+        }
+        body.dat-lich-standalone .modal-dialog.modal-dialog-centered {
+            display: block;
+            min-height: auto;
         }
         body.dat-lich-standalone .modal-body {
             padding-bottom: 8px;
@@ -41,6 +52,66 @@
         body.dat-lich-standalone .modal-header .btn-close { display: none; }
         body.dat-lich-standalone .modal-dialog-scrollable .modal-content { max-height: none; overflow: visible; }
         body.dat-lich-standalone .modal-dialog-scrollable .modal-body { overflow: visible; }
+        body.dat-lich-standalone #bookingModal .modal-content { max-height: none !important; overflow: visible; }
+        body.dat-lich-standalone #bookingModal .modal-body { max-height: none !important; overflow: visible !important; }
+
+        /* Trang dat-lich: thu gon khoang trong duoi dong mo ta hero con 5px */
+        body.dat-lich-standalone .page-hero {
+            padding-bottom: 5px;
+        }
+        body.dat-lich-standalone .page-hero .lead {
+            margin-bottom: 0;
+        }
+
+        @media (max-width: 767.98px) {
+            /* Mobile: giữ khoảng cách giữa form và khối cam kết còn 5px */
+            body.dat-lich-standalone .row.g-4.g-lg-4.justify-content-center {
+                --bs-gutter-y: 5px !important;
+            }
+
+            /* Mobile: thu gọn khoảng cách đầu/cuối form để sát yêu cầu 5px */
+            body.dat-lich-standalone .modal-body {
+                padding-top: 5px;
+                padding-bottom: 5px;
+            }
+
+            /* Mobile: làm nhỏ nút xác nhận */
+            body.dat-lich-standalone #bookingConfirm .cfm-actions {
+                gap: 8px;
+                margin-top: 2px;
+            }
+            body.dat-lich-standalone #bookingConfirm .cfm-btn-back,
+            body.dat-lich-standalone #bookingConfirm .cfm-btn-submit {
+                padding: 10px 10px;
+                border-radius: 10px;
+                font-size: 0.82rem;
+                line-height: 1.25;
+            }
+            body.dat-lich-standalone #bookingConfirm .cfm-btn-submit {
+                flex: 1.35;
+            }
+
+            /* Mobile: tên + số điện thoại luôn hiển thị cùng 1 hàng */
+            body.dat-lich-standalone #bookingConfirm .cfm-info-grid {
+                grid-template-columns: repeat(2, minmax(0, 1fr));
+                gap: 8px;
+                margin-bottom: 8px;
+            }
+            body.dat-lich-standalone #bookingConfirm .cfm-info-item {
+                min-width: 0;
+                gap: 8px;
+            }
+            body.dat-lich-standalone #bookingConfirm .cfm-info-icon {
+                width: 30px;
+                height: 30px;
+            }
+            body.dat-lich-standalone #bookingConfirm .cfm-info-sub {
+                font-size: 0.68rem;
+            }
+            body.dat-lich-standalone #bookingConfirm .cfm-info-val {
+                font-size: 0.84rem;
+            }
+        }
     </style>
 </head>
 <body class="dat-lich-standalone">
@@ -80,7 +151,6 @@
                                         <img src="../assets/images/logo-dich-vu-quanh-ta.jpg"
                                              alt="Dịch Vụ Quanh Ta" class="bk-header-logo">
                                         <h5 class="modal-title fw-bold mb-0">
-                                            <i class="fas fa-calendar-check me-1" style="color:var(--primary);"></i>
                                             Đặt Lịch Dịch Vụ
                                         </h5>
                                         <img src="../assets/images/tho-nha-logo-thuong-hieu-cropped.jpg"
@@ -90,6 +160,7 @@
                                 </div>
 
                                 <div class="modal-body">
+                                    <div id="bookingSharedContent">
                                     <div id="bookingAuthBanner" class="mb-3" style="display:none;"></div>
 
                                     <form id="bookingForm">
@@ -337,6 +408,7 @@
 
                                     </div>
 
+                                    </div><!-- /bookingSharedContent -->
                                 </div><!-- /modal-body -->
                             </div>
                         </div>
@@ -416,7 +488,15 @@
                         btn.addEventListener('click', e => {
                             e.preventDefault();
                             e.stopImmediatePropagation();
-                            document.getElementById('bookingForm')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                            const confirm = document.getElementById('bookingConfirm');
+                            const target = (confirm && confirm.style.display !== 'none')
+                                ? confirm
+                                : document.getElementById('bookingForm');
+                            if (!target) return;
+                            const navbar = document.querySelector('#header-container .navbar');
+                            const offset = (navbar?.offsetHeight || 0) + 8;
+                            const top = target.getBoundingClientRect().top + window.scrollY - offset;
+                            window.scrollTo({ top: Math.max(0, top), behavior: 'smooth' });
                         }, true);
                     });
                     window.addEventListener('scroll', () => {
@@ -446,7 +526,9 @@
 
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
     <script src="../assets/js/public/map-picker.js"></script>
+    <script src="../assets/js/public/booking-detail-shared.js"></script>
+    <script src="../assets/js/public/booking-detail-modal.js"></script>
+    <script src="../assets/js/public/booking-detail-standalone.js"></script>
     <script src="../assets/js/public/booking-detail.js"></script>
-    <script src="../assets/js/public/booking-autofill.js"></script>
 </body>
 </html>

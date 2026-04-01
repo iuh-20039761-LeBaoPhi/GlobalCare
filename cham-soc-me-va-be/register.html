@@ -5,6 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Đăng Ký - Hệ Thống Quản Lý Dịch Vụ</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css" rel="stylesheet">
     <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <style>
         body {
@@ -65,24 +66,63 @@
         .login-link:hover {
             text-decoration: underline;
         }
-        #employeeFields {
-            background: #f8f9fa;
-            padding: 20px;
-            border-radius: 10px;
-            margin-top: 20px;
-            display: none;
+        .input-icon .input-group-text {
+            border: 2px solid #e0e0e0;
+            border-right: 0;
+            border-radius: 10px 0 0 10px;
+            background: #f8fafc;
+            color: #64748b;
+            min-width: 48px;
+            justify-content: center;
         }
-        .image-upload-section {
-            background: #f8f9fa;
-            padding: 20px;
-            border-radius: 10px;
-            margin-top: 20px;
+        .input-icon .form-control {
+            border-left: 0;
+            border-radius: 0 10px 10px 0;
         }
-        .upload-preview {
-            max-width: 200px;
-            max-height: 200px;
+        .input-icon .form-control:focus {
+            box-shadow: none;
+        }
+        .input-icon:focus-within .input-group-text,
+        .input-icon:focus-within .form-control,
+        .input-icon:focus-within .toggle-pwd {
+            border-color: #667eea;
+        }
+        .toggle-pwd {
+            border: 2px solid #e0e0e0;
+            border-left: 0;
+            border-radius: 0 10px 10px 0;
+            background: #fff;
+            color: #64748b;
+            min-width: 52px;
+        }
+        .toggle-pwd:hover {
+            color: #4c51bf;
+            background: #f8fafc;
+        }
+        .strength-bar {
+            height: 8px;
+            background: #e5e7eb;
+            border-radius: 999px;
             margin-top: 10px;
-            border-radius: 10px;
+            overflow: hidden;
+        }
+        .strength-fill {
+            height: 100%;
+            width: 0;
+            transition: width 0.25s ease, background 0.25s ease;
+        }
+        #msg {
+            min-height: 24px;
+            margin-top: 12px;
+            text-align: center;
+        }
+        @media (max-width: 768px) {
+            .register-container {
+                padding: 28px 20px;
+            }
+            .form-title {
+                font-size: 26px;
+            }
         }
     </style>
 </head>
@@ -91,81 +131,68 @@
         <h2 class="form-title">Đăng Ký Tài Khoản</h2>
         <p class="form-subtitle">Tạo tài khoản mới để sử dụng hệ thống</p>
         
-        <div id="alertContainer"></div>
-        
-        <form id="registerForm" enctype="multipart/form-data">
-            <div class="row">
-                <div class="col-md-6 mb-3">
+        <form id="registerForm" onsubmit="return false;">
+            <div class="row g-3">
+                <div class="col-12">
                     <label class="form-label">Họ và tên <span class="text-danger">*</span></label>
-                    <input type="text" class="form-control" id="name" name="name" required>
+                    <div class="input-group input-icon">
+                        <span class="input-group-text"><i class="fas fa-user"></i></span>
+                        <input type="text" id="full_name" class="form-control" placeholder="Nhập tên" autocomplete="name" required>
+                    </div>
                 </div>
-                <div class="col-md-6 mb-3">
+
+                <div class="col-12">
+                    <label class="form-label">Email <span class="text-danger">*</span></label>
+                    <div class="input-group input-icon">
+                        <span class="input-group-text"><i class="fas fa-envelope"></i></span>
+                        <input type="email" id="email" class="form-control" placeholder="Nhập email" autocomplete="email" required>
+                    </div>
+                </div>
+
+                <div class="col-12">
                     <label class="form-label">Số điện thoại <span class="text-danger">*</span></label>
-                    <input type="tel" class="form-control" id="phone" name="phone" required>
+                    <div class="input-group input-icon">
+                        <span class="input-group-text"><i class="fas fa-phone"></i></span>
+                        <input type="tel" id="sodienthoai" class="form-control" placeholder="Nhập số điện thoại" autocomplete="tel" required>
+                    </div>
                 </div>
-            </div>
-            
-            <div class="row">
-                <div class="col-md-6 mb-3">
-                    <label class="form-label">Email</label>
-                    <input type="email" class="form-control" id="email" name="email">
-                </div>
-                <div class="col-md-6 mb-3">
+
+                <div class="col-12">
                     <label class="form-label">Loại tài khoản <span class="text-danger">*</span></label>
-                    <select class="form-select" id="role" name="role" required>
-                        <option value="customer">Khách hàng</option>
-                        <option value="employee">Nhân viên</option>
-                    </select>
+                    <div class="input-group input-icon">
+                        <span class="input-group-text"><i class="fas fa-user-tag"></i></span>
+                        <select id="account_type" class="form-select" required>
+                            <option value="khachhang" selected>Khách hàng</option>
+                            <option value="nhanvien">Nhân viên</option>
+                        </select>
+                    </div>
                 </div>
-            </div>
-            
-            <div class="mb-3">
-                <label class="form-label">Địa chỉ</label>
-                <textarea class="form-control" id="address" name="address" rows="2"></textarea>
-            </div>
-            
-            <div class="row">
-                <div class="col-md-6 mb-3">
-                    <label class="form-label">Tên đăng nhập <span class="text-danger">*</span></label>
-                    <input type="text" class="form-control" id="username" name="username" required>
-                </div>
-                <div class="col-md-6 mb-3">
+
+                <div class="col-12">
                     <label class="form-label">Mật khẩu <span class="text-danger">*</span></label>
-                    <input type="password" class="form-control" id="password" name="password" required>
+                    <div class="input-group input-icon">
+                        <span class="input-group-text"><i class="fas fa-lock"></i></span>
+                        <input type="password" id="password" class="form-control" placeholder="Ít nhất 6 ký tự" autocomplete="new-password" required>
+                        <button class="btn toggle-pwd" type="button" id="togglePwd">
+                            <i class="fas fa-eye" id="eyeIcon"></i>
+                        </button>
+                    </div>
+                    <div class="strength-bar"><div class="strength-fill" id="strengthFill"></div></div>
                 </div>
-            </div>
-            
-            <div class="image-upload-section">
-                <h5 class="mb-3">Upload ảnh bắt buộc</h5>
-                <div class="row">
-                    <div class="col-md-6 mb-3">
-                        <label class="form-label">Ảnh chân dung (Avatar) <span class="text-danger">*</span></label>
-                        <input type="file" class="form-control" id="avatar" name="avatar" accept="image/*" required>
-                        <img id="avatarPreview" class="upload-preview" style="display:none;">
-                    </div>
-                    <div class="col-md-6 mb-3">
-                        <label class="form-label">Ảnh CCCD <span class="text-danger">*</span></label>
-                        <input type="file" class="form-control" id="cccd_image" name="cccd_image" accept="image/*" required>
-                        <img id="cccdPreview" class="upload-preview" style="display:none;">
-                    </div>
-                </div>
-            </div>
-            
-            <div id="employeeFields">
-                <h5 class="mb-3">Thông tin nhân viên</h5>
-                <div class="row">
-                    <div class="col-md-6 mb-3">
-                        <label class="form-label">Số CCCD</label>
-                        <input type="text" class="form-control" id="cccd_number" name="cccd_number">
-                    </div>
-                    <div class="col-md-6 mb-3">
-                        <label class="form-label">Kinh nghiệm</label>
-                        <textarea class="form-control" id="experience" name="experience" rows="2"></textarea>
+
+                <div class="col-12">
+                    <label class="form-label">Xác nhận mật khẩu <span class="text-danger">*</span></label>
+                    <div class="input-group input-icon">
+                        <span class="input-group-text"><i class="fas fa-lock"></i></span>
+                        <input type="password" id="confirm_password" class="form-control" placeholder="Nhập lại mật khẩu" autocomplete="new-password" required>
                     </div>
                 </div>
             </div>
-            
-            <button type="submit" class="btn btn-primary btn-register w-100 mt-3">Đăng Ký</button>
+
+            <button type="button" class="btn btn-primary btn-register w-100 mt-3" id="registerBtn">
+                <i class="fas fa-user-plus me-2"></i>Tạo tài khoản
+            </button>
+            <div id="msg"></div>
         </form>
         
         <div class="text-center mt-4">
@@ -174,69 +201,128 @@
     </div>
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+
+    <script src="https://api.dvqt.vn/js/krud.js"></script>
     <script>
-        // Show/hide employee fields
-        document.getElementById('role').addEventListener('change', (e) => {
-            const employeeFields = document.getElementById('employeeFields');
-            employeeFields.style.display = e.target.value === 'employee' ? 'block' : 'none';
+        document.getElementById('togglePwd').addEventListener('click', function() {
+            const input = document.getElementById('password');
+            const icon  = document.getElementById('eyeIcon');
+            if (input.type === 'password') { input.type = 'text'; icon.className = 'fas fa-eye-slash'; }
+            else { input.type = 'password'; icon.className = 'fas fa-eye'; }
         });
 
-        // Preview avatar
-        document.getElementById('avatar').addEventListener('change', (e) => {
-            const file = e.target.files[0];
-            if (file) {
-                const reader = new FileReader();
-                reader.onload = (e) => {
-                    const preview = document.getElementById('avatarPreview');
-                    preview.src = e.target.result;
-                    preview.style.display = 'block';
-                };
-                reader.readAsDataURL(file);
+        document.getElementById('password').addEventListener('input', function() {
+            const val = this.value;
+            const fill = document.getElementById('strengthFill');
+            let strength = 0;
+            if (val.length >= 6) strength++;
+            if (val.length >= 10) strength++;
+            if (/[A-Z]/.test(val)) strength++;
+            if (/[0-9]/.test(val)) strength++;
+            const colors = ['', '#e53e3e', '#ed8936', '#48bb78', '#11998e'];
+            const widths = ['0%', '25%', '50%', '75%', '100%'];
+            fill.style.width = widths[strength];
+            fill.style.background = colors[strength] || 'transparent';
+        });
+
+        const BANG_DANG_KY_KHACH_HANG = 'khachhang';
+        const BANG_DANG_KY_NHAN_VIEN = 'nhacungcap_mevabe';
+
+        document.getElementById('registerBtn').addEventListener('click', register);
+
+        function nowSql() {
+            const d = new Date();
+            const pad = (n) => String(n).padStart(2, '0');
+            return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())} ${pad(d.getHours())}:${pad(d.getMinutes())}:${pad(d.getSeconds())}`;
+        }
+
+        function normalizePhone(value) {
+            return String(value || '').replace(/\s+/g, '');
+        }
+
+        function isValidPhone(phone) {
+            return /^(0|\+84)[0-9]{9}$/.test(phone);
+        }
+
+        function isKrudSuccess(res) {
+            return !!res && !res.error && res.success !== false;
+        }
+
+        function register() {
+            const full_name        = document.getElementById('full_name').value.trim();
+            const email            = document.getElementById('email').value.trim();
+            const phone            = normalizePhone(document.getElementById('sodienthoai').value);
+            const account_type     = document.getElementById('account_type').value;
+            const password         = document.getElementById('password').value;
+            const confirm_password = document.getElementById('confirm_password').value;
+            const btn = document.getElementById('registerBtn');
+            const msg = document.getElementById('msg');
+
+            if (!full_name || !email || !phone || !account_type || !password || !confirm_password) {
+                msg.innerHTML = '<span class="text-danger"><i class="fas fa-exclamation-circle me-1"></i>Vui lòng điền đầy đủ thông tin</span>';
+                return;
             }
-        });
-
-        // Preview CCCD
-        document.getElementById('cccd_image').addEventListener('change', (e) => {
-            const file = e.target.files[0];
-            if (file) {
-                const reader = new FileReader();
-                reader.onload = (e) => {
-                    const preview = document.getElementById('cccdPreview');
-                    preview.src = e.target.result;
-                    preview.style.display = 'block';
-                };
-                reader.readAsDataURL(file);
+            if (password.length < 6) {
+                msg.innerHTML = '<span class="text-danger"><i class="fas fa-exclamation-circle me-1"></i>Mật khẩu phải có ít nhất 6 ký tự</span>';
+                return;
             }
-        });
+            if (password !== confirm_password) {
+                msg.innerHTML = '<span class="text-danger"><i class="fas fa-exclamation-circle me-1"></i>Mật khẩu xác nhận không khớp</span>';
+                return;
+            }
 
-        document.getElementById('registerForm').addEventListener('submit', async (e) => {
-            e.preventDefault();
-            
-            const formData = new FormData(e.target);
-            
-            const alertContainer = document.getElementById('alertContainer');
-            alertContainer.innerHTML = '';
-            
-            try {
-                const response = await fetch('api/register.php', {
-                    method: 'POST',
-                    body: formData
+            if (!isValidPhone(phone)) {
+                msg.innerHTML = '<span class="text-danger"><i class="fas fa-exclamation-circle me-1"></i>Số điện thoại không hợp lệ</span>';
+                return;
+            }
+
+            btn.disabled = true;
+            btn.innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span>Đang tạo tài khoản...';
+            msg.innerHTML = '';
+
+            if (typeof krud !== 'function') {
+                msg.innerHTML = '<span class="text-danger"><i class="fas fa-times-circle me-1"></i>Không tải được hàm KRUD</span>';
+                btn.disabled = false;
+                btn.innerHTML = '<i class="fas fa-user-plus me-2"></i>Tạo tài khoản';
+                return;
+            }
+
+            const payload = {
+                hovaten: full_name,
+                email: email.toLowerCase(),
+                sodienthoai: phone,
+                matkhau: password,
+                created_date: nowSql()
+            };
+
+            const bangDangKy = account_type === 'nhanvien'
+                ? BANG_DANG_KY_NHAN_VIEN
+                : BANG_DANG_KY_KHACH_HANG;
+
+            krud('insert', bangDangKy, payload)
+                .then((res) => {
+                    console.log(res);
+                    if (!isKrudSuccess(res)) {
+                        throw new Error(res && (res.message || res.error) ? (res.message || res.error) : 'Đăng ký thất bại');
+                    }
+
+                    localStorage.setItem('customer_logged_in', 'true');
+                    localStorage.setItem('customer_name', full_name);
+                    localStorage.setItem('profile', JSON.stringify({
+                        name: full_name,
+                        phone: phone,
+                        address: ''
+                    }));
+
+                    msg.innerHTML = '<span class="text-success"><i class="fas fa-check-circle me-1"></i>Đăng ký thành công! Đang chuyển hướng...</span>';
+                    setTimeout(() => window.location.href = 'index.html', 1000);
+                })
+                .catch((err) => {
+                    msg.innerHTML = '<span class="text-danger"><i class="fas fa-times-circle me-1"></i>' + (err && err.message ? err.message : 'Không kết nối được server') + '</span>';
+                    btn.disabled = false;
+                    btn.innerHTML = '<i class="fas fa-user-plus me-2"></i>Tạo tài khoản';
                 });
-                
-                const data = await response.json();
-                
-                if (data.success) {
-                    alertContainer.innerHTML = `<div class="alert alert-success">${data.message}</div>`;
-                    setTimeout(() => {
-                        window.location.href = 'login.html';
-                    }, 2000);
-                } else {
-                    alertContainer.innerHTML = `<div class="alert alert-danger">${data.message}</div>`;
-                }
-            } catch (error) {
-                alertContainer.innerHTML = `<div class="alert alert-danger">Lỗi kết nối. Vui lòng thử lại.</div>`;
-            }
-        });
+        }
     </script>
 </body>
 </html>

@@ -160,7 +160,6 @@ tho-nha/
 │       │   ├── main.js           ← Khởi tạo chung (smooth scroll, nav active)
 │       │   ├── booking-detail.js ← Engine đặt lịch (modal mode + standalone mode)
 │       │   ├── booking-panel.js  ← UI helper cho form đặt lịch
-│       │   ├── booking-autofill.js ← Tự điền thông tin khách đã đăng nhập
 │       │   ├── service-detail.js ← Logic trang chi tiết dịch vụ
 │       │   ├── map-picker.js     ← Chọn địa chỉ bằng bản đồ Leaflet
 │       │   └── order-tracking.js ← Tra cứu đơn hàng
@@ -324,9 +323,6 @@ Click "Đặt Lịch" (.booking-btn hoặc nút nav)
 booking-detail.js lazy-load partials/dat-lich-chi-tiet.html (chỉ lần đầu)
     ↓
 Modal mở ra, điền sẵn thông tin dịch vụ
-    ↓
-booking-autofill.js gọi api/public/check-session.php
-  → Nếu đã login: tự điền tên, SĐT
     ↓
 Người dùng nhập địa chỉ
   → map-picker.js (Leaflet) hoặc gõ tay

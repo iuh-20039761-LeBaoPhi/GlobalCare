@@ -252,14 +252,14 @@ const today = () => new Date().toISOString().split('T')[0];
 
 const TX_GSHEET_URL = window.GSHEET_URL || 'https://script.google.com/macros/s/AKfycbx8J5infIIqf-VOFCNq89L7W1xRfluTU0Dt4R8Vijl81zhid59aql3vURdT01dwaaKgPQ/exec';
 
-function txSendToSheetStatic(data, selectedCar, days) {
+function txSendToSheetStatic(data, selectedCar, days, orderCode) {
     if (!TX_GSHEET_URL) return;
     const now        = new Date();
     const rentalCost = (data.price_per_day || 0) * (days || 0);
     const addonCost  = data.addon_total || 0;
     const payload = {
         sheet_name:      'DatXe',
-        order_code:      'TX' + Date.now(),
+        order_code:      orderCode || ('TX' + Date.now()),
         name:            data.customer_name    || '',
         phone:           data.customer_phone   || '',
         email:           data.customer_email   || '',
@@ -900,6 +900,55 @@ function renderCarDetail(carType, availableCars) {
 
     // ===== Callback gọi bởi booking-panel.js sau khi jQuery load form =====
     window.txBpFormLoaded = function () {
+        const modalPickup = document.querySelector('#bookingFormFull #pickupDate');
+        const modalReturn = document.querySelector('#bookingFormFull #returnDate');
+
+        function syncSidebarDatesToModal() {
+            if (!modalPickup || !modalReturn) return;
+
+            modalPickup.min = pickup.min || today();
+            modalReturn.min = ret.min || pickup.value || today();
+
+            if (pickup.value) modalPickup.value = pickup.value;
+            if (ret.value) modalReturn.value = ret.value;
+
+            if (modalPickup.value) {
+                modalReturn.min = modalPickup.value;
+            }
+        }
+
+        function syncModalDatesToSidebar() {
+            if (!modalPickup || !modalReturn) return;
+
+            if (modalPickup.value) {
+                pickup.value = modalPickup.value;
+                ret.min = modalPickup.value;
+            }
+            if (modalReturn.value) {
+                ret.value = modalReturn.value;
+            }
+
+            calcPrice();
+            recalcAddonSummary(carType.price_per_day);
+        }
+
+        if (modalPickup) {
+            modalPickup.addEventListener('change', () => {
+                if (modalReturn && modalPickup.value) {
+                    modalReturn.min = modalPickup.value;
+                    if (modalReturn.value && modalReturn.value < modalPickup.value) {
+                        modalReturn.value = modalPickup.value;
+                    }
+                }
+                syncModalDatesToSidebar();
+            });
+        }
+        if (modalReturn) {
+            modalReturn.addEventListener('change', syncModalDatesToSidebar);
+        }
+
+        syncSidebarDatesToModal();
+
         // Setup addon checkboxes
         renderAddonServices();
         document.querySelectorAll('input[name="addon_services"]').forEach(cb => {
@@ -910,6 +959,7 @@ function renderCarDetail(carType, availableCars) {
         const modalEl = document.getElementById('txBpModal');
         if (modalEl) {
             modalEl.addEventListener('show.bs.modal', () => {
+                syncSidebarDatesToModal();
                 recalcAddonSummary(carType.price_per_day);
                 bookingAutoFill();
             });
@@ -941,11 +991,12 @@ function renderCarDetail(carType, availableCars) {
             const form = e.target;
             const phone    = form.querySelector('[name="customer_phone"]').value.trim();
             const email    = form.querySelector('[name="customer_email"]').value.trim();
-            const idNumber = form.querySelector('[name="id_number"]').value.trim();
+            const idNumberEl = form.querySelector('[name="id_number"]');
+            const idNumber = idNumberEl ? idNumberEl.value.trim() : '';
             if (!/^0[3-9][0-9]{8}$/.test(phone)) {
                 showAlert('Số điện thoại không hợp lệ! Vui lòng nhập 10 chữ số bắt đầu bằng 03x / 05x / 07x / 08x / 09x.', 'danger'); return;
             }
-            if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+            if (email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
                 showAlert('Email không hợp lệ!', 'danger'); return;
             }
             if (idNumber && !/^[0-9]{9}$|^[0-9]{12}$/.test(idNumber)) {
@@ -975,7 +1026,7 @@ function renderCarDetail(carType, availableCars) {
                 license_plate: selectedCar ? selectedCar.license_plate : '',
                 car_front_image: `assets/images/cars/${frontImage}`,
                 customer_name:    form.querySelector('[name="customer_name"]').value.trim(),
-                customer_phone:   phone, customer_email: email, id_number: idNumber,
+                customer_phone:   phone, customer_email: email, id_number: idNumber || '',
                 customer_address: form.querySelector('[name="customer_address"]')?.value.trim() || '',
                 pickup_date: pickup.value, return_date: ret.value,
                 pickup_time: pickupTime,  return_time: returnTime,
@@ -987,9 +1038,17 @@ function renderCarDetail(carType, availableCars) {
             // Điền bảng xác nhận
             document.getElementById('tx-cf-name').textContent  = _pendingBooking.customer_name;
             document.getElementById('tx-cf-phone').textContent = phone;
-            document.getElementById('tx-cf-email').textContent = email;
+            document.getElementById('tx-cf-email').textContent = email || 'Không cung cấp';
             const idRow = document.getElementById('tx-cf-id-row');
-            if (idNumber) { document.getElementById('tx-cf-id').textContent = idNumber; idRow.style.display = ''; } else idRow.style.display = 'none';
+            if (idRow) {
+                if (idNumber) {
+                    const idValueEl = document.getElementById('tx-cf-id');
+                    if (idValueEl) idValueEl.textContent = idNumber;
+                    idRow.style.display = '';
+                } else {
+                    idRow.style.display = 'none';
+                }
+            }
             const addressRow = document.getElementById('tx-cf-address-row');
             const addressEl  = document.getElementById('tx-cf-address');
             if (addressRow && addressEl) {
@@ -1059,34 +1118,42 @@ function renderCarDetail(carType, availableCars) {
             const { _days: days, _totalPrice: totalPrice, ...bookingData } = _pendingBooking;
             const addonLines = bookingData.addon_services.length ? `<br><strong>Dịch vụ đi kèm:</strong> ${bookingData.addon_services.join(', ')}` : '';
             const selectedCar = (STATIC_DATA.cars || []).find(c => c.id === bookingData.car_id);
-            // Trang static — không gọi API với static ID (ID không khớp DB)
-            const IS_LOCAL = true;
-            if (IS_LOCAL) {
+            const backendFlag = String(window.TX_ENABLE_BACKEND || '').toLowerCase();
+            const tryBackend = backendFlag === '1' || backendFlag === 'true' || backendFlag === 'yes';
+            let backendBookingId = null;
+            let backendMessage = '';
+
+            if (tryBackend) {
                 try {
                     const res = await fetch('controllers/booking-controller.php?action=create', {
-                        method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(bookingData)
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify(bookingData)
                     });
                     const result = await res.json();
-                    document.getElementById('txBookingConfirm').style.display = 'none';
-                    document.getElementById('bookingFormFull').style.display  = '';
-                    if (result.success) {
-                        showAlert(`<i class="fas fa-check-circle me-2"></i><strong>Đặt xe thành công!</strong><br>Mã đơn: <strong>#${result.booking_id}</strong> – Xe: <strong>${bookingData.car_name}</strong>${selectedCar ? ` (${selectedCar.license_plate})` : ''}.${addonLines}<br><strong>Tổng tiền: ${fmt(totalPrice)}đ</strong><br>Chúng tôi sẽ liên hệ xác nhận trong thời gian sớm nhất.`, 'success');
-                        document.getElementById('bookingFormFull').reset();
-                    } else {
-                        showAlert(`<i class="fas fa-times-circle me-2"></i><strong>Lỗi:</strong> ${result.message || 'Gửi đặt xe thất bại. Vui lòng thử lại!'}`, 'danger');
+                    if (result && result.success && result.booking_id) {
+                        backendBookingId = result.booking_id;
+                    } else if (result && result.message) {
+                        backendMessage = result.message;
                     }
                 } catch {
-                    document.getElementById('txBookingConfirm').style.display = 'none';
-                    document.getElementById('bookingFormFull').style.display  = '';
-                    showAlert('<i class="fas fa-times-circle me-2"></i>Không thể kết nối đến server! Vui lòng kiểm tra XAMPP đang chạy và thử lại.', 'danger');
+                    backendMessage = 'Không thể kết nối backend nội bộ. Đơn vẫn được lưu lên Google Sheet.';
                 }
-            } else {
-                txSendToSheetStatic(bookingData, selectedCar, days);
-                await new Promise(r => setTimeout(r, 600));
-                document.getElementById('txBookingConfirm').style.display = 'none';
-                document.getElementById('bookingFormFull').style.display  = '';
-                showAlert(`<i class="fas fa-check-circle me-2"></i><strong>Đặt xe thành công! (Demo)</strong><br>Cảm ơn bạn đã quan tâm đến <strong>${bookingData.car_name}</strong>${selectedCar ? ` – BKS <strong>${selectedCar.license_plate}</strong>` : ''}.${addonLines}<br><strong>Tổng tiền ước tính: ${fmt(totalPrice)}đ</strong><br>Để hoàn tất, vui lòng gọi hotline <strong>0775 472 347</strong> – hỗ trợ 24/7.`, 'success');
             }
+
+            const orderCode = backendBookingId ? ('TX' + backendBookingId) : ('TX' + Date.now());
+            txSendToSheetStatic(bookingData, selectedCar, days, orderCode);
+
+            await new Promise(r => setTimeout(r, 400));
+            document.getElementById('txBookingConfirm').style.display = 'none';
+            document.getElementById('bookingFormFull').style.display  = '';
+
+            const backendNote = tryBackend && backendMessage
+                ? `<br><small class="text-muted">${backendMessage}</small>`
+                : '';
+
+            showAlert(`<i class="fas fa-check-circle me-2"></i><strong>Đặt xe thành công!</strong><br>Mã đơn: <strong>#${orderCode}</strong> – Xe: <strong>${bookingData.car_name}</strong>${selectedCar ? ` (${selectedCar.license_plate})` : ''}.${addonLines}<br><strong>Tổng tiền ước tính: ${fmt(totalPrice)}đ</strong><br>Thông tin đã được gửi lên Google Sheet.${backendNote}`, 'success');
+            document.getElementById('bookingFormFull').reset();
             _pendingBooking = null;
             resetBtn();
         });
