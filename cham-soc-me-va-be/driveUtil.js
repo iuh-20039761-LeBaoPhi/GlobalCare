@@ -1,4 +1,4 @@
-const API_URL = "https://script.google.com/macros/s/AKfycbzXfUWt5B6PVX1_QC33pYW_XoFQcUFUEfDZy8YzGv1Drp0ilgE9kwWQ5rXE_Iwx_aeMww/exec";
+const API_URL = "https://script.google.com/macros/s/AKfycbxnkPNuiUNP_ayPThPDzKGKlnj72BY_yHntDUfKP0C5ZVvk0EGHRqcDiYpXgys0P8IxPQ/exec";
 
 function toSafeString(value) {
   return (value == null ? "" : String(value)).trim();
