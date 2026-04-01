@@ -510,7 +510,25 @@
     </section>
 
       <div id="site-footer"></div>
+      <script src="https://api.dvqt.vn/js/krud.js"></script>
+      <script>
+        if (typeof krud === 'undefined') {
+          console.warn('krud chưa load, tạo fallback');
 
+          const KRUD_API_URL = "https://api.dvqt.vn";
+
+          function krud(action, table, data = {}, id = null) {
+            const payload = { action, table, data };
+            if (id !== null) payload.id = id;
+
+            return fetch(KRUD_API_URL + "/krud/", {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify(payload)
+            }).then(res => res.json());
+          }
+        }
+      </script>
       <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
       <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
       <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
@@ -1211,33 +1229,116 @@
           });
 
           // Xác nhận và gửi dữ liệu sang driveUtil.js để lưu Google Sheet.
-          $('#btnConfirmSave').on('click', async function () {
-            var formData = collectBookingFormData();
-            var sheetPayload = buildBookingSheetPayload(formData);
 
-            if (!formData.name || !formData.phone || !formData.service || !formData.selectedPackage || !formData.jobs.length) {
-              alert('Thông tin chưa đầy đủ. Vui lòng kiểm tra lại trước khi xác nhận.');
+        // helper
+        function nowSql() {
+          var d = new Date();
+          var pad = function (n) { return String(n).padStart(2, '0'); };
+          return d.getFullYear() + '-' + pad(d.getMonth() + 1) + '-' + pad(d.getDate()) + ' ' +
+            pad(d.getHours()) + ':' + pad(d.getMinutes()) + ':' + pad(d.getSeconds());
+        }
+
+        function isKrudSuccess(res) {
+          return !!res && !res.error && res.success !== false;
+        }
+
+        function getSheetErrorMessage(result) {
+          if (!result) return 'Không nhận được phản hồi từ Google Sheet.';
+          var status = (result.status || '').toString().toLowerCase();
+          if (status === 'success' || result.success === true) return '';
+          return result.message || result.error || 'Google Sheet trả về trạng thái không thành công.';
+        }
+
+        // CLICK CONFIRM
+        $('#btnConfirmSave').on('click', async function () {
+          var btn = this;
+          var formData = collectBookingFormData();
+          var sheetPayload = buildBookingSheetPayload(formData);
+          sheetPayload.created_at = nowSql();
+
+          // ===== VALIDATE =====
+          if (!formData.name || !formData.phone) {
+            alert('Thiếu tên hoặc số điện thoại');
+            return;
+          }
+
+          if (typeof krud !== 'function') {
+            alert('Chưa load KRUD');
+            return;
+          }
+
+          // ===== UI LOADING =====
+          var oldHtml = btn.innerHTML;
+          btn.disabled = true;
+          btn.innerHTML = 'Đang lưu...';
+
+          try {
+            // =========================
+            // 1. LƯU GOOGLE SHEET
+            // =========================
+            var sheetResult = null;
+            var sheetErrorMessage = '';
+
+            try {
+              sheetResult = await saveToGoogleSheet(sheetPayload);
+              console.log('GG Sheet:', sheetResult);
+              sheetErrorMessage = getSheetErrorMessage(sheetResult);
+            } catch (e) {
+              sheetErrorMessage = (e && e.message) ? e.message : 'Không thể kết nối Google Sheet.';
+              console.warn('Sheet lỗi nhưng vẫn lưu DB:', e);
+            }
+
+            // =========================
+            // 2. LƯU DATABASE (KRUD)
+            // =========================
+            var res = await krud('insert', 'datlich_nguoibenh', {
+              hovaten: formData.name || '',
+              sodienthoai: formData.phone || '',
+              email: formData.email || '',
+              diachi: formData.address || '',
+              dich_vu: formData.service || '',
+              goi_dich_vu: formData.selectedPackage || '',
+              cong_viec: (formData.jobs || []).join(', '),
+
+              ngay_bat_dau: formData.startDate || '',
+              ngay_ket_thuc: formData.endDate || '',
+              gio_bat_dau: formData.startTime || '',
+              gio_ket_thuc: formData.endTime || '',
+
+              tong_tien: normalizeMoneyToNumber(formData.price),
+
+              yeu_cau_khac: formData.extraRequest || '',
+              ghi_chu: formData.note || '',
+
+              created_date: nowSql()
+            });
+
+            console.log('DB:', res);
+
+            if (!isKrudSuccess(res)) {
+              throw new Error(res.message || 'Lưu DB thất bại');
+            }
+
+            if (sheetErrorMessage) {
+              alert('Đã lưu DB thành công nhưng Google Sheet lỗi: ' + sheetErrorMessage);
+              handleBookingSuccess();
               return;
             }
 
-            var $btn = $(this);
-            var oldHtml = $btn.html();
-            $btn.prop('disabled', true).html('<span class="spinner-border spinner-border-sm me-2"></span>Đang lưu...');
+            // =========================
+            // SUCCESS
+            // =========================
+            alert('✅ Đặt lịch thành công');
+            handleBookingSuccess();
+          } catch (err) {
+            console.error(err);
+            alert('❌ ' + (err && err.message ? err.message : 'Có lỗi xảy ra'));
+          } finally {
+            btn.disabled = false;
+            btn.innerHTML = oldHtml;
+          }
+        });
 
-            try {
-              var result = await saveToGoogleSheet(sheetPayload);
-              if (result && result.status === 'success') {
-                handleBookingSuccess();
-                return;
-              }
-              var msg = (result && result.message) ? result.message : 'Lưu dữ liệu thất bại. Vui lòng thử lại.';
-              alert(msg);
-            } catch (error) {
-              alert('Không thể gửi dữ liệu lên hệ thống. Vui lòng thử lại sau.');
-            } finally {
-              $btn.prop('disabled', false).html(oldHtml);
-            }
-          });
         });
       </script>
 
