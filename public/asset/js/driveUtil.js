@@ -1,17 +1,18 @@
-const API_URL = "https://script.google.com/macros/s/AKfycbxnkPNuiUNP_ayPThPDzKGKlnj72BY_yHntDUfKP0C5ZVvk0EGHRqcDiYpXgys0P8IxPQ/exec";
+const GG_SHEET_API_URL =
+  "https://script.google.com/macros/s/AKfycbzXfUWt5B6PVX1_QC33pYW_XoFQcUFUEfDZy8YzGv1Drp0ilgE9kwWQ5rXE_Iwx_aeMww/exec";
 
 function toSafeString(value) {
   return (value == null ? "" : String(value)).trim();
 }
 
 async function postToAppsScript(data, contentType) {
-  var response = await fetch(API_URL, {
+  var response = await fetch(GG_SHEET_API_URL, {
     method: "POST",
     mode: "cors",
     headers: {
-      "Content-Type": contentType
+      "Content-Type": contentType,
     },
-    body: JSON.stringify(data)
+    body: JSON.stringify(data),
   });
 
   if (!response.ok) {
@@ -46,7 +47,6 @@ async function saveToGoogleSheet(sheetData) {
       // fallback kiểu simple request để tránh lỗi preflight trên một số cấu hình Web App
       return await postToAppsScript(data, "text/plain;charset=utf-8");
     }
-
   } catch (err) {
     console.error("Lỗi gửi Google Sheet:", err);
     throw err;
