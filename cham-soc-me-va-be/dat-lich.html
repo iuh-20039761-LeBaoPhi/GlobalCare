@@ -781,7 +781,7 @@
           var em = parseInt(end.split(':')[1], 10);
           var sMin = sh * 60 + sm;
           var eMin = eh * 60 + em;
-          if (getShiftType() === 'day_full' && eMin < sMin) eMin += 1440;
+          if (eMin < sMin) eMin += 1440;
           var diff = eMin - sMin;
           return diff > 0 ? diff / 60 : 0;
         }
