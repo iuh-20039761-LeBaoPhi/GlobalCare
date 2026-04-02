@@ -139,6 +139,13 @@ admin_render_layout_start('Quan Ly Dich Vu', 'services', $admin);
 										<a href="sua-dich-vu.php?id=<?= urlencode((string)($row['id'] ?? '')) ?>" class="btn btn-sm btn-outline-warning">
 											<i class="bi bi-pencil-square me-1"></i>Sua
 										</a>
+										<form method="post" action="xu-ly-xoa-dich-vu.php" class="d-inline" onsubmit="return confirm('Ban co chac chan muon xoa dich vu nay?');">
+											<input type="hidden" name="id" value="<?= (int)($row['id'] ?? 0) ?>">
+											<input type="hidden" name="q" value="<?= admin_h($q) ?>">
+											<button type="submit" class="btn btn-sm btn-outline-danger">
+												<i class="bi bi-trash me-1"></i>Xoa
+											</button>
+										</form>
 									</div>
 								</td>
 							</tr>

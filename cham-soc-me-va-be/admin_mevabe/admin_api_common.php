@@ -189,3 +189,52 @@ if (!function_exists('admin_api_insert_table')) {
         ];
     }
 }
+
+if (!function_exists('admin_api_delete_table')) {
+    function admin_api_delete_table(string $table, int $id): array
+    {
+        if ($id <= 0) {
+            return ['success' => false, 'message' => 'ID khong hop le.'];
+        }
+
+        $url = 'https://api.dvqt.vn/krud/';
+        $payload = json_encode([
+            'action' => 'delete',
+            'table' => $table,
+            'id' => $id,
+        ], JSON_UNESCAPED_UNICODE);
+
+        if ($payload === false) {
+            return ['success' => false, 'message' => 'Khong tao duoc payload API.'];
+        }
+
+        $ch = curl_init($url);
+        curl_setopt_array($ch, [
+            CURLOPT_POST => true,
+            CURLOPT_RETURNTRANSFER => true,
+            CURLOPT_HTTPHEADER => ['Content-Type: application/json'],
+            CURLOPT_POSTFIELDS => $payload,
+            CURLOPT_CONNECTTIMEOUT => 8,
+            CURLOPT_TIMEOUT => 20,
+        ]);
+
+        $raw = curl_exec($ch);
+        $err = curl_error($ch);
+        curl_close($ch);
+
+        if (!is_string($raw) || $raw === '') {
+            return ['success' => false, 'message' => $err !== '' ? $err : 'Khong nhan duoc phan hoi API.'];
+        }
+
+        $decoded = json_decode($raw, true);
+        if (!is_array($decoded)) {
+            return ['success' => false, 'message' => 'Phan hoi API khong hop le.'];
+        }
+
+        if (!empty($decoded['error']) || (isset($decoded['success']) && $decoded['success'] === false)) {
+            return ['success' => false, 'message' => (string)($decoded['error'] ?? $decoded['message'] ?? 'Xoa that bai.')];
+        }
+
+        return ['success' => true, 'message' => 'Xoa thanh cong.'];
+    }
+}
