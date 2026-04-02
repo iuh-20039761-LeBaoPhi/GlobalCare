@@ -477,11 +477,29 @@
     </section>
 
       <div id="site-footer"></div>
+<script src="https://api.dvqt.vn/js/krud.js"></script>
+<script>
+  if (typeof krud === 'undefined') {
+    console.warn('krud chưa load, tạo fallback');
 
+    const KRUD_API_URL = "https://api.dvqt.vn";
+
+    function krud(action, table, data = {}, id = null) {
+      const payload = { action, table, data };
+      if (id !== null) payload.id = id;
+
+      return fetch(KRUD_API_URL + "/krud/", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(payload)
+      }).then(res => res.json());
+    }
+  }
+</script>
       <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
       <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
       <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
-
+<script src="driveUtil.js"></script>
     <script>
       var EMBEDDED_BOOKING_MODE = false;
       var PRESELECT_SERVICE_ID = '';
@@ -1587,27 +1605,93 @@
           renderReviewAttachmentPreview();
         }
 
+        // Chuc nang: xu ly nghiep vu cho normalizeMoneyToNumber.
+        function normalizeMoneyToNumber(value) {
+          if (typeof value === 'number' && Number.isFinite(value)) return Math.round(value);
+          var raw = String(value == null ? '' : value).trim();
+          if (!raw) return 0;
+          var sign = raw.indexOf('-') !== -1 ? -1 : 1;
+          var digits = raw.replace(/\D/g, '');
+          if (!digits) return 0;
+          return sign * Number(digits);
+        }
+
+        // Chuc nang: xu ly nghiep vu cho nowSql.
+        function nowSql() {
+          var d = new Date();
+          var pad = function (n) {
+            return String(n).padStart(2, '0');
+          };
+          return (
+            d.getFullYear() +
+            '-' +
+            pad(d.getMonth() + 1) +
+            '-' +
+            pad(d.getDate()) +
+            ' ' +
+            pad(d.getHours()) +
+            ':' +
+            pad(d.getMinutes()) +
+            ':' +
+            pad(d.getSeconds())
+          );
+        }
+
+        // Chuc nang: xu ly nghiep vu cho isKrudSuccess.
+        function isKrudSuccess(res) {
+          return !!res && !res.error && res.success !== false;
+        }
+
+        // Chuc nang: xu ly nghiep vu cho getSheetErrorMessage.
+        function getSheetErrorMessage(result) {
+          if (!result) return 'Không nhận được phản hồi từ Google Sheet.';
+          var status = String(result.status || '').toLowerCase();
+          if (status === 'success' || result.success === true) return '';
+          return result.message || result.error || 'Google Sheet trả về trạng thái không thành công.';
+        }
+
+        // Chuc nang: xu ly nghiep vu cho buildBookingSheetPayload.
+        function buildBookingSheetPayload(data) {
+          return {
+            sheet_type: 'Lau dọn vệ sinh',
+            created_at: '',
+            'Tên khách': (data.name || '').trim(),
+            'Số điện thoại': (data.phone || '').trim(),
+            'Email': (data.email || '').trim(),
+            'Địa chỉ': (data.address || '').trim(),
+            'Dịch vụ': data.service || '',
+            'Loại nơi dọn': data.serviceLoaiLabel || data.serviceLoai || '',
+            'Gói dịch vụ': data.package || 'Không chọn gói',
+            'Công việc': data.jobs || '',
+            'Ngày bắt đầu': data.startDate || '',
+            'Ngày kết thúc': data.endDate || '',
+            'Giờ bắt đầu': data.startTime || '',
+            'Giờ kết thúc': data.endTime || '',
+            'Tổng số ngày': Number(data.totalDays || 0),
+            'Tổng số giờ': Number(data.totalHours || 0),
+            'Yêu cầu khác': data.extraRequest || '',
+            'Ghi chú': (data.note || '').trim(),
+            'Tổng tiền': normalizeMoneyToNumber(data.price)
+          };
+        }
+
         // Chuc nang: xu ly nghiep vu cho mapBookingDataForDatabase.
         function mapBookingDataForDatabase(data) {
           var payload = {
-            ten: (data.name || '').trim(),
-            dien_thoai: (data.phone || '').trim(),
+            hovaten: (data.name || '').trim(),
+            sodienthoai: (data.phone || '').trim(),
             email: (data.email || '').trim(),
-            dia_chi: (data.address || '').trim(),
+            diachi: (data.address || '').trim(),
             dich_vu: data.service || '',
             loai_noi_don: data.serviceLoaiLabel || data.serviceLoai || '',
             goi_dich_vu: data.package || 'Không chọn gói',
             cong_viec: data.jobs || '',
-            startDate: data.startDate || '',
-            endDate: data.endDate || '',
-            durationUnit: data.durationUnit || '',
-            durationAmount: data.durationUnit && data.durationUnit !== 'day' ? data.durationAmount || '' : '',
-            totalDays: Number(data.totalDays || 0),
-            startTime: data.startTime || '',
-            endTime: data.endTime || '',
-            totalHours: Number(data.totalHours || 0),
-            extraRequest: data.extraRequest || '',
-            gia_tien: data.price || '0 đ',
+            ngay_bat_dau: data.startDate || '',
+            ngay_ket_thuc: data.endDate || '',
+            gio_bat_dau: data.startTime || '',
+            gio_ket_thuc: data.endTime || '',
+            tong_tien: normalizeMoneyToNumber(data.price),
+            yeu_cau_khac: data.extraRequest || '',
             ghi_chu: (data.note || '').trim()
           };
 
@@ -1617,25 +1701,27 @@
             payload.khach_hang_id = window.loggedInUserId;
           }
 
+          payload.created_date = nowSql();
+
           return payload;
+        }
+
+        // Chuc nang: xu ly nghiep vu cho saveBookingToGoogleSheet.
+        function saveBookingToGoogleSheet(data) {
+          if (typeof saveToGoogleSheet !== 'function') {
+            throw new Error('Chưa tải được hàm lưu Google Sheet.');
+          }
+          var sheetPayload = buildBookingSheetPayload(data);
+          sheetPayload.created_at = nowSql();
+          return saveToGoogleSheet(sheetPayload);
         }
 
         // Chuc nang: xu ly nghiep vu cho saveBookingToDatabase.
         function saveBookingToDatabase(data) {
-          return fetch('api/create_booking.php', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify(mapBookingDataForDatabase(data))
-          })
-            .then(function (res) {
-              return res.json();
-            })
-            .then(function (resp) {
-              if (resp.success || resp.result === 'success') {
-                return resp;
-              }
-              throw new Error(resp.message || 'Lưu cơ sở dữ liệu thất bại');
-            });
+          if (typeof krud !== 'function') {
+            throw new Error('Chưa tải KRUD API.');
+          }
+          return krud('insert', 'datlich_donvesinh', mapBookingDataForDatabase(data));
         }
 
         // Chuc nang: xu ly nghiep vu cho finishSuccessState.
@@ -1677,7 +1763,7 @@
         }
 
         // Chuc nang: xu ly nghiep vu cho submitBookingData.
-        function submitBookingData(data) {
+        async function submitBookingData(data) {
           var saveBtn = $('#btnConfirmSave');
           var backBtn = $('#btnBackToEdit');
           var originalText = saveBtn.html();
@@ -1685,21 +1771,38 @@
           saveBtn.html('<i class="fas fa-spinner fa-spin me-1"></i>Đang lưu...').prop('disabled', true);
           backBtn.prop('disabled', true);
 
-          saveBookingToDatabase(data)
-            .then(function () {
-              PENDING_BOOKING_DATA = null;
-              sessionStorage.removeItem(STORAGE_KEY);
-              resetQuickAttachments();
-              finishSuccessState();
-            })
-            .catch(function (err) {
-              console.error('Lỗi khi lưu cơ sở dữ liệu:', err);
-              alert('Không thể lưu dữ liệu đặt lịch. Vui lòng thử lại.\nChi tiết: ' + ((err && err.message) || 'Lỗi không xác định'));
-            })
-            .finally(function () {
-              saveBtn.html(originalText).prop('disabled', false);
-              backBtn.prop('disabled', false);
-            });
+          try {
+            var sheetErrorMessage = '';
+
+            try {
+              var sheetResult = await saveBookingToGoogleSheet(data);
+              sheetErrorMessage = getSheetErrorMessage(sheetResult);
+            } catch (sheetErr) {
+              sheetErrorMessage = (sheetErr && sheetErr.message) || 'Không thể kết nối Google Sheet.';
+              console.warn('Lỗi lưu Google Sheet, tiếp tục lưu cơ sở dữ liệu:', sheetErr);
+            }
+
+            var dbResult = await saveBookingToDatabase(data);
+            if (!isKrudSuccess(dbResult)) {
+              throw new Error((dbResult && dbResult.message) || 'Lưu dữ liệu đặt lịch thất bại.');
+            }
+
+            PENDING_BOOKING_DATA = null;
+            sessionStorage.removeItem(STORAGE_KEY);
+            resetQuickAttachments();
+
+            if (sheetErrorMessage) {
+              alert('Đã lưu cơ sở dữ liệu thành công nhưng Google Sheet lỗi: ' + sheetErrorMessage);
+            }
+
+            finishSuccessState();
+          } catch (err) {
+            console.error('Lỗi khi lưu dữ liệu đặt lịch:', err);
+            alert('Không thể lưu dữ liệu đặt lịch. Vui lòng thử lại.\nChi tiết: ' + ((err && err.message) || 'Lỗi không xác định'));
+          } finally {
+            saveBtn.html(originalText).prop('disabled', false);
+            backBtn.prop('disabled', false);
+          }
         }
 
         // Chuc nang: xu ly nghiep vu cho showReviewStep.
