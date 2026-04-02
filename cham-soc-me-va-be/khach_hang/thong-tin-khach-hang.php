@@ -317,7 +317,7 @@ $statusClass = $statusRaw === 'pending' ? ' pending' : '';
                                     <div class="info-label">Ngay sinh</div>
                                     <div class="info-value"><?= esc_profile($birthDate) ?></div>
                                 </div>
-                                <div class="info-item">
+                                <!-- <div class="info-item">
                                     <div class="info-label">Mat khau</div>
                                     <div class="password-view"><?= esc_profile($password) ?></div>
                                 </div>
@@ -332,7 +332,7 @@ $statusClass = $statusRaw === 'pending' ? ' pending' : '';
                                 <div class="info-item">
                                     <div class="info-label">CCCD mat sau (duong dan)</div>
                                     <div class="path-text"><?= esc_profile($cccdBackPath !== '' ? $cccdBackPath : '-') ?></div>
-                                </div>
+                                </div> -->
                                 <div class="info-item">
                                     <div class="info-label">Ngay tao</div>
                                     <div class="info-value"><?= esc_profile($createdDate) ?></div>
