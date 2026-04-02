@@ -18,7 +18,7 @@ function fetchNhanVienById(int $nhanVienId): ?array
 	}
 
 	$url = 'https://api.dvqt.vn/list/';
-	$payload = json_encode(['table' => 'nhacungcap_nguoibenh'], JSON_UNESCAPED_UNICODE);
+	$payload = json_encode(['table' => 'nhacungcap_mevabe'], JSON_UNESCAPED_UNICODE);
 	if ($payload === false) {
 		return null;
 	}
@@ -283,7 +283,7 @@ if ($loadError === '' && is_array($invoice)) {
 				$employeePhone = trim((string)($employeeSource['sodienthoai'] ?? ''));
 				$employeeEmail = trim((string)($employeeSource['email'] ?? ''));
 				$employeeCreatedDate = trim((string)($employeeSource['created_date'] ?? ''));
-				$employeeAvatar = '../assets/logo-cham-soc-benh-nhan.png';
+				$employeeAvatar = '../assets/logomvb.png';
 
 				$displayOrDefault = static function (string $value, string $default = 'N/A'): string {
 					return $value !== '' ? $value : $default;
@@ -336,7 +336,7 @@ if ($loadError === '' && is_array($invoice)) {
 					<div class="card-box h-100">
 						<div class="head-green"><i class="bi bi-person me-2"></i>Thông Tin Khách Hàng</div>
 						<div class="box-body">
-							<img class="avatar" src="../assets/logo-cham-soc-benh-nhan.png" alt="avatar khách hàng">
+							<img class="avatar" src="../assets/logomvb.png" alt="avatar khách hàng">
 							<div class="center-name"><?= htmlspecialchars($displayOrDefault($customerName, 'Khách hàng'), ENT_QUOTES, 'UTF-8') ?></div>
 							<ul class="kv-list">
 								<li><b>SĐT:</b> <?= htmlspecialchars($displayOrDefault($customerPhone), ENT_QUOTES, 'UTF-8') ?></li>

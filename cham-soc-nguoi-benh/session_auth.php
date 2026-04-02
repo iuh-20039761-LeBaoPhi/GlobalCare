@@ -116,7 +116,7 @@ if ($action === 'login') {
         $accountType = 'khach_hang';
     }
 
-    $sourceTable = trim((string)($payload['bang_nguon'] ?? ($accountType === 'nhan_vien' ? 'nhacungcap_mevabe' : 'khachhang')));
+    $sourceTable = trim((string)($payload['bang_nguon'] ?? ($accountType === 'nhan_vien' ? 'nhacungcap_nguoibenh' : 'khachhang')));
     $rawUser = $payload['user'] ?? [];
 
     if (!is_array($rawUser) || $rawUser === []) {

@@ -66,7 +66,7 @@ function huy_hoa_don(int $invoiceId, string $sessionPhone): array
 
     return krud_call([
         'action' => 'update',
-        'table' => 'datlich_nguoibenh',
+        'table' => 'datlich_nguoigia',
         'id' => $invoiceId,
         'data' => [
             'trangthai' => 'huy_don',

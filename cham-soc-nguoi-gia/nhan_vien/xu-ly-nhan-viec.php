@@ -76,7 +76,7 @@ function nhanViecHoaDon(int $invoiceId, int $nhanVienId): array
 
     return krudCall([
         'action' => 'update',
-        'table' => 'datlich_nguoibenh',
+        'table' => 'datlich_mevabe',
         'id' => $invoiceId,
         'data' => [
             'id_nhacungcap' => $nhanVienId,

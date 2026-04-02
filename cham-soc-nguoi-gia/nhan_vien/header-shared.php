@@ -1,19 +1,19 @@
 <?php
 declare(strict_types=1);
 
-if (!function_exists('kh_header_escape')) {
-    function kh_header_escape(string $value): string
+if (!function_exists('nv_header_escape')) {
+    function nv_header_escape(string $value): string
     {
         return htmlspecialchars($value, ENT_QUOTES, 'UTF-8');
     }
 }
 
-if (!function_exists('kh_avatar_path')) {
-    function kh_avatar_path(string $value): string
+if (!function_exists('nv_avatar_path')) {
+    function nv_avatar_path(string $value): string
     {
         $avatar = trim(str_replace('\\', '/', $value));
         if ($avatar === '') {
-            return '../assets/logo-cham-soc-benh-nhan.png';
+            return '../assets/logomvb.png';
         }
 
         if (preg_match('/^(https?:)?\/\//i', $avatar) || strpos($avatar, 'data:image/') === 0) {
@@ -37,17 +37,17 @@ if (!function_exists('kh_avatar_path')) {
     }
 }
 
-if (!function_exists('render_khach_hang_header_styles')) {
-    function render_khach_hang_header_styles(): void
+if (!function_exists('render_nhan_vien_header_styles')) {
+    function render_nhan_vien_header_styles(): void
     {
         ?>
         <style>
-            .kh-topbar {
+            .nv-topbar {
                 background: linear-gradient(95deg, #0b4ea2 0%, #0e61c0 45%, #1a73e8 100%);
                 border-radius: 14px;
                 box-shadow: 0 10px 30px rgba(11, 78, 162, 0.24);
             }
-            .kh-brand {
+            .nv-brand {
                 display: inline-flex;
                 align-items: center;
                 gap: 10px;
@@ -56,7 +56,7 @@ if (!function_exists('render_khach_hang_header_styles')) {
                 font-weight: 700;
                 letter-spacing: 0.2px;
             }
-            .kh-brand img {
+            .nv-brand img {
                 width: 34px;
                 height: 34px;
                 border-radius: 8px;
@@ -64,13 +64,13 @@ if (!function_exists('render_khach_hang_header_styles')) {
                 background: #fff;
                 padding: 3px;
             }
-            .kh-title {
+            .nv-title {
                 color: #e9f2ff;
                 font-size: 0.95rem;
                 margin: 0;
                 opacity: 0.95;
             }
-            .kh-avatar-btn {
+            .nv-avatar-btn {
                 border: 1px solid rgba(255, 255, 255, 0.35);
                 color: #fff;
                 background: rgba(255, 255, 255, 0.12);
@@ -81,11 +81,11 @@ if (!function_exists('render_khach_hang_header_styles')) {
                 gap: 8px;
                 font-weight: 600;
             }
-            .kh-avatar-btn:hover {
+            .nv-avatar-btn:hover {
                 background: rgba(255, 255, 255, 0.18);
                 color: #fff;
             }
-            .kh-avatar {
+            .nv-avatar {
                 width: 30px;
                 height: 30px;
                 border-radius: 50%;
@@ -93,7 +93,7 @@ if (!function_exists('render_khach_hang_header_styles')) {
                 border: 2px solid rgba(255, 255, 255, 0.65);
                 background: #fff;
             }
-            .kh-menu {
+            .nv-menu {
                 min-width: 220px;
                 border: 0;
                 border-radius: 12px;
@@ -104,37 +104,37 @@ if (!function_exists('render_khach_hang_header_styles')) {
     }
 }
 
-if (!function_exists('render_khach_hang_header')) {
-    function render_khach_hang_header(array $user, string $title = 'Hoa don cua ban'): void
+if (!function_exists('render_nhan_vien_header')) {
+    function render_nhan_vien_header(array $user, string $title = 'Quan ly hoa don'): void
     {
-        $name = trim((string)($user['ten'] ?? 'Khach hang'));
+        $name = trim((string)($user['ten'] ?? 'Nhan vien'));
         if ($name === '') {
-            $name = 'Khach hang';
+            $name = 'Nhan vien';
         }
 
         $phone = trim((string)($user['sodienthoai'] ?? ''));
-        $avatar = kh_avatar_path((string)($user['anh_dai_dien'] ?? ''));
+        $avatar = nv_avatar_path((string)($user['anh_dai_dien'] ?? ''));
 
-        $nameEsc = kh_header_escape($name);
-        $phoneEsc = kh_header_escape($phone);
-        $avatarEsc = kh_header_escape($avatar);
-        $titleEsc = kh_header_escape($title);
+        $nameEsc = nv_header_escape($name);
+        $phoneEsc = nv_header_escape($phone);
+        $avatarEsc = nv_header_escape($avatar);
+        $titleEsc = nv_header_escape($title);
         ?>
-        <header class="kh-topbar px-3 px-md-4 py-3 mb-3">
+        <header class="nv-topbar px-3 px-md-4 py-3 mb-3">
             <div class="d-flex align-items-center justify-content-between gap-3">
                 <div class="d-flex align-items-center gap-3">
-                    <a class="kh-brand" href="../index.html">
-                        <img src="../assets/logo-cham-soc-benh-nhan.png" alt="logo">
+                    <a class="nv-brand" href="../index.html">
+                        <img src="../assets/logomvb.png" alt="logo">
                         <span>DVQT Chăm Sóc Mẹ và Bé</span>
                     </a>
-                    <p class="kh-title d-none d-md-block"><?= $titleEsc ?></p>
+                    <p class="nv-title d-none d-md-block"><?= $titleEsc ?></p>
                 </div>
                 <div class="dropdown">
-                    <button class="btn kh-avatar-btn dropdown-toggle" type="button" data-bs-toggle="dropdown" aria-expanded="false">
-                        <img class="kh-avatar" src="<?= $avatarEsc ?>" alt="avatar">
+                    <button class="btn nv-avatar-btn dropdown-toggle" type="button" data-bs-toggle="dropdown" aria-expanded="false">
+                        <img class="nv-avatar" src="<?= $avatarEsc ?>" alt="avatar">
                         <span class="d-none d-sm-inline"><?= $nameEsc ?></span>
                     </button>
-                    <ul class="dropdown-menu dropdown-menu-end kh-menu">
+                    <ul class="dropdown-menu dropdown-menu-end nv-menu">
                         <li class="px-3 py-2 border-bottom">
                             <div class="fw-semibold"><?= $nameEsc ?></div>
                             <div class="text-muted small"><?= $phoneEsc ?></div>

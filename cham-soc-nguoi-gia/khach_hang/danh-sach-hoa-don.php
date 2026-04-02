@@ -102,7 +102,7 @@ function status_meta(string $status): array
 }
 
 $employeesById = [];
-foreach (list_table_rows('nhacungcap_nguoibenh') as $employee) {
+foreach (list_table_rows('nhacungcap_nguoigia') as $employee) {
     $employeeId = (int)($employee['id'] ?? 0);
     if ($employeeId > 0) {
         $employeesById[$employeeId] = $employee;

@@ -2,13 +2,13 @@
 declare(strict_types=1);
 
 /**
- * Ham duy nhat dung chung: lay toan bo hoa don bang datlich_nguoibenh,
+ * Ham duy nhat dung chung: lay toan bo hoa don bang datlich_mevabe,
  * va co the loc 1 hoa don theo id khi can cho trang chi tiet.
  */
 function getHoaDonData(?int $invoiceId = null): array
 {
     $url = 'https://api.dvqt.vn/list/';
-    $payload = json_encode(['table' => 'datlich_nguoibenh'], JSON_UNESCAPED_UNICODE);
+    $payload = json_encode(['table' => 'datlich_mevabe'], JSON_UNESCAPED_UNICODE);
 
     if ($payload === false) {
         return [

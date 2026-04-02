@@ -67,7 +67,7 @@ function list_table_rows(string $table): array
 }
 
 /**
- * Ham dung chung: lay tat ca hoa don datlich_nguoibenh theo so dien thoai session.
+ * Ham dung chung: lay tat ca hoa don datlich_nguoigia theo so dien thoai session.
  * Tra ve rows va row theo id (neu co).
  */
 function getHoaDonBySessionSdt(string $sessionPhone, ?int $invoiceId = null): array
@@ -82,7 +82,7 @@ function getHoaDonBySessionSdt(string $sessionPhone, ?int $invoiceId = null): ar
         ];
     }
 
-    $rows = list_table_rows('datlich_nguoibenh');
+    $rows = list_table_rows('datlich_nguoigia');
     $filtered = [];
 
     foreach ($rows as $row) {
@@ -116,14 +116,14 @@ function getHoaDonBySessionSdt(string $sessionPhone, ?int $invoiceId = null): ar
     ];
 }
 
-/** Lay thong tin nhan vien theo id_nhacungcap tu bang nhacungcap_nguoibenh. */
+/** Lay thong tin nhan vien theo id_nhacungcap tu bang nhacungcap_nguoigia. */
 function getNhanVienById(int $nhanVienId): ?array
 {
     if ($nhanVienId <= 0) {
         return null;
     }
 
-    $rows = list_table_rows('nhacungcap_nguoibenh');
+    $rows = list_table_rows('nhacungcap_nguoigia');
     foreach ($rows as $row) {
         if ((int)($row['id'] ?? 0) === $nhanVienId) {
             return $row;

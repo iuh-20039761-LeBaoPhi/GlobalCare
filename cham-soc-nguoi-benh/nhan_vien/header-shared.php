@@ -13,7 +13,7 @@ if (!function_exists('nv_avatar_path')) {
     {
         $avatar = trim(str_replace('\\', '/', $value));
         if ($avatar === '') {
-            return '../assets/logomvb.png';
+            return '../assets/logo-cham-soc-benh-nhan.png';
         }
 
         if (preg_match('/^(https?:)?\/\//i', $avatar) || strpos($avatar, 'data:image/') === 0) {
@@ -124,8 +124,8 @@ if (!function_exists('render_nhan_vien_header')) {
             <div class="d-flex align-items-center justify-content-between gap-3">
                 <div class="d-flex align-items-center gap-3">
                     <a class="nv-brand" href="../index.html">
-                        <img src="../assets/logomvb.png" alt="logo">
-                        <span>DVQT Chăm Sóc Mẹ và Bé</span>
+                        <img src="../assets/logo-cham-soc-benh-nhan.png" alt="logo">
+                        <span>DVQT Chăm Sóc Người Bệnh</span>
                     </a>
                     <p class="nv-title d-none d-md-block"><?= $titleEsc ?></p>
                 </div>

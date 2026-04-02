@@ -13,7 +13,7 @@ if (!function_exists('kh_avatar_path')) {
     {
         $avatar = trim(str_replace('\\', '/', $value));
         if ($avatar === '') {
-            return '../assets/logo-cham-soc-benh-nhan.png';
+            return '../assets/logong.png';
         }
 
         if (preg_match('/^(https?:)?\/\//i', $avatar) || strpos($avatar, 'data:image/') === 0) {
@@ -124,7 +124,7 @@ if (!function_exists('render_khach_hang_header')) {
             <div class="d-flex align-items-center justify-content-between gap-3">
                 <div class="d-flex align-items-center gap-3">
                     <a class="kh-brand" href="../index.html">
-                        <img src="../assets/logo-cham-soc-benh-nhan.png" alt="logo">
+                        <img src="../assets/logong.png" alt="logo">
                         <span>DVQT Chăm Sóc Mẹ và Bé</span>
                     </a>
                     <p class="kh-title d-none d-md-block"><?= $titleEsc ?></p>

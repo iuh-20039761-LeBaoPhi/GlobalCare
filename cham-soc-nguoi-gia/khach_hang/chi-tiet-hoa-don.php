@@ -2,101 +2,28 @@
 declare(strict_types=1);
 
 require_once __DIR__ . '/../session_user.php';
-require_once __DIR__ . '/get-hoadon.php';
+require_once __DIR__ . '/get-hoadonsdt.php';
 require_once __DIR__ . '/header-shared.php';
 
-$sessionUser = session_user_require_employee('../login.html', 'nhan_vien/chi-tiet-hoa-don.php' . (isset($_GET['id']) ? ('?id=' . urlencode((string)$_GET['id'])) : ''));
-
-$sessionEmployeeId = (int)($sessionUser['id'] ?? 0);
-$employeeStatus = (string)($sessionUser['trangthai'] ?? '');
-$isEmployeeApproved = employee_account_is_approved($employeeStatus);
-
-function fetchNhanVienById(int $nhanVienId): ?array
-{
-	if ($nhanVienId <= 0) {
-		return null;
-	}
-
-	$url = 'https://api.dvqt.vn/list/';
-	$payload = json_encode(['table' => 'nhacungcap_nguoibenh'], JSON_UNESCAPED_UNICODE);
-	if ($payload === false) {
-		return null;
-	}
-
-	$ch = curl_init($url);
-	curl_setopt_array($ch, [
-		CURLOPT_POST => true,
-		CURLOPT_RETURNTRANSFER => true,
-		CURLOPT_HTTPHEADER => ['Content-Type: application/json'],
-		CURLOPT_POSTFIELDS => $payload,
-		CURLOPT_CONNECTTIMEOUT => 8,
-		CURLOPT_TIMEOUT => 20,
-	]);
-
-	$raw = curl_exec($ch);
-	curl_close($ch);
-
-	if (!is_string($raw) || $raw === '') {
-		return null;
-	}
-
-	$decoded = json_decode($raw, true);
-	if (!is_array($decoded) || !empty($decoded['error']) || (isset($decoded['success']) && $decoded['success'] === false)) {
-		return null;
-	}
-
-	$rows = $decoded;
-	if (isset($decoded['data']) && is_array($decoded['data'])) {
-		$rows = $decoded['data'];
-	} elseif (isset($decoded['rows']) && is_array($decoded['rows'])) {
-		$rows = $decoded['rows'];
-	} elseif (isset($decoded['items']) && is_array($decoded['items'])) {
-		$rows = $decoded['items'];
-	}
-
-	if (!is_array($rows)) {
-		return null;
-	}
-
-	foreach ($rows as $row) {
-		if (!is_array($row)) {
-			continue;
-		}
-		if ((int)($row['id'] ?? 0) === $nhanVienId) {
-			return $row;
-		}
-	}
-
-	return null;
-}
+$sessionUser = session_user_require_customer('../login.html', 'khach_hang/chi-tiet-hoa-don.php' . (isset($_GET['id']) ? ('?id=' . urlencode((string)$_GET['id'])) : ''));
+$sessionPhone = (string)($sessionUser['sodienthoai'] ?? '');
 
 $invoiceId = (int)($_GET['id'] ?? 0);
-$invoice = null;
-$loadError = '';
+$result = getHoaDonBySessionSdt($sessionPhone, $invoiceId > 0 ? $invoiceId : null);
+$invoice = $result['row'] ?? null;
+$loadError = (string)($result['error'] ?? '');
 
-if (!$isEmployeeApproved) {
-	$loadError = 'Tài khoản của bạn đang chờ duyệt';
-} elseif ($invoiceId <= 0) {
+if ($invoiceId <= 0) {
 	$loadError = 'Thiếu mã hóa đơn để hiển thị chi tiết.';
-} else {
-	$result = getHoaDonData($invoiceId);
-	$invoice = $result['row'] ?? null;
-	$loadError = (string)($result['error'] ?? '');
-
-	if (!$invoice && $loadError === '') {
-		$loadError = 'Không tìm thấy hóa đơn tương ứng.';
-	}
-
-	if (is_array($invoice) && !invoice_in_employee_scope($invoice, $sessionEmployeeId)) {
-		$invoice = null;
-		$loadError = 'Bạn không có quyền xem hóa đơn này.';
-	}
+}
+if ($invoiceId > 0 && !$invoice && $loadError === '') {
+	$loadError = 'Không tìm thấy hóa đơn hoặc bạn không có quyền xem hóa đơn này.';
 }
 
 $employeeProfile = null;
 if ($loadError === '' && is_array($invoice)) {
-	$assignedEmployeeId = (int)($invoice['id_nhacungcap'] ?? 0);
-	$employeeProfile = $assignedEmployeeId > 0 ? fetchNhanVienById($assignedEmployeeId) : null;
+	$employeeId = (int)($invoice['id_nhacungcap'] ?? 0);
+	$employeeProfile = $employeeId > 0 ? getNhanVienById($employeeId) : null;
 }
 ?>
 <!DOCTYPE html>
@@ -107,7 +34,7 @@ if ($loadError === '' && is_array($invoice)) {
 	<title>Chi Tiết Hóa Đơn</title>
 	<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
 	<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css">
-	<?php render_nhan_vien_header_styles(); ?>
+	<?php render_khach_hang_header_styles(); ?>
 	<style>
 		body {
 			background: linear-gradient(180deg, #edf2f7 0%, #f8fafc 100%);
@@ -239,7 +166,7 @@ if ($loadError === '' && is_array($invoice)) {
 </head>
 <body>
 <main class="detail-wrap">
-	<?php render_nhan_vien_header($sessionUser, 'Chi tiet hoa don'); ?>
+	<?php render_khach_hang_header($sessionUser, 'Chi tiet hoa don khach hang'); ?>
 	<div class="top-head">
 		<h1><i class="bi bi-file-earmark-text me-2"></i>Chi Tiết Hóa Đơn</h1>
 		<a href="danh-sach-hoa-don.php" class="btn btn-sm btn-outline-light"><i class="bi bi-x-lg"></i></a>
@@ -283,7 +210,7 @@ if ($loadError === '' && is_array($invoice)) {
 				$employeePhone = trim((string)($employeeSource['sodienthoai'] ?? ''));
 				$employeeEmail = trim((string)($employeeSource['email'] ?? ''));
 				$employeeCreatedDate = trim((string)($employeeSource['created_date'] ?? ''));
-				$employeeAvatar = '../assets/logo-cham-soc-benh-nhan.png';
+				$employeeAvatar = '../assets/logong.png';
 
 				$displayOrDefault = static function (string $value, string $default = 'N/A'): string {
 					return $value !== '' ? $value : $default;
@@ -336,7 +263,7 @@ if ($loadError === '' && is_array($invoice)) {
 					<div class="card-box h-100">
 						<div class="head-green"><i class="bi bi-person me-2"></i>Thông Tin Khách Hàng</div>
 						<div class="box-body">
-							<img class="avatar" src="../assets/logo-cham-soc-benh-nhan.png" alt="avatar khách hàng">
+							<img class="avatar" src="../assets/logong.png" alt="avatar khách hàng">
 							<div class="center-name"><?= htmlspecialchars($displayOrDefault($customerName, 'Khách hàng'), ENT_QUOTES, 'UTF-8') ?></div>
 							<ul class="kv-list">
 								<li><b>SĐT:</b> <?= htmlspecialchars($displayOrDefault($customerPhone), ENT_QUOTES, 'UTF-8') ?></li>
