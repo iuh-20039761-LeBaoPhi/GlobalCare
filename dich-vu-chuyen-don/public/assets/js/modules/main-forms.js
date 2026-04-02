@@ -52,25 +52,25 @@
     chuyen_nha: {
       defaultValue: "xe_van_500kg",
       options: [
-        { value: "xe_van_500kg", label: "Xe Van 500kg" },
-        { value: "xe_tai_1_5_tan", label: "Xe Tải 1.5 Tấn" },
-        { value: "xe_tai_2_5_tan", label: "Xe Tải 2.5 Tấn" },
+        { value: "xe_van_500kg", label: "Xe 4 bánh nhỏ ≤ 500kg" },
+        { value: "xe_tai_1_5_tan", label: "Xe 4 bánh vừa ≤ 1200kg" },
+        { value: "xe_tai_2_5_tan", label: "Xe tải ≤ 3500kg" },
       ],
     },
     chuyen_van_phong: {
       defaultValue: "xe_van_500kg",
       options: [
-        { value: "xe_van_500kg", label: "Xe Van 500kg (VP)" },
-        { value: "xe_tai_1_5_tan", label: "Xe Tải 1.5 Tấn (VP)" },
-        { value: "xe_tai_2_5_tan", label: "Xe Tải 2.5 Tấn (VP)" },
+        { value: "xe_van_500kg", label: "Xe 4 bánh nhỏ ≤ 500kg" },
+        { value: "xe_tai_1_5_tan", label: "Xe 4 bánh vừa ≤ 1200kg" },
+        { value: "xe_tai_2_5_tan", label: "Xe tải ≤ 3500kg" },
       ],
     },
     chuyen_kho_bai: {
       defaultValue: "xe_tai_1_5_tan",
       options: [
-        { value: "xe_tai_1_5_tan", label: "Xe Tải 1.5 Tấn (Kho)" },
-        { value: "xe_tai_2_5_tan", label: "Xe Tải 2.5 Tấn (Kho)" },
-        { value: "xe_tai_5_tan", label: "Xe Tải 5 Tấn (Kho)" },
+        { value: "xe_tai_1_5_tan", label: "Xe 4 bánh vừa ≤ 1200kg" },
+        { value: "xe_tai_2_5_tan", label: "Xe tải ≤ 3500kg" },
+        { value: "xe_tai_7_5_tan", label: "Xe tải lớn ≤ 7500kg" },
       ],
     },
   };

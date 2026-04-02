@@ -100,6 +100,25 @@
     `;
   }
 
+  function updateDistancePricingBadge(scope, core, total) {
+    const priceWrap = scope.querySelector(
+      "[data-tam-tinh-theo-khoang-cach-dat-lich]",
+    );
+    const priceValue = scope.querySelector(
+      "[data-gia-tri-tam-tinh-theo-khoang-cach-dat-lich]",
+    );
+    if (!priceWrap || !priceValue) return;
+
+    if (typeof total !== "number" || !Number.isFinite(total) || total < 0) {
+      priceWrap.hidden = true;
+      priceValue.textContent = "";
+      return;
+    }
+
+    priceValue.textContent = core.formatCurrencyVnd(total);
+    priceWrap.hidden = false;
+  }
+
   // Chuẩn hóa dữ liệu giá trước khi render: dòng chi phí, note và card hạng mục.
   function buildBookingPricingState(scope, serviceData, deps) {
     const {
@@ -220,12 +239,43 @@
       notes.push("Chọn loại xe để hệ thống tính cước theo số km di chuyển.");
     } else if (hasDistance) {
       const ratePerKm = Number(vehicleEntry.gia_moi_km || 0);
+      const longDistanceRate = Number(vehicleEntry.gia_moi_km_duong_dai || 0);
+      const minimumFee = Number(vehicleEntry.phi_toi_thieu || 0);
+      const longDistanceThreshold = Number(
+        vehicleEntry.nguong_km_giam_gia || 20,
+      );
+      const longDistanceDiscountRate = Number(
+        vehicleEntry.ty_le_giam_gia_duong_dai || 0,
+      );
       const billedDistanceKm = Math.max(0, distanceKm);
+      const isLongDistance =
+        billedDistanceKm > longDistanceThreshold &&
+        longDistanceRate > 0 &&
+        longDistanceRate < ratePerKm;
+      const appliedRate = isLongDistance ? longDistanceRate : ratePerKm;
+      const transportBeforeMinimum = Math.round(
+        billedDistanceKm * appliedRate,
+      );
       addChargeLine({
         label: "Cước xe theo quãng đường",
-        detail: `${billedDistanceKm.toFixed(billedDistanceKm >= 10 ? 0 : 1)} km x ${core.formatCurrencyVnd(ratePerKm)}`,
-        amount: Math.round(billedDistanceKm * ratePerKm),
+        detail: `${billedDistanceKm.toFixed(billedDistanceKm >= 10 ? 0 : 1)} km x ${core.formatCurrencyVnd(appliedRate)}${
+          isLongDistance
+            ? ` (đã giảm ${Math.round(longDistanceDiscountRate * 100)}% khi vượt ${longDistanceThreshold}km)`
+            : ""
+        }`,
+        amount: transportBeforeMinimum,
       });
+      if (minimumFee > transportBeforeMinimum) {
+        addChargeLine({
+          label: "Bù phí tối thiểu",
+          detail: `Áp dụng mức tối thiểu của ${vehicleEntry.ten_hien_thi || "loại xe đã chọn"}: ${core.formatCurrencyVnd(minimumFee)}`,
+          amount: minimumFee - transportBeforeMinimum,
+        });
+      } else if (isLongDistance) {
+        notes.push(
+          `Quãng đường vượt ${longDistanceThreshold}km nên cước xe đã tự giảm ${Math.round(longDistanceDiscountRate * 100)}% theo đơn giá đường dài.`,
+        );
+      }
     } else {
       notes.push(
         "Chưa ghim đủ hai điểm trên bản đồ nên hệ thống chưa tính được cước xe theo km.",
@@ -396,13 +446,13 @@
       title: serviceData.ten_dich_vu || "Giá tạm tính",
       description:
         serviceData?.thong_tin_minh_bach?.tom_tat_tong_chi_phi ||
-        "Giá tạm tính đang bám theo số km di chuyển, loại xe và các phụ phí bạn đã chọn trong form.",
+        "Giá tạm tính đang bám theo số km di chuyển, loại xe, giảm giá đường dài và các phụ phí bạn đã chọn trong form.",
       optionCardsHtml,
       breakdownHtml,
       breakdownLines,
       total: vehicleEntry ? total : null,
       totalNote: vehicleEntry
-        ? "Giá tạm tính sẽ tự cập nhật ngay khi bạn đổi loại xe, thay đổi số km hoặc bật thêm phụ phí."
+        ? "Giá tạm tính sẽ tự cập nhật ngay khi bạn đổi loại xe, thay đổi số km, vượt ngưỡng 20km hoặc bật thêm phụ phí."
         : "Chọn loại xe trước để hệ thống tính giá tạm tính theo km.",
       notes,
     };
@@ -451,6 +501,7 @@
     const pricingServiceId = getPricingServiceId(serviceSelect?.value || "");
 
     if (!pricingServiceId) {
+      updateDistancePricingBadge(scope, core, null);
       if (defaultBlock) defaultBlock.hidden = false;
       if (contentBlock) {
         contentBlock.hidden = true;
@@ -493,6 +544,7 @@
       : null;
 
     if (!serviceData) {
+      updateDistancePricingBadge(scope, core, null);
       if (defaultBlock) defaultBlock.hidden = false;
       if (contentBlock) {
         contentBlock.hidden = true;
@@ -544,6 +596,7 @@
             ? "Chưa đủ dữ liệu"
             : core.formatCurrencyVnd(pricingState.total);
     }
+    updateDistancePricingBadge(scope, core, pricingState.total);
     if (totalHint) {
       totalHint.textContent = pricingState.totalNote;
     }

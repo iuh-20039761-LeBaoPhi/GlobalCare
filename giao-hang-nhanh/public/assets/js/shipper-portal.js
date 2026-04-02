@@ -156,7 +156,12 @@
   function normalizeMockBreakdown(rawBreakdown, shippingFee) {
     const breakdown = rawBreakdown || {};
     return {
-      base_price: Number(breakdown.base_price ?? breakdown.basePrice ?? 0),
+      base_price: Number(
+        breakdown.base_price ??
+          breakdown.tong_gia_van_chuyen ??
+          breakdown.basePrice ??
+          0,
+      ),
       overweight_fee: Number(
         breakdown.overweight_fee ?? breakdown.overweightFee ?? 0,
       ),

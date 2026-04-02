@@ -361,26 +361,26 @@
   "phuong_tien": [
     {
       "key": "xe_may",
+      "he_so_xe": 1,
       "label": "Xe máy",
-      "multiplier": 1,
       "description": "Mức chuẩn, không cộng thêm"
     },
     {
       "key": "xe_loi",
+      "he_so_xe": 2,
       "label": "Xe lôi / xe ba gác",
-      "multiplier": 2,
       "description": "Phần vận chuyển tăng gấp 2 lần"
     },
     {
       "key": "xe_ban_tai",
+      "he_so_xe": 2.8,
       "label": "Xe bán tải / xe van",
-      "multiplier": 2.8,
       "description": "Phần vận chuyển tăng gấp 2,8 lần"
     },
     {
       "key": "xe_tai",
+      "he_so_xe": 4,
       "label": "Xe tải nhẹ",
-      "multiplier": 4,
       "description": "Phần vận chuyển tăng gấp 4 lần"
     }
   ],

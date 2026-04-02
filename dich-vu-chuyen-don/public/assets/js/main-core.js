@@ -92,6 +92,12 @@
         slug: String(item?.slug || "").trim(),
         ten_hien_thi: String(item?.ten || "").trim(),
         gia_moi_km: Number(item?.gia_moi_km || 0),
+        gia_moi_km_duong_dai: Number(item?.gia_moi_km_duong_dai || 0),
+        phi_toi_thieu: Number(item?.phi_toi_thieu || 0),
+        nguong_km_giam_gia: Number(item?.nguong_km_giam_gia || 20),
+        ty_le_giam_gia_duong_dai: Number(
+          item?.ty_le_giam_gia_duong_dai || 0,
+        ),
       }));
     }
     return [];

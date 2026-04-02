@@ -122,9 +122,48 @@
         margin-left: auto;
         margin-right: auto;
       }
+      .pricing-clarity-box {
+        max-width: 920px;
+        margin-left: auto;
+        margin-right: auto;
+      }
+      .pricing-clarity-grid {
+        max-width: 920px;
+        margin: 0 auto 32px;
+        display: grid;
+        grid-template-columns: repeat(4, minmax(0, 1fr));
+        gap: 18px;
+      }
+      .pricing-clarity-card {
+        min-height: 100%;
+        padding: 22px 20px;
+        border-radius: 18px;
+        display: flex;
+        flex-direction: column;
+        justify-content: flex-start;
+      }
+      .pricing-clarity-card h4 {
+        font-size: 16px;
+        margin-bottom: 10px;
+      }
+      .pricing-clarity-card p {
+        font-size: 13.5px;
+      }
       @media (max-width: 768px) {
         .pricing-card-grid--examples {
           grid-template-columns: 1fr !important;
+        }
+        .pricing-clarity-grid {
+          grid-template-columns: repeat(2, minmax(0, 1fr));
+          gap: 14px;
+        }
+        .pricing-clarity-card {
+          padding: 18px 16px;
+        }
+      }
+      @media (max-width: 560px) {
+        .pricing-clarity-grid {
+          grid-template-columns: 1fr;
         }
       }
     </style>
@@ -141,10 +180,10 @@
             Bảng giá minh bạch và tự tính cước trên cùng một trang
           </h1>
           <p class="subpage-hero__desc">
-            Xem rõ 5 nhóm phí, công thức tính cước và ví dụ minh họa trước khi
-            tạo đơn. Tất cả 4 gói dịch vụ đều có thể phát sinh thêm phụ phí thời
-            gian và phụ phí thời tiết tùy theo điều kiện thực tế. Mức giá trên
-            trang là giá tham khảo trước khi điều phối thực tế.
+            Xem rõ công thức tính cước, loại xe áp dụng và các phụ phí phát
+            sinh trước khi tạo đơn. Gói Giao hàng ngay lập tức được tính đơn
+            giản theo Km, loại xe và hệ số xăng; các gói còn lại vẫn hiển thị
+            để bạn so sánh nhanh trước khi đặt đơn.
           </p>
           <div class="subpage-hero__actions">
             <a href="#bang-gia" class="btn-primary">Xem bảng giá</a>
@@ -168,18 +207,12 @@
         <div class="pricing-formula-banner">
           <div class="pricing-formula-inner">
             <span class="formula-icon">📊</span>
-            <p class="formula-title">5 nhóm phí của một đơn hàng</p>
+            <p class="formula-title">4 nhóm chi phí chính của một đơn hàng</p>
             <div class="formula-equation">
               <span
                 class="formula-term formula-tab-btn term-base active"
                 data-tab="tab-base"
                 >Phí vận chuyển chính</span
-              >
-              <span class="formula-op">+</span>
-              <span
-                class="formula-term formula-tab-btn term-weight"
-                data-tab="tab-weight"
-                >Phí trọng lượng & kích thước</span
               >
               <span class="formula-op">+</span>
               <span
@@ -197,14 +230,14 @@
               <span
                 class="formula-term formula-tab-btn term-vehicle"
                 data-tab="tab-vehicle"
-                >Phí xe</span
+                >Điều chỉnh phương tiện</span
               >
             </div>
             <p class="formula-caption">
-              Bên dưới là cách gom toàn bộ chi phí về 5 nhóm để khách dễ hiểu.
-              Trong đó phụ phí dịch vụ gồm COD và các khoản thời gian/thời
-              tiết/điều kiện giao vận cho tất cả các gói dịch vụ. Toàn bộ đều là
-              giá tham khảo trước khi xác nhận đơn.
+              Bên dưới là cách gom toàn bộ chi phí về 4 nhóm để khách dễ hiểu.
+              Khối lượng và kích thước hiện dùng để gợi ý loại xe phù hợp,
+              không còn dùng công thức thể tích phức tạp để cộng phí riêng trên
+              trang tra cứu này.
             </p>
           </div>
         </div>
@@ -267,44 +300,46 @@
               style="margin-top: 30px"
               id="note-service-multipliers"
             >
-              <p>Đang tải cấu hình hệ số dịch vụ...</p>
+              <p>Đang tải nguyên tắc tính giá giao hàng ngay lập tức...</p>
             </div>
           </div>
 
           <div class="pricing-tab-panel" id="tab-weight">
             <p class="tab-desc">
-              Hệ thống tính theo <strong>trọng lượng thực tế</strong> hoặc
-              <strong>trọng lượng thể tích</strong>, lấy giá trị nào lớn hơn.
+              Hệ thống hiện dùng <strong>trọng lượng thực tế</strong> và
+              <strong>kích thước kiện hàng</strong> để gợi ý loại xe phù hợp,
+              không còn dùng công thức quy đổi thể tích để cộng cước.
             </p>
             <div class="weight-rule-box">
               <div class="weight-rule-item">
                 <span class="weight-rule-icon">⚖️</span>
                 <div>
                   <strong>Trọng lượng thực tế</strong>
-                  <p>Cân như thường, đơn vị kg.</p>
+                  <p>Dùng để gợi ý xe máy, xe 4 bánh nhỏ, vừa hoặc lớn.</p>
                 </div>
               </div>
-              <div class="weight-rule-vs">VS</div>
+              <div class="weight-rule-vs">+</div>
               <div class="weight-rule-item">
                 <span class="weight-rule-icon">📦</span>
                 <div>
-                  <strong>Trọng lượng thể tích</strong>
+                  <strong>Kích thước kiện hàng</strong>
                   <p>
-                    Dài (cm) × Rộng (cm) × Cao (cm) ÷ <strong>6.000</strong>
+                    Dùng để kiểm tra xe máy có chở hợp lệ hay phải đổi sang xe
+                    4 bánh.
                   </p>
                 </div>
               </div>
             </div>
             <div class="weight-threshold-box">
               <p id="pricing-weight-summary">
-                Đang tải ngưỡng trọng lượng miễn phí...
+                Đang tải quy tắc gợi ý phương tiện...
               </p>
-              <p>Mỗi <strong>0,5 kg vượt ngưỡng</strong>, tính thêm:</p>
+              <p>Nguyên tắc áp dụng trên trang tra giá:</p>
               <ul id="pricing-weight-excess-list">
-                <li>Đang tải dữ liệu vượt cân...</li>
+                <li>Đang tải quy tắc khối lượng và kích thước...</li>
               </ul>
               <div class="weight-example" id="pricing-weight-example">
-                Đang tải ví dụ trọng lượng...
+                Đang tải ví dụ gợi ý xe...
               </div>
             </div>
           </div>
@@ -404,9 +439,9 @@
 
           <div class="pricing-tab-panel" id="tab-vehicle">
             <p class="tab-desc">
-              Phí xe được chốt ở bước đặt đơn. Hệ thống sẽ gợi ý xe phù hợp theo
-              khối lượng, kích thước và loại hàng; nếu bạn đổi sang xe lớn hơn,
-              phần vận chuyển sẽ được nhân theo hệ số tương ứng.
+              Hệ thống đang dùng 4 loại xe đã chuẩn hóa: xe máy, xe 4 bánh nhỏ,
+              xe 4 bánh vừa và xe tải. Nếu đổi sang xe lớn hơn, phần vận
+              chuyển sẽ được nhân theo hệ số của loại xe đó.
             </p>
             <div class="pricing-table-wrapper">
               <table class="pricing-table">
@@ -431,9 +466,10 @@
                   <h4>Khi nào hệ thống gợi ý xe lớn?</h4>
                 </div>
                 <ul class="pricing-info-list">
-                  <li>Hàng cồng kềnh hoặc kích thước dài nhất quá lớn.</li>
-                  <li>Khối lượng tính cước vượt mức xe máy phù hợp.</li>
-                  <li>Hàng cần không gian hoặc tải trọng chuyên dụng hơn.</li>
+                  <li>≤ 50kg và gọn hàng: có thể đi xe máy.</li>
+                  <li>Quá 50kg hoặc hàng quá khổ: chuyển sang xe 4 bánh nhỏ.</li>
+                  <li>≤ 1200kg: gợi ý xe 4 bánh vừa.</li>
+                  <li>> 1200kg: gợi ý xe tải.</li>
                 </ul>
               </div>
               <div class="pricing-info-card">
@@ -495,8 +531,8 @@
             <div>
               <h3>Ví dụ hoàn chỉnh ra tổng tiền cuối</h3>
               <p>
-                Một ví dụ đủ 5 nhóm phí để khách nhìn là hiểu cách cộng tiền,
-                không cần tự suy luận từ nhiều bảng khác nhau.
+                Một ví dụ đủ 4 nhóm chi phí chính để khách nhìn là hiểu cách
+                cộng tiền, không cần tự suy luận từ nhiều bảng khác nhau.
               </p>
             </div>
           </div>
@@ -517,7 +553,7 @@
           <div class="pricing-clarity-box__head">
             <span>🔎</span>
             <div>
-              <h3>Muốn đọc kỹ hơn? Đây là 5 nhóm phí theo ngôn ngữ đơn giản</h3>
+              <h3>Muốn đọc kỹ hơn? Đây là 4 nhóm chi phí theo ngôn ngữ đơn giản</h3>
               <p>
                 Phần này dành cho khách muốn hiểu vì sao giá tăng hoặc giảm
                 trước khi tự tra cước.
@@ -530,22 +566,18 @@
               <p>Tiền nền theo Vùng (cố định) hoặc theo Km (linh hoạt).</p>
             </article>
             <article class="pricing-clarity-card">
-              <h4>2. Trọng lượng & kích thước</h4>
-              <p>Lấy mức lớn hơn giữa cân thực và cân thể tích.</p>
-            </article>
-            <article class="pricing-clarity-card">
-              <h4>3. Phụ phí hàng hóa</h4>
+              <h4>2. Phụ phí hàng hóa</h4>
               <p>Áp dụng khi hàng cần xử lý đặc biệt hoặc mua bảo hiểm.</p>
             </article>
             <article class="pricing-clarity-card">
-              <h4>4. Phụ phí dịch vụ</h4>
+              <h4>3. Phụ phí dịch vụ</h4>
               <p>
                 Gồm COD và, nếu là giao tức thời, cả phụ phí thời gian lẫn phụ
                 phí thời tiết.
               </p>
             </article>
             <article class="pricing-clarity-card">
-              <h4>5. Phí phương tiện</h4>
+              <h4>4. Điều chỉnh phương tiện</h4>
               <p>Phát sinh khi cần đổi sang xe lớn hơn xe gợi ý ban đầu.</p>
             </article>
           </div>
@@ -561,7 +593,7 @@
             <h3>Đã biết gói phù hợp?</h3>
             <p>
               Nhập tuyến gửi nhận và thông tin hàng hóa bên dưới để hệ thống trả
-              ra giá tham khảo ngay theo đúng 5 nhóm phí.
+              ra giá tham khảo ngay theo công thức và loại xe đang áp dụng.
             </p>
           </div>
           <a href="#quick-quote" class="btn-primary">Tra giá ngay</a>
@@ -723,10 +755,9 @@
             </div>
             <div class="quote-span-2">
               <p class="quote-note">
-                Công cụ này giúp bạn so sánh nhanh 5 nhóm phí. Cả 4 gói dùng
-                chung logic phụ phí dịch vụ, chỉ khác phần phí vận chuyển. Ở
-                bước tra nhanh, hệ thống chưa cộng phụ phí dịch vụ và phí
-                phương tiện nên kết quả là giá tham khảo.
+                Công cụ này giúp bạn so sánh nhanh công thức tính giá, loại xe
+                và các phụ phí chính. Ở bước tra nhanh, hệ thống trả về giá
+                tham khảo để bạn đối chiếu trước khi sang màn đặt đơn chi tiết.
               </p>
             </div>
           </div>
