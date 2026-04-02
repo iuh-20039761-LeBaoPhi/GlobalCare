@@ -8,6 +8,35 @@ if (!function_exists('kh_header_escape')) {
     }
 }
 
+if (!function_exists('kh_avatar_path')) {
+    function kh_avatar_path(string $value): string
+    {
+        $avatar = trim(str_replace('\\', '/', $value));
+        if ($avatar === '') {
+            return '../assets/logomvb.png';
+        }
+
+        if (preg_match('/^(https?:)?\/\//i', $avatar) || strpos($avatar, 'data:image/') === 0) {
+            return $avatar;
+        }
+
+        if (strpos($avatar, '../') === 0) {
+            return $avatar;
+        }
+
+        $assetPos = strpos($avatar, 'assets/');
+        if ($assetPos !== false) {
+            return '../' . ltrim(substr($avatar, $assetPos), '/');
+        }
+
+        if (strpos($avatar, './') === 0) {
+            $avatar = substr($avatar, 2);
+        }
+
+        return '../' . ltrim($avatar, '/');
+    }
+}
+
 if (!function_exists('render_khach_hang_header_styles')) {
     function render_khach_hang_header_styles(): void
     {
@@ -84,10 +113,7 @@ if (!function_exists('render_khach_hang_header')) {
         }
 
         $phone = trim((string)($user['sodienthoai'] ?? ''));
-        $avatar = trim((string)($user['anh_dai_dien'] ?? ''));
-        if ($avatar === '') {
-            $avatar = '../assets/logomvb.png';
-        }
+        $avatar = kh_avatar_path((string)($user['anh_dai_dien'] ?? ''));
 
         $nameEsc = kh_header_escape($name);
         $phoneEsc = kh_header_escape($phone);

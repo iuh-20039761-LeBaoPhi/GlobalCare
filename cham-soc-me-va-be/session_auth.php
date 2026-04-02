@@ -49,9 +49,14 @@ function normalize_user(array $rawUser, string $accountType, string $sourceTable
     $name = trim((string)($rawUser['ten'] ?? $rawUser['hovaten'] ?? $rawUser['ho_ten'] ?? $rawUser['name'] ?? ''));
     $phone = trim((string)($rawUser['sodienthoai'] ?? $rawUser['so_dien_thoai'] ?? $rawUser['phone'] ?? ''));
     $role = trim((string)($rawUser['vai_tro'] ?? $rawUser['role'] ?? ''));
+    $accountStatus = trim((string)($rawUser['trangthai'] ?? $rawUser['trang_thai'] ?? $rawUser['status'] ?? ''));
 
     if ($role === '') {
         $role = $accountType === 'nhan_vien' ? 'nhan_vien' : 'khach_hang';
+    }
+
+    if ($accountType === 'nhan_vien' && $accountStatus === '') {
+        $accountStatus = 'active';
     }
 
     return array_merge($rawUser, [
@@ -64,6 +69,7 @@ function normalize_user(array $rawUser, string $accountType, string $sourceTable
         'vai_tro' => $role,
         'loai_tai_khoan' => $accountType,
         'bang_nguon' => $sourceTable,
+        'trangthai' => $accountStatus,
     ]);
 }
 
@@ -137,6 +143,7 @@ if ($action === 'login') {
     $_SESSION['user_name'] = $user['ten'];
     $_SESSION['user_phone'] = $user['sodienthoai'];
     $_SESSION['user_role'] = $user['vai_tro'];
+    $_SESSION['user_status'] = (string)($user['trangthai'] ?? '');
     $_SESSION['last_activity'] = time();
 
     json_response(200, [

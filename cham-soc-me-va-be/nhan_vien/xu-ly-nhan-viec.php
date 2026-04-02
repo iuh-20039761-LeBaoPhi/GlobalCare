@@ -51,7 +51,20 @@ function nhanViecHoaDon(int $invoiceId, int $nhanVienId): array
     }
 
     $invoiceResult = getHoaDonData($invoiceId);
-    $invoice = is_array($invoiceResult['row'] ?? null) ? $invoiceResult['row'] : [];
+    $invoice = is_array($invoiceResult['row'] ?? null) ? $invoiceResult['row'] : null;
+
+    if (!is_array($invoice)) {
+        return ['success' => false, 'message' => 'Khong tim thay hoa don can nhan viec.'];
+    }
+
+    if (!invoice_in_employee_scope($invoice, $nhanVienId)) {
+        return ['success' => false, 'message' => 'Hoa don nay da duoc nhan boi nhan vien khac.'];
+    }
+
+    $assignedId = (int)($invoice['id_nhacungcap'] ?? 0);
+    if ($assignedId === $nhanVienId) {
+        return ['success' => true, 'message' => 'Hoa don nay ban da nhan truoc do.'];
+    }
 
     $statusKey = 'trangthai';
     foreach (['trangthai', 'trang_thai', 'status'] as $candidate) {
@@ -73,6 +86,11 @@ function nhanViecHoaDon(int $invoiceId, int $nhanVienId): array
 }
 
 $user = session_user_require_employee('../login.html', 'nhan_vien/danh-sach-hoa-don.php');
+
+if (!employee_account_is_approved((string)($user['trangthai'] ?? ''))) {
+    header('Location: danh-sach-hoa-don.php?ok=0&msg=' . rawurlencode('Tai khoan cua ban dang cho duyet'));
+    exit;
+}
 
 if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
     header('Location: danh-sach-hoa-don.php');

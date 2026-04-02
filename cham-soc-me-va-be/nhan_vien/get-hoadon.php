@@ -143,3 +143,40 @@ function getHoaDonData(?int $invoiceId = null): array
         'row' => $row,
     ];
 }
+
+/** Kiem tra trang thai tai khoan nhan vien da duyet hay chua. */
+function employee_account_is_approved(string $status): bool
+{
+    $raw = strtolower(trim($status));
+    return in_array($raw, ['active', 'approved', 'da_duyet', 'da duyet', 'đã duyệt'], true);
+}
+
+/** Kiem tra hoa don da o trang thai huy hay chua. */
+function invoice_is_cancelled(array $invoice): bool
+{
+    $raw = strtolower(trim((string)($invoice['trangthai'] ?? '')));
+    return in_array($raw, ['huy_don', 'huy don', 'huy', 'da_huy', 'da huy', 'đã hủy', 'cancelled', 'canceled'], true);
+}
+
+/** Hoa don hop le voi nhan vien: chua ai nhan hoac do chinh nhan vien da nhan. */
+function invoice_in_employee_scope(array $invoice, int $employeeId): bool
+{
+    if ($employeeId <= 0) {
+        return false;
+    }
+
+    if (invoice_is_cancelled($invoice)) {
+        return false;
+    }
+
+    $assignedId = (int)($invoice['id_nhacungcap'] ?? 0);
+    return $assignedId <= 0 || $assignedId === $employeeId;
+}
+
+/** Loc danh sach hoa don theo pham vi duoc xem cua nhan vien. */
+function filter_invoices_for_employee(array $rows, int $employeeId): array
+{
+    return array_values(array_filter($rows, static function ($item) use ($employeeId): bool {
+        return is_array($item) && invoice_in_employee_scope($item, $employeeId);
+    }));
+}

@@ -7,9 +7,18 @@ require_once __DIR__ . '/header-shared.php';
 
 $sessionUser = session_user_require_employee('../login.html', 'nhan_vien/danh-sach-hoa-don.php');
 
-$result = getHoaDonData();
-$rows = $result['rows'] ?? [];
-$loadError = (string)($result['error'] ?? '');
+$employeeId = (int)($sessionUser['id'] ?? 0);
+$employeeStatus = (string)($sessionUser['trangthai'] ?? '');
+$isEmployeeApproved = employee_account_is_approved($employeeStatus);
+
+$rows = [];
+$loadError = '';
+
+if ($isEmployeeApproved) {
+    $result = getHoaDonData();
+    $loadError = (string)($result['error'] ?? '');
+    $rows = filter_invoices_for_employee($result['rows'] ?? [], $employeeId);
+}
 $flashOk = isset($_GET['ok']) ? ((string)$_GET['ok'] === '1') : null;
 $flashMsg = trim((string)($_GET['msg'] ?? ''));
 
@@ -92,6 +101,7 @@ foreach ($rows as $row) {
     $startDate = trim((string)($row['ngay_bat_dau'] ?? ''));
     $statusRaw = trim((string)($row['trangthai'] ?? ''));
     $phone = trim((string)($row['sodienthoai'] ?? ''));
+    $assignedId = (int)($row['id_nhacungcap'] ?? 0);
 
     $meta = status_meta($statusRaw);
 
@@ -111,6 +121,7 @@ foreach ($rows as $row) {
         'statusText' => (string)$meta['text'],
         'statusClass' => (string)$meta['class'],
         'isReceived' => ((string)$meta['key'] === 'received'),
+        'assignedId' => $assignedId,
     ];
 }
 
@@ -295,6 +306,9 @@ $summaryTotal = count($normalizedRows);
 
     <section class="card panel-soft mb-3">
         <div class="card-body p-3 p-lg-4">
+            <?php if (!$isEmployeeApproved): ?>
+                <div class="alert alert-warning mb-0">Tài khoản của bạn đang chờ duyệt</div>
+            <?php else: ?>
             <div class="d-flex flex-column flex-lg-row justify-content-between align-items-lg-center gap-2 mb-3">
                 <div>
                     <h1 class="h4 fw-bold mb-1">Danh sách hóa đơn</h1>
@@ -422,7 +436,7 @@ $summaryTotal = count($normalizedRows);
                                     <td><span class="badge rounded-pill <?= esc($item['statusClass']) ?>"><?= esc($item['statusText']) ?></span></td>
                                     <td>
                                         <div class="action-group">
-                                            <?php if (!$item['isReceived']): ?>
+                                            <?php if (!$item['isReceived'] && (int)$item['assignedId'] <= 0): ?>
                                                 <form method="post" action="xu-ly-nhan-viec.php" class="d-inline">
                                                     <input type="hidden" name="invoice_id" value="<?= esc($item['id']) ?>">
                                                     <button type="submit" class="btn btn-success btn-action"><i class="bi bi-hand-thumbs-up"></i>Nhan viec</button>
@@ -439,6 +453,7 @@ $summaryTotal = count($normalizedRows);
                     </table>
                 </div>
             </div>
+            <?php endif; ?>
         </div>
     </section>
 </main>

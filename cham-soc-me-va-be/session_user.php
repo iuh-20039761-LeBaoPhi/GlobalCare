@@ -71,6 +71,7 @@ function session_user_current(): array
 			'ten' => (string)($user['ten'] ?? ($_SESSION['user_name'] ?? '')),
 			'sodienthoai' => (string)($user['sodienthoai'] ?? ($_SESSION['user_phone'] ?? '')),
 			'vai_tro' => (string)($user['vai_tro'] ?? ($_SESSION['user_role'] ?? '')),
+			'trangthai' => (string)($user['trangthai'] ?? ($_SESSION['user_status'] ?? '')),
 			'anh_dai_dien' => (string)($user['anh_dai_dien'] ?? ''),
 			'dia_chi' => (string)($user['dia_chi'] ?? ''),
 			'loai_tai_khoan' => (string)($user['loai_tai_khoan'] ?? ''),
