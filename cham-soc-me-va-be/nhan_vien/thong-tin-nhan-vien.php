@@ -3,20 +3,20 @@ declare(strict_types=1);
 
 require_once __DIR__ . '/../session_user.php';
 require_once __DIR__ . '/header-shared.php';
-require_once __DIR__ . '/get-khach-hang.php';
+require_once __DIR__ . '/get-nhan-vien.php';
 
-$sessionUser = session_user_require_customer('../login.html', 'khach_hang/thong-tin-khach-hang.php');
+$sessionUser = session_user_require_employee('../login.html', 'nhan_vien/thong-tin-nhan-vien.php');
 $flashOk = isset($_GET['ok']) ? ((string)$_GET['ok'] === '1') : null;
 $flashMsg = trim((string)($_GET['msg'] ?? ''));
 
 /** Escape output for HTML. */
-function esc_profile(string $value): string
+function esc_nv(string $value): string
 {
     return htmlspecialchars($value, ENT_QUOTES, 'UTF-8');
 }
 
 /** Convert DB image path to browser source. */
-function profile_asset_url(string $path): string
+function nv_asset_url(string $path): string
 {
     $value = trim(str_replace('\\', '/', $path));
     if ($value === '') {
@@ -35,35 +35,36 @@ function profile_asset_url(string $path): string
 }
 
 /** Read text field with fallback. */
-function profile_text(array $row, string $key, string $fallback = '-'): string
+function nv_text(array $row, string $key, string $fallback = '-'): string
 {
     $value = trim((string)($row[$key] ?? ''));
     return $value !== '' ? $value : $fallback;
 }
 
-$customerResult = getKhachHangBySessionId($sessionUser['id'] ?? 0);
-$customer = is_array($customerResult['row'] ?? null) ? $customerResult['row'] : [];
-$loadError = (string)($customerResult['error'] ?? '');
+$employeeResult = getNhanVienBySessionId($sessionUser['id'] ?? 0);
+$employee = is_array($employeeResult['row'] ?? null) ? $employeeResult['row'] : [];
+$loadError = (string)($employeeResult['error'] ?? '');
 
-$customerId = (int)($customer['id'] ?? ($sessionUser['id'] ?? 0));
-$fullName = profile_text($customer, 'hovaten', profile_text($customer, 'ten', 'Khach hang'));
-$email = profile_text($customer, 'email');
-$phone = profile_text($customer, 'sodienthoai');
-$password = profile_text($customer, 'matkhau', '');
-$address = profile_text($customer, 'diachi');
-$birthDate = profile_text($customer, 'ngaysinh');
-$createdDate = profile_text($customer, 'created_date', profile_text($customer, 'created_at'));
+$employeeId = (int)($employee['id'] ?? ($sessionUser['id'] ?? 0));
+$fullName = nv_text($employee, 'hovaten', nv_text($employee, 'ten', 'Nhan vien'));
+$email = nv_text($employee, 'email');
+$phone = nv_text($employee, 'sodienthoai');
+$password = nv_text($employee, 'matkhau', '');
+$address = nv_text($employee, 'diachi');
+$birthDate = nv_text($employee, 'ngaysinh');
+$experience = nv_text($employee, 'kinh_nghiem', 'Chua cap nhat');
+$createdDate = nv_text($employee, 'created_date', nv_text($employee, 'created_at'));
 
-$avatarPath = trim((string)($customer['anh_dai_dien'] ?? ''));
-$cccdFrontPath = trim((string)($customer['cccd_mat_truoc'] ?? ''));
-$cccdBackPath = trim((string)($customer['cccd_mat_sau'] ?? ''));
+$avatarPath = trim((string)($employee['anh_dai_dien'] ?? ''));
+$cccdFrontPath = trim((string)($employee['cccd_mat_truoc'] ?? ''));
+$cccdBackPath = trim((string)($employee['cccd_mat_sau'] ?? ''));
 
-$avatarUrl = profile_asset_url($avatarPath);
-$cccdFrontUrl = profile_asset_url($cccdFrontPath);
-$cccdBackUrl = profile_asset_url($cccdBackPath);
+$avatarUrl = nv_asset_url($avatarPath);
+$cccdFrontUrl = nv_asset_url($cccdFrontPath);
+$cccdBackUrl = nv_asset_url($cccdBackPath);
 
-$statusRaw = strtolower(trim((string)($customer['trangthai'] ?? 'active')));
-$statusText = $statusRaw === 'pending' ? 'Dang cho duyet' : 'Dang hoat dong';
+$statusRaw = strtolower(trim((string)($employee['trangthai'] ?? 'active')));
+$statusText = $statusRaw === 'pending' ? 'Dang cho duyet' : ($statusRaw === 'blocked' ? 'Bi khoa' : 'Dang hoat dong');
 $statusClass = $statusRaw === 'pending' ? ' pending' : '';
 ?>
 <!DOCTYPE html>
@@ -71,30 +72,16 @@ $statusClass = $statusRaw === 'pending' ? ' pending' : '';
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Thong Tin Khach Hang</title>
+    <title>Thong Tin Nhan Vien</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
     <link href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-    <?php render_khach_hang_header_styles(); ?>
+    <?php render_nhan_vien_header_styles(); ?>
     <style>
-        :root {
-            --bg-a: #eef6ff;
-            --bg-b: #f8fbff;
-            --ink: #0f172a;
-            --sub: #64748b;
-            --line: #dbe7f5;
-            --card: #ffffff;
-            --shadow: 0 18px 45px rgba(30, 64, 175, 0.12);
-            --primary: #1453b8;
-            --primary-2: #1a73e8;
-        }
         body {
             font-family: 'Be Vietnam Pro', sans-serif;
-            background:
-                radial-gradient(1200px 500px at 10% -10%, #dbeafe 0%, transparent 55%),
-                radial-gradient(900px 440px at 100% 0%, #d1fae5 0%, transparent 52%),
-                linear-gradient(180deg, var(--bg-a) 0%, var(--bg-b) 100%);
-            color: var(--ink);
+            background: linear-gradient(180deg, #eef4ff 0%, #f8fbff 100%);
+            color: #0f172a;
             min-height: 100vh;
         }
         .page-wrap {
@@ -103,14 +90,14 @@ $statusClass = $statusRaw === 'pending' ? ' pending' : '';
             padding: 14px;
         }
         .profile-shell {
-            border: 1px solid var(--line);
+            border: 1px solid #dbe7f5;
             border-radius: 20px;
-            background: var(--card);
-            box-shadow: var(--shadow);
+            background: #fff;
+            box-shadow: 0 18px 45px rgba(30, 64, 175, 0.12);
             overflow: hidden;
         }
         .profile-head {
-            background: linear-gradient(110deg, var(--primary) 0%, var(--primary-2) 65%, #37a1ff 100%);
+            background: linear-gradient(110deg, #1453b8 0%, #1a73e8 65%, #37a1ff 100%);
             color: #fff;
             padding: 24px;
             display: flex;
@@ -159,7 +146,7 @@ $statusClass = $statusRaw === 'pending' ? ' pending' : '';
             color: #0b2454;
         }
         .muted {
-            color: var(--sub);
+            color: #64748b;
         }
         .status-pill {
             display: inline-flex;
@@ -200,14 +187,6 @@ $statusClass = $statusRaw === 'pending' ? ' pending' : '';
             color: #0f172a;
             word-break: break-word;
         }
-        .password-view {
-            min-height: 34px;
-            border-radius: 8px;
-            border: 1px solid #d5deeb;
-            padding: 6px 10px;
-            font-size: 0.94rem;
-            background: #fff;
-        }
         .path-text {
             font-size: 0.8rem;
             color: #64748b;
@@ -242,24 +221,24 @@ $statusClass = $statusRaw === 'pending' ? ' pending' : '';
 </head>
 <body>
 <main class="page-wrap">
-    <?php render_khach_hang_header($sessionUser, 'Thong tin khach hang'); ?>
+    <?php render_nhan_vien_header($sessionUser, 'Thong tin nhan vien'); ?>
 
     <?php if ($flashMsg !== ''): ?>
         <div class="alert <?= $flashOk ? 'alert-success' : 'alert-warning' ?> py-2" role="alert">
-            <?= esc_profile($flashMsg) ?>
+            <?= esc_nv($flashMsg) ?>
         </div>
     <?php endif; ?>
 
     <?php if ($loadError !== ''): ?>
-        <div class="alert alert-danger py-2" role="alert"><?= esc_profile($loadError) ?></div>
+        <div class="alert alert-danger py-2" role="alert"><?= esc_nv($loadError) ?></div>
     <?php endif; ?>
 
     <section class="profile-shell">
         <div class="profile-head">
             <div>
-                <h1><i class="bi bi-person-vcard me-2"></i>Thong Tin Ca Nhan</h1>
+                <h1><i class="bi bi-person-badge me-2"></i>Thong Tin Nhan Vien</h1>
             </div>
-            <a class="btn btn-light btn-soft" href="sua-thong-tin-khach-hang.php">
+            <a class="btn btn-light btn-soft" href="sua-thong-tin-nhan-vien.php">
                 <i class="bi bi-pencil-square me-1"></i> Sua thong tin
             </a>
         </div>
@@ -269,18 +248,18 @@ $statusClass = $statusRaw === 'pending' ? ' pending' : '';
                 <div class="col-12 col-lg-4">
                     <div class="card-soft">
                         <div class="card-body text-center">
-                            <img class="avatar" src="<?= esc_profile($avatarUrl) ?>" alt="avatar khach hang">
-                            <div class="name"><?= esc_profile($fullName) ?></div>
-                            <div class="muted"><?= esc_profile($phone) ?></div>
+                            <img class="avatar" src="<?= esc_nv($avatarUrl) ?>" alt="avatar nhan vien">
+                            <div class="name"><?= esc_nv($fullName) ?></div>
+                            <div class="muted"><?= esc_nv($phone) ?></div>
                             <div class="mt-2">
-                                <span class="status-pill<?= esc_profile($statusClass) ?>"><?= esc_profile($statusText) ?></span>
+                                <span class="status-pill<?= esc_nv($statusClass) ?>"><?= esc_nv($statusText) ?></span>
                             </div>
                             <div class="mt-3 d-grid gap-2">
-                                <a class="btn btn-primary btn-soft" href="sua-thong-tin-khach-hang.php">
+                                <a class="btn btn-primary btn-soft" href="sua-thong-tin-nhan-vien.php">
                                     <i class="bi bi-sliders2 me-1"></i> Cap nhat ngay
                                 </a>
                                 <a class="btn btn-outline-secondary btn-soft" href="danh-sach-hoa-don.php">
-                                    <i class="bi bi-receipt me-1"></i> Xem hoa don
+                                    <i class="bi bi-receipt me-1"></i> Danh sach hoa don
                                 </a>
                             </div>
                         </div>
@@ -291,49 +270,34 @@ $statusClass = $statusRaw === 'pending' ? ' pending' : '';
                     <div class="card-soft">
                         <div class="card-body">
                             <div class="d-flex align-items-center justify-content-between mb-3">
-                                <h2 class="h5 mb-0 fw-bold">Chi tiet tai khoan</h2>
+                                <h2 class="h5 mb-0 fw-bold">Chi tiet tai khoan nhan vien</h2>
+                                
                             </div>
 
                             <div class="info-grid">
                                 <div class="info-item">
                                     <div class="info-label">Ho va ten</div>
-                                    <div class="info-value"><?= esc_profile($fullName) ?></div>
+                                    <div class="info-value"><?= esc_nv($fullName) ?></div>
                                 </div>
                                 <div class="info-item">
                                     <div class="info-label">So dien thoai</div>
-                                    <div class="info-value"><?= esc_profile($phone) ?></div>
+                                    <div class="info-value"><?= esc_nv($phone) ?></div>
                                 </div>
                                 <div class="info-item">
                                     <div class="info-label">Email</div>
-                                    <div class="info-value"><?= esc_profile($email) ?></div>
+                                    <div class="info-value"><?= esc_nv($email) ?></div>
                                 </div>
                                 <div class="info-item">
                                     <div class="info-label">Dia chi</div>
-                                    <div class="info-value"><?= esc_profile($address) ?></div>
+                                    <div class="info-value"><?= esc_nv($address) ?></div>
                                 </div>
                                 <div class="info-item">
                                     <div class="info-label">Ngay sinh</div>
-                                    <div class="info-value"><?= esc_profile($birthDate) ?></div>
-                                </div>
-                                <!-- <div class="info-item">
-                                    <div class="info-label">Mat khau</div>
-                                    <div class="password-view"><?= esc_profile($password) ?></div>
+                                    <div class="info-value"><?= esc_nv($birthDate) ?></div>
                                 </div>
                                 <div class="info-item">
-                                    <div class="info-label">Anh dai dien (duong dan)</div>
-                                    <div class="path-text"><?= esc_profile($avatarPath !== '' ? $avatarPath : '-') ?></div>
-                                </div>
-                                <div class="info-item">
-                                    <div class="info-label">CCCD mat truoc (duong dan)</div>
-                                    <div class="path-text"><?= esc_profile($cccdFrontPath !== '' ? $cccdFrontPath : '-') ?></div>
-                                </div>
-                                <div class="info-item">
-                                    <div class="info-label">CCCD mat sau (duong dan)</div>
-                                    <div class="path-text"><?= esc_profile($cccdBackPath !== '' ? $cccdBackPath : '-') ?></div>
-                                </div> -->
-                                <div class="info-item">
-                                    <div class="info-label">Ngay tao</div>
-                                    <div class="info-value"><?= esc_profile($createdDate) ?></div>
+                                    <div class="info-label">Mo ta kinh nghiem</div>
+                                    <div class="info-value"><?= esc_nv($experience) ?></div>
                                 </div>
                             </div>
 
@@ -341,24 +305,24 @@ $statusClass = $statusRaw === 'pending' ? ' pending' : '';
                                 <div class="col-12 col-md-4">
                                     <div class="media-item">
                                         <div class="small fw-semibold mb-2">Anh dai dien</div>
-                                        <a href="<?= esc_profile($avatarUrl) ?>" target="_blank" rel="noopener noreferrer">
-                                            <img src="<?= esc_profile($avatarUrl) ?>" alt="anh dai dien">
+                                        <a href="<?= esc_nv($avatarUrl) ?>" target="_blank" rel="noopener noreferrer">
+                                            <img src="<?= esc_nv($avatarUrl) ?>" alt="anh dai dien">
                                         </a>
                                     </div>
                                 </div>
                                 <div class="col-12 col-md-4">
                                     <div class="media-item">
                                         <div class="small fw-semibold mb-2">CCCD mat truoc</div>
-                                        <a href="<?= esc_profile($cccdFrontUrl) ?>" target="_blank" rel="noopener noreferrer">
-                                            <img src="<?= esc_profile($cccdFrontUrl) ?>" alt="cccd mat truoc">
+                                        <a href="<?= esc_nv($cccdFrontUrl) ?>" target="_blank" rel="noopener noreferrer">
+                                            <img src="<?= esc_nv($cccdFrontUrl) ?>" alt="cccd mat truoc">
                                         </a>
                                     </div>
                                 </div>
                                 <div class="col-12 col-md-4">
                                     <div class="media-item">
                                         <div class="small fw-semibold mb-2">CCCD mat sau</div>
-                                        <a href="<?= esc_profile($cccdBackUrl) ?>" target="_blank" rel="noopener noreferrer">
-                                            <img src="<?= esc_profile($cccdBackUrl) ?>" alt="cccd mat sau">
+                                        <a href="<?= esc_nv($cccdBackUrl) ?>" target="_blank" rel="noopener noreferrer">
+                                            <img src="<?= esc_nv($cccdBackUrl) ?>" alt="cccd mat sau">
                                         </a>
                                     </div>
                                 </div>

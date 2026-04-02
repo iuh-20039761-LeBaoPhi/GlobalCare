@@ -3,7 +3,7 @@ declare(strict_types=1);
 
 require_once __DIR__ . '/../session_user.php';
 require_once __DIR__ . '/header-shared.php';
-require_once __DIR__ . '/get-khach-hang.php';
+require_once __DIR__ . '/get-nhan-vien.php';
 
 /** Escape HTML output. */
 function esc_edit(string $value): string
@@ -30,25 +30,26 @@ function asset_url(string $path): string
     return '../' . ltrim($value, '/');
 }
 
-$sessionUser = session_user_require_customer('../login.html', 'khach_hang/sua-thong-tin-khach-hang.php');
+$sessionUser = session_user_require_employee('../login.html', 'nhan_vien/sua-thong-tin-nhan-vien.php');
 $flashOk = isset($_GET['ok']) ? ((string)$_GET['ok'] === '1') : null;
 $flashMsg = trim((string)($_GET['msg'] ?? ''));
 
-$customerId = (int)($sessionUser['id'] ?? 0);
-$load = getKhachHangBySessionId($customerId);
-$customer = is_array($load['row'] ?? null) ? $load['row'] : [];
+$employeeId = (int)($sessionUser['id'] ?? 0);
+$load = getNhanVienBySessionId($employeeId);
+$employee = is_array($load['row'] ?? null) ? $load['row'] : [];
 $loadError = (string)($load['error'] ?? '');
 
-$fullName = trim((string)($customer['hovaten'] ?? ''));
-$email = trim((string)($customer['email'] ?? ''));
-$phone = trim((string)($customer['sodienthoai'] ?? ''));
-$password = trim((string)($customer['matkhau'] ?? ''));
-$address = trim((string)($customer['diachi'] ?? ''));
-$birthDate = trim((string)($customer['ngaysinh'] ?? ''));
+$fullName = trim((string)($employee['hovaten'] ?? ''));
+$email = trim((string)($employee['email'] ?? ''));
+$phone = trim((string)($employee['sodienthoai'] ?? ''));
+$password = trim((string)($employee['matkhau'] ?? ''));
+$address = trim((string)($employee['diachi'] ?? ''));
+$birthDate = trim((string)($employee['ngaysinh'] ?? ''));
+$experience = trim((string)($employee['kinh_nghiem'] ?? ''));
 
-$avatarPath = trim((string)($customer['anh_dai_dien'] ?? ''));
-$cccdFrontPath = trim((string)($customer['cccd_mat_truoc'] ?? ''));
-$cccdBackPath = trim((string)($customer['cccd_mat_sau'] ?? ''));
+$avatarPath = trim((string)($employee['anh_dai_dien'] ?? ''));
+$cccdFrontPath = trim((string)($employee['cccd_mat_truoc'] ?? ''));
+$cccdBackPath = trim((string)($employee['cccd_mat_sau'] ?? ''));
 
 $isDisabled = $loadError !== '';
 ?>
@@ -57,11 +58,11 @@ $isDisabled = $loadError !== '';
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Sua Thong Tin Khach Hang</title>
+    <title>Sua Thong Tin Nhan Vien</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
     <link href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-    <?php render_khach_hang_header_styles(); ?>
+    <?php render_nhan_vien_header_styles(); ?>
     <style>
         body {
             font-family: 'Be Vietnam Pro', sans-serif;
@@ -161,7 +162,7 @@ $isDisabled = $loadError !== '';
 </head>
 <body>
 <main class="page-wrap">
-    <?php render_khach_hang_header($sessionUser, 'Sua thong tin khach hang'); ?>
+    <?php render_nhan_vien_header($sessionUser, 'Sua thong tin nhan vien'); ?>
 
     <?php if ($flashMsg !== ''): ?>
         <div class="alert <?= $flashOk ? 'alert-success' : 'alert-warning' ?> py-2" role="alert">
@@ -175,15 +176,19 @@ $isDisabled = $loadError !== '';
 
     <section class="edit-shell">
         <div class="edit-head">
-            <h1><i class="bi bi-pencil-square me-2"></i>Cap Nhat Thong Tin Ca Nhan</h1>
+            <h1><i class="bi bi-pencil-square me-2"></i>Cap Nhat Thong Tin Nhan Vien</h1>
         </div>
         <div class="edit-body">
-            <form class="form-box" method="post" action="xu-ly-sua-thong-tin-khach-hang.php" enctype="multipart/form-data">
+            <form class="form-box" method="post" action="xu-ly-sua-thong-tin-nhan-vien.php" enctype="multipart/form-data">
                 <input type="hidden" name="existing_anh_dai_dien" value="<?= esc_edit($avatarPath) ?>">
                 <input type="hidden" name="existing_cccd_mat_truoc" value="<?= esc_edit($cccdFrontPath) ?>">
                 <input type="hidden" name="existing_cccd_mat_sau" value="<?= esc_edit($cccdBackPath) ?>">
 
                 <div class="row g-3">
+                    <!-- <div class="col-12 col-md-6">
+                        <label class="form-label">ID nhan vien</label>
+                        <input type="text" class="form-control" value="<?= (int)$employeeId ?>" readonly>
+                    </div> -->
                     <div class="col-12 col-md-6">
                         <label for="hovaten" class="form-label">Ho va ten *</label>
                         <input type="text" class="form-control" id="hovaten" name="hovaten" maxlength="120" required value="<?= esc_edit($fullName) ?>" <?= $isDisabled ? 'disabled' : '' ?>>
@@ -208,6 +213,10 @@ $isDisabled = $loadError !== '';
                         <label for="ngaysinh" class="form-label">Ngay sinh *</label>
                         <input type="date" class="form-control" id="ngaysinh" name="ngaysinh" required value="<?= esc_edit($birthDate) ?>" <?= $isDisabled ? 'disabled' : '' ?>>
                     </div>
+                    <div class="col-12">
+                        <label for="kinh_nghiem" class="form-label">Mo ta kinh nghiem *</label>
+                        <textarea class="form-control" id="kinh_nghiem" name="kinh_nghiem" rows="3" required <?= $isDisabled ? 'disabled' : '' ?>><?= esc_edit($experience) ?></textarea>
+                    </div>
                     <div class="col-12 col-md-4">
                         <label for="anh_dai_dien" class="form-label">Anh dai dien moi</label>
                         <input type="file" class="form-control" id="anh_dai_dien" name="anh_dai_dien" accept="image/*" <?= $isDisabled ? 'disabled' : '' ?>>
@@ -226,14 +235,17 @@ $isDisabled = $loadError !== '';
                     <div class="preview-card">
                         <div class="small fw-semibold">Anh dai dien hien tai</div>
                         <img src="<?= esc_edit(asset_url($avatarPath)) ?>" alt="anh dai dien">
+                        <!-- <div class="path-text"><?= esc_edit($avatarPath !== '' ? $avatarPath : '-') ?></div> -->
                     </div>
                     <div class="preview-card">
                         <div class="small fw-semibold">CCCD mat truoc hien tai</div>
                         <img src="<?= esc_edit(asset_url($cccdFrontPath)) ?>" alt="cccd mat truoc">
+                        <!-- <div class="path-text"><?= esc_edit($cccdFrontPath !== '' ? $cccdFrontPath : '-') ?></div> -->
                     </div>
                     <div class="preview-card">
                         <div class="small fw-semibold">CCCD mat sau hien tai</div>
                         <img src="<?= esc_edit(asset_url($cccdBackPath)) ?>" alt="cccd mat sau">
+                        <!-- <div class="path-text"><?= esc_edit($cccdBackPath !== '' ? $cccdBackPath : '-') ?></div> -->
                     </div>
                 </div>
 
@@ -241,7 +253,7 @@ $isDisabled = $loadError !== '';
                     <button type="submit" class="btn btn-primary btn-soft" <?= $isDisabled ? 'disabled' : '' ?>>
                         <i class="bi bi-check2-circle me-1"></i> Luu thay doi
                     </button>
-                    <a class="btn btn-outline-secondary btn-soft" href="thong-tin-khach-hang.php">
+                    <a class="btn btn-outline-secondary btn-soft" href="thong-tin-nhan-vien.php">
                         <i class="bi bi-arrow-left me-1"></i> Quay lai thong tin
                     </a>
                 </div>
