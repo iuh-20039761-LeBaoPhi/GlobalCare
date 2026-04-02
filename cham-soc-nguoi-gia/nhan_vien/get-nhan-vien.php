@@ -72,7 +72,7 @@ function get_nhan_vien_by_id(int $employeeId): ?array
         return null;
     }
 
-    $rows = nv_list_table_rows('nhacungcap_mevabe');
+    $rows = nv_list_table_rows('nhacungcap_nguoigia');
     foreach ($rows as $row) {
         if ((int)($row['id'] ?? 0) === $employeeId) {
             return $row;
@@ -101,7 +101,7 @@ function getNhanVienBySessionId($sessionEmployeeId): array
     if (!is_array($employee)) {
         return [
             'success' => false,
-            'error' => 'Khong tim thay du lieu nhan vien trong bang nhacungcap_mevabe.',
+            'error' => 'Khong tim thay du lieu nhan vien trong bang nhacungcap_nguoigia.',
             'row' => null,
         ];
     }

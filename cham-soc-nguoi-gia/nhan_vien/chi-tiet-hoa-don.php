@@ -18,7 +18,7 @@ function fetchNhanVienById(int $nhanVienId): ?array
 	}
 
 	$url = 'https://api.dvqt.vn/list/';
-	$payload = json_encode(['table' => 'nhacungcap_mevabe'], JSON_UNESCAPED_UNICODE);
+	$payload = json_encode(['table' => 'nhacungcap_nguoigia'], JSON_UNESCAPED_UNICODE);
 	if ($payload === false) {
 		return null;
 	}

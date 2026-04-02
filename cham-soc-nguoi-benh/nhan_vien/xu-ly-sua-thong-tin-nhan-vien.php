@@ -218,7 +218,7 @@ $data = [
 
 $updateResult = krud_call([
     'action' => 'update',
-    'table' => 'nhacungcap_mevabe',
+    'table' => 'nhacungcap_nguoibenh',
     'id' => $employeeId,
     'data' => $data,
 ]);
