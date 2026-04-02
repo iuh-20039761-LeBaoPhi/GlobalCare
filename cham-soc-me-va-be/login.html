@@ -247,6 +247,11 @@
             return 'Tài khoản hiện không thể đăng nhập';
         }
 
+        function isPendingStatus(status) {
+            const s = String(status || '').toLowerCase();
+            return ['pending', 'cho_duyet', 'cho duyet', 'chờ duyệt'].includes(s);
+        }
+
         // Luu thong tin dang nhap len session server dung chung.
         async function saveLoginSession(loginPayload) {
             const response = await fetch('session_auth.php?action=login', {
@@ -307,7 +312,11 @@
                     throw new Error('Không tìm thấy tài khoản với số điện thoại này');
                 }
 
-                const allowMessage = statusMessage(account.trangthai || account.trang_thai || account.status);
+                const accountStatus = account.trangthai || account.trang_thai || account.status;
+                let allowMessage = statusMessage(accountStatus);
+                if (accountType === 'nhan_vien' && isPendingStatus(accountStatus)) {
+                    allowMessage = '';
+                }
                 if (allowMessage) {
                     throw new Error(allowMessage);
                 }
@@ -324,6 +333,7 @@
                     id: account.id || account.ID || account.ma || '',
                     ten: account.ten || name,
                     sodienthoai: phone,
+                    trangthai: account.trangthai || account.trang_thai || account.status || '',
                     vai_tro: loginConfig.role,
                     loai_tai_khoan: accountType,
                     bang_nguon: loginConfig.table,

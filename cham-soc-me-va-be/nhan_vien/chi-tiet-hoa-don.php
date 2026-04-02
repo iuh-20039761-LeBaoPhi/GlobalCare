@@ -7,6 +7,10 @@ require_once __DIR__ . '/header-shared.php';
 
 $sessionUser = session_user_require_employee('../login.html', 'nhan_vien/chi-tiet-hoa-don.php' . (isset($_GET['id']) ? ('?id=' . urlencode((string)$_GET['id'])) : ''));
 
+$sessionEmployeeId = (int)($sessionUser['id'] ?? 0);
+$employeeStatus = (string)($sessionUser['trangthai'] ?? '');
+$isEmployeeApproved = employee_account_is_approved($employeeStatus);
+
 function fetchNhanVienById(int $nhanVienId): ?array
 {
 	if ($nhanVienId <= 0) {
@@ -67,21 +71,32 @@ function fetchNhanVienById(int $nhanVienId): ?array
 }
 
 $invoiceId = (int)($_GET['id'] ?? 0);
-$result = getHoaDonData($invoiceId > 0 ? $invoiceId : null);
-$invoice = $result['row'] ?? null;
-$loadError = (string)($result['error'] ?? '');
+$invoice = null;
+$loadError = '';
 
-if ($invoiceId <= 0) {
+if (!$isEmployeeApproved) {
+	$loadError = 'Tài khoản của bạn đang chờ duyệt';
+} elseif ($invoiceId <= 0) {
 	$loadError = 'Thiếu mã hóa đơn để hiển thị chi tiết.';
-}
-if ($invoiceId > 0 && !$invoice && $loadError === '') {
-	$loadError = 'Không tìm thấy hóa đơn tương ứng.';
+} else {
+	$result = getHoaDonData($invoiceId);
+	$invoice = $result['row'] ?? null;
+	$loadError = (string)($result['error'] ?? '');
+
+	if (!$invoice && $loadError === '') {
+		$loadError = 'Không tìm thấy hóa đơn tương ứng.';
+	}
+
+	if (is_array($invoice) && !invoice_in_employee_scope($invoice, $sessionEmployeeId)) {
+		$invoice = null;
+		$loadError = 'Bạn không có quyền xem hóa đơn này.';
+	}
 }
 
 $employeeProfile = null;
 if ($loadError === '' && is_array($invoice)) {
-	$employeeId = (int)($invoice['id_nhacungcap'] ?? 0);
-	$employeeProfile = $employeeId > 0 ? fetchNhanVienById($employeeId) : null;
+	$assignedEmployeeId = (int)($invoice['id_nhacungcap'] ?? 0);
+	$employeeProfile = $assignedEmployeeId > 0 ? fetchNhanVienById($assignedEmployeeId) : null;
 }
 ?>
 <!DOCTYPE html>

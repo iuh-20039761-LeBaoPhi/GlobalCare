@@ -99,7 +99,7 @@
       : [];
     const formulaSummary =
       transparentInfo.tom_tat_tong_chi_phi ||
-      "Tổng tiền = Số km di chuyển x Giá mỗi km theo loại xe + Các phụ phí nếu có";
+      "Tổng tiền = max(Phí tối thiểu, Số km di chuyển x Giá mỗi km theo loại xe x Hệ số đường dài) + Các phụ phí nếu có";
     const factorCards = buildPricingFactorCards(serviceData);
     const pricingOverviewUrl = core.toProjectUrl("bang-gia-chuyen-don.html");
     const vehicleOptions = core.getPricingVehicleEntries(serviceData);
@@ -122,7 +122,7 @@
               Tóm tắt cách tính giá
             </span>
             <h3 class="pricing-formula-summary__title">
-              Dịch vụ này được tính theo km và phụ phí phát sinh
+              Dịch vụ này được tính theo km, phí tối thiểu và phụ phí phát sinh
             </h3>
             <p class="pricing-formula-summary__description">
               ${formulaSummary}
@@ -130,12 +130,12 @@
             ${
               startingVehicle
                 ? `<div class="pricing-formula-summary__starting">
-                    <p class="pricing-formula-summary__label">Giá theo km thấp nhất</p>
+                    <p class="pricing-formula-summary__label">Đơn giá xe thấp nhất</p>
                     <div class="pricing-formula-summary__starting-row">
                       <p class="pricing-formula-summary__starting-name">${startingVehicle.ten_hien_thi}</p>
                       <p class="pricing-formula-summary__starting-price">${formatCurrency(startingVehicle.gia_moi_km)}</p>
                     </div>
-                    <p class="pricing-formula-summary__starting-note">Cước xe được tính trực tiếp theo tổng số km di chuyển nhân với đơn giá của loại xe đã chọn.</p>
+                    <p class="pricing-formula-summary__starting-note">Cước xe được tính theo số km, tự giảm giá khi vượt 20km và luôn so với mức phí tối thiểu của loại xe đã chọn.</p>
                   </div>`
                 : ""
             }

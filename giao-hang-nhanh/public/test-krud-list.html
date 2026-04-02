@@ -111,6 +111,34 @@ th {
 <script src="https://api.dvqt.vn/js/krud.js"></script>
 
 <script>
+function formatKrudOrderDateCode(value) {
+    const date = value ? new Date(value) : new Date();
+    if (Number.isNaN(date.getTime())) {
+        return formatKrudOrderDateCode(new Date());
+    }
+    return [
+        date.getFullYear(),
+        String(date.getMonth() + 1).padStart(2, "0"),
+        String(date.getDate()).padStart(2, "0")
+    ].join("");
+}
+
+function buildKrudSystemOrderCode(row) {
+    const explicitCode = String(
+        row?.ma_don_hang_noi_bo || row?.ma_don_hang || row?.order_code || ""
+    ).trim();
+    if (/^GHN-\d{8}-\d{7}$/i.test(explicitCode)) {
+        return explicitCode.toUpperCase();
+    }
+
+    const numericId = Number(row?.id || row?.insertId || row?.insert_id || row?.record_id || 0);
+    if (!Number.isFinite(numericId) || numericId <= 0) {
+        return explicitCode;
+    }
+
+    return `GHN-${formatKrudOrderDateCode(row?.created_at)}-${String(Math.trunc(Math.abs(numericId))).padStart(7, "0")}`;
+}
+
 const TABLE_CONFIGS = [
     {
         key: "orders",
@@ -120,7 +148,7 @@ const TABLE_CONFIGS = [
         emptyMessage: "Chua co don dat lich.",
         matchesKeyword(row, keyword) {
             const stack = [
-                row.ma_don_hang_noi_bo,
+                buildKrudSystemOrderCode(row),
                 row.ho_ten_nguoi_gui,
                 row.ho_ten_nguoi_nhan,
                 row.so_dien_thoai_nguoi_gui,
@@ -131,7 +159,7 @@ const TABLE_CONFIGS = [
         columns: [
             {
                 label: "Ma don",
-                render: (row) => row.ma_don_hang_noi_bo || row.order_code || row.id || ""
+                render: (row) => buildKrudSystemOrderCode(row)
             },
             {
                 label: "Nguoi gui",

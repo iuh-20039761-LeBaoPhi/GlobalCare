@@ -143,7 +143,12 @@
   function normalizeMockBreakdown(rawBreakdown, shippingFee) {
     const breakdown = rawBreakdown || {};
     return {
-      base_price: Number(breakdown.base_price ?? breakdown.basePrice ?? 0),
+      base_price: Number(
+        breakdown.base_price ??
+          breakdown.tong_gia_van_chuyen ??
+          breakdown.basePrice ??
+          0,
+      ),
       overweight_fee: Number(
         breakdown.overweight_fee ?? breakdown.overweightFee ?? 0,
       ),
@@ -882,15 +887,15 @@
   function renderFeeBreakdownRows(breakdown, shippingFee) {
     const rows = [
       { label: "Phí vận chuyển", value: breakdown.base_price || 0 },
-      { label: "Phí trọng lượng vượt mức", value: breakdown.overweight_fee || 0 },
-      { label: "Phí thể tích", value: breakdown.volume_fee || 0 },
       { label: "Phụ phí loại hàng", value: breakdown.goods_fee || 0 },
-      { label: "Phí khung giờ", value: breakdown.time_fee || 0 },
-      { label: "Phụ phí điều kiện thực tế", value: breakdown.condition_fee || 0 },
-      { label: "Phí phương tiện", value: breakdown.vehicle_fee || 0 },
+      { label: "Phụ phí khung giờ", value: breakdown.time_fee || 0 },
+      { label: "Phụ phí thời tiết", value: breakdown.condition_fee || 0 },
+      { label: "Điều chỉnh theo xe", value: breakdown.vehicle_fee || 0 },
       { label: "Phí COD", value: breakdown.cod_fee || 0 },
       { label: "Phí bảo hiểm", value: breakdown.insurance_fee || 0 },
-    ].filter((item) => Number(item.value || 0) > 0);
+    ].filter((item, index) =>
+      index < 5 ? true : Number(item.value || 0) > 0,
+    );
 
     if (!rows.length) {
       rows.push({

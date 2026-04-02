@@ -254,7 +254,6 @@
     const toDistrict = String(extras.toDistrict || "").trim();
     const quoteDomestic =
       (window.QUOTE_SHIPPING_DATA && window.QUOTE_SHIPPING_DATA.domestic) || {};
-    const instantMeta = (quoteDomestic.services || {}).instant || {};
     const instantDistance = quoteDomestic.distanceConfig || {};
     const localServiceMap = {
       standard: { name: "Giao tiêu chuẩn", basePrice: 30000 },
@@ -262,10 +261,7 @@
       express: { name: "Giao hỏa tốc", basePrice: 50000 },
       instant: {
         name: "Giao ngay lập tức",
-        basePrice:
-          toPositiveNumber(instantDistance.base_price, 0) *
-            Math.max(toPositiveNumber(instantMeta.serviceMultiplier, 1), 1) ||
-          65000,
+        basePrice: toPositiveNumber(instantDistance.base_price, 65000) || 65000,
       },
     };
 
@@ -295,7 +291,14 @@
     if (quoteMatch) {
       const breakdown = quoteMatch.serviceQuote.breakdown || {};
       return {
-        basePrice: toPositiveNumber(breakdown.basePrice, 0),
+        basePrice: toPositiveNumber(
+          breakdown.tong_gia_van_chuyen ?? breakdown.basePrice,
+          0,
+        ),
+        tong_gia_van_chuyen: toPositiveNumber(
+          breakdown.tong_gia_van_chuyen ?? breakdown.basePrice,
+          0,
+        ),
         weightFee: toPositiveNumber(breakdown.weightFee, 0),
         goodsFee: toPositiveNumber(
           breakdown.goodsFee ?? breakdown.goodsAdjustedFee,
@@ -352,6 +355,7 @@
 
       return {
         basePrice: domesticBase,
+        tong_gia_van_chuyen: domesticBase,
         weightFee: Math.max(domesticShipFee - domesticBase, 0),
         codFee: domesticAddon,
         regionFee: 0,
@@ -383,6 +387,7 @@
 
     return {
       basePrice: scaledBase,
+      tong_gia_van_chuyen: scaledBase,
       weightFee: scaledWeight,
       codFee,
       regionFee,

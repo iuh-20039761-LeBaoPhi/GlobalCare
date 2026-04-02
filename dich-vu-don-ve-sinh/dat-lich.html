@@ -1,4 +1,4 @@
-<!doctype html>
+﻿<!doctype html>
 <html lang="vi">
   <head>
     <meta charset="UTF-8" />
@@ -178,36 +178,7 @@
   </head>
   <body>
     <div style="font-family: &quot;Quicksand&quot;, sans-serif">
-      <nav class="navbar navbar-expand-lg navbar-light bg-white sticky-top shadow-sm py-3">
-        <div class="container">
-          <a class="navbar-brand d-flex align-items-center gap-2 fw-bold fs-3" href="../index.html" style="color: #007bff">
-            <img style="width: 80px; height: 60px" src="assets/logo-he-thong.png" alt="Dịch Vụ Dọn Vệ Sinh" />
-          </a>
-
-          <span class="fw-bold text-primary">Dịch Vụ Dọn Vệ Sinh</span>
-
-          <a class="navbar-brand d-flex align-items-center gap-2 fw-bold fs-3" href="index.html" style="color: #007bff">
-            <img style="width: 80px; height: 60px" src="assets/logo_main.png" alt="Dịch Vụ Dọn Vệ Sinh" />
-          </a>
-
-          <button class="navbar-toggler border-0" type="button" id="menuToggle" data-bs-toggle="collapse" data-bs-target="#navMenu">
-            <span class="navbar-toggler-icon"></span>
-          </button>
-
-          <div class="collapse navbar-collapse justify-content-end" id="navMenu">
-            <ul class="navbar-nav align-items-center gap-3">
-              <li class="nav-item">
-                <a class="nav-link fw-bold px-3 active" href="index.html" style="color: #007bff; font-size: larger">Trang Chủ</a>
-              </li>
-              <li class="nav-item"><a class="nav-link fw-bold px-3" href="gioi-thieu.html">Giới Thiệu</a></li>
-              <li class="nav-item"><a class="nav-link fw-bold px-3" href="dich-vu.html">Dịch Vụ</a></li>
-              <li class="nav-item"><a class="nav-link fw-bold px-3" href="dieu-khoan.html">Điều Khoản</a></li>
-              <li class="nav-item"><a class="nav-link fw-bold px-3" href="cam-nang.html">Cẩm Nang</a></li>
-              <li class="nav-item"><a class="nav-link fw-bold px-3" href="lien-he.html">Liên Hệ</a></li>
-            </ul>
-          </div>
-        </div>
-      </nav>
+      <div id="site-header"></div>
 
     <section class="py-5" style="background: linear-gradient(135deg, #e3f2fd 0%, #ffffff 50%, #e8f4ff 100%)">
       <div class="container py-lg-4">
@@ -274,10 +245,15 @@
                     <label class="form-label">Chọn dịch vụ</label>
                     <select id="serviceSelector" class="form-select"></select>
                   </div>
-
+                  <div class="mb-2">
+                    <label class="form-label">Chọn nơi dọn:</label>
+                    <select id="serviceLoai" class="form-select"></select>
+                  </div>
                   <div>
                     <label class="form-label"><i class="fas fa-grip-horizontal me-1" style="color: #4f9ddb"></i>Chọn công việc cần làm</label>
-                    <div id="serviceJobs"></div>
+                    <div id="serviceJobs">
+                      <div id="serviceJobsList" class="list-group"></div>
+                    </div>
                   </div>
                 </div>
                 <div class="mb-3 extra-request-box">
@@ -287,7 +263,31 @@
                 <div class="schedule-box">
                   <div class="mb-2">
                     <label class="form-label fw-bold" style="color: #1f2a37"><i class="fas fa-clock me-1" style="color: #2f93df"></i>Chọn khung giờ</label>
-                    <div id="servicePackages"></div>
+                    <div id="servicePackages">
+                      <div id="areaLevelSection" class="row g-2 mb-2 d-none">
+                        <div class="col-md-6">
+                          <label class="form-label fw-bold" for="serviceArea">Diện tích (m²)</label>
+                          <input type="number" min="1" id="serviceArea" class="form-control" placeholder="Ví dụ: 80" />
+                        </div>
+                        <div class="col-md-6">
+                          <label class="form-label fw-bold" for="serviceLevel">Mức độ vệ sinh</label>
+                          <select id="serviceLevel" class="form-select">
+                            <option value="light">Nhẹ (light)</option>
+                            <option value="standard" selected>Tiêu chuẩn (standard)</option>
+                            <option value="deep">Sâu (deep)</option>
+                          </select>
+                        </div>
+                      </div>
+
+                      <div id="packageSection" class="mb-2 d-none">
+                        <div id="packageList" class="list-group"></div>
+                      </div>
+
+                      <div id="timeSlotSection" class="mb-2 d-none">
+                        <label class="form-label fw-bold" for="timeSlotSelect">Khung giờ ưu tiên</label>
+                        <select id="timeSlotSelect" class="form-select"></select>
+                      </div>
+                    </div>
                   </div>
 
                   <div id="shiftInfoBox" class="alert alert-info py-2 px-3 small d-none"></div>
@@ -448,6 +448,7 @@
                   <h6 class="fw-bold mb-3 review-section-title">Chi tiết đặt lịch</h6>
                   <div class="row g-2 small">
                     <div class="col-12 review-row"><span class="review-label">Dịch vụ:</span><span id="reviewService" class="review-value">-</span></div>
+                    <div class="col-12 review-row"><span class="review-label">Nơi dọn:</span><span id="reviewLoai" class="review-value">-</span></div>
                     <div class="col-12 review-row"><span class="review-label">Gói dịch vụ:</span><span id="reviewPackage" class="review-value">-</span></div>
                     <div class="col-12"><strong>Công việc:</strong><div id="reviewJobs" class="mt-1">-</div></div>
                     <div class="col-12 review-row"><span class="review-label">Ngày bắt đầu:</span><span id="reviewStartDate" class="review-value">-</span></div>
@@ -501,78 +502,30 @@
       </div>
     </section>
 
-      <footer class="bg-dark text-white pt-5 pb-3">
-        <div class="container">
-          <div class="row g-4 mb-4">
-            <div class="col-lg-4">
-              <h3 class="h4 fw-bold mb-3" style="color: #007bff">Dịch Vụ Dọn Vệ Sinh</h3>
-              <p class="opacity-75">Hệ thống cung cấp dịch vụ dọn vệ sinh nhà cửa và văn phòng chuyên nghiệp hàng đầu tại Việt Nam.</p>
-              <p class="opacity-75">CÔNG TY TNHH DỊCH VỤ QUANH TA KERI <br>MST: 0315609853</p>
-              <p class="opacity-75 small">Địa chỉ: Tòa Nhà Sbi, Lô 6b, Đường Số 3, Công Viên Phần Mềm Quang Trung, Phường Tân Chánh Hiệp, Quận 12, TP. Hồ Chí Minh</p>
-              
-              <h4 class="h5 fw-bold mt-4 mb-3">Liên Hệ</h4>
-              <p class="mb-1 opacity-75 small"><i class="fas fa-phone me-2"></i> 0775472347</p>
-              <p class="mb-1 opacity-75 small"><i class="fas fa-envelope me-2"></i> dichvuquanhta.vn@gmail.com</p>
-            </div>
+      <div id="site-footer"></div>
+    <script src="https://api.dvqt.vn/js/krud.js"></script>
+    <script>
+      if (typeof krud === 'undefined') {
+        console.warn('krud chưa load, tạo fallback');
 
-            <div class="col-lg-2">
-              <h4 class="h5 fw-bold mb-3">Liên Kết</h4>
-              <ul class="list-unstyled">
-                  <li class="mb-2"><a href="dich-vu.html" class="text-white text-decoration-none opacity-75">Dịch Vụ</a></li>
-                  <li class="mb-2"><a href="lien-he.html" class="text-white text-decoration-none opacity-75">Liên Hệ</a></li>
-                  <li class="mb-2"><a href="../dich-vu-don-ve-sinh/" class="text-white text-decoration-none opacity-75" target="_blank">Lau Dọn Vệ Sinh</a></li>
-                  <li class="mb-2"><a href="../cham-soc-me-va-be/" class="text-white text-decoration-none opacity-75" target="_blank">Chăm Sóc Mẹ & Bé</a></li>
-                  <li class="mb-2"><a href="../cham-soc-vuon-nha/" class="text-white text-decoration-none opacity-75" target="_blank">Chăm Sóc Vườn & Rẫy</a></li>
-                  <li class="mb-2"><a href="../giat-ui-nhanh/" class="text-white text-decoration-none opacity-75" target="_blank">Giặt Ủi Cao Cấp</a></li>
-                  <li class="mb-2"><a href="../tho-nha/" class="text-white text-decoration-none opacity-75" target="_blank">Thợ Nhà & Sửa Chữa</a></li>
-                  <li class="mb-2"><a href="../cham-soc-nguoi-gia/" class="text-white text-decoration-none opacity-75" target="_blank">Chăm Sóc Người Già</a></li>
-                  <li class="mb-2"><a href="../cham-soc-nguoi-benh/" class="text-white text-decoration-none opacity-75" target="_blank">Chăm Sóc Bệnh Nhân</a></li>
-                  <li class="mb-2"><a href="../giao-hang-nhanh/" class="text-white text-decoration-none opacity-75" target="_blank">Giao Hàng Nhanh</a></li>
-              </ul>
-            </div>
- 
-            <div class="col-lg-3">
-              <h4 class="h5 fw-bold mb-3">Theo Dõi</h4>
-              <div class="d-flex gap-2">
-                <a href="#" class="btn btn-outline-light btn-sm rounded-circle"><i class="fab fa-facebook-f"></i></a>
-                <a href="#" class="btn btn-outline-light btn-sm rounded-circle"><i class="fab fa-instagram"></i></a>
-                <a href="#" class="btn btn-outline-light btn-sm rounded-circle"><i class="fab fa-youtube"></i></a>
-                <a href="#" class="btn btn-outline-light btn-sm rounded-circle"><i class="fab fa-tiktok"></i></a>
-              </div>
+        const KRUD_API_URL = "https://api.dvqt.vn";
 
-              <div class="mt-4">
-                <h5 class="h6 fw-bold mb-3">Tải Ứng Dụng</h5>
-                <div class="d-flex gap-2 flex-wrap">
-                  <a href="#" class="btn btn-primary btn-sm d-flex align-items-center px-3 py-2" style="min-width: 130px;">
-                    <i data-lucide="apple" class="me-2" style="width: 18px;"></i>
-                    <div class="text-start lh-1">
-                      <small class="d-block" style="font-size: 8px;">Download on</small>
-                      <span class="fw-bold" style="font-size: 11px;">App Store</span>
-                    </div>
-                  </a>
-                  <a href="#" class="btn btn-warning btn-sm d-flex align-items-center px-3 py-2" style="min-width: 130px;">
-                    <i data-lucide="play" class="me-2" style="width: 18px;"></i>
-                    <div class="text-start lh-1">
-                      <small class="d-block" style="font-size: 8px;">Get it on</small>
-                      <span class="fw-bold" style="font-size: 11px;">Google Play</span>
-                    </div>
-                  </a>
-                </div>
-              </div>
-            </div>
-          </div>
+        function krud(action, table, data = {}, id = null) {
+          const payload = { action, table, data };
+          if (id !== null) payload.id = id;
 
-          <hr class="opacity-25" />
-          <p class="text-center small opacity-50 mb-0">
-            &copy; 2026 Dịch Vụ Dọn Vệ Sinh.
-          </p>
-        </div>
-      </footer>
-
-      <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
-      <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
-      <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
-
+          return fetch(KRUD_API_URL + "/krud/", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify(payload)
+          }).then(res => res.json());
+        }
+      }
+    </script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    <script src="driveUtil.js"></script>
     <script>
       var EMBEDDED_BOOKING_MODE = false;
       var PRESELECT_SERVICE_ID = '';
@@ -589,6 +542,7 @@
       var mapPickerMarker = null;
       var CUSTOMER_LOCATION = null;
 
+      // Chuc nang: xu ly nghiep vu cho buildAddressFromNominatim.
       function buildAddressFromNominatim(data, lat, lng) {
         if (data && data.address) {
           var a = data.address;
@@ -604,6 +558,7 @@
         return (data && data.display_name) || lat.toFixed(6) + ', ' + lng.toFixed(6);
       }
 
+      // Chuc nang: xu ly nghiep vu cho setPickedLocation.
       async function setPickedLocation(lat, lng) {
         var $address = $('#customerAddress');
         $address.attr('placeholder', 'Đang tải địa chỉ...');
@@ -635,6 +590,7 @@
         }
       }
 
+      // Chuc nang: xu ly nghiep vu cho ensureMapPickerInit.
       function ensureMapPickerInit() {
         if (typeof L === 'undefined') {
           alert('Không thể tải bản đồ. Vui lòng thử lại sau.');
@@ -660,6 +616,7 @@
         return true;
       }
 
+      // Chuc nang: xu ly nghiep vu cho toggleMapPicker.
       function toggleMapPicker() {
         var $box = $('#mapPickerBox');
         var $btn = $('#toggleMapBtn');
@@ -674,6 +631,7 @@
         }
       }
 
+      // Chuc nang: xu ly nghiep vu cho getLocation.
       function getLocation() {
         if (!navigator.geolocation) {
           alert('Trình duyệt của bạn không hỗ trợ định vị GPS.');
@@ -710,7 +668,6 @@
       }
 
       $(document).ready(async function () {
-        var SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbzAYI7UOZOtkwHjrA7eSx9jyCXOY7b06Vo-SAI4xoHvy_ocKZBYxbDOuHODO9ytfncZSw/exec';
         var SERVICES = [];
         var CURRENT_SERVICE = null;
         var LAST_CALC_RESULT = null;
@@ -726,6 +683,7 @@
         var DISTANCE_KM = 0;
         var DISTANCE_REQUEST_ID = 0;
 
+        // Chuc nang: xu ly nghiep vu cho renderDistanceInfo.
         function renderDistanceInfo(message, isError) {
           var $distanceInfo = $('#distanceInfo');
           if (!$distanceInfo.length) return;
@@ -735,6 +693,7 @@
             .toggleClass('text-muted', !isError);
         }
 
+        // Chuc nang: xu ly nghiep vu cho haversineKm.
         function haversineKm(from, to) {
           var R = 6371;
           var dLat = (to.lat - from.lat) * Math.PI / 180;
@@ -747,10 +706,12 @@
           return R * c;
         }
 
+        // Chuc nang: xu ly nghiep vu cho isValidCoordinate.
         function isValidCoordinate(value) {
           return typeof value === 'number' && Number.isFinite(value);
         }
 
+        // Chuc nang: xu ly nghiep vu cho getRouteDistanceKm.
         async function getRouteDistanceKm(origin, destination) {
           var routeUrl =
             'https://router.project-osrm.org/route/v1/driving/' +
@@ -771,6 +732,7 @@
           throw new Error('Không lấy được dữ liệu tuyến đường.');
         }
 
+        // Chuc nang: xu ly nghiep vu cho recalculateDistanceAndPrice.
         async function recalculateDistanceAndPrice() {
           var requestId = ++DISTANCE_REQUEST_ID;
 
@@ -822,6 +784,7 @@
 
         window.recalculateDistanceAndPrice = recalculateDistanceAndPrice;
 
+        // Chuc nang: xu ly nghiep vu cho isUserLoggedIn.
         function isUserLoggedIn() {
           try {
             var user = JSON.parse(localStorage.getItem('currentUser') || 'null');
@@ -831,15 +794,52 @@
           }
         }
 
+        // Chuc nang: xu ly nghiep vu cho getPricingType.
         function getPricingType() {
           return CURRENT_SERVICE && CURRENT_SERVICE.pricing ? CURRENT_SERVICE.pricing.type : '';
         }
 
+        // Chuc nang: xu ly nghiep vu cho hasVisibleTimeSlotSelector.
+        function hasVisibleTimeSlotSelector() {
+          var $slot = $('#timeSlotSelect');
+          var $section = $('#timeSlotSection');
+          return $slot.length && $section.length && !$section.hasClass('d-none') && $slot.find('option').length > 0;
+        }
+
+        // Chuc nang: xu ly nghiep vu cho getSelectedPackage.
         function getSelectedPackage() {
           var $pkg = $('.package-check:checked');
           return $pkg.length ? $pkg : null;
         }
 
+        // Chuc nang: xu ly nghiep vu cho renderServiceLoaiOptions.
+        function renderServiceLoaiOptions(service, selectedLoai) {
+          var $serviceLoai = $('#serviceLoai');
+          if (!$serviceLoai.length) return;
+
+          var loaiList = Array.isArray(service && service.loai) ? service.loai : [];
+          $serviceLoai.empty();
+
+          if (!loaiList.length) {
+            $serviceLoai.append($('<option>').val('').text('Chưa có loại nơi dọn'));
+            return;
+          }
+
+          loaiList.forEach(function (item) {
+            var value = String(item || '').trim();
+            if (!value) return;
+            $serviceLoai.append($('<option>').val(value).text(value));
+          });
+
+          if (selectedLoai) {
+            $serviceLoai.val(String(selectedLoai));
+          }
+          if (!$serviceLoai.val()) {
+            $serviceLoai.prop('selectedIndex', 0);
+          }
+        }
+
+        // Chuc nang: xu ly nghiep vu cho resetFormState.
         function resetFormState() {
           $('#startTime').val('');
           $('#endTime').val('');
@@ -863,9 +863,16 @@
           $('#basePrice').text('0 đ');
           $('#totalPrice').val('0 đ');
           $('#travelFee').text('0 đ');
+          $('#serviceArea').val('');
+          $('#serviceLevel').val('standard');
+          if ($('#timeSlotSelect').length) {
+            $('#timeSlotSelect').prop('selectedIndex', 0);
+          }
+          $('.package-check').prop('checked', false).closest('label').removeClass('active');
           LAST_CALC_RESULT = null;
         }
 
+        // Chuc nang: xu ly nghiep vu cho applyShiftHints.
         function applyShiftHints() {
           var type = getPricingType();
           var box = $('#shiftInfoBox');
@@ -889,13 +896,16 @@
           }
         }
 
+        // Chuc nang: xu ly nghiep vu cho updatePackageLockState.
         function updatePackageLockState() {
           $('.package-check').closest('label').removeClass('package-locked');
         }
 
+        // Chuc nang: xu ly nghiep vu cho validateTimeForShift.
         function validateTimeForShift() {
-          var slotVal = String($('#timeSlotSelect').val() || '');
-          var requireManualTime = $('#timeSlotSelect').length ? slotVal === 'custom' : true;
+          var hasTimeSlot = hasVisibleTimeSlotSelector();
+          var slotVal = hasTimeSlot ? String($('#timeSlotSelect').val() || '') : '';
+          var requireManualTime = !hasTimeSlot || slotVal === 'custom';
           var start = $('#startTime').val();
           var end = $('#endTime').val();
           $('#timeError').addClass('d-none').text('');
@@ -928,6 +938,7 @@
           return true;
         }
 
+        // Chuc nang: xu ly nghiep vu cho getHours.
         function getHours() {
           var start = $('#startTime').val();
           var end = $('#endTime').val();
@@ -943,6 +954,7 @@
           return diff > 0 ? diff / 60 : 0;
         }
 
+        // Chuc nang: xu ly nghiep vu cho getDays.
         function getDays() {
           var startVal = $('#startDate').val();
           var unit = $('#durationUnit').val() || 'day';
@@ -956,6 +968,7 @@
           return diff > 0 ? diff : 0;
         }
 
+        // Chuc nang: xu ly nghiep vu cho computeEndDate.
         function computeEndDate() {
           var startVal = $('#startDate').val();
           var unit = $('#durationUnit').val();
@@ -973,10 +986,12 @@
           return e;
         }
 
+        // Chuc nang: xu ly nghiep vu cho formatDateVN.
         function formatDateVN(d) {
           return d ? d.toLocaleDateString('vi-VN', { day: '2-digit', month: '2-digit', year: 'numeric' }) : '';
         }
 
+        // Chuc nang: xu ly nghiep vu cho formatDateFromInput.
         function formatDateFromInput(dateStr) {
           if (!dateStr) return '-';
           var d = new Date(dateStr);
@@ -984,6 +999,7 @@
           return formatDateVN(d);
         }
 
+        // Chuc nang: xu ly nghiep vu cho updateDurationUI.
         function updateDurationUI() {
           $('#durationUnit').val('day');
           $('#endDateRow').addClass('d-none');
@@ -991,12 +1007,14 @@
           $('#autoEndDateRow').addClass('d-none');
         }
 
+        // Chuc nang: xu ly nghiep vu cho updateAutoEndDate.
         function updateAutoEndDate() {
           $('#autoEndDateRow').addClass('d-none');
         }
 
         var HOLIDAYS = ['01-01', '30-04', '01-05', '02-09'];
 
+        // Chuc nang: xu ly nghiep vu cho isHoliday.
         function isHoliday(dateStr) {
           if (!dateStr) return false;
           var d = new Date(dateStr);
@@ -1004,6 +1022,7 @@
           return HOLIDAYS.indexOf(key) !== -1;
         }
 
+        // Chuc nang: xu ly nghiep vu cho isWeekend.
         function isWeekend(dateStr) {
           if (!dateStr) return false;
           var d = new Date(dateStr);
@@ -1011,8 +1030,9 @@
           return day === 0 || day === 6;
         }
 
+        // Chuc nang: xu ly nghiep vu cho isPeakTime.
         function isPeakTime() {
-          var slotVal = String($('#timeSlotSelect').val() || '').toLowerCase();
+          var slotVal = hasVisibleTimeSlotSelector() ? String($('#timeSlotSelect').val() || '').toLowerCase() : '';
           if (slotVal.indexOf('peak') !== -1 || slotVal.indexOf('evening') !== -1 || slotVal.indexOf('gio-cao-diem') !== -1) {
             return true;
           }
@@ -1023,6 +1043,7 @@
           return (h >= 6 && h < 9) || (h >= 17 && h < 21);
         }
 
+        // Chuc nang: xu ly nghiep vu cho getNearestEstimate.
         function getNearestEstimate(area, estimatedList) {
           if (!Array.isArray(estimatedList) || !estimatedList.length) return null;
           var sorted = estimatedList.slice().sort(function (a, b) {
@@ -1031,6 +1052,7 @@
           return sorted[0] || null;
         }
 
+        // Chuc nang: xu ly nghiep vu cho normalizeTimeText.
         function normalizeTimeText(timeText) {
           if (!timeText) return '';
           var parts = String(timeText).trim().split(':');
@@ -1041,6 +1063,7 @@
           return String(h).padStart(2, '0') + ':' + String(m).padStart(2, '0');
         }
 
+        // Chuc nang: xu ly nghiep vu cho parseSlotRangeFromLabel.
         function parseSlotRangeFromLabel(label) {
           var m = String(label || '').match(/(\d{1,2}:\d{2})\s*-\s*(\d{1,2}:\d{2})/);
           if (!m) return null;
@@ -1050,6 +1073,7 @@
           };
         }
 
+        // Chuc nang: xu ly nghiep vu cho addHoursToTime.
         function addHoursToTime(startTime, hours) {
           var normalized = normalizeTimeText(startTime);
           var workHours = Number(hours || 0);
@@ -1063,6 +1087,7 @@
           return String(endHour).padStart(2, '0') + ':' + String(endMin).padStart(2, '0');
         }
 
+        // Chuc nang: xu ly nghiep vu cho getEstimatedHoursForAutoEnd.
         function getEstimatedHoursForAutoEnd() {
           if (!CURRENT_SERVICE || !CURRENT_SERVICE.pricing) return 0;
 
@@ -1081,8 +1106,9 @@
           return Number(selectedPackage.data('hours') || 0);
         }
 
+        // Chuc nang: xu ly nghiep vu cho syncAutoEndTimeFromStart.
         function syncAutoEndTimeFromStart() {
-          if (String($('#timeSlotSelect').val() || '') !== 'custom') return;
+          if (hasVisibleTimeSlotSelector() && String($('#timeSlotSelect').val() || '') !== 'custom') return;
 
           var start = $('#startTime').val();
           if (!start) {
@@ -1102,14 +1128,16 @@
           $('#endTimeHint').text('Tự động: giờ bắt đầu + ' + Number(hours).toFixed(1) + ' giờ.');
         }
 
+        // Chuc nang: xu ly nghiep vu cho applyTimeSlotBehavior.
         function applyTimeSlotBehavior() {
           var $slot = $('#timeSlotSelect');
           var $row = $('#timeRangeRow');
 
-          if (!$slot.length) {
+          if (!hasVisibleTimeSlotSelector()) {
             $row.removeClass('d-none');
             $('#startTime').prop('readonly', false);
             $('#endTime').prop('readonly', true);
+            $('#startTimeHint').text('Nhập giờ bắt đầu, hệ thống tự tính giờ kết thúc theo số giờ làm.');
             return;
           }
 
@@ -1146,6 +1174,7 @@
           $row.addClass('d-none');
         }
 
+        // Chuc nang: xu ly nghiep vu cho calculateBasePriceByServiceType.
         function calculateBasePriceByServiceType() {
           if (!CURRENT_SERVICE || !CURRENT_SERVICE.pricing) {
             return { valid: false, message: 'Vui lòng chọn dịch vụ.', basePrice: 0 };
@@ -1206,6 +1235,7 @@
           };
         }
 
+        // Chuc nang: xu ly nghiep vu cho getDayFactor.
         function getDayFactor(dateStr) {
           if (!dateStr) return { factor: 1, label: '' };
           if (isHoliday(dateStr)) return { factor: 1.3, label: 'Ngày lễ (+30%)' };
@@ -1213,10 +1243,12 @@
           return { factor: 1, label: '' };
         }
 
+        // Chuc nang: xu ly nghiep vu cho formatMoney.
         function formatMoney(val) {
           return Math.round(val).toLocaleString('vi-VN') + ' đ';
         }
 
+        // Chuc nang: xu ly nghiep vu cho updateTotalPrice.
         function updateTotalPrice() {
           if (!CURRENT_SERVICE) return;
 
@@ -1306,6 +1338,7 @@
           };
         }
 
+        // Chuc nang: xu ly nghiep vu cho resetQuickAttachments.
         function resetQuickAttachments() {
           QUICK_ATTACHMENTS.images.forEach(function (item) {
             if (item.url) URL.revokeObjectURL(item.url);
@@ -1321,6 +1354,7 @@
           renderReviewAttachmentPreview();
         }
 
+        // Chuc nang: xu ly nghiep vu cho renderAttachmentPreview.
         function renderAttachmentPreview() {
           var images = QUICK_ATTACHMENTS.images;
           var videos = QUICK_ATTACHMENTS.videos;
@@ -1367,6 +1401,7 @@
           }
         }
 
+        // Chuc nang: xu ly nghiep vu cho renderReviewAttachmentPreview.
         function renderReviewAttachmentPreview() {
           var images = QUICK_ATTACHMENTS.images;
           var videos = QUICK_ATTACHMENTS.videos;
@@ -1413,6 +1448,7 @@
           }
         }
 
+        // Chuc nang: xu ly nghiep vu cho appendQuickFiles.
         function appendQuickFiles(fileList, kind) {
           if (!fileList || !fileList.length) return;
           var bucket = kind === 'image' ? QUICK_ATTACHMENTS.images : QUICK_ATTACHMENTS.videos;
@@ -1429,6 +1465,7 @@
           renderReviewAttachmentPreview();
         }
 
+        // Chuc nang: xu ly nghiep vu cho collectBookingData.
         function collectBookingData() {
           var selectedPackage = getSelectedPackage();
           var selectedPackageLabel = selectedPackage ? selectedPackage.data('label') : 'Không chọn gói';
@@ -1440,7 +1477,7 @@
               .get() || [];
           var unit = $('#durationUnit').val();
           var endDateValue = $('#endDate').val();
-          var slotLabel = $('#timeSlotSelect').length ? ($('#timeSlotSelect option:selected').text() || '') : '';
+          var slotLabel = hasVisibleTimeSlotSelector() ? ($('#timeSlotSelect option:selected').text() || '') : '';
 
           updateTotalPrice();
 
@@ -1451,6 +1488,8 @@
             email: $('#customerEmail').val().trim(),
             address: $('#customerAddress').val().trim(),
             service: $('#serviceSelector option:selected').text() || '',
+            serviceLoai: $('#serviceLoai').val() || '',
+            serviceLoaiLabel: $('#serviceLoai option:selected').text() || '',
             packageValue: selectedPackage ? String(selectedPackage.val()) : (LAST_CALC_RESULT ? LAST_CALC_RESULT.packageValue : ''),
             package: (LAST_CALC_RESULT && LAST_CALC_RESULT.packageLabel) || selectedPackageLabel,
             jobsList: selectedJobs,
@@ -1474,6 +1513,7 @@
           };
         }
 
+        // Chuc nang: xu ly nghiep vu cho restoreBookingForm.
         function restoreBookingForm(data) {
           if (!data) return;
 
@@ -1494,6 +1534,10 @@
           $('#extraRequest').val(data.extraRequest || '');
           $('#customerNote').val(data.note || '');
 
+          if ($('#serviceLoai').length) {
+            $('#serviceLoai').val(data.serviceLoai || data.serviceLoaiLabel || '');
+          }
+
           if (data.packageValue) {
             var $pkg = $('.package-check[value="' + data.packageValue + '"]');
             if ($pkg.length) {
@@ -1503,7 +1547,7 @@
             }
           }
 
-          if (data.timeSlotLabel && $('#timeSlotSelect').length) {
+          if (data.timeSlotLabel && hasVisibleTimeSlotSelector()) {
             $('#timeSlotSelect option').filter(function () {
               return $(this).text() === data.timeSlotLabel;
             }).prop('selected', true);
@@ -1548,12 +1592,14 @@
           updateTotalPrice();
         }
 
+        // Chuc nang: xu ly nghiep vu cho renderReviewData.
         function renderReviewData(data) {
           $('#reviewName').text(data.name || '-');
           $('#reviewPhone').text(data.phone || '-');
           $('#reviewEmail').text(data.email || '-');
           $('#reviewAddress').text(data.address || '-');
           $('#reviewService').text(data.service || '-');
+          $('#reviewLoai').text(data.serviceLoaiLabel || data.serviceLoai || '-');
           $('#reviewPackage').text(data.package || '-');
 
           var jobs = Array.isArray(data.jobsList) ? data.jobsList : [];
@@ -1600,25 +1646,93 @@
           renderReviewAttachmentPreview();
         }
 
+        // Chuc nang: xu ly nghiep vu cho normalizeMoneyToNumber.
+        function normalizeMoneyToNumber(value) {
+          if (typeof value === 'number' && Number.isFinite(value)) return Math.round(value);
+          var raw = String(value == null ? '' : value).trim();
+          if (!raw) return 0;
+          var sign = raw.indexOf('-') !== -1 ? -1 : 1;
+          var digits = raw.replace(/\D/g, '');
+          if (!digits) return 0;
+          return sign * Number(digits);
+        }
+
+        // Chuc nang: xu ly nghiep vu cho nowSql.
+        function nowSql() {
+          var d = new Date();
+          var pad = function (n) {
+            return String(n).padStart(2, '0');
+          };
+          return (
+            d.getFullYear() +
+            '-' +
+            pad(d.getMonth() + 1) +
+            '-' +
+            pad(d.getDate()) +
+            ' ' +
+            pad(d.getHours()) +
+            ':' +
+            pad(d.getMinutes()) +
+            ':' +
+            pad(d.getSeconds())
+          );
+        }
+
+        // Chuc nang: xu ly nghiep vu cho isKrudSuccess.
+        function isKrudSuccess(res) {
+          return !!res && !res.error && res.success !== false;
+        }
+
+        // Chuc nang: xu ly nghiep vu cho getSheetErrorMessage.
+        function getSheetErrorMessage(result) {
+          if (!result) return 'Không nhận được phản hồi từ Google Sheet.';
+          var status = String(result.status || '').toLowerCase();
+          if (status === 'success' || result.success === true) return '';
+          return result.message || result.error || 'Google Sheet trả về trạng thái không thành công.';
+        }
+
+        // Chuc nang: xu ly nghiep vu cho buildBookingSheetPayload.
+        function buildBookingSheetPayload(data) {
+          return {
+            sheet_type: 'Lau dọn vệ sinh',
+            created_at: '',
+            'Tên khách': (data.name || '').trim(),
+            'Số điện thoại': (data.phone || '').trim(),
+            'Email': (data.email || '').trim(),
+            'Địa chỉ': (data.address || '').trim(),
+            'Dịch vụ': data.service || '',
+            'Loại nơi dọn': data.serviceLoaiLabel || data.serviceLoai || '',
+            'Gói dịch vụ': data.package || 'Không chọn gói',
+            'Công việc': data.jobs || '',
+            'Ngày bắt đầu': data.startDate || '',
+            'Ngày kết thúc': data.endDate || '',
+            'Giờ bắt đầu': data.startTime || '',
+            'Giờ kết thúc': data.endTime || '',
+            'Tổng số ngày': Number(data.totalDays || 0),
+            'Tổng số giờ': Number(data.totalHours || 0),
+            'Yêu cầu khác': data.extraRequest || '',
+            'Ghi chú': (data.note || '').trim(),
+            'Tổng tiền': normalizeMoneyToNumber(data.price)
+          };
+        }
+
+        // Chuc nang: xu ly nghiep vu cho mapBookingDataForDatabase.
         function mapBookingDataForDatabase(data) {
           var payload = {
-            ten: (data.name || '').trim(),
-            dien_thoai: (data.phone || '').trim(),
+            hovaten: (data.name || '').trim(),
+            sodienthoai: (data.phone || '').trim(),
             email: (data.email || '').trim(),
-            dia_chi: (data.address || '').trim(),
+            diachi: (data.address || '').trim(),
             dich_vu: data.service || '',
+            loai_noi_don: data.serviceLoaiLabel || data.serviceLoai || '',
             goi_dich_vu: data.package || 'Không chọn gói',
             cong_viec: data.jobs || '',
-            startDate: data.startDate || '',
-            endDate: data.endDate || '',
-            durationUnit: data.durationUnit || '',
-            durationAmount: data.durationUnit && data.durationUnit !== 'day' ? data.durationAmount || '' : '',
-            totalDays: Number(data.totalDays || 0),
-            startTime: data.startTime || '',
-            endTime: data.endTime || '',
-            totalHours: Number(data.totalHours || 0),
-            extraRequest: data.extraRequest || '',
-            gia_tien: data.price || '0 đ',
+            ngay_bat_dau: data.startDate || '',
+            ngay_ket_thuc: data.endDate || '',
+            gio_bat_dau: data.startTime || '',
+            gio_ket_thuc: data.endTime || '',
+            tong_tien: normalizeMoneyToNumber(data.price),
+            yeu_cau_khac: data.extraRequest || '',
             ghi_chu: (data.note || '').trim()
           };
 
@@ -1628,26 +1742,30 @@
             payload.khach_hang_id = window.loggedInUserId;
           }
 
+          payload.created_date = nowSql();
+
           return payload;
         }
 
-        function saveBookingToDatabase(data) {
-          return fetch('api/create_booking.php', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify(mapBookingDataForDatabase(data))
-          })
-            .then(function (res) {
-              return res.json();
-            })
-            .then(function (resp) {
-              if (resp.success || resp.result === 'success') {
-                return resp;
-              }
-              throw new Error(resp.message || 'Lưu cơ sở dữ liệu thất bại');
-            });
+        // Chuc nang: xu ly nghiep vu cho saveBookingToGoogleSheet.
+        function saveBookingToGoogleSheet(data) {
+          if (typeof saveToGoogleSheet !== 'function') {
+            throw new Error('Chưa tải được hàm lưu Google Sheet.');
+          }
+          var sheetPayload = buildBookingSheetPayload(data);
+          sheetPayload.created_at = nowSql();
+          return saveToGoogleSheet(sheetPayload);
         }
 
+        // Chuc nang: xu ly nghiep vu cho saveBookingToDatabase.
+        function saveBookingToDatabase(data) {
+          if (typeof krud !== 'function') {
+            throw new Error('Chưa tải KRUD API.');
+          }
+          return krud('insert', 'datlich_donvesinh', mapBookingDataForDatabase(data));
+        }
+
+        // Chuc nang: xu ly nghiep vu cho finishSuccessState.
         function finishSuccessState() {
           if (EMBEDDED_BOOKING_MODE) {
             try {
@@ -1685,7 +1803,8 @@
           }, 2000);
         }
 
-        function submitBookingToSheet(data) {
+        // Chuc nang: xu ly nghiep vu cho submitBookingData.
+        async function submitBookingData(data) {
           var saveBtn = $('#btnConfirmSave');
           var backBtn = $('#btnBackToEdit');
           var originalText = saveBtn.html();
@@ -1693,70 +1812,48 @@
           saveBtn.html('<i class="fas fa-spinner fa-spin me-1"></i>Đang lưu...').prop('disabled', true);
           backBtn.prop('disabled', true);
 
-          var sheetError = null;
-          var dbError = null;
+          try {
+            var sheetErrorMessage = '';
 
-          var sheetPromise = fetch(SCRIPT_URL, {
-            method: 'POST',
-            headers: { 'Content-Type': 'text/plain;charset=utf-8' },
-            body: JSON.stringify(data)
-          })
-            .then(function (res) {
-              return res.json();
-            })
-            .then(function (result) {
-              if (result && result.result === 'success') {
-                return result;
-              }
-              throw new Error((result && result.message) || 'Lưu Google Sheet thất bại');
-            })
-            .catch(function (err) {
-              sheetError = err;
-              console.error('Lỗi khi lưu Google Sheet:', err);
-              throw err;
-            });
-
-          var dbPromise = saveBookingToDatabase(data).catch(function (err) {
-            dbError = err;
-            console.error('Lỗi khi lưu cơ sở dữ liệu:', err);
-            throw err;
-          });
-
-          Promise.allSettled([sheetPromise, dbPromise]).then(function (results) {
-            var sheetOk = results[0].status === 'fulfilled';
-            var dbOk = results[1].status === 'fulfilled';
-
-            saveBtn.html(originalText).prop('disabled', false);
-            backBtn.prop('disabled', false);
-
-            if (sheetOk || dbOk) {
-              PENDING_BOOKING_DATA = null;
-              sessionStorage.removeItem(STORAGE_KEY);
-              resetQuickAttachments();
-              finishSuccessState();
-
-              if (!sheetOk && dbOk) {
-                alert('Đặt lịch đã lưu thành công trong cơ sở dữ liệu, nhưng lưu Google Sheet thất bại.');
-              } else if (sheetOk && !dbOk) {
-                alert('Đặt lịch đã lưu thành công trên Google Sheet, nhưng lưu cơ sở dữ liệu thất bại.');
-              }
-              return;
+            try {
+              var sheetResult = await saveBookingToGoogleSheet(data);
+              sheetErrorMessage = getSheetErrorMessage(sheetResult);
+            } catch (sheetErr) {
+              sheetErrorMessage = (sheetErr && sheetErr.message) || 'Không thể kết nối Google Sheet.';
+              console.warn('Lỗi lưu Google Sheet, tiếp tục lưu cơ sở dữ liệu:', sheetErr);
             }
 
-            alert(
-              'Không thể lưu dữ liệu ở cả Google Sheet và cơ sở dữ liệu. Vui lòng thử lại.\n' +
-                'Sheet: ' + ((sheetError && sheetError.message) || 'Lỗi không xác định') + '\n' +
-                'DB: ' + ((dbError && dbError.message) || 'Lỗi không xác định')
-            );
-          });
+            var dbResult = await saveBookingToDatabase(data);
+            if (!isKrudSuccess(dbResult)) {
+              throw new Error((dbResult && dbResult.message) || 'Lưu dữ liệu đặt lịch thất bại.');
+            }
+
+            PENDING_BOOKING_DATA = null;
+            sessionStorage.removeItem(STORAGE_KEY);
+            resetQuickAttachments();
+
+            if (sheetErrorMessage) {
+              alert('Đã lưu cơ sở dữ liệu thành công nhưng Google Sheet lỗi: ' + sheetErrorMessage);
+            }
+
+            finishSuccessState();
+          } catch (err) {
+            console.error('Lỗi khi lưu dữ liệu đặt lịch:', err);
+            alert('Không thể lưu dữ liệu đặt lịch. Vui lòng thử lại.\nChi tiết: ' + ((err && err.message) || 'Lỗi không xác định'));
+          } finally {
+            saveBtn.html(originalText).prop('disabled', false);
+            backBtn.prop('disabled', false);
+          }
         }
 
+        // Chuc nang: xu ly nghiep vu cho showReviewStep.
         function showReviewStep() {
           $('#bookingPageSection').addClass('d-none');
           $('#reviewPageSection').removeClass('d-none');
           $('html, body').animate({ scrollTop: $('#reviewPageSection').offset().top - 30 }, 300);
         }
 
+        // Chuc nang: xu ly nghiep vu cho showEditStep.
         function showEditStep() {
           $('#reviewPageSection').addClass('d-none');
           $('#bookingPageSection').removeClass('d-none');
@@ -1765,72 +1862,90 @@
           $('html, body').animate({ scrollTop: $('#bookingPageSection').offset().top - 30 }, 300);
         }
 
+        // Chuc nang: xu ly nghiep vu cho renderPackageOptions.
+        function renderPackageOptions(packages) {
+          var $packageList = $('#packageList');
+          $packageList.empty();
+
+          (packages || []).forEach(function (p, idx) {
+            var subText = p.hours ? ' • ' + p.hours + ' giờ' : '';
+            var $label = $('<label>').addClass('list-group-item list-group-item-action d-flex align-items-center gap-3 rounded mb-2 border');
+            var $input = $('<input type="radio" name="package">')
+              .addClass('package-check form-check-input flex-shrink-0')
+              .val(String(idx))
+              .attr('data-price', Number(p.price || 0))
+              .attr('data-label', p.name || '')
+              .attr('data-staff', Number(p.staff || 0))
+              .attr('data-hours', Number(p.hours || 0));
+            var $title = $('<span>').addClass('fw-bold').text((p.name || '') + subText);
+            var $price = $('<span>')
+              .addClass('ms-auto badge rounded-pill text-bg-danger')
+              .text(Number(p.price || 0).toLocaleString('vi-VN') + ' đ');
+
+            $label.append($input, $title, $price);
+            $packageList.append($label);
+          });
+        }
+
+        // Chuc nang: xu ly nghiep vu cho renderTimeSlotOptions.
+        function renderTimeSlotOptions(timeSlots) {
+          var $section = $('#timeSlotSection');
+          var $slot = $('#timeSlotSelect');
+          $slot.empty();
+
+          if (!Array.isArray(timeSlots) || !timeSlots.length) {
+            $section.addClass('d-none');
+            return;
+          }
+
+          timeSlots.forEach(function (slot) {
+            var value = slot && slot.value != null ? String(slot.value) : '';
+            var label = slot && slot.label != null ? String(slot.label) : '';
+            $slot.append($('<option>').val(value).text(label));
+          });
+          $slot.append($('<option>').val('custom').text('Khác (tự nhập giờ bắt đầu)'));
+          $slot.prop('selectedIndex', 0);
+          $section.removeClass('d-none');
+        }
+
+        // Chuc nang: xu ly nghiep vu cho renderJobOptions.
+        function renderJobOptions(jobs) {
+          var $list = $('#serviceJobsList');
+          $list.empty();
+
+          (jobs || []).forEach(function (job) {
+            var $label = $('<label>').addClass('list-group-item list-group-item-action d-flex align-items-center gap-2 rounded mb-1 border');
+            var $input = $('<input type="checkbox" checked>')
+              .addClass('job-check form-check-input flex-shrink-0')
+              .val(job || '');
+            var $text = $('<span>').text(job || '');
+            $label.append($input, $text);
+            $list.append($label);
+          });
+        }
+
+        // Chuc nang: xu ly nghiep vu cho renderService.
         function renderService(service) {
           CURRENT_SERVICE = service;
           $('#serviceSelector').val(String(service.id));
+          renderServiceLoaiOptions(service);
 
           var pricing = service.pricing || {};
           var pricingType = pricing.type || '';
-          var pkgHtml = '';
+          var isPerM2 = pricingType === 'per_m2';
+          var isPackage = pricingType === 'package';
 
-          if (pricingType === 'per_m2') {
-            pkgHtml +=
-              '<div class="row g-2 mb-2">' +
-              '<div class="col-md-6">' +
-              '<label class="form-label fw-bold">Diện tích (m²)</label>' +
-              '<input type="number" min="1" id="serviceArea" class="form-control" placeholder="Ví dụ: 80" />' +
-              '</div>' +
-              '<div class="col-md-6">' +
-              '<label class="form-label fw-bold">Mức độ vệ sinh</label>' +
-              '<select id="serviceLevel" class="form-select">' +
-              '<option value="light">Nhẹ (light)</option>' +
-              '<option value="standard" selected>Tiêu chuẩn (standard)</option>' +
-              '<option value="deep">Sâu (deep)</option>' +
-              '</select>' +
-              '</div>' +
-              '</div>';
-          } else if (pricingType === 'package') {
-            pkgHtml += '<div class="list-group mb-2">';
-            (pricing.packages || []).forEach(function (p, idx) {
-              var subText = p.hours ? ' • ' + p.hours + ' giờ' : '';
-              pkgHtml +=
-                '<label class="list-group-item list-group-item-action d-flex align-items-center gap-3 rounded mb-2 border">' +
-                '<input type="radio" name="package" class="package-check form-check-input flex-shrink-0" value="' + idx + '" data-price="' + Number(p.price || 0) + '" data-label="' + p.name + '" data-staff="' + Number(p.staff || 0) + '" data-hours="' + Number(p.hours || 0) + '">' +
-                '<span class="fw-bold">' + p.name + subText + '</span>' +
-                '<span class="ms-auto badge rounded-pill text-bg-danger">' + Number(p.price || 0).toLocaleString('vi-VN') + ' đ</span>' +
-                '</label>';
-            });
-            pkgHtml += '</div>';
+          $('#areaLevelSection').toggleClass('d-none', !isPerM2);
+          $('#packageSection').toggleClass('d-none', !isPackage);
+
+          if (isPackage) {
+            renderPackageOptions(pricing.packages || []);
+          } else {
+            $('#packageList').empty();
           }
 
-          if (Array.isArray(service.time_slots) && service.time_slots.length) {
-            pkgHtml +=
-              '<div class="mb-2">' +
-              '<label class="form-label fw-bold">Khung giờ ưu tiên</label>' +
-              '<select id="timeSlotSelect" class="form-select">';
-            service.time_slots.forEach(function (slot) {
-              pkgHtml += '<option value="' + slot.value + '">' + slot.label + '</option>';
-            });
-            pkgHtml += '<option value="custom">Khác (tự nhập giờ bắt đầu)</option>';
-            pkgHtml += '</select></div>';
-          }
-
-          $('#servicePackages').html(pkgHtml);
-
-          var jobHtml = '<div class="list-group">';
-          service.includes.forEach(function (job) {
-            jobHtml +=
-              '<label class="list-group-item list-group-item-action d-flex align-items-center gap-2 rounded mb-1 border">' +
-              '<input type="checkbox" class="job-check form-check-input flex-shrink-0" value="' +
-              job +
-              '" checked>' +
-              '<span>' +
-              job +
-              '</span>' +
-              '</label>';
-          });
-          jobHtml += '</div>';
-          $('#serviceJobs').html(jobHtml);
+          renderTimeSlotOptions(service.time_slots || []);
+          renderJobOptions(service.includes || []);
 
           resetFormState();
           applyShiftHints();
@@ -2011,12 +2126,12 @@
             return;
           }
 
-          submitBookingToSheet(PENDING_BOOKING_DATA);
+          submitBookingData(PENDING_BOOKING_DATA);
         });
 
         window.addEventListener('auth:login-success', function () {
           if (PENDING_BOOKING_DATA) {
-            submitBookingToSheet(PENDING_BOOKING_DATA);
+            submitBookingData(PENDING_BOOKING_DATA);
             return;
           }
 
@@ -2028,7 +2143,7 @@
               PENDING_BOOKING_DATA = parsed;
               renderReviewData(PENDING_BOOKING_DATA);
               showReviewStep();
-              submitBookingToSheet(PENDING_BOOKING_DATA);
+              submitBookingData(PENDING_BOOKING_DATA);
             }
           } catch (e) {
             console.error('Không thể đọc dữ liệu đặt lịch chờ:', e);
@@ -2038,6 +2153,9 @@
     </script>
 
     </div>
+        <script src="JS/shared-layout.js"></script>
   </body>
 </html>
+
+
 

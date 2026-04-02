@@ -275,7 +275,7 @@
             (breakdown.conditionFee || 0) +
             (breakdown.codFee || 0);
           const domesticFeeList = `
-            <li>① Phí vận chuyển: <strong>${formatVnd(breakdown.basePrice || 0)}</strong></li>
+            <li>① Phí vận chuyển: <strong>${formatVnd(breakdown.tong_gia_van_chuyen ?? breakdown.basePrice ?? 0)}</strong></li>
             <li>② Phí trọng lượng & kích thước: <strong>${formatVnd(weightSizeFee)}</strong></li>
             <li>③ Phụ phí hàng hóa: <strong>${formatVnd(goodsGroupFee)}</strong></li>
             <li>④ Phụ phí dịch vụ: <strong>${formatVnd(serviceGroupFee)}</strong></li>
@@ -730,7 +730,7 @@
         },
         {
           icon: "⚖️",
-          label: "Khối lượng tính cước",
+          label: "Khối lượng hàng",
           value: `${String(result.billableWeight)} kg`,
         },
         {
@@ -749,7 +749,7 @@
         `Bảng giá vận chuyển nội địa — ${result.zoneLabel || ""}`,
         summaryMetrics,
         result.services,
-        `Giá tham khảo nhanh đang bám theo 5 nhóm phí: phí vận chuyển + phí trọng lượng & kích thước + phụ phí hàng hóa + phụ phí dịch vụ + phí phương tiện. Ở bước tra nhanh này hệ thống chưa cộng phụ phí dịch vụ và phí phương tiện; khi sang bước đặt lịch, cả 4 gói đều sẽ được đối chiếu cùng một logic phụ phí theo khung giờ, điều kiện giao và loại xe bạn chọn.`,
+        `Giá tham khảo nhanh đang bám theo logic tính cước hiện tại: phí vận chuyển chính, phụ phí hàng hóa, phụ phí dịch vụ và điều chỉnh phương tiện. Ở bước tra nhanh này hệ thống chưa cộng phụ phí dịch vụ và điều chỉnh phương tiện; khi sang bước đặt lịch, kết quả sẽ được đối chiếu đầy đủ theo khung giờ, điều kiện giao và loại xe áp dụng.`,
         pricingExplanation,
       );
     });

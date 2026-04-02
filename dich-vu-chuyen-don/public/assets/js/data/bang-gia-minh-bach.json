@@ -6,7 +6,7 @@
     "thong_tin_minh_bach": {
       "mo_ta_ngan": "Căn hộ, nhà phố, phòng trọ hoặc chung cư cần chuyển đồ sinh hoạt và nội thất gia đình.",
       "phu_hop_khi": "Phù hợp khi bạn cần xe, nhân công, đóng gói, tháo lắp và sắp xếp lại tại nhà mới.",
-      "phan_co_ban": ["Loại xe", "Quãng đường di chuyển"],
+      "phan_co_ban": ["Loại xe", "Quãng đường di chuyển", "Phí tối thiểu"],
       "phan_phat_sinh": [
         "Đóng gói",
         "Tháo lắp",
@@ -17,24 +17,36 @@
       ],
       "nen_khao_sat_khi": "Có nhiều tầng, hẻm nhỏ, đồ dễ vỡ, đồ giá trị cao hoặc cần tháo lắp kỹ thuật.",
       "co_the_dat_lich_luon_khi": "Bạn đã rõ loại xe cần dùng, địa chỉ hai đầu, số tầng và không có hạng mục đặc biệt ngoài gói cơ bản.",
-      "tom_tat_tong_chi_phi": "Tổng tiền = Số km di chuyển x Giá mỗi km theo loại xe + Đóng gói, tháo lắp và các phụ phí nếu có."
+      "tom_tat_tong_chi_phi": "Tổng tiền = max(Phí tối thiểu, Số km di chuyển x Giá mỗi km theo loại xe x Hệ số đường dài) + Đóng gói, tháo lắp và các phụ phí nếu có."
     },
     "bang_gia": {
       "loai_xe": [
         {
           "slug": "xe_van_500kg",
-          "ten": "Xe Van 500kg",
-          "gia_moi_km": 12000
+          "ten": "Xe 4 bánh nhỏ ≤ 500kg",
+          "gia_moi_km": 13000,
+          "gia_moi_km_duong_dai": 11700,
+          "phi_toi_thieu": 120000,
+          "nguong_km_giam_gia": 20,
+          "ty_le_giam_gia_duong_dai": 0.1
         },
         {
           "slug": "xe_tai_1_5_tan",
-          "ten": "Xe Tải 1.5 Tấn",
-          "gia_moi_km": 14000
+          "ten": "Xe 4 bánh vừa ≤ 1200kg",
+          "gia_moi_km": 17000,
+          "gia_moi_km_duong_dai": 15300,
+          "phi_toi_thieu": 180000,
+          "nguong_km_giam_gia": 20,
+          "ty_le_giam_gia_duong_dai": 0.1
         },
         {
           "slug": "xe_tai_2_5_tan",
-          "ten": "Xe Tải 2.5 Tấn",
-          "gia_moi_km": 24000
+          "ten": "Xe tải ≤ 3500kg",
+          "gia_moi_km": 24000,
+          "gia_moi_km_duong_dai": 21600,
+          "phi_toi_thieu": 300000,
+          "nguong_km_giam_gia": 20,
+          "ty_le_giam_gia_duong_dai": 0.1
         }
       ],
       "phu_phi": {
@@ -95,9 +107,9 @@
       {
         "slug": "cuoc_xe",
         "ten": "Cước xe theo km",
-        "khoang_gia": "12.000 – 24.000",
+        "khoang_gia": "13.000 – 24.000",
         "don_vi": "km",
-        "ghi_chu": "Đơn giá di chuyển tính theo số km thực tế và loại xe bạn chọn cho đơn chuyển dọn.",
+        "ghi_chu": "Đơn giá di chuyển tính theo số km thực tế, tự giảm 10% khi vượt 20km và luôn so với phí tối thiểu của loại xe đã chọn.",
         "hinh_anh": "assets/images/chuyendon-nha-o.png",
         "icon_svg": "M8 17a2 2 0 100 4 2 2 0 000-4zm8 0a2 2 0 100 4 2 2 0 000-4zm-9-2h10l2-5H9m-2 5L5 7H3m4 8l1.5-7H19"
       },
@@ -146,7 +158,7 @@
     "thong_tin_minh_bach": {
       "mo_ta_ngan": "Văn phòng công ty cần di dời hồ sơ, bàn ghế, máy tính, server và thiết bị vận hành.",
       "phu_hop_khi": "Phù hợp khi bạn cần di dời có kế hoạch, kiểm soát tài liệu và giữ nhịp vận hành ổn định.",
-      "phan_co_ban": ["Loại xe", "Quãng đường di chuyển"],
+      "phan_co_ban": ["Loại xe", "Quãng đường di chuyển", "Phí tối thiểu"],
       "phan_phat_sinh": [
         "Đóng gói hồ sơ",
         "Thiết bị IT",
@@ -157,24 +169,36 @@
       ],
       "nen_khao_sat_khi": "Có server, tài liệu bảo mật, tòa nhà giới hạn giờ ra vào hoặc cần làm ngoài giờ.",
       "co_the_dat_lich_luon_khi": "Bạn đã rõ sơ đồ di dời, số lượng bàn ghế thiết bị, điều kiện tòa nhà và không có hạng mục kỹ thuật đặc biệt.",
-      "tom_tat_tong_chi_phi": "Tổng tiền = Số km di chuyển x Giá mỗi km theo loại xe + Đóng gói hồ sơ, thiết bị IT, tháo lắp và các phụ phí nếu có."
+      "tom_tat_tong_chi_phi": "Tổng tiền = max(Phí tối thiểu, Số km di chuyển x Giá mỗi km theo loại xe x Hệ số đường dài) + Đóng gói hồ sơ, thiết bị IT, tháo lắp và các phụ phí nếu có."
     },
     "bang_gia": {
       "loai_xe": [
         {
           "slug": "xe_van_500kg",
-          "ten": "Xe Van 500kg (VP)",
-          "gia_moi_km": 12000
+          "ten": "Xe 4 bánh nhỏ ≤ 500kg",
+          "gia_moi_km": 13000,
+          "gia_moi_km_duong_dai": 11700,
+          "phi_toi_thieu": 120000,
+          "nguong_km_giam_gia": 20,
+          "ty_le_giam_gia_duong_dai": 0.1
         },
         {
           "slug": "xe_tai_1_5_tan",
-          "ten": "Xe Tải 1.5 Tấn (VP)",
-          "gia_moi_km": 14500
+          "ten": "Xe 4 bánh vừa ≤ 1200kg",
+          "gia_moi_km": 17000,
+          "gia_moi_km_duong_dai": 15300,
+          "phi_toi_thieu": 180000,
+          "nguong_km_giam_gia": 20,
+          "ty_le_giam_gia_duong_dai": 0.1
         },
         {
           "slug": "xe_tai_2_5_tan",
-          "ten": "Xe Tải 2.5 Tấn (VP)",
-          "gia_moi_km": 18000
+          "ten": "Xe tải ≤ 3500kg",
+          "gia_moi_km": 24000,
+          "gia_moi_km_duong_dai": 21600,
+          "phi_toi_thieu": 300000,
+          "nguong_km_giam_gia": 20,
+          "ty_le_giam_gia_duong_dai": 0.1
         }
       ],
       "phu_phi": {
@@ -235,9 +259,9 @@
       {
         "slug": "cuoc_xe",
         "ten": "Cước xe theo km",
-        "khoang_gia": "12.000 – 18.000",
+        "khoang_gia": "13.000 – 24.000",
         "don_vi": "km",
-        "ghi_chu": "Đơn giá di chuyển tính theo số km thực tế và loại xe sử dụng cho văn phòng.",
+        "ghi_chu": "Đơn giá di chuyển tính theo số km thực tế, tự giảm 10% khi vượt 20km và luôn so với phí tối thiểu của loại xe đã chọn.",
         "hinh_anh": "assets/images/chuyendon-van-phong.png",
         "icon_svg": "M8 17a2 2 0 100 4 2 2 0 000-4zm8 0a2 2 0 100 4 2 2 0 000-4zm-9-2h10l2-5H9m-2 5L5 7H3m4 8l1.5-7H19"
       },
@@ -295,7 +319,7 @@
     "thong_tin_minh_bach": {
       "mo_ta_ngan": "Kho hàng, nhà xưởng hoặc mô hình logistics cần xe tải, xe nâng, xe cẩu và kiểm kê chặt chẽ.",
       "phu_hop_khi": "Phù hợp khi bạn cần di dời pallet, kiện hàng nặng, máy móc và gia cố hàng hóa trước khi chuyển.",
-      "phan_co_ban": ["Loại xe", "Quãng đường di chuyển"],
+      "phan_co_ban": ["Loại xe", "Quãng đường di chuyển", "Phí tối thiểu"],
       "phan_phat_sinh": [
         "Pallet",
         "Xe nâng/xe cẩu",
@@ -305,24 +329,36 @@
       ],
       "nen_khao_sat_khi": "Có máy móc lớn, nhiều pallet, đường cấm tải hoặc cần xe nâng, xe cẩu tại hiện trường.",
       "co_the_dat_lich_luon_khi": "Bạn đã rõ khối lượng hàng, số pallet, phương tiện nâng hạ cần dùng và điều kiện xe vào ra kho bãi.",
-      "tom_tat_tong_chi_phi": "Tổng tiền = Số km di chuyển x Giá mỗi km theo loại xe + Pallet, xe nâng/xe cẩu, gia cố và các phụ phí nếu có."
+      "tom_tat_tong_chi_phi": "Tổng tiền = max(Phí tối thiểu, Số km di chuyển x Giá mỗi km theo loại xe x Hệ số đường dài) + Pallet, xe nâng/xe cẩu, gia cố và các phụ phí nếu có."
     },
     "bang_gia": {
       "loai_xe": [
         {
           "slug": "xe_tai_1_5_tan",
-          "ten": "Xe Tải 1.5 Tấn (Kho)",
-          "gia_moi_km": 14000
+          "ten": "Xe 4 bánh vừa ≤ 1200kg",
+          "gia_moi_km": 18000,
+          "gia_moi_km_duong_dai": 16200,
+          "phi_toi_thieu": 180000,
+          "nguong_km_giam_gia": 20,
+          "ty_le_giam_gia_duong_dai": 0.1
         },
         {
           "slug": "xe_tai_2_5_tan",
-          "ten": "Xe Tải 2.5 Tấn (Kho)",
-          "gia_moi_km": 20000
+          "ten": "Xe tải ≤ 3500kg",
+          "gia_moi_km": 25000,
+          "gia_moi_km_duong_dai": 22500,
+          "phi_toi_thieu": 320000,
+          "nguong_km_giam_gia": 20,
+          "ty_le_giam_gia_duong_dai": 0.1
         },
         {
-          "slug": "xe_tai_5_tan",
-          "ten": "Xe Tải 5 Tấn (Kho)",
-          "gia_moi_km": 26000
+          "slug": "xe_tai_7_5_tan",
+          "ten": "Xe tải lớn ≤ 7500kg",
+          "gia_moi_km": 32000,
+          "gia_moi_km_duong_dai": 28800,
+          "phi_toi_thieu": 450000,
+          "nguong_km_giam_gia": 20,
+          "ty_le_giam_gia_duong_dai": 0.1
         }
       ],
       "phu_phi": {
@@ -389,9 +425,9 @@
       {
         "slug": "cuoc_xe",
         "ten": "Cước xe theo km",
-        "khoang_gia": "14.000 – 26.000",
+        "khoang_gia": "18.000 – 32.000",
         "don_vi": "km",
-        "ghi_chu": "Đơn giá di chuyển tính theo số km thực tế và loại xe phù hợp với đơn kho bãi.",
+        "ghi_chu": "Đơn giá di chuyển tính theo số km thực tế, tự giảm 10% khi vượt 20km và luôn so với phí tối thiểu của loại xe đã chọn.",
         "hinh_anh": "assets/images/chuyendon-kho-bai.png",
         "icon_svg": "M8 17a2 2 0 100 4 2 2 0 000-4zm8 0a2 2 0 100 4 2 2 0 000-4zm-9-2h10l2-5H9m-2 5L5 7H3m4 8l1.5-7H19"
       },

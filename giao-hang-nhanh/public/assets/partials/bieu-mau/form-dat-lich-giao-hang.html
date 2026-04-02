@@ -162,6 +162,13 @@
           >
             <i class="fas fa-route"></i> Khoảng cách:
             <span id="gia_tri_khoang_cach_km">0</span> km
+            <span
+              id="thong_tin_tam_tinh_theo_km"
+              style="display: none; margin-left: 8px;"
+            >
+              • Tạm tính:
+              <strong id="gia_tri_tam_tinh_theo_km"></strong>
+            </span>
           </span>
         </div>
 
@@ -347,7 +354,7 @@
         </div>
 
         <div id="luong_lich_hen">
-          <div class="form-grid schedule-grid">
+          <div class="form-grid schedule-grid" id="khung_lich_hen_thu_cong">
             <div class="form-group">
               <label><i class="fas fa-calendar-day"></i> Ngày lấy hàng</label>
               <input type="date" class="form-control" id="ngay_lay_hang" name="ngay_lay_hang" />
@@ -356,6 +363,17 @@
               <label><i class="fas fa-clock"></i> Khung giờ lấy hàng</label>
               <select class="form-control" id="khung_gio_lay_hang" name="khung_gio_lay_hang"></select>
             </div>
+          </div>
+
+          <div
+            id="thong_bao_lich_tu_dong"
+            class="schedule-estimate is-hidden"
+            style="margin-bottom: 16px;"
+          >
+            <strong><i class="fas fa-bolt"></i> Giao ngay lập tức:</strong>
+            <span id="noi_dung_lich_tu_dong"
+              >Hệ thống tự nhảy sang ngày hiện tại và khung giờ hiện tại. Bạn vẫn có thể đổi lại nếu muốn.</span
+            >
           </div>
 
           <!-- Đã gỡ bỏ ngày / khung giờ nhận mong muốn -->
