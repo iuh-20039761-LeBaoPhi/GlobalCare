@@ -205,6 +205,7 @@ if (!function_exists('admin_render_layout_start')) {
                     <div class="list-group list-group-flush mb-3">
                         <a href="index.php" class="<?= admin_h(admin_menu_link_class($activeKey, 'dashboard')) ?>"><i class="bi bi-speedometer2"></i>Tong quan</a>
                         <a href="quan-ly-hoa-don.php" class="<?= admin_h(admin_menu_link_class($activeKey, 'orders')) ?>"><i class="bi bi-receipt"></i>Quan ly don hang</a>
+                        <a href="quan-ly-dich-vu.php" class="<?= admin_h(admin_menu_link_class($activeKey, 'services')) ?>"><i class="bi bi-grid"></i>Quan ly dich vu</a>
                         <a href="quan-ly-nhan-vien.php" class="<?= admin_h(admin_menu_link_class($activeKey, 'employees')) ?>"><i class="bi bi-people"></i>Quan ly nhan vien</a>
                     </div>
 
