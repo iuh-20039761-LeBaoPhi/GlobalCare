@@ -21,10 +21,10 @@
   },
   "loaixe": [
     { "key": "auto", "label": "Để hệ thống tự đề xuất" },
-    { "key": "xe_may", "label": "Xe máy" },
-    { "key": "xe_loi", "label": "Xe lôi / xe ba gác" },
-    { "key": "xe_ban_tai", "label": "Xe bán tải / xe van" },
-    { "key": "xe_tai", "label": "Xe tải nhẹ" }
+    { "key": "xe_may", "label": "Xe máy trọng lượng ≤ 50kg" },
+    { "key": "xe_4_banh_nho", "label": "Xe 4 bánh nhỏ ≤ 500kg" },
+    { "key": "xe_4_banh_vua", "label": "Xe 4 bánh vừa ≤ 1200kg" },
+    { "key": "xe_4_banh_lon", "label": "Xe tải ≤ 3500kg" }
   ],
   "khunggiolayhang": [
     { "key": "sang_08_10", "label": "08:00 - 10:00", "start": "08:00", "end": "10:00", "phicodinh": 0, "heso": 1, "ghichu": "Khung giờ tiêu chuẩn, cả 4 gói áp dụng chung logic phụ phí dịch vụ" },

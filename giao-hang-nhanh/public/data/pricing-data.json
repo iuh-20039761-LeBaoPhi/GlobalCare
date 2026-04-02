@@ -348,43 +348,55 @@
         "da_gom_vat": true
       },
       "goi_y_phuong_tien": {
-        "cong_kenh": "Xe tải nhẹ",
-        "cong_kenh_lientinh": "Xe tải nhẹ liên tỉnh",
-        "dong_lanh_lon": "Xe tải lạnh / xe tải nhẹ",
-        "dong_lanh_nho": "Xe van lạnh / xe bán tải",
-        "nang_lon": "Xe bán tải / xe van",
-        "nang_nho": "Xe lôi / xe ba gác",
-        "mac_dinh": "Xe máy"
+        "cong_kenh": "Xe tải ≤ 3500kg",
+        "cong_kenh_lientinh": "Xe tải ≤ 3500kg",
+        "dong_lanh_lon": "Xe 4 bánh vừa ≤ 1200kg",
+        "dong_lanh_nho": "Xe 4 bánh nhỏ ≤ 500kg",
+        "nang_lon": "Xe 4 bánh vừa ≤ 1200kg",
+        "nang_nho": "Xe 4 bánh nhỏ ≤ 500kg",
+        "mac_dinh": "Xe máy trọng lượng ≤ 50kg"
       }
     }
   },
   "phuong_tien": [
     {
       "key": "xe_may",
-      "label": "Xe máy",
-      "multiplier": 1,
-      "description": "Mức chuẩn, không cộng thêm"
+      "label": "Xe máy trọng lượng ≤ 50kg",
+      "he_so_xe": 1,
+      "gia_co_ban": 6500,
+      "phi_toi_thieu": 10000,
+      "trong_luong_toi_da": 50,
+      "description": "Đơn đến 20km áp dụng 6.500đ/km, trên 20km áp dụng khoảng 5.000đ/km."
     },
     {
-      "key": "xe_loi",
-      "label": "Xe lôi / xe ba gác",
-      "multiplier": 2,
-      "description": "Phần vận chuyển tăng gấp 2 lần"
+      "key": "xe_4_banh_nho",
+      "label": "Xe 4 bánh nhỏ ≤ 500kg",
+      "he_so_xe": 1,
+      "gia_co_ban": 10000,
+      "phi_toi_thieu": 50000,
+      "trong_luong_toi_da": 500,
+      "description": "Giá cơ bản 10.000đ/km, tối thiểu 50.000đ."
     },
     {
-      "key": "xe_ban_tai",
-      "label": "Xe bán tải / xe van",
-      "multiplier": 2.8,
-      "description": "Phần vận chuyển tăng gấp 2,8 lần"
+      "key": "xe_4_banh_vua",
+      "label": "Xe 4 bánh vừa ≤ 1200kg",
+      "he_so_xe": 1.25,
+      "gia_co_ban": 10000,
+      "phi_toi_thieu": 100000,
+      "trong_luong_toi_da": 1200,
+      "description": "Hệ số xe 1,25, tương đương khoảng 12.500đ/km."
     },
     {
-      "key": "xe_tai",
-      "label": "Xe tải nhẹ",
-      "multiplier": 4,
-      "description": "Phần vận chuyển tăng gấp 4 lần"
+      "key": "xe_4_banh_lon",
+      "label": "Xe tải ≤ 3500kg",
+      "he_so_xe": 1.75,
+      "gia_co_ban": 10000,
+      "phi_toi_thieu": 150000,
+      "trong_luong_toi_da": 3500,
+      "description": "Nhóm xe tải đến 3.500kg, hệ số xe 1,75, tương đương khoảng 17.500đ/km."
     }
   ],
-  "vi_du_tinh_phi": "Ví dụ: Đơn hàng nội thành (20.000đ) x Xe bán tải / xe van (2,8) = 56.000đ",
+  "vi_du_tinh_phi": "Ví dụ: 8km x 10.000đ x hệ số xe 1,25 = 100.000đ, sau đó so với phí tối thiểu để chốt giá cuối.",
   "noi_dung_bang_gia": {
     "trong_luong": {
       "vi_du": {

@@ -1,4 +1,17 @@
 <?php
+/**
+ * booking.php
+ * API chính cho prefill, reorder và tạo đơn giao hàng trong admin/public flow.
+ * File này giữ orchestration:
+ * - đọc request
+ * - xác thực / truy vấn DB
+ * - lưu đơn và trả response
+ *
+ * Liên quan trực tiếp:
+ * - booking_normalize.php: gom alias/fallback/normalize để file này ngắn hơn
+ * - dat-lich/flow-submit.js: submit đơn từ frontend
+ * - customer-portal.js, shipper-portal.js, tracking modules: đọc dữ liệu đơn trả về
+ */
 header('Content-Type: application/json');
 header('Access-Control-Allow-Origin: *');
 header('Access-Control-Allow-Methods: GET, POST, OPTIONS');
@@ -12,11 +25,30 @@ if ($_SERVER['REQUEST_METHOD'] === 'OPTIONS') {
 
 require_once __DIR__ . '/../config/db.php';
 require_once __DIR__ . '/../config/settings_helper.php';
+require_once __DIR__ . '/booking_normalize.php';
 
 function json_response($payload, $statusCode = 200) {
     http_response_code($statusCode);
     echo json_encode($payload);
     exit;
+}
+
+function build_system_order_code($orderId, $createdAt = null) {
+    $numericId = (int) $orderId;
+    if ($numericId <= 0) {
+        return '';
+    }
+
+    $timezone = new DateTimeZone('Asia/Ho_Chi_Minh');
+    try {
+        $date = $createdAt
+            ? new DateTime((string) $createdAt, $timezone)
+            : new DateTime('now', $timezone);
+    } catch (Exception $exception) {
+        $date = new DateTime('now', $timezone);
+    }
+
+    return 'GHN-' . $date->format('Ymd') . '-' . str_pad((string) $numericId, 7, '0', STR_PAD_LEFT);
 }
 
 function sanitize_filename($name) {
@@ -76,91 +108,6 @@ function save_upload_group($field, $targetDir, array $allowedExts = []) {
     }
 
     return $saved;
-}
-
-function first_non_empty_value(...$values) {
-    foreach ($values as $value) {
-        if ($value !== null && $value !== '') {
-            return $value;
-        }
-    }
-    return '';
-}
-
-function normalize_booking_payload(array $data): array {
-    $aliases = [
-        'sender_name' => ['nguoi_gui_ho_ten'],
-        'sender_phone' => ['nguoi_gui_so_dien_thoai'],
-        'receiver_name' => ['nguoi_nhan_ho_ten'],
-        'receiver_phone' => ['nguoi_nhan_so_dien_thoai'],
-        'search_pickup' => ['dia_chi_lay_hang'],
-        'search_delivery' => ['dia_chi_giao_hang'],
-        'pickup_date' => ['ngay_lay_hang'],
-        'pickup_slot' => ['khung_gio_lay_hang'],
-        'pickup_slot_label' => ['ten_khung_gio_lay_hang'],
-        'notes' => ['ghi_chu_tai_xe'],
-        'cod_value' => ['gia_tri_thu_ho_cod'],
-        'payment_method' => ['phuong_thuc_thanh_toan'],
-        'fee_payer' => ['nguoi_tra_cuoc'],
-        'service' => ['dich_vu'],
-        'service_name' => ['ten_dich_vu'],
-        'estimated_eta' => ['du_kien_giao_hang'],
-        'vehicle' => ['phuong_tien'],
-        'vehicle_label' => ['ten_phuong_tien'],
-        'total_fee' => ['tong_cuoc'],
-        'pricing_breakdown' => ['chi_tiet_gia_cuoc'],
-        'pickup_lat' => ['vi_do_lay_hang'],
-        'pickup_lng' => ['kinh_do_lay_hang'],
-        'delivery_lat' => ['vi_do_giao_hang'],
-        'delivery_lng' => ['kinh_do_giao_hang'],
-        'service_condition_key' => ['ma_dieu_kien_dich_vu'],
-        'weather_source' => ['nguon_thoi_tiet'],
-        'weather_note' => ['ghi_chu_thoi_tiet'],
-        'items' => ['mat_hang'],
-    ];
-
-    foreach ($aliases as $legacyKey => $newKeys) {
-        if (!array_key_exists($legacyKey, $data) || $data[$legacyKey] === null || $data[$legacyKey] === '') {
-            foreach ($newKeys as $newKey) {
-                if (array_key_exists($newKey, $data) && $data[$newKey] !== null && $data[$newKey] !== '') {
-                    $data[$legacyKey] = $data[$newKey];
-                    break;
-                }
-            }
-        }
-    }
-
-    if ((!array_key_exists('items', $data) || !is_array($data['items'])) && isset($data['mat_hang']) && is_array($data['mat_hang'])) {
-        $data['items'] = $data['mat_hang'];
-    }
-
-    return $data;
-}
-
-function with_booking_prefill_aliases(array $payload): array {
-    return array_merge($payload, [
-        'nguoi_gui_ho_ten' => $payload['sender_name'] ?? '',
-        'nguoi_gui_so_dien_thoai' => $payload['sender_phone'] ?? '',
-        'dia_chi_lay_hang' => $payload['pickup_address'] ?? '',
-    ]);
-}
-
-function with_booking_reorder_aliases(array $payload): array {
-    return array_merge($payload, [
-        'nguoi_gui_ho_ten' => $payload['sender_name'] ?? '',
-        'nguoi_gui_so_dien_thoai' => $payload['sender_phone'] ?? '',
-        'nguoi_nhan_ho_ten' => $payload['receiver_name'] ?? '',
-        'nguoi_nhan_so_dien_thoai' => $payload['receiver_phone'] ?? '',
-        'dia_chi_lay_hang' => $payload['pickup_address'] ?? '',
-        'dia_chi_giao_hang' => $payload['delivery_address'] ?? '',
-        'dich_vu' => $payload['service_type'] ?? '',
-        'phuong_tien' => $payload['vehicle'] ?? '',
-        'phuong_thuc_thanh_toan' => $payload['payment_method'] ?? '',
-        'nguoi_tra_cuoc' => $payload['fee_payer'] ?? 'gui',
-        'gia_tri_thu_ho_cod' => $payload['cod_value'] ?? 0,
-        'ghi_chu_tai_xe' => $payload['notes'] ?? '',
-        'mat_hang' => $payload['items'] ?? [],
-    ]);
 }
 
 function get_booking_prefill(mysqli $conn, $userId) {
@@ -260,115 +207,6 @@ function save_recent_pickup_address(mysqli $conn, $userId, $name, $phone, $addre
     }
 }
 
-function extract_slot_start_time($slotValue, $fallback = '08:00') {
-    $slotText = trim((string)$slotValue);
-    if ($slotText === '') {
-        return $fallback;
-    }
-
-    if (preg_match('/(\d{1,2}:\d{2})\s*-\s*(\d{1,2}:\d{2})/', $slotText, $matches)) {
-        return $matches[1];
-    }
-
-    if (preg_match('/(\d{1,2})_(\d{2})_(\d{1,2})_(\d{2})/', $slotText, $matches)) {
-        return sprintf('%02d:%02d', intval($matches[1]), intval($matches[2]));
-    }
-
-    if (preg_match('/(\d{1,2}:\d{2})/', $slotText, $matches)) {
-        return $matches[1];
-    }
-
-    return $fallback;
-}
-
-function map_package_type_to_item_type($packageType) {
-    $normalized = strtolower(trim((string) $packageType));
-    $map = [
-        'document' => 'thuong',
-        'clothes' => 'thuong',
-        'food' => 'thuong',
-        'other' => 'thuong',
-        'electronic' => 'gia-tri-cao',
-        'fragile' => 'de-vo',
-        'frozen' => 'dong-lanh',
-        'liquid' => 'chat-long',
-    ];
-
-    return $map[$normalized] ?? 'thuong';
-}
-
-function normalize_reorder_payment_method($paymentMethod) {
-    $normalized = strtolower(trim((string) $paymentMethod));
-    if (in_array($normalized, ['bank', 'bank_transfer', 'transfer', 'chuyen_khoan'], true)) {
-        return 'chuyen_khoan';
-    }
-
-    return 'tien_mat';
-}
-
-function normalize_db_payment_method($paymentMethod) {
-    $normalized = strtolower(trim((string) $paymentMethod));
-    if (in_array($normalized, ['bank', 'bank_transfer', 'transfer', 'chuyen_khoan'], true)) {
-        return 'bank_transfer';
-    }
-
-    return 'cod';
-}
-
-function normalize_reorder_vehicle_key($vehicleType) {
-    $normalized = strtolower(trim((string) $vehicleType));
-    if ($normalized === '') {
-        return 'auto';
-    }
-    if (strpos($normalized, 'xe_may') !== false || strpos($normalized, 'xe máy') !== false) {
-        return 'xe_may';
-    }
-    if (strpos($normalized, 'xe_loi') !== false || strpos($normalized, 'xe lôi') !== false || strpos($normalized, 'ba gác') !== false) {
-        return 'xe_loi';
-    }
-    if (strpos($normalized, 'xe_ban_tai') !== false || strpos($normalized, 'bán tải') !== false || strpos($normalized, 'van') !== false) {
-        return 'xe_ban_tai';
-    }
-    if (strpos($normalized, 'xe_tai') !== false || strpos($normalized, 'xe tải') !== false || strpos($normalized, 'tải nhẹ') !== false) {
-        return 'xe_tai';
-    }
-
-    return 'auto';
-}
-
-function extract_reorder_note_and_fee_payer($note) {
-    $noteText = trim((string) $note);
-    if ($noteText === '') {
-        return ['note' => '', 'fee_payer' => 'gui'];
-    }
-
-    $noteText = preg_replace('/--- THÔNG TIN DỊCH VỤ ---.*?(?=(\n--- [A-ZÀ-Ỹ ]+ ---)|$)/us', '', $noteText);
-    $noteText = preg_replace('/--- CHI TIẾT PHÍ ---.*?(?=(\n--- [A-ZÀ-Ỹ ]+ ---)|$)/us', '', $noteText);
-    $noteText = preg_replace('/--- CHI TIET DICH VU ---.*?(?=(\n--- [A-ZÀ-Ỹ ]+ ---)|$)/us', '', $noteText);
-    $noteText = preg_replace('/--- CHI TIET PHI ---.*?(?=(\n--- [A-ZÀ-Ỹ ]+ ---)|$)/us', '', $noteText);
-
-    $feePayer = 'gui';
-    $cleanLines = [];
-    foreach (preg_split('/\r\n|\r|\n/', $noteText) as $line) {
-        $trimmedLine = trim($line);
-        if ($trimmedLine === '') {
-            continue;
-        }
-        if (stripos($trimmedLine, 'Người trả cước:') === 0) {
-            if (preg_match('/người nhận/ui', $trimmedLine)) {
-                $feePayer = 'nhan';
-            }
-            continue;
-        }
-        $cleanLines[] = $trimmedLine;
-    }
-
-    return [
-        'note' => implode("\n", $cleanLines),
-        'fee_payer' => $feePayer,
-    ];
-}
-
 function format_money_text($value) {
     return number_format((float) $value, 0, ',', '.') . 'đ';
 }
@@ -380,14 +218,6 @@ function encode_json_for_db($value) {
     );
 
     return $json !== false ? $json : '{}';
-}
-
-function fee_payer_label($feePayer) {
-    return $feePayer === 'nhan' ? 'Người nhận' : 'Người gửi';
-}
-
-function payment_method_label($paymentMethod) {
-    return normalize_db_payment_method($paymentMethod) === 'bank_transfer' ? 'Chuyển khoản' : 'Tiền mặt';
 }
 
 function build_slot_datetime($dateValue, $slotValue, $fallback = '08:00') {
@@ -476,22 +306,35 @@ function build_service_meta_record(array $data) {
     ];
 }
 
+function doc_gia_tri_breakdown(array $breakdown, array $keys, $default = 0) {
+    foreach ($keys as $key) {
+        if (array_key_exists($key, $breakdown) && $breakdown[$key] !== null && $breakdown[$key] !== '') {
+            return $breakdown[$key];
+        }
+    }
+
+    return $default;
+}
+
 function build_pricing_breakdown_record(array $data, $shippingFee) {
     $breakdown = isset($data['pricing_breakdown']) && is_array($data['pricing_breakdown'])
         ? $data['pricing_breakdown']
         : [];
 
     return [
-        'base_price' => round((float) ($breakdown['basePrice'] ?? 0), 2),
-        'overweight_fee' => round((float) ($breakdown['overweightFee'] ?? 0), 2),
-        'volume_fee' => round((float) ($breakdown['volumeFee'] ?? 0), 2),
-        'goods_fee' => round((float) ($breakdown['goodsFee'] ?? 0), 2),
-        'time_fee' => round((float) ($breakdown['timeFee'] ?? 0), 2),
-        'condition_fee' => round((float) ($breakdown['conditionFee'] ?? 0), 2),
-        'vehicle_fee' => round((float) ($breakdown['vehicleFee'] ?? 0), 2),
-        'cod_fee' => round((float) ($breakdown['codFee'] ?? 0), 2),
-        'insurance_fee' => round((float) ($breakdown['insuranceFee'] ?? 0), 2),
-        'service_fee' => round((float) ($breakdown['serviceFee'] ?? 0), 2),
+        'base_price' => round((float) doc_gia_tri_breakdown($breakdown, ['basePrice', 'tong_gia_van_chuyen', 'gia_co_ban']), 2),
+        'goods_fee' => round((float) doc_gia_tri_breakdown($breakdown, ['goodsFee', 'phu_phi_loai_hang']), 2),
+        'time_fee' => round((float) doc_gia_tri_breakdown($breakdown, ['timeFee', 'phu_phi_khung_gio']), 2),
+        'condition_fee' => round((float) doc_gia_tri_breakdown($breakdown, ['conditionFee', 'phu_phi_thoi_tiet']), 2),
+        'vehicle_fee' => round((float) doc_gia_tri_breakdown($breakdown, ['vehicleFee', 'dieu_chinh_theo_xe']), 2),
+        'cod_fee' => round((float) doc_gia_tri_breakdown($breakdown, ['codFee', 'phi_cod']), 2),
+        'insurance_fee' => round((float) doc_gia_tri_breakdown($breakdown, ['insuranceFee', 'phi_bao_hiem']), 2),
+        'don_gia_km' => round((float) doc_gia_tri_breakdown($breakdown, ['don_gia_km']), 2),
+        'he_so_xe' => round((float) doc_gia_tri_breakdown($breakdown, ['he_so_xe'], 1), 4),
+        'phi_toi_thieu' => round((float) doc_gia_tri_breakdown($breakdown, ['phi_toi_thieu']), 2),
+        'ten_loai_xe_tinh_gia' => trim((string) doc_gia_tri_breakdown($breakdown, ['ten_loai_xe_tinh_gia'], '')),
+        'ten_khung_gio' => trim((string) doc_gia_tri_breakdown($breakdown, ['ten_khung_gio', 'timeSurchargeLabel'], '')),
+        'ten_dieu_kien_thoi_tiet' => trim((string) doc_gia_tri_breakdown($breakdown, ['ten_dieu_kien_thoi_tiet', 'conditionSurchargeLabel'], '')),
         'total_fee' => round((float) $shippingFee, 2),
     ];
 }
@@ -948,7 +791,10 @@ function apply_server_side_instant_pricing(&$data, &$shippingFee, $conn) {
     $breakdown = isset($data['pricing_breakdown']) && is_array($data['pricing_breakdown'])
         ? $data['pricing_breakdown']
         : [];
-    $transportSubtotal = floatval($breakdown['basePrice'] ?? 0)
+    if (array_key_exists('don_gia_km', $breakdown)) {
+        return;
+    }
+    $transportSubtotal = floatval(($breakdown['tong_gia_van_chuyen'] ?? ($breakdown['basePrice'] ?? 0)))
         + floatval($breakdown['weightFee'] ?? 0)
         + floatval($breakdown['goodsFee'] ?? 0);
 
@@ -1122,7 +968,7 @@ $conn->begin_transaction();
 
 try {
     $user_id = isset($_SESSION['user_id']) ? intval($_SESSION['user_id']) : null;
-    $order_code = 'ORD' . time();
+    $order_code = 'TMP' . date('YmdHis') . '-' . bin2hex(random_bytes(3));
     
     // Thu thập các thông tin cơ bản
     $name = $data['sender_name'] ?? '';
@@ -1180,6 +1026,15 @@ try {
         }
     }
 
+    $kiem_tra_xe_may = kiem_tra_hang_hoa_xe_may($data['items'] ?? [], $vehicle_type);
+    if (!$kiem_tra_xe_may['hop_le']) {
+        $conn->rollback();
+        json_response([
+            'success' => false,
+            'message' => $kiem_tra_xe_may['ly_do'],
+        ], 422);
+    }
+
     // Insert order chính
     $sql = "INSERT INTO don_hang (
                 ma_don_hang, nguoi_dung_id, dia_chi_lay_hang, vi_do_lay_hang, kinh_do_lay_hang, ten_nguoi_gui, so_dien_thoai_nguoi_gui,
@@ -1208,6 +1063,20 @@ try {
     }
 
     $order_id = $conn->insert_id;
+    $order_code = build_system_order_code($order_id);
+    if ($order_code === '') {
+        throw new Exception("Không thể tạo mã đơn hàng từ ID hệ thống.");
+    }
+
+    $updateCodeStmt = $conn->prepare("UPDATE don_hang SET ma_don_hang = ? WHERE id = ? LIMIT 1");
+    if (!$updateCodeStmt) {
+        throw new Exception("Không thể cập nhật mã đơn hàng: " . $conn->error);
+    }
+    $updateCodeStmt->bind_param("si", $order_code, $order_id);
+    if (!$updateCodeStmt->execute()) {
+        throw new Exception("Không thể cập nhật mã đơn hàng: " . $updateCodeStmt->error);
+    }
+    $updateCodeStmt->close();
 
     // Insert chi tiết món hàng
     if (isset($data['items']) && is_array($data['items'])) {
@@ -1291,6 +1160,7 @@ try {
     json_response([
         'success' => true, 
         'message' => 'Đặt đơn hàng thành công!',
+        'order_id' => $order_id,
         'order_code' => $order_code,
         'ma_don_hang' => $order_code,
         'uploaded_files' => $uploadedMedia,

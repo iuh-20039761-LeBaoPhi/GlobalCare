@@ -95,6 +95,14 @@
             <span class="ten-phi">${core.escapeHtml(v.ten_hien_thi)}</span>
             <span class="muc-tien"><strong>${core.escapeHtml(formatCurrency(v.gia_moi_km) || "Cần xác nhận")}</strong>/km</span>
           </div>
+          <div class="dong-gia-so-sanh">
+            <span class="ten-phi">Đường dài >20km</span>
+            <span class="muc-tien"><strong>${core.escapeHtml(formatCurrency(v.gia_moi_km_duong_dai) || "Cần xác nhận")}</strong>/km</span>
+          </div>
+          <div class="dong-gia-so-sanh">
+            <span class="ten-phi">Phí tối thiểu</span>
+            <span class="muc-tien"><strong>${core.escapeHtml(formatCurrency(v.phi_toi_thieu) || "Cần xác nhận")}</strong></span>
+          </div>
         `);
       }
 
@@ -133,7 +141,7 @@
     }).join("");
 
     let commonNote = "";
-    if (groupId === "cuoc-xe") commonNote = "Tổng cước xe = Số km di chuyển x Giá mỗi km của loại xe đã chọn.";
+    if (groupId === "cuoc-xe") commonNote = "Tổng cước xe = max(Phí tối thiểu, Số km di chuyển x Giá mỗi km theo loại xe). Khi quãng đường vượt 20km, hệ thống tự giảm 10% đơn giá xe để giữ bảng giá đồng nhất.";
     if (groupId === "ho-tro") commonNote = "Chỉ phát sinh khi khách hàng yêu cầu thêm các dịch vụ hỗ trợ ngoài cước di chuyển cơ bản.";
     if (groupId === "thoi-diem") commonNote = "Hệ số và phụ phí thời điểm sẽ được linh động cộng dồn một lần vào tổng hóa đơn cuối cùng.";
 
