@@ -140,6 +140,8 @@ if (!function_exists('render_khach_hang_header')) {
                             <div class="text-muted small"><?= $phoneEsc ?></div>
                         </li>
                         <li><a class="dropdown-item" href="../index.html"><i class="bi bi-house me-2"></i>Trang chu</a></li>
+                        <li><a class="dropdown-item" href="thong-tin-khach-hang.php"><i class="bi bi-person-circle me-2"></i>Thong tin ca nhan</a></li>
+                        <li><a class="dropdown-item" href="danh-sach-hoa-don.php"><i class="bi bi-receipt me-2"></i>Danh sach hoa don</a></li>
                         <li><a class="dropdown-item text-danger" href="../logout.php"><i class="bi bi-box-arrow-right me-2"></i>Dang xuat</a></li>
                     </ul>
                 </div>

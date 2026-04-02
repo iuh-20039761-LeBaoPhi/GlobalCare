@@ -56,9 +56,9 @@
                                     <input type="text" id="address" class="form-control" required>
                                 </div>
 
-                                <div class="col-12">
+                                <div class="col-12 d-none" id="experienceWrap">
                                     <label for="experience" class="form-label">Mô tả kinh nghiệm <span class="text-danger">*</span></label>
-                                    <textarea id="experience" class="form-control" rows="3" required></textarea>
+                                    <textarea id="experience" class="form-control" rows="3"></textarea>
                                 </div>
 
                                 <div class="col-12 col-md-4">
@@ -102,6 +102,9 @@
         const form = document.getElementById('registerForm');
         const msg = document.getElementById('msg');
         const btn = document.getElementById('registerBtn');
+        const accountTypeEl = document.getElementById('account_type');
+        const experienceWrap = document.getElementById('experienceWrap');
+        const experienceEl = document.getElementById('experience');
 
         // Hien thi thong bao trang thai cho nguoi dung.
         function showMsg(type, text) {
@@ -123,6 +126,21 @@
         // Kiem tra ket qua tra ve tu KRUD.
         function isKrudSuccess(res) {
             return !!res && !res.error && res.success !== false;
+        }
+
+        // Chi hien mo ta kinh nghiem voi tai khoan nhan vien.
+        function syncExperienceField() {
+            const accountType = accountTypeEl.value;
+            const isEmployee = accountType === 'nhanvien';
+
+            if (isEmployee) {
+                experienceWrap.classList.remove('d-none');
+                experienceEl.required = true;
+            } else {
+                experienceWrap.classList.add('d-none');
+                experienceEl.required = false;
+                experienceEl.value = '';
+            }
         }
 
         // Upload 3 anh va nhan ve duong dan de luu vao DB.
@@ -160,10 +178,10 @@
             const email = document.getElementById('email').value.trim().toLowerCase();
             const phone = normalizePhone(document.getElementById('sodienthoai').value);
             const birthDate = document.getElementById('birth_date').value;
-            const accountType = document.getElementById('account_type').value;
+            const accountType = accountTypeEl.value;
             const password = document.getElementById('password').value;
             const address = document.getElementById('address').value.trim();
-            const experience = document.getElementById('experience').value.trim();
+            const experience = experienceEl.value.trim();
 
             const avatarFile = document.getElementById('anh_dai_dien').files[0];
             const frontFile = document.getElementById('cccd_mat_truoc').files[0];
@@ -202,7 +220,6 @@
                     sodienthoai: phone,
                     matkhau: password,
                     diachi: address,
-                    kinh_nghiem: experience,
                     ngaysinh: birthDate,
                     anh_dai_dien: imagePaths.anh_dai_dien,
                     cccd_mat_truoc: imagePaths.cccd_mat_truoc,
@@ -211,6 +228,7 @@
                 };
 
                 if (accountType === 'nhanvien') {
+                    payload.kinh_nghiem = experience;
                     payload.trangthai = 'pending';
                 }
 
@@ -235,6 +253,8 @@
             }
         }
 
+        accountTypeEl.addEventListener('change', syncExperienceField);
+        syncExperienceField();
         form.addEventListener('submit', registerHandler);
     </script>
 </body>
