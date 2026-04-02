@@ -1445,6 +1445,48 @@
             });
         }
 
+        function updateOrderStatus(order, nextStatus) {
+          if (typeof window.krud !== "function") {
+            return Promise.reject(
+              new Error("KRUD chưa sẵn sàng. Vui lòng tải lại trang."),
+            );
+          }
+
+          if (!order || !order.rowId) {
+            return Promise.reject(
+              new Error("Không tìm thấy mã bản ghi để cập nhật trạng thái."),
+            );
+          }
+
+          return Promise.resolve(
+            window.krud(
+              "update",
+              "datlich_giatuinhanh",
+              {
+                trangthaidon: nextStatus,
+              },
+              order.rowId,
+            ),
+          ).then(function (response) {
+            if (!response || response.success === false || response.error) {
+              throw new Error(
+                (response && (response.error || response.message)) ||
+                  "Cập nhật trạng thái đơn thất bại.",
+              );
+            }
+
+            return response;
+          });
+        }
+
+        function cancelOrder(order) {
+          return updateOrderStatus(order, "Cancel").then(function () {
+            order.order_status = "cancel";
+            applyFilter();
+            return loadOrdersFromKrud(getHiddenSessionPhone());
+          });
+        }
+
         function bindEvents() {
           statusFilter.addEventListener("change", applyFilter);
 
@@ -1467,12 +1509,18 @@
           });
 
           tableBody.addEventListener("click", function (event) {
-            const target = event.target;
-            if (!(target instanceof HTMLElement)) {
+            const clickTarget = event.target;
+            if (!(clickTarget instanceof HTMLElement)) {
               return;
             }
-            const action = target.getAttribute("data-action");
-            const orderId = target.getAttribute("data-order-id");
+
+            const button = clickTarget.closest("button[data-action]");
+            if (!button) {
+              return;
+            }
+
+            const action = button.getAttribute("data-action");
+            const orderId = button.getAttribute("data-order-id");
             if (!orderId) {
               return;
             }
@@ -1494,8 +1542,23 @@
                 return;
               }
 
-              orderToCancel.order_status = "Cancel";
-              applyFilter();
+              const originalText = button.textContent;
+              button.disabled = true;
+              button.textContent = "Đang hủy...";
+
+              cancelOrder(orderToCancel)
+                .catch(function (error) {
+                  console.error("Lỗi hủy đơn:", error);
+                  window.alert(
+                    (error && error.message) ||
+                      "Không thể hủy đơn. Vui lòng thử lại.",
+                  );
+                })
+                .finally(function () {
+                  button.disabled = false;
+                  button.textContent = originalText || "Hủy đơn";
+                });
+
               return;
             }
 

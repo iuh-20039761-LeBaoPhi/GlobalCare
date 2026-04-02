@@ -1,23 +1,45 @@
 (function (window, document) {
   var SESSION_ENDPOINT = "public/session-user.php";
-  var LOGIN_TABLE = "khachhang";
-
-  var form = document.getElementById("loginForm");
+  var form =
+    document.getElementById("loginForm") ||
+    document.getElementById("providerLoginForm") ||
+    document.getElementById("loginProviderForm");
   if (!form) return;
 
-  var identityInput = document.getElementById("identity");
-  var passwordInput = document.getElementById("password");
-  var identityError = document.getElementById("identityError");
-  var passwordError = document.getElementById("passwordError");
-  var togglePasswordBtn = document.getElementById("togglePassword");
-  var submitBtn = document.getElementById("submitBtn");
-  var loginStatus = document.getElementById("loginStatus");
+  var isProviderLogin =
+    form.id === "providerLoginForm" || form.id === "loginProviderForm";
+  var LOGIN_TABLE = isProviderLogin ? "nhacungcap_giatuinhanh" : "khachhang";
+  var REDIRECT_URL = "index.html";
+
+  var identityInput =
+    document.getElementById("identity") ||
+    document.getElementById("providerPhone");
+  var passwordInput =
+    document.getElementById("password") ||
+    document.getElementById("providerPassword");
+  var identityError =
+    document.getElementById("identityError") ||
+    document.getElementById("providerPhoneError");
+  var passwordError =
+    document.getElementById("passwordError") ||
+    document.getElementById("providerPasswordError");
+  var togglePasswordBtn =
+    document.getElementById("togglePassword") ||
+    document.getElementById("toggleProviderPassword");
+  var submitBtn =
+    document.getElementById("submitBtn") ||
+    document.getElementById("providerSubmitBtn");
+  var loginStatus =
+    document.getElementById("loginStatus") ||
+    document.getElementById("providerLoginStatus");
 
   function isPhoneVN(value) {
     return /^(?:\+84|84|0)(?:3|5|7|8|9)\d{8}$/.test(value);
   }
 
   function validateIdentity() {
+    if (!identityInput || !identityError) return false;
+
     var value = String(identityInput.value || "").trim();
     identityError.textContent = "";
     identityInput.setAttribute("aria-invalid", "false");
@@ -39,6 +61,8 @@
   }
 
   function validatePassword() {
+    if (!passwordInput || !passwordError) return false;
+
     var value = String(passwordInput.value || "");
     passwordError.textContent = "";
     passwordInput.setAttribute("aria-invalid", "false");
@@ -99,7 +123,24 @@
       user_name: row.user_name || row.hovaten || row.ten || "",
       user_tel: row.user_tel || row.sodienthoai || row.phone || "",
       user_email: row.user_email || row.email || "",
+      account_type: isProviderLogin ? "provider" : "customer",
     };
+  }
+
+  function isBlockedProvider(row) {
+    if (!isProviderLogin || !row) return false;
+
+    var status = String(row.trangthai || row.status || "")
+      .trim()
+      .toLowerCase();
+
+    return (
+      status === "blocked" ||
+      status === "block" ||
+      status === "locked" ||
+      status === "khoa" ||
+      status === "khóa"
+    );
   }
 
   async function findValidUser(identity, password) {
@@ -166,20 +207,29 @@
 
   form.addEventListener("submit", async function (event) {
     event.preventDefault();
-    loginStatus.classList.add("d-none");
+    if (loginStatus) {
+      loginStatus.classList.add("d-none");
+    }
 
     var isIdentityValid = validateIdentity();
     var isPasswordValid = validatePassword();
     if (!isIdentityValid || !isPasswordValid) return;
 
-    submitBtn.disabled = true;
-    submitBtn.innerHTML =
-      '<span class="spinner-border spinner-border-sm me-2" aria-hidden="true"></span><span class="btn-text">Đang xử lý...</span>';
+    if (submitBtn) {
+      submitBtn.disabled = true;
+      submitBtn.innerHTML =
+        '<span class="spinner-border spinner-border-sm me-2" aria-hidden="true"></span><span class="btn-text">Đang xử lý...</span>';
+    }
 
     try {
       var row = await findValidUser(identityInput.value, passwordInput.value);
       if (!row) {
         setStatus("Sai số điện thoại hoặc mật khẩu.", "error");
+        return;
+      }
+
+      if (isBlockedProvider(row)) {
+        setStatus("Tài khoản nhà cung cấp đang bị khóa.", "error");
         return;
       }
 
@@ -192,7 +242,7 @@
       setStatus("Đăng nhập thành công! Đang chuyển trang...", "success");
 
       setTimeout(function () {
-        window.location.href = "index.html";
+        window.location.href = REDIRECT_URL;
       }, 500);
     } catch (error) {
       setStatus(
@@ -200,8 +250,10 @@
         "error",
       );
     } finally {
-      submitBtn.disabled = false;
-      submitBtn.innerHTML = '<span class="btn-text">Đăng nhập</span>';
+      if (submitBtn) {
+        submitBtn.disabled = false;
+        submitBtn.innerHTML = '<span class="btn-text">Đăng nhập</span>';
+      }
     }
   });
 })(window, document);

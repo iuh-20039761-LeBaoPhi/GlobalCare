@@ -64,7 +64,12 @@ $sessionUser = [
     'user_name' => isset($user['user_name']) ? trim((string) $user['user_name']) : '',
     'user_tel' => isset($user['user_tel']) ? trim((string) $user['user_tel']) : '',
     'user_email' => isset($user['user_email']) ? trim((string) $user['user_email']) : '',
+    'account_type' => isset($user['account_type']) ? trim((string) $user['account_type']) : '',
 ];
+
+if (!in_array($sessionUser['account_type'], ['provider', 'customer'], true)) {
+    $sessionUser['account_type'] = '';
+}
 
 if ($sessionUser['user_tel'] === '') {
     respond(400, [

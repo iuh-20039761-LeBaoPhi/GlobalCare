@@ -38,6 +38,16 @@
       logoutLinks: Array.from(
         document.querySelectorAll(".nav-menu .auth-logout-btn"),
       ),
+      orderLinks: Array.from(
+        document.querySelectorAll(
+          '.nav-menu .auth-user-dropdown a[href*="don-dat.html"]',
+        ),
+      ),
+      dashboardLinks: Array.from(
+        document.querySelectorAll(
+          '.nav-menu .auth-user-dropdown a[href*="nha-cung-cap.html"]',
+        ),
+      ),
     };
   }
 
@@ -78,12 +88,101 @@
     });
   }
 
+  function setMenuItemVisibility(elements, visible) {
+    elements.forEach(function (element) {
+      if (!element) return;
+      element.style.display = visible ? "flex" : "none";
+    });
+  }
+
+  function normalizeAccountType(value) {
+    var type = String(value || "")
+      .trim()
+      .toLowerCase();
+
+    if (
+      type === "provider" ||
+      type === "supplier" ||
+      type === "ncc" ||
+      type === "nhacungcap" ||
+      type === "nha-cung-cap"
+    ) {
+      return "provider";
+    }
+
+    if (
+      type === "customer" ||
+      type === "client" ||
+      type === "khachhang" ||
+      type === "khach-hang"
+    ) {
+      return "customer";
+    }
+
+    return "";
+  }
+
+  function detectAccountTypeByPhone(phone) {
+    if (!phone || typeof window.krudList !== "function") {
+      return Promise.resolve("customer");
+    }
+
+    return Promise.resolve(
+      window.krudList({
+        table: "nhacungcap_giatuinhanh",
+        where: [{ field: "sodienthoai", operator: "=", value: phone }],
+        limit: 1,
+      }),
+    )
+      .then(function (result) {
+        var rows = [];
+        if (Array.isArray(result)) rows = result;
+        else if (result && Array.isArray(result.data)) rows = result.data;
+        else if (result && Array.isArray(result.items)) rows = result.items;
+        else if (result && Array.isArray(result.rows)) rows = result.rows;
+        else if (result && Array.isArray(result.result)) rows = result.result;
+
+        return rows.length ? "provider" : "customer";
+      })
+      .catch(function () {
+        return "customer";
+      });
+  }
+
+  function resolveAccountType(user) {
+    var fromSession = normalizeAccountType(
+      user && (user.account_type || user.user_role || user.role),
+    );
+    if (fromSession) {
+      return Promise.resolve(fromSession);
+    }
+
+    var phone = user && user.user_tel ? String(user.user_tel).trim() : "";
+    return detectAccountTypeByPhone(phone);
+  }
+
+  function applyAccountMenuByType(nodes, accountType) {
+    var isProvider = accountType === "provider";
+    setMenuItemVisibility(nodes.orderLinks, !isProvider);
+    setMenuItemVisibility(nodes.dashboardLinks, isProvider);
+  }
+
   function applyAuthState(authenticated, user) {
     var nodes = getNavNodes();
     if (!nodes.loginLinks.length && !nodes.userMenus.length) return;
 
     setLoginVisibility(nodes.loginLinks, !authenticated);
     setUserMenuState(nodes.userMenus, authenticated, user || null);
+
+    if (!authenticated) {
+      setMenuItemVisibility(nodes.orderLinks, true);
+      setMenuItemVisibility(nodes.dashboardLinks, false);
+      return Promise.resolve();
+    }
+
+    return resolveAccountType(user).then(function (accountType) {
+      applyAccountMenuByType(nodes, accountType);
+    });
   }
 
   function bindLogout(logoutLinks) {
@@ -111,7 +210,9 @@
       var hasUser = Boolean(result && result.hasUser);
       var user = result && result.user ? result.user : null;
 
-      applyAuthState(hasUser, user);
+      return applyAuthState(hasUser, user);
+    })
+    .then(function () {
       bindLogout(getNavNodes().logoutLinks);
     })
     .catch(function () {
