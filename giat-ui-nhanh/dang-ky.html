@@ -598,7 +598,6 @@
                 id="providerSubmitBtn"
                 type="submit"
                 class="btn-login mt-2"
-                onclick="createProvider()"
               >
                 <span class="btn-text">Tạo tài khoản nhà cung cấp</span>
               </button>
@@ -961,6 +960,14 @@
 
         // Validate ảnh tải lên theo định dạng và giới hạn dung lượng.
         function validateUpload(config) {
+          if (config.input.files.length > 1) {
+            return setError(
+              config.input,
+              config.error,
+              "Mỗi mục chỉ được tải lên 1 ảnh.",
+            );
+          }
+
           var file = config.input.files[0];
           clearError(config.input, config.error);
 
@@ -1176,19 +1183,120 @@
         }
 
         function submitProvider(providerPayload) {
+          function setProviderSubmitting(isSubmitting) {
+            providerSubmitBtn.disabled = isSubmitting;
+            providerSubmitBtn.innerHTML = isSubmitting
+              ? '<span class="spinner-border spinner-border-sm me-2" aria-hidden="true"></span><span class="btn-text">Đang xử lý...</span>'
+              : '<span class="btn-text">Tạo tài khoản nhà cung cấp</span>';
+          }
+
+          async function geocodeProviderAddress(address) {
+            var text = String(address || "").trim();
+            if (!text) return { lat: "", lng: "" };
+
+            try {
+              var endpoint =
+                "https://nominatim.openstreetmap.org/search?format=json&limit=1&countrycodes=vn&q=" +
+                encodeURIComponent(text);
+              var res = await fetch(endpoint, {
+                headers: { "Accept-Language": "vi" },
+              });
+              if (!res.ok) return { lat: "", lng: "" };
+
+              var list = await res.json();
+              var first = Array.isArray(list) && list.length ? list[0] : null;
+              if (!first) return { lat: "", lng: "" };
+
+              return {
+                lat: String(first.lat || "").trim(),
+                lng: String(first.lon || "").trim(),
+              };
+            } catch (_error) {
+              return { lat: "", lng: "" };
+            }
+          }
+
+          async function uploadProviderFiles(payload) {
+            var formData = new FormData();
+            if (payload.avatarFile)
+              formData.append("avatar", payload.avatarFile);
+            if (payload.cccdFront)
+              formData.append("cccdFront", payload.cccdFront);
+            if (payload.cccdBack) formData.append("cccdBack", payload.cccdBack);
+
+            var response = await fetch("public/upload-nhacungcap-images.php", {
+              method: "POST",
+              credentials: "same-origin",
+              body: formData,
+            });
+
+            var result = await response.json().catch(function () {
+              return null;
+            });
+
+            if (!response.ok || !result || result.success !== true) {
+              throw new Error(
+                (result && result.message) || "Không thể tải ảnh lên máy chủ.",
+              );
+            }
+
+            return result.files || {};
+          }
+
           providerSubmitBtn.disabled = true;
           providerSubmitBtn.innerHTML =
             '<span class="spinner-border spinner-border-sm me-2" aria-hidden="true"></span><span class="btn-text">Đang xử lý...</span>';
 
-          setTimeout(function () {
-            providerSubmitBtn.disabled = false;
-            providerSubmitBtn.innerHTML =
-              '<span class="btn-text">Tạo tài khoản nhà cung cấp</span>';
-            providerStatus.classList.remove("d-none");
-            providerForm.reset();
-            resetProviderState();
-            console.log("providerPayload", providerPayload);
-          }, 1200);
+          Promise.all([
+            uploadProviderFiles(providerPayload),
+            geocodeProviderAddress(providerPayload.serviceAddress),
+          ])
+            .then(function (values) {
+              var files = values[0] || {};
+              var coords = values[1] || { lat: "", lng: "" };
+
+              return Promise.resolve(
+                krud("insert", "nhacungcap_giatuinhanh", {
+                  hovaten: providerPayload.fullName,
+                  sodienthoai: providerPayload.phone,
+                  email: providerPayload.email,
+                  matkhau: providerPayload.password,
+                  cuahang: providerPayload.serviceName,
+                  diachi: providerPayload.serviceAddress,
+                  gioithieu: providerPayload.serviceIntro,
+                  avatar: files.avatar || null,
+                  cccdFront: files.cccdFront || null,
+                  cccdBack: files.cccdBack || null,
+                  lat_ncc: coords.lat || "",
+                  lng_ncc: coords.lng || "",
+                  trangthai: "Pending",
+                }),
+              );
+            })
+            .then(function (res) {
+              if (!res || res.success === false || res.error) {
+                throw new Error(
+                  (res && (res.message || res.error)) ||
+                    "Không thể tạo tài khoản nhà cung cấp.",
+                );
+              }
+
+              providerStatus.textContent =
+                "Đăng ký thành công! Vui lòng chờ xét duyệt.";
+              providerStatus.classList.remove("d-none", "alert-danger");
+              providerStatus.classList.add("alert-success");
+              providerForm.reset();
+              resetProviderState();
+            })
+            .catch(function (error) {
+              providerStatus.textContent =
+                (error && error.message) || "Không thể đăng ký tài khoản.";
+              providerStatus.classList.remove("d-none", "alert-success");
+              providerStatus.classList.add("alert-danger");
+            })
+            .finally(function () {
+              setProviderSubmitting(false);
+            });
         }
 
         togglePasswordButtons.forEach(function (button) {
@@ -1362,41 +1470,7 @@
           });
       }
       function createProvider() {
-        document
-          .getElementById("providerForm")
-          .addEventListener("submit", function (e) {
-            e.preventDefault();
-
-            const hovaten = document.getElementById("providerFullName").value;
-            const sodienthoai = document.getElementById("providerPhone").value;
-            const email = document.getElementById("providerEmail").value;
-            const matkhau = document.getElementById("providerPassword").value;
-            const cuahang = document.getElementById("serviceName").value;
-            const diachi = document.getElementById("serviceAddress").value;
-            const gioithieu = document.getElementById("serviceIntro").value;
-            const avatarFile = document.getElementById("avatarFile").files[0];
-            const cccdFront = document.getElementById("cccdFront").files[0];
-            const cccdBack = document.getElementById("cccdBack").files[0];
-            krud("insert", "nhacungcap_giatuinhanh", {
-              hovaten: hovaten,
-              sodienthoai: sodienthoai,
-              email: email,
-              matkhau: matkhau,
-              cuahang: cuahang,
-              diachi: diachi,
-              gioithieu: gioithieu,
-              avatar: avatarFile ? avatarFile.name : null,
-              cccdFront: cccdFront ? cccdFront.name : null,
-              cccdBack: cccdBack ? cccdBack.name : null,
-            }).then((res) => {
-              document.getElementById("providerStatus").textContent =
-                "Đăng ký thành công! Vui lòng chờ xét duyệt.";
-              document
-                .getElementById("providerStatus")
-                .classList.remove("d-none");
-              document.getElementById("customerForm").reset();
-            });
-          });
+        return;
       }
     </script>
   </body>

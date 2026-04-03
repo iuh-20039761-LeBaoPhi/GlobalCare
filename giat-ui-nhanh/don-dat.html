@@ -917,6 +917,10 @@
       type="text/javascript"
       src="public/asset/js/auth-session.js"
     ></script>
+    <script
+      type="text/javascript"
+      src="public/asset/js/order-display-utils.js"
+    ></script>
     <script>
       WebFont.load({
         google: {
@@ -939,7 +943,7 @@
     <script>
       (function () {
         const statusFilter = document.getElementById("statusFilter");
-        const sessionPhoneFilterInput =
+        const sessionPhoneFilter =
           document.getElementById("sessionPhoneFilter");
         const tableBody = document.querySelector(".table tbody");
         const orderDetailModalElement =
@@ -947,636 +951,303 @@
         const orderDetailModal = orderDetailModalElement
           ? new bootstrap.Modal(orderDetailModalElement)
           : null;
+
         let allOrders = [];
 
-        if (!statusFilter || !sessionPhoneFilterInput || !tableBody) {
-          return;
-        }
-
-        function getSessionPhoneFromLogin() {
-          return fetch("public/asset/login-page.php", {
-            method: "GET",
-            credentials: "same-origin",
-            headers: {
-              "Content-Type": "application/json",
-              Accept: "application/json",
-            },
-          })
-            .then(function (response) {
-              return response
-                .json()
-                .catch(function () {
-                  return null;
-                })
-                .then(function (result) {
-                  return {
-                    ok: response.ok,
-                    result: result,
-                  };
-                });
-            })
-            .then(function (payload) {
-              const result = payload && payload.result ? payload.result : null;
-
-              if (!result || result.loggedIn !== true) {
-                const redirectTarget =
-                  (result && result.redirect) || "index.html";
-                window.location.href = redirectTarget;
-                return "";
-              }
-
-              const phone = normalizePhone(
-                result &&
-                  result.user &&
-                  (result.user.user_tel ||
-                    result.user.sodienthoai ||
-                    result.user.phone),
-              );
-
-              sessionPhoneFilterInput.value = phone || "";
-              return phone || "";
-            })
-            .catch(function () {
-              window.location.href = "index.html";
-              return "";
-            });
-        }
-
-        function getHiddenSessionPhone() {
-          return normalizePhone(sessionPhoneFilterInput.value || "");
-        }
-
-        function formatDate(dateValue) {
-          const date = new Date(dateValue);
-          if (Number.isNaN(date.getTime())) {
-            return dateValue;
-          }
-          return date.toLocaleDateString("vi-VN");
-        }
-
-        function statusText(status) {
-          const normalized = (status || "").toLowerCase();
-          if (normalized === "pending") {
-            return "Chờ xử lý";
-          }
-          if (normalized === "processing") {
-            return "Đang xử lý";
-          }
-          if (normalized === "completed") {
-            return "Hoàn thành";
-          }
-          if (normalized === "cancel") {
-            return "Đã hủy";
-          }
-          return status || "Không rõ";
-        }
-
-        function orderStatusText(value) {
-          const normalized = String(value || "").toLowerCase();
-          if (normalized === "pending") {
-            return "Chờ xử lý";
-          }
-          if (normalized === "processing") {
-            return "Đang xử lý";
-          }
-          if (normalized === "completed") {
-            return "Hoàn thành";
-          }
-          if (normalized === "cancel") {
-            return "Đã hủy";
-          }
-          return value || "Không rõ";
-        }
-
-        function transactionStatusText(value) {
-          const normalized = String(value || "").toLowerCase();
-          if (normalized === "paid") {
-            return "Đã thanh toán";
-          }
-          if (normalized === "unpaid") {
-            return "Chưa thanh toán";
-          }
-          return value || "Không rõ";
-        }
-
-        function transactionStatusClass(value) {
-          const normalized = String(value || "").toLowerCase();
-          if (normalized === "paid") {
-            return "payment-status-paid";
-          }
-          if (normalized === "unpaid") {
-            return "payment-status-unpaid";
-          }
-          return "payment-status-unknown";
-        }
-
-        function toNumber(value) {
-          const normalized = String(value == null ? "" : value)
-            .replace(/[^\d.-]/g, "")
-            .trim();
-          const number = Number(normalized);
-          return Number.isFinite(number) ? number : 0;
-        }
-
-        function formatCurrency(value) {
-          const number = toNumber(value);
-          return number.toLocaleString("vi-VN", {
-            style: "currency",
-            currency: "VND",
-            maximumFractionDigits: 0,
-          });
-        }
-
-        function getTransportFee(order) {
-          return toNumber(order && order.transportFee ? order.transportFee : 0);
-        }
-
         function setText(id, value) {
-          const element = document.getElementById(id);
-          if (element) {
-            element.textContent = value || "-";
+          const el = document.getElementById(id);
+          if (el) el.textContent = value || "-";
+        }
+
+        async function getSessionPhone() {
+          try {
+            const response = await fetch("public/session-user.php?action=get", {
+              method: "GET",
+              credentials: "same-origin",
+              headers: { "Content-Type": "application/json" },
+            });
+            const result = await response.json().catch(() => null);
+            const phone =
+              response.ok && result?.hasUser === true
+                ? String(result?.user?.user_tel || "").trim()
+                : "";
+            if (sessionPhoneFilter) sessionPhoneFilter.value = phone;
+            return phone;
+          } catch (_) {
+            if (sessionPhoneFilter) sessionPhoneFilter.value = "";
+            return "";
           }
         }
 
-        function setTextAllowEmpty(id, value) {
-          const element = document.getElementById(id);
-          if (element) {
-            element.textContent = value ?? "";
-          }
-        }
-
-        function getOrderStatusCode(order) {
-          return String(order && order.order_status ? order.order_status : "")
-            .toLowerCase()
-            .trim();
-        }
-
-        function isPendingOrder(order) {
-          return getOrderStatusCode(order) === "pending";
-        }
-
-        function openOrderModal(order) {
-          if (!order || !orderDetailModal) {
-            return;
-          }
-
-          const pendingOrder = isPendingOrder(order);
-
-          setText("modalOrderId", order.id);
-          setText("modalServiceName", order.serviceName);
-          setText("modalWorkItems", order.work_items);
-          setText("modalSupportChemicals", order.support_chemicals);
-          setText("modalTransportOptions", order.transport_options);
-          setText("modalQuantity", String(order.quantity || "-"));
-          setText("modalOrderDate", formatDate(order.orderDate));
-          setText("modalOrderStatus", orderStatusText(order.order_status));
-          const transactionStatusEl = document.getElementById(
-            "modalTransactionStatus",
+        function extractRows(result) {
+          return (
+            result?.data ||
+            result?.rows ||
+            result?.items ||
+            result?.result ||
+            result ||
+            []
           );
-          if (transactionStatusEl) {
-            transactionStatusEl.innerHTML = `<span class="payment-status-badge ${transactionStatusClass(order.transaction_status)}">${transactionStatusText(order.transaction_status)}</span>`;
-          }
-          setText("modalServicePrice", formatCurrency(order.servicePrice));
-          setText("modalShippingFee", formatCurrency(getTransportFee(order)));
-          setText(
-            "modalShippingSurcharge",
-            formatCurrency(order.shippingSurcharge),
-          );
-          setText("modalTotalPrice", formatCurrency(order.totalPrice));
-          setText("modalNote", order.note || "Không có ghi chú.");
+        }
 
-          setText("modalCustomerName", order.customer && order.customer.name);
-          setText("modalCustomerPhone", order.customer && order.customer.phone);
-          setText("modalCustomerEmail", order.customer && order.customer.email);
-          setText(
-            "modalCustomerAddress",
-            order.customer && order.customer.address,
+        function getSupplierIdFromOrder(order) {
+          const supplierId = Number(
+            order?.idnhacungcap || order?.id_ncc || order?.manhacungcap,
           );
+          return Number.isFinite(supplierId) && supplierId > 0
+            ? supplierId
+            : null;
+        }
 
-          if (pendingOrder) {
-            setTextAllowEmpty("modalProviderName", "Chưa có");
-            setTextAllowEmpty("modalProviderPhone", "Chưa có");
-            setTextAllowEmpty("modalProviderEmail", "Chưa có");
-            setTextAllowEmpty("modalProviderAddress", "Chưa có");
-          } else {
-            setText("modalProviderName", order.provider && order.provider.name);
-            setText(
-              "modalProviderPhone",
-              order.provider && order.provider.phone,
-            );
-            setText(
-              "modalProviderEmail",
-              order.provider && order.provider.email,
-            );
-            setText(
-              "modalProviderAddress",
-              order.provider && order.provider.address,
+        async function markOrderCanceled(orderId, canceledAt) {
+          const result = await Promise.resolve(
+            window.krud(
+              "update",
+              "datlich_giatuinhanh",
+              { ngayhuy: canceledAt },
+              orderId,
+            ),
+          );
+          if (!result || result.success === false || result.error) {
+            throw new Error(
+              result?.message || result?.error || "Cập nhật thất bại",
             );
           }
-
-          orderDetailModal.show();
         }
 
-        function renderRows(orders) {
-          if (!orders.length) {
+        function normalizeOrderStatus(value) {
+          const row = value || {};
+          if (row.ngayhuy) return "cancel";
+          if (row.ngayhoanthanh) return "completed";
+          if (row.ngaynhan) return "processing";
+          if (row.thoigiandatdichvu) return "pending";
+          return "pending";
+        }
+
+        function getOrderStatusLabel(value) {
+          if (value === "processing") return "Đã nhận đơn";
+          if (value === "completed") return "Đã hoàn thành";
+          if (value === "cancel") return "Đã hủy";
+          return "Chờ nhận đơn";
+        }
+
+        function getPaymentStatusLabel(value) {
+          return String(value || "")
+            .trim()
+            .toLowerCase() === "paid"
+            ? "Đã thanh toán"
+            : "Chưa thanh toán";
+        }
+
+        function renderRows(rows) {
+          if (!rows.length) {
             tableBody.innerHTML =
-              '<tr><td colspan="8" class="empty-row">Không có đơn phù hợp.</td></tr>';
+              '<tr><td colspan="8" class="empty-row">Không có dữ liệu.</td></tr>';
             return;
           }
 
-          tableBody.innerHTML = orders
-            .map(function (order, index) {
-              const normalizedStatus = getOrderStatusCode(order);
+          tableBody.innerHTML = rows
+            .map((row, index) => {
+              const status = normalizeOrderStatus(row);
               const statusClass =
-                normalizedStatus === "pending" ||
-                normalizedStatus === "processing" ||
-                normalizedStatus === "completed" ||
-                normalizedStatus === "cancel"
-                  ? `status-${normalizedStatus}`
+                status === "processing" ||
+                status === "completed" ||
+                status === "cancel"
+                  ? `status-${status}`
                   : "status-pending";
+              const canCancel = status === "pending";
 
               return `
-                <tr>
-                  <td>${index + 1}</td>
-                  <td>${(order.customer && order.customer.name) || "-"}</td>
-                  <td>${order.serviceName || "-"}</td>
-                  <td>${order.transport_options || "-"}</td>
-                  <td>${formatDate(order.orderDate)}</td>
-                  <td><span class="status-badge ${statusClass}">${statusText(normalizedStatus)}</span></td>
-                  <td>${isPendingOrder(order) ? "Chưa có" : (order.provider && order.provider.name) || "-"}</td>
-                  <td>
-                    <div class="action-wrap">
-                      <button class="action-btn" type="button" data-action="view" data-order-id="${order.id}">Xem</button>
-                      ${isPendingOrder(order) ? `<button class="cancel-btn" type="button" data-action="cancel" data-order-id="${order.id}">Hủy đơn</button>` : ""}
-                    </div>
-                  </td>
-                </tr>
-              `;
+            <tr>
+              <td>${index + 1}</td>
+              <td>${row.hovaten || "-"}</td>
+              <td>${row.dichvu || "-"}</td>
+              <td>${row.hinhthucnhangiao || "-"}</td>
+              <td>${row.thoigiandatdichvu || "-"}</td>
+              <td><span class="status-badge ${statusClass}">${getOrderStatusLabel(status)}</span></td>
+              <td>${row.tennhacungcap || "Chưa có"}</td>
+              <td>
+                <div class="action-wrap">
+                  <button class="action-btn" type="button" data-action="view" data-id="${row.id || ""}">Xem</button>
+                  ${canCancel ? `<button class="cancel-btn" type="button" data-action="cancel" data-id="${row.id || ""}">Hủy</button>` : ""}
+                </div>
+              </td>
+            </tr>
+          `;
             })
             .join("");
         }
 
         function applyFilter() {
-          const filterValue = statusFilter.value;
-          const filtered =
-            filterValue === "all"
-              ? allOrders
-              : allOrders.filter(function (order) {
-                  return getOrderStatusCode(order) === filterValue;
-                });
-          renderRows(filtered);
-        }
-
-        function extractKrudRows(result) {
-          if (Array.isArray(result)) {
-            return result;
-          }
-          if (result && Array.isArray(result.data)) {
-            return result.data;
-          }
-          if (result && Array.isArray(result.items)) {
-            return result.items;
-          }
-          if (result && Array.isArray(result.rows)) {
-            return result.rows;
-          }
-          if (result && Array.isArray(result.result)) {
-            return result.result;
-          }
-          return [];
-        }
-
-        function normalizeOrderStatus(value) {
-          const status = String(value || "")
-            .trim()
-            .toLowerCase();
-
-          if (
-            status === "pending" ||
-            status === "new" ||
-            status === "moi" ||
-            status === "chờ xử lý" ||
-            status === "cho xu ly"
-          ) {
-            return "pending";
-          }
-
-          if (
-            status === "processing" ||
-            status === "đang xử lý" ||
-            status === "dang xu ly"
-          ) {
-            return "processing";
-          }
-
-          if (
-            status === "completed" ||
-            status === "hoàn thành" ||
-            status === "hoan thanh"
-          ) {
-            return "completed";
-          }
-
-          if (
-            status === "cancel" ||
-            status === "cancelled" ||
-            status === "đã hủy" ||
-            status === "da huy"
-          ) {
-            return "cancel";
-          }
-
-          return "pending";
-        }
-
-        function normalizePaymentStatus(value) {
-          const status = String(value || "")
-            .trim()
-            .toLowerCase();
-
-          if (
-            status === "paid" ||
-            status === "đã thanh toán" ||
-            status === "da thanh toan"
-          ) {
-            return "paid";
-          }
-
-          if (
-            status === "unpaid" ||
-            status === "chưa thanh toán" ||
-            status === "chua thanh toan"
-          ) {
-            return "unpaid";
-          }
-
-          return "unpaid";
-        }
-
-        function normalizePhone(value) {
-          const phone = String(value || "")
-            .replace(/\s+/g, "")
-            .trim();
-
-          if (phone.indexOf("+84") === 0) {
-            return "0" + phone.slice(3);
-          }
-
-          if (phone.indexOf("84") === 0 && phone.length >= 11) {
-            return "0" + phone.slice(2);
-          }
-
-          return phone;
-        }
-
-        function mapOrderFromKrud(row) {
-          const transportFee = toNumber(row.tiendichuyen);
-          const shippingSurcharge = toNumber(row.phuphigiaonhan);
-
-          return {
-            rowId: row.id || "",
-            id: row.madonhang || row.id || "",
-            serviceName: row.dichvu || "",
-            transport_options: row.hinhthucnhangiao || "",
-            orderDate: row.thoigiandatdichvu || "",
-            order_status: normalizeOrderStatus(
-              row.trangthaidon || row.trangthai,
-            ),
-            transaction_status: normalizePaymentStatus(row.trangthaithanhtoan),
-            servicePrice: toNumber(row.giadichvu),
-            transportFee: transportFee,
-            shippingSurcharge: shippingSurcharge,
-            totalPrice: toNumber(row.tongtien),
-            work_items: row.danhsachcongviec || "",
-            support_chemicals: row.danhsachhoachat || "",
-            note: row.ghichu || "",
-            quantity: row.soluong || "",
-            customer: {
-              name: row.hovaten || "",
-              phone: row.sodienthoai || "",
-              email: row.email || "",
-              address: row.diachi || "",
-            },
-            provider: {
-              name: row.tennhacungcap || "",
-              phone: row.sdt_ncc || "",
-              email: row.email_ncc || "",
-              address: row.diachi_ncc || "",
-            },
-          };
-        }
-
-        function getRowFreshScore(row) {
-          if (!row || typeof row !== "object") {
-            return 0;
-          }
-
-          const dateCandidates = [row.thoigiancapnhat, row.thoigiandatdichvu];
-
-          for (let i = 0; i < dateCandidates.length; i += 1) {
-            const time = new Date(dateCandidates[i]).getTime();
-            if (Number.isFinite(time) && time > 0) {
-              return time;
-            }
-          }
-
-          const numericId = Number(row.id);
-          if (Number.isFinite(numericId) && numericId > 0) {
-            return numericId;
-          }
-
-          return 0;
-        }
-
-        function loadOrdersFromKrud(normalizedSessionPhone) {
-          if (typeof window.krudList !== "function") {
-            tableBody.innerHTML =
-              '<tr><td colspan="8" class="empty-row">KRUD chưa sẵn sàng. Vui lòng tải lại trang.</td></tr>';
+          const value = statusFilter ? statusFilter.value : "all";
+          if (value === "all") {
+            renderRows(allOrders);
             return;
           }
-
-          const sessionPhone = normalizePhone(
-            normalizedSessionPhone || getHiddenSessionPhone(),
+          renderRows(
+            allOrders.filter((r) => normalizeOrderStatus(r) === value),
           );
+        }
 
-          if (!sessionPhone) {
-            allOrders = [];
-            tableBody.innerHTML =
-              '<tr><td colspan="8" class="empty-row">Vui lòng đăng nhập để xem đơn đặt của bạn.</td></tr>';
-            return;
-          }
+        function openOrderModal(order) {
+          if (!order || !orderDetailModal) return;
 
+          setText(
+            "modalOrderId",
+            order.id ? String(order.id).padStart(7, "0") : "-",
+          );
+          setText("modalServiceName", order.dichvu);
+          setText("modalWorkItems", order.danhsachcongviec);
+          setText("modalSupportChemicals", order.danhsachhoachat);
+          setText("modalTransportOptions", order.hinhthucnhangiao);
+          setText("modalQuantity", order.soluong);
+          setText("modalOrderDate", order.thoigiandatdichvu);
+          setText(
+            "modalOrderStatus",
+            getOrderStatusLabel(normalizeOrderStatus(order)),
+          );
+          setText(
+            "modalTransactionStatus",
+            getPaymentStatusLabel(order.trangthaithanhtoan),
+          );
+          setText("modalServicePrice", order.giadichvu);
+          setText("modalShippingFee", order.tiendichuyen);
+          setText("modalShippingSurcharge", order.phuphigiaonhan);
+          setText("modalTotalPrice", order.tongtien);
+          setText("modalNote", order.ghichu);
+          setText("modalCustomerName", order.hovaten);
+          setText("modalCustomerPhone", order.sodienthoai);
+          setText("modalCustomerEmail", order.email);
+          setText("modalCustomerAddress", order.diachi);
+          setText("modalProviderName", order.tennhacungcap || "Chưa có");
+          setText("modalProviderPhone", order.sdt_ncc || "Chưa có");
+          setText("modalProviderEmail", order.email_ncc || "Chưa có");
+          setText("modalProviderAddress", order.diachi_ncc || "Chưa có");
+
+          orderDetailModal.show();
+        }
+
+        function loadOrders() {
           tableBody.innerHTML =
             '<tr><td colspan="8" class="empty-row">Đang tải dữ liệu...</td></tr>';
 
-          Promise.resolve(
-            window.krudList({
-              table: "datlich_giatuinhanh",
-              where: [
-                {
-                  op: "AND",
-                  conditions: [
-                    {
-                      field: "sodienthoai",
-                      operator: "=",
-                      value: sessionPhone,
-                    },
-                  ],
-                },
-              ],
-              page: 1,
-              limit: 10,
-            }),
-          )
-            .then(function (result) {
-              const rows = extractKrudRows(result);
+          getSessionPhone()
+            .then((phone) =>
+              Promise.all([
+                Promise.resolve(
+                  window.krudList({
+                    table: "datlich_giatuinhanh",
+                    where: [
+                      {
+                        conditions: [
+                          {
+                            field: "sodienthoai",
+                            operator: "=",
+                            value: phone,
+                          },
+                        ],
+                      },
+                    ],
+                    page: 1,
+                    limit: 10,
+                  }),
+                ),
+                Promise.resolve(
+                  window.krudList({
+                    table: "nhacungcap_giatuinhanh",
+                    page: 1,
+                    limit: 10,
+                  }),
+                ),
+              ]),
+            )
+            .then(([ordersResult, suppliersResult]) => {
+              const orders = Array.isArray(extractRows(ordersResult))
+                ? extractRows(ordersResult)
+                : [];
+              const suppliers = Array.isArray(extractRows(suppliersResult))
+                ? extractRows(suppliersResult)
+                : [];
 
-              rows.sort(function (a, b) {
-                return getRowFreshScore(b) - getRowFreshScore(a);
+              const supplierById = new Map(
+                suppliers
+                  .filter((item) => Number(item?.id) > 0)
+                  .map((item) => [Number(item.id), item]),
+              );
+
+              allOrders = orders.map((order) => {
+                const supplierId = getSupplierIdFromOrder(order);
+                const supplier = supplierId
+                  ? supplierById.get(supplierId)
+                  : null;
+
+                return {
+                  ...order,
+                  tennhacungcap:
+                    order?.tennhacungcap ||
+                    supplier?.hovaten ||
+                    supplier?.hoten ||
+                    "",
+                  sdt_ncc:
+                    order?.sdt_ncc ||
+                    supplier?.sodienthoai ||
+                    supplier?.sdt ||
+                    "",
+                  email_ncc: order?.email_ncc || supplier?.email || "",
+                  diachi_ncc: order?.diachi_ncc || supplier?.diachi || "",
+                };
               });
 
-              allOrders = rows.map(mapOrderFromKrud);
               applyFilter();
             })
-            .catch(function (error) {
-              console.error("Lỗi tải đơn từ KRUD:", error);
+            .catch(() => {
               tableBody.innerHTML =
-                '<tr><td colspan="8" class="empty-row">Không tải được dữ liệu từ bảng datlich_giatuinhanh.</td></tr>';
+                '<tr><td colspan="8" class="empty-row">Không tải được dữ liệu.</td></tr>';
             });
         }
 
-        function updateOrderStatus(order, nextStatus) {
-          if (typeof window.krud !== "function") {
-            return Promise.reject(
-              new Error("KRUD chưa sẵn sàng. Vui lòng tải lại trang."),
-            );
-          }
-
-          if (!order || !order.rowId) {
-            return Promise.reject(
-              new Error("Không tìm thấy mã bản ghi để cập nhật trạng thái."),
-            );
-          }
-
-          return Promise.resolve(
-            window.krud(
-              "update",
-              "datlich_giatuinhanh",
-              {
-                trangthaidon: nextStatus,
-              },
-              order.rowId,
-            ),
-          ).then(function (response) {
-            if (!response || response.success === false || response.error) {
-              throw new Error(
-                (response && (response.error || response.message)) ||
-                  "Cập nhật trạng thái đơn thất bại.",
-              );
-            }
-
-            return response;
-          });
-        }
-
-        function cancelOrder(order) {
-          return updateOrderStatus(order, "Cancel").then(function () {
-            order.order_status = "cancel";
-            applyFilter();
-            return loadOrdersFromKrud(getHiddenSessionPhone());
-          });
-        }
-
-        function bindEvents() {
+        if (statusFilter) {
           statusFilter.addEventListener("change", applyFilter);
-
-          window.addEventListener("focus", function () {
-            getSessionPhoneFromLogin().then(function (phone) {
-              if (phone) {
-                loadOrdersFromKrud(phone);
-              }
-            });
-          });
-
-          document.addEventListener("visibilitychange", function () {
-            if (document.visibilityState === "visible") {
-              getSessionPhoneFromLogin().then(function (phone) {
-                if (phone) {
-                  loadOrdersFromKrud(phone);
-                }
-              });
-            }
-          });
-
-          tableBody.addEventListener("click", function (event) {
-            const clickTarget = event.target;
-            if (!(clickTarget instanceof HTMLElement)) {
-              return;
-            }
-
-            const button = clickTarget.closest("button[data-action]");
-            if (!button) {
-              return;
-            }
-
-            const action = button.getAttribute("data-action");
-            const orderId = button.getAttribute("data-order-id");
-            if (!orderId) {
-              return;
-            }
-
-            if (action === "cancel") {
-              const orderToCancel = allOrders.find(function (item) {
-                return item.id === orderId;
-              });
-
-              if (!orderToCancel || !isPendingOrder(orderToCancel)) {
-                return;
-              }
-
-              const accepted = window.confirm(
-                `Bạn có chắc muốn hủy đơn ${orderId} không?`,
-              );
-
-              if (!accepted) {
-                return;
-              }
-
-              const originalText = button.textContent;
-              button.disabled = true;
-              button.textContent = "Đang hủy...";
-
-              cancelOrder(orderToCancel)
-                .catch(function (error) {
-                  console.error("Lỗi hủy đơn:", error);
-                  window.alert(
-                    (error && error.message) ||
-                      "Không thể hủy đơn. Vui lòng thử lại.",
-                  );
-                })
-                .finally(function () {
-                  button.disabled = false;
-                  button.textContent = originalText || "Hủy đơn";
-                });
-
-              return;
-            }
-
-            if (action === "view") {
-              const selectedOrder = allOrders.find(function (item) {
-                return item.id === orderId;
-              });
-              openOrderModal(selectedOrder);
-            }
-          });
         }
 
-        bindEvents();
-        getSessionPhoneFromLogin().then(function (phone) {
-          if (phone) {
-            loadOrdersFromKrud(phone);
+        tableBody.addEventListener("click", function (event) {
+          const button = event.target.closest("button[data-action]");
+          if (!button) return;
+
+          const action = button.getAttribute("data-action");
+          const id = Number(button.getAttribute("data-id"));
+          const order = allOrders.find((r) => Number(r.id) === id);
+
+          if (action === "view") {
+            openOrderModal(order);
+            return;
+          }
+
+          if (action === "cancel") {
+            if (!order) return;
+            if (normalizeOrderStatus(order) !== "pending") {
+              window.alert("Chỉ hủy được đơn đang chờ nhận.");
+              return;
+            }
+            if (!window.confirm("Bạn có chắc muốn hủy đơn này?")) return;
+
+            button.disabled = true;
+            const now = new Date().toISOString();
+            markOrderCanceled(id, now)
+              .then(() => {
+                order.ngayhuy = now;
+                applyFilter();
+              })
+              .catch(() => {
+                window.alert("Không thể hủy đơn.");
+              })
+              .finally(() => {
+                button.disabled = false;
+              });
           }
         });
+
+        loadOrders();
       })();
     </script>
   </body>

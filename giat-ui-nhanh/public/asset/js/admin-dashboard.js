@@ -3,9 +3,9 @@
   let orders = [];
 
   const statusConfig = {
-    pending: { label: "Chờ xác nhận", className: "status-pending" },
-    confirmed: { label: "Đã xác nhận", className: "status-confirmed" },
-    completed: { label: "Hoàn thành", className: "status-completed" },
+    pending: { label: "Chờ nhận đơn", className: "status-pending" },
+    confirmed: { label: "Đã nhận đơn", className: "status-confirmed" },
+    completed: { label: "Đã hoàn thành", className: "status-completed" },
     canceled: { label: "Đã hủy", className: "status-canceled" },
   };
 
@@ -18,50 +18,11 @@
     return [];
   }
 
-  function normalizeOrderStatus(value) {
-    const status = String(value || "")
-      .trim()
-      .toLowerCase();
-
-    if (
-      status === "confirmed" ||
-      status === "confirm" ||
-      status === "xác nhận" ||
-      status === "xac nhan" ||
-      status === "đã xác nhận" ||
-      status === "da xac nhan"
-    ) {
-      return "confirmed";
-    }
-
-    if (
-      status === "processing" ||
-      status === "in-progress" ||
-      status === "đang xử lý" ||
-      status === "dang xu ly"
-    ) {
-      return "confirmed";
-    }
-
-    if (
-      status === "completed" ||
-      status === "done" ||
-      status === "hoàn thành" ||
-      status === "hoan thanh"
-    ) {
-      return "completed";
-    }
-
-    if (
-      status === "cancel" ||
-      status === "cancelled" ||
-      status === "canceled" ||
-      status === "đã hủy" ||
-      status === "da huy"
-    ) {
-      return "canceled";
-    }
-
+  function getOrderStatusFromDates(row) {
+    if (row && row.ngayhuy) return "canceled";
+    if (row && row.ngayhoanthanh) return "completed";
+    if (row && row.ngaynhan) return "confirmed";
+    if (row && row.thoigiandatdichvu) return "pending";
     return "pending";
   }
 
@@ -89,15 +50,23 @@
     return new Date(time).toLocaleDateString("vi-VN");
   }
 
+  function formatOrderCode(id) {
+    const num = Number(id);
+    if (!Number.isFinite(num) || num <= 0) return "Không có mã";
+    return String(Math.floor(num)).padStart(7, "0");
+  }
+
   function mapOrderFromKrud(row) {
     const rawDate =
       row.thoigiandatdichvu || row.ngaytao || row.created_at || "";
     return {
-      code: row.madonhang || (row.id ? `GU-${row.id}` : "Không có mã"),
+      id: Number(row.id) || 0,
+      code: formatOrderCode(row.id),
       customer: row.hovaten || row.tenkhachhang || row.hoten || "Khách hàng",
       service: row.dichvu || row.dichvuquantam || "Chưa cập nhật dịch vụ",
-      status: normalizeOrderStatus(row.trangthaidon || row.trangthai),
+      status: getOrderStatusFromDates(row),
       date: formatDate(rawDate),
+      raw: row,
       _sortTime: parseTime(rawDate) || Number(row.id) || 0,
     };
   }
@@ -124,19 +93,19 @@
         color: "linear-gradient(135deg,#10b981,#22c55e)",
       },
       {
-        label: "Chờ xác nhận",
+        label: "Chờ nhận đơn",
         value: statusCounters.pending,
         icon: "fas fa-hourglass-half",
         color: "linear-gradient(135deg,#f59e0b,#fb7185)",
       },
       {
-        label: "Đã xác nhận",
+        label: "Đã nhận đơn",
         value: statusCounters.confirmed,
         icon: "fas fa-check-double",
         color: "linear-gradient(135deg,#0ea5e9,#06b6d4)",
       },
       {
-        label: "Hoàn thành",
+        label: "Đã hoàn thành",
         value: statusCounters.completed,
         icon: "fas fa-check-circle",
         color: "linear-gradient(135deg,#34d399,#10b981)",
@@ -206,7 +175,7 @@
 
     if (orders.length === 0) {
       tbody.innerHTML =
-        '<tr><td colspan="5" class="text-center text-muted py-4">Chưa có dữ liệu đơn đặt.</td></tr>';
+        '<tr><td colspan="6" class="text-center text-muted py-4">Chưa có dữ liệu đơn đặt.</td></tr>';
       return;
     }
 
@@ -226,10 +195,84 @@
             <td>${order.service}</td>
             <td><span class="status-pill ${status.className}">${status.label}</span></td>
             <td>${order.date}</td>
+            <td>
+              <button type="button" class="btn btn-sm btn-primary btn-order-detail" data-order-id="${order.id}">
+                Xem chi tiết
+              </button>
+            </td>
           </tr>
         `;
       })
       .join("");
+  }
+
+  function bindOrderDetailAction() {
+    const tbody = document.getElementById("recentOrdersBody");
+    const modalEl = document.getElementById("adminOrderDetailModal");
+    if (!tbody || !modalEl || !window.bootstrap) return;
+
+    const modal = new window.bootstrap.Modal(modalEl);
+    const setText = function (id, value) {
+      const el = document.getElementById(id);
+      if (el) el.textContent = value || "-";
+    };
+
+    tbody.addEventListener("click", function (event) {
+      const button = event.target.closest(".btn-order-detail");
+      if (!button) return;
+
+      const orderId = Number(button.getAttribute("data-order-id"));
+      const order = orders.find(function (item) {
+        return Number(item.id) === orderId;
+      });
+      if (!order) return;
+
+      const row = order.raw || {};
+      const status = statusConfig[order.status] || statusConfig.pending;
+      const paymentStatus =
+        String(row.trangthaithanhtoan || "")
+          .trim()
+          .toLowerCase() === "paid"
+          ? "Đã thanh toán"
+          : "Chưa thanh toán";
+
+      setText("adminDetailOrderCode", order.code);
+      setText("adminDetailServiceName", row.dichvu || row.dichvuquantam);
+      setText("adminDetailWorkItems", row.danhsachcongviec);
+      setText("adminDetailChemicals", row.danhsachhoachat);
+      setText(
+        "adminDetailTransport",
+        row.hinhthucnhangiao || row.phuongthucgiaonhan,
+      );
+      setText(
+        "adminDetailQuantity",
+        row.soluong || row.khoiluong || row.quantity,
+      );
+
+      setText(
+        "adminDetailOrderDate",
+        row.thoigiandatdichvu || row.ngaytao || row.created_at,
+      );
+      setText("adminDetailOrderStatus", status.label);
+      setText("adminDetailPaymentStatus", paymentStatus);
+      setText("adminDetailServicePrice", row.giadichvu);
+      setText("adminDetailTransportFee", row.tiendichuyen);
+      setText("adminDetailSurchargeFee", row.phuphigiaonhan);
+      setText("adminDetailTotal", row.tongtien);
+      setText("adminDetailNote", row.ghichu);
+
+      setText("adminDetailCustomerName", row.hovaten || row.tenkhachhang);
+      setText("adminDetailCustomerPhone", row.sodienthoai || row.phone);
+      setText("adminDetailCustomerEmail", row.email);
+      setText("adminDetailCustomerAddress", row.diachi);
+
+      setText("adminDetailSupplierName", row.tennhacungcap);
+      setText("adminDetailSupplierPhone", row.sdt_ncc);
+      setText("adminDetailSupplierEmail", row.email_ncc);
+      setText("adminDetailSupplierAddress", row.diachi_ncc);
+
+      modal.show();
+    });
   }
 
   function renderStatusSummary() {
@@ -267,7 +310,7 @@
 
     if (tbody) {
       tbody.innerHTML =
-        '<tr><td colspan="5" class="text-center text-muted py-4">Đang tải danh sách đơn đặt...</td></tr>';
+        '<tr><td colspan="6" class="text-center text-muted py-4">Đang tải danh sách đơn đặt...</td></tr>';
     }
 
     if (box) {
@@ -276,6 +319,7 @@
   }
 
   document.addEventListener("DOMContentLoaded", function () {
+    bindOrderDetailAction();
     renderLoadingState();
 
     loadOrders()

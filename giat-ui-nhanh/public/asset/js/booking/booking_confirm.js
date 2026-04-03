@@ -12,51 +12,6 @@
     const confirmImages = document.getElementById("confirmImages");
     const confirmVideos = document.getElementById("confirmVideos");
     const confirmMediaUrls = [];
-    const ORDER_CODE_PREFIX = "GUN";
-    let currentOrderCode = "";
-
-    function createRandomOrderCode() {
-      const numberPart = String(Math.floor(Math.random() * 1000000)).padStart(
-        6,
-        "0",
-      );
-      return `${ORDER_CODE_PREFIX}${numberPart}`;
-    }
-
-    async function isOrderCodeExistsOnKrud(orderCode) {
-      if (!config.BOOKING_KRUD_TABLE) {
-        throw new Error("Thiếu cấu hình BOOKING_KRUD_TABLE.");
-      }
-      // Truy vấn KRUD API để đảm bảo mã đơn chưa tồn tại trước khi sử dụng.
-      const result = await Promise.resolve(
-        krudList({
-          table: config.BOOKING_KRUD_TABLE,
-          where: [{ field: "madonhang", operator: "=", value: orderCode }],
-          limit: 1,
-        }),
-      );
-
-      if (Array.isArray(result)) return result.length > 0;
-      if (Array.isArray(result?.data)) return result.data.length > 0;
-      if (Array.isArray(result?.items)) return result.items.length > 0;
-      if (Array.isArray(result?.rows)) return result.rows.length > 0;
-      if (Array.isArray(result?.result)) return result.result.length > 0;
-
-      const total = Number(result?.total || result?.count || result?.records);
-      return Number.isFinite(total) && total > 0;
-    }
-
-    async function generateUniqueOrderCode() {
-      for (let i = 0; i < 50; i += 1) {
-        const candidate = createRandomOrderCode();
-        const exists = await isOrderCodeExistsOnKrud(candidate);
-        if (!exists) return candidate;
-      }
-
-      throw new Error(
-        "Không thể tạo mã đơn duy nhất sau 50 lần thử. Vui lòng thử lại.",
-      );
-    }
 
     if (!form || !bookingModalEl || !confirmModalEl) return;
     if (form.dataset.confirmFlowBound === "true") return;
@@ -177,9 +132,7 @@
       const serviceSelect = document.getElementById("dichvuquantam");
       const transportOptionSelect = document.getElementById("hinhthucnhangiao");
       const kgInput = document.getElementById("khoiluong");
-      const pairInput = document.getElementById("pair");
       const kgBox = document.getElementById("khoiluongbox");
-      const pairBox = document.getElementById("pairBox");
 
       const serviceText =
         serviceSelect?.options[serviceSelect.selectedIndex]?.text;
@@ -188,8 +141,6 @@
           ?.text;
 
       const isKgVisible = kgBox && getComputedStyle(kgBox).display !== "none";
-      const isPairVisible =
-        pairBox && getComputedStyle(pairBox).display !== "none";
 
       const selectedWorkItems = Array.from(
         form.querySelectorAll('input[name="congviec"]:checked'),
@@ -200,12 +151,9 @@
 
       let quantity = "";
       if (isKgVisible && kgInput?.value) quantity = `${kgInput.value} kg`;
-      if (isPairVisible && pairInput?.value)
-        quantity = `${pairInput.value} đôi`;
 
       data.service_name =
         serviceText && serviceText !== "Chọn dịch vụ" ? serviceText : "";
-      data.order_code = currentOrderCode || "";
       data.sub_service =
         transportOptionText &&
         transportOptionText !== "Chọn hình thức nhận / giao"
@@ -235,6 +183,12 @@
       data.name = data.hoten || "";
       data.phone = data.sodienthoai || "";
       data.address = data.diachi || "";
+      data.lat_kh = String(
+        document.getElementById("diachi")?.dataset.lat || "",
+      ).trim();
+      data.lng_kh = String(
+        document.getElementById("diachi")?.dataset.lng || "",
+      ).trim();
       data.message = data.ghichu || "";
       data.service = data.dichvu || "";
       data.transport_option = data.hinhthucnhangiao || "";
@@ -249,7 +203,7 @@
         data,
         preview: {
           name: data.name,
-          orderCode: data.order_code,
+          orderCode: "Sẽ tạo sau khi lưu",
           phone: data.phone,
           address: data.address,
           bookingTime: bookingTimeDisplay,
@@ -298,9 +252,10 @@
         utils.fillBookingTimeNow(true);
       }
 
-      try {
-        await ensureCurrentOrderCode();
-      } catch (_err) {
+      const isLoggedIn = await isUserLoggedInForBooking();
+      if (!isLoggedIn) {
+        hideBookingStep();
+        window.location.href = "dang-nhap.html";
         return;
       }
 
@@ -322,26 +277,21 @@
       hideConfirmAndQueueReturn("show-booking");
     }
 
-    async function ensureCurrentOrderCode() {
-      if (currentOrderCode) return currentOrderCode;
-
+    async function isUserLoggedInForBooking() {
       try {
-        currentOrderCode = await generateUniqueOrderCode();
-        return currentOrderCode;
-      } catch (err) {
-        console.error("Lỗi tạo mã đơn:", err);
-        if (typeof utils.showToast === "function") {
-          utils.showToast(
-            "Không thể tạo mã đơn lúc này. Vui lòng thử lại sau.",
-            "error",
-          );
-        }
+        const response = await fetch("public/session-user.php?action=get", {
+          method: "GET",
+          credentials: "same-origin",
+          headers: {
+            "Content-Type": "application/json",
+          },
+        });
 
-        const wrappedError = new Error(
-          "ORDER_CODE_GENERATION_FAILED: Không thể tạo mã đơn.",
-        );
-        wrappedError.cause = err;
-        throw wrappedError;
+        if (!response.ok) return false;
+        const result = await response.json();
+        return Boolean(result && result.hasUser);
+      } catch (_error) {
+        return false;
       }
     }
 
@@ -364,10 +314,11 @@
       return {
         sheet_type: "Giặt ủi nhanh",
         created_at: "",
-        "Mã đơn": formData.order_code || "",
         "Tên khách": formData.name || "",
         "Số điện thoại": formData.phone || "",
         "Địa chỉ": formData.address || "",
+        lat_kh: formData.lat_kh || "",
+        lng_kh: formData.lng_kh || "",
         "Dịch vụ": formData.service_name || formData.service || "",
         "Hình thức nhận/giao": formData.sub_service || "",
         "Số lượng": formData.quantity || "",
@@ -381,7 +332,6 @@
         "Hóa chất hỗ trợ": formData.support_chemicals || "",
         "Thời gian đặt": formData.booking_time || "",
         "Ghi chú": formData.message || "",
-        "Trang thái đơn": "Pending",
         "Trạng thái thanh toán": "Unpaid",
       };
     }
@@ -416,7 +366,6 @@
       }
       console.log("Saving to KRUD API with data:", data, "and config:", config);
       const dbPayload = {
-        madonhang: data.order_code || "",
         hovaten: data.name || "",
         sodienthoai: data.phone || "",
         dichvu: data.service_name || "",
@@ -430,8 +379,9 @@
         danhsachhoachat: data.support_chemicals || "",
         thoigiandatdichvu: data.booking_time || "",
         diachi: data.address || "",
+        lat_kh: data.lat_kh || "",
+        lng_kh: data.lng_kh || "",
         ghichu: data.message || "",
-        trangthaidon: "Pending",
         trangthaithanhtoan: "Unpaid",
       };
       console.log("Constructed KRUD payload:", dbPayload);
@@ -456,7 +406,6 @@
       confirmBtn.textContent = "Đang gửi...";
 
       try {
-        await ensureCurrentOrderCode();
         const { data } = collectBookingData();
 
         await Promise.all([saveToGoogleSheet(data), saveToKrudApi(data)]);
@@ -473,17 +422,12 @@
 
         form.reset();
         clearConfirmMedia();
-        currentOrderCode = "";
 
         if (!isEmbeddedMode) {
           pendingStandaloneAction = "show-booking";
         }
       } catch (err) {
         const msg = String(err && err.message ? err.message : "");
-        if (msg.includes("ORDER_CODE_GENERATION_FAILED")) {
-          return;
-        }
-
         console.error("Lỗi gửi dữ liệu đặt lịch:", err);
         if (msg.includes("401")) {
           const permissionMessage =

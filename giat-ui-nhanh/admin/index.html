@@ -62,6 +62,7 @@
                         <th>Dịch vụ</th>
                         <th>Trạng thái</th>
                         <th>Ngày đặt</th>
+                        <th>Thao tác</th>
                       </tr>
                     </thead>
                     <tbody id="recentOrdersBody"></tbody>
@@ -84,6 +85,132 @@
           </div>
         </section>
       </main>
+    </div>
+
+    <div
+      class="modal fade"
+      id="adminOrderDetailModal"
+      tabindex="-1"
+      aria-labelledby="adminOrderDetailModalLabel"
+      aria-hidden="true"
+    >
+      <div class="modal-dialog modal-xl modal-dialog-centered">
+        <div class="modal-content">
+          <div class="modal-header">
+            <h5 class="modal-title" id="adminOrderDetailModalLabel">
+              Chi tiết đơn đặt
+            </h5>
+            <button
+              type="button"
+              class="btn-close"
+              data-bs-dismiss="modal"
+              aria-label="Close"
+            ></button>
+          </div>
+          <div class="modal-body">
+            <div class="admin-order-summary-card">
+              <div class="admin-order-summary-grid">
+                <div class="admin-summary-section">
+                  <h6>Đơn đặt</h6>
+                  <div class="admin-info-item">
+                    <b>Mã đơn:</b> <span id="adminDetailOrderCode">-</span>
+                  </div>
+                  <div class="admin-info-item">
+                    <b>Dịch vụ cụ thể:</b>
+                    <span id="adminDetailServiceName">-</span>
+                  </div>
+                  <div class="admin-info-item">
+                    <b>Công việc thực hiện:</b>
+                    <span id="adminDetailWorkItems">-</span>
+                  </div>
+                  <div class="admin-info-item">
+                    <b>Hóa chất hỗ trợ:</b>
+                    <span id="adminDetailChemicals">-</span>
+                  </div>
+                  <div class="admin-info-item">
+                    <b>Hình thức giao nhận:</b>
+                    <span id="adminDetailTransport">-</span>
+                  </div>
+                  <div class="admin-info-item">
+                    <b>Số lượng:</b> <span id="adminDetailQuantity">-</span>
+                  </div>
+                </div>
+
+                <div class="admin-summary-section">
+                  <h6>Thanh toán</h6>
+                  <div class="admin-info-item">
+                    <b>Ngày đặt:</b> <span id="adminDetailOrderDate">-</span>
+                  </div>
+                  <div class="admin-info-item">
+                    <b>Trạng thái đơn:</b>
+                    <span id="adminDetailOrderStatus">-</span>
+                  </div>
+                  <div class="admin-info-item">
+                    <b>Trạng thái thanh toán:</b>
+                    <span id="adminDetailPaymentStatus">-</span>
+                  </div>
+                  <div class="admin-info-item">
+                    <b>Giá dịch vụ:</b>
+                    <span id="adminDetailServicePrice">-</span>
+                  </div>
+                  <div class="admin-info-item">
+                    <b>Phí di chuyển:</b>
+                    <span id="adminDetailTransportFee">-</span>
+                  </div>
+                  <div class="admin-info-item">
+                    <b>Phụ phí di chuyển:</b>
+                    <span id="adminDetailSurchargeFee">-</span>
+                  </div>
+                  <div class="admin-info-item">
+                    <b>Tổng tiền:</b> <span id="adminDetailTotal">-</span>
+                  </div>
+                </div>
+              </div>
+
+              <div class="admin-summary-note">
+                <div class="admin-info-item">
+                  <b>Ghi chú:</b> <span id="adminDetailNote">-</span>
+                </div>
+              </div>
+            </div>
+
+            <div class="admin-order-modal-grid mt-3">
+              <div class="admin-order-info-card">
+                <h6>Thông tin khách hàng</h6>
+                <div class="admin-info-item">
+                  <b>Họ tên:</b> <span id="adminDetailCustomerName">-</span>
+                </div>
+                <div class="admin-info-item">
+                  <b>Số điện thoại:</b>
+                  <span id="adminDetailCustomerPhone">-</span>
+                </div>
+                <div class="admin-info-item">
+                  <b>Email:</b> <span id="adminDetailCustomerEmail">-</span>
+                </div>
+                <div class="admin-info-item">
+                  <b>Địa chỉ:</b> <span id="adminDetailCustomerAddress">-</span>
+                </div>
+              </div>
+              <div class="admin-order-info-card">
+                <h6>Thông tin nhà cung cấp</h6>
+                <div class="admin-info-item">
+                  <b>Họ tên:</b> <span id="adminDetailSupplierName">-</span>
+                </div>
+                <div class="admin-info-item">
+                  <b>Số điện thoại:</b>
+                  <span id="adminDetailSupplierPhone">-</span>
+                </div>
+                <div class="admin-info-item">
+                  <b>Email:</b> <span id="adminDetailSupplierEmail">-</span>
+                </div>
+                <div class="admin-info-item">
+                  <b>Địa chỉ:</b> <span id="adminDetailSupplierAddress">-</span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
     </div>
 
     <script src="../public/asset/js/bootstrap.bundle.min.js"></script>
@@ -110,6 +237,23 @@
         },
       });
     </script>
-    <script></script>
+    <script>
+      async function checkAdminLogin() {
+        try {
+          const res = await fetch("../public/session-admin.php?action=get", {
+            method: "GET",
+            credentials: "same-origin",
+          });
+          const data = await res.json().catch(() => null);
+          if (!res.ok || !data || data.hasAdmin !== true) {
+            window.location.href = "dang-nhap-admin.html";
+          }
+        } catch (_) {
+          window.location.href = "dang-nhap-admin.html";
+        }
+      }
+
+      checkAdminLogin();
+    </script>
   </body>
 </html>

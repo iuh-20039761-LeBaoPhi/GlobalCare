@@ -1,6 +1,34 @@
 (function () {
   var BOOKING_TABLE = "datlich_giatuinhanh";
   var SUPPLIER_TABLE = "nhacungcap_giatuinhanh";
+  var orderDisplayUtils = window.OrderDisplayUtils || {};
+  var parseOrderIdFromDisplayCode =
+    typeof orderDisplayUtils.parseOrderIdFromDisplayCode === "function"
+      ? orderDisplayUtils.parseOrderIdFromDisplayCode
+      : function (codeText) {
+          var text = String(codeText || "").trim();
+          if (!text) return null;
+
+          var legacyMatch = text.match(/GU-(\d+)/i);
+          if (legacyMatch) {
+            var legacyId = Number(legacyMatch[1]);
+            return Number.isFinite(legacyId) && legacyId > 0 ? legacyId : null;
+          }
+
+          var sevenDigitMatch = text.match(/^(\d{7})$/);
+          if (sevenDigitMatch) {
+            var sevenDigitId = Number(sevenDigitMatch[1]);
+            return Number.isFinite(sevenDigitId) && sevenDigitId > 0
+              ? sevenDigitId
+              : null;
+          }
+
+          var digitsOnly = text.replace(/\D/g, "");
+          if (!digitsOnly) return null;
+
+          var numericId = Number(digitsOnly);
+          return Number.isFinite(numericId) && numericId > 0 ? numericId : null;
+        };
 
   function extractKrudRows(result) {
     if (Array.isArray(result)) return result;
@@ -248,12 +276,16 @@
   async function updateBookingAfterAccept(orderId, supplier, pricing) {
     var supplierId = supplier.id;
     var payload = {
-      trangthaidon: "Processing",
+      ngaynhan: new Date().toISOString(),
       phuphigiaonhan: pricing.shippingSurcharge,
       tongtien: pricing.totalAmount,
       tiendichuyen: pricing.effectiveTransportFee,
       khoangcachgiaonhan: pricing.distanceKm,
       idnhacungcap: supplierId,
+      tennhacungcap: supplier.hovaten || supplier.hoten || "",
+      sdt_ncc: supplier.sodienthoai || supplier.sdt || "",
+      email_ncc: supplier.email || "",
+      diachi_ncc: supplier.diachi || "",
     };
 
     var result = await Promise.resolve(
@@ -331,9 +363,7 @@
     var row = button ? button.closest("tr") : null;
     var codeText =
       row && row.children && row.children[0] ? row.children[0].textContent : "";
-    var match = String(codeText || "").match(/GU-(\d+)/i);
-    var parsed = match ? Number(match[1]) : NaN;
-    return Number.isFinite(parsed) && parsed > 0 ? parsed : null;
+    return parseOrderIdFromDisplayCode(codeText);
   }
 
   function bindAcceptOrderAction() {

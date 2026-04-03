@@ -31,10 +31,8 @@
     const bookingModalEl = document.getElementById("bookingModal");
 
     const kgBox = document.getElementById("khoiluongbox");
-    const pairBox = document.getElementById("pairBox");
 
     const kgInput = document.getElementById("khoiluong");
-    const pairInput = document.getElementById("pair");
     const quantityInput = document.getElementById("quantityContact");
     const bookingForm = document.getElementById("formdatdichvu");
 
@@ -312,11 +310,15 @@
         const isMandatory =
           lockAllOptions ||
           (mandatoryValue && normalizeLabel(value) === mandatoryValue);
+        const wrapperClass = isMandatory
+          ? "form-check is-mandatory"
+          : "form-check";
         const checkedAttr = isMandatory ? "checked" : "";
         const mandatoryAttr = isMandatory ? 'data-mandatory="true"' : "";
+        const disabledAttr = isMandatory ? 'disabled aria-disabled="true"' : "";
         html += `
-          <div class="form-check">
-            <input class="form-check-input" type="checkbox" id="${inputId}" name="${name}" value="${value}" ${checkedAttr} ${mandatoryAttr}>
+          <div class="${wrapperClass}">
+            <input class="form-check-input" type="checkbox" id="${inputId}" name="${name}" value="${value}" ${checkedAttr} ${mandatoryAttr} ${disabledAttr}>
             <label class="form-check-label" for="${inputId}">${value}</label>
           </div>
         `;
@@ -442,10 +444,8 @@
         toggleServiceOptionGroups(false);
 
         kgInput.value = "";
-        if (pairInput) pairInput.value = "";
 
         kgBox.style.display = "block";
-        if (pairBox) pairBox.style.display = "none";
 
         priceInput.value = "";
         shipInput.value = "";
@@ -494,19 +494,13 @@
       const unit = service.price_unit;
 
       kgInput.value = 1;
-      if (pairInput) pairInput.value = 1;
 
       kgBox.style.display = "none";
-      if (pairBox) pairBox.style.display = "none";
 
       if (unit === "kg") kgBox.style.display = "block";
-      if (unit === "pair" && pairBox) pairBox.style.display = "block";
 
       if (quantityInput) {
-        quantityInput.value =
-          unit === "pair" && pairInput
-            ? String(pairInput.value || 1)
-            : String(kgInput.value || 1);
+        quantityInput.value = String(kgInput.value || 1);
       }
 
       calculate();
@@ -540,9 +534,6 @@
       let quantity = 1;
 
       if (kgBox.style.display === "block") quantity = Number(kgInput.value);
-      if (pairBox && pairInput && pairBox.style.display === "block") {
-        quantity = Number(pairInput.value);
-      }
 
       if (quantityInput) {
         const normalizedQuantity =
@@ -595,7 +586,6 @@
     }
 
     kgInput.addEventListener("input", calculate);
-    if (pairInput) pairInput.addEventListener("input", calculate);
 
     if (workItemsList && !workItemsList.dataset.priceSyncBound) {
       workItemsList.dataset.priceSyncBound = "true";
