@@ -204,6 +204,23 @@
         padding: 8px 10px;
       }
 
+      #bookingModal .form-check.is-mandatory {
+        background: #f1f5f9;
+        border-color: #93c5fd;
+        box-shadow: inset 0 0 0 1px rgba(37, 99, 235, 0.2);
+      }
+
+      #bookingModal .form-check.is-mandatory .form-check-label {
+        font-weight: 700;
+        color: #0f172a;
+        cursor: not-allowed;
+      }
+
+      #bookingModal .form-check.is-mandatory .form-check-input[disabled] {
+        cursor: not-allowed;
+        opacity: 0.85;
+      }
+
       #bookingModal .form-check-input {
         margin-top: 0.2em;
       }
