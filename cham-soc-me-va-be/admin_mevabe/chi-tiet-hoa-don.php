@@ -102,41 +102,49 @@ admin_render_layout_start('Chi Tiết Hóa Đơn', 'orders', $admin);
 	}
 
 	.od-hero {
-		padding: 12px;
-		background: linear-gradient(115deg, #1f66c6 0%, #1282d3 50%, #12a58d 100%);
+		padding: 14px 14px 16px;
+		border-radius: 16px;
+		background: linear-gradient(96deg, #2862c3 0%, #1f8dcb 52%, #1fa696 100%);
+		box-shadow: 0 16px 34px rgba(19, 75, 148, 0.24);
 		color: #fff;
 	}
 
 	.od-hero-top {
 		display: flex;
 		justify-content: space-between;
-		align-items: flex-start;
-		gap: 14px;
+		align-items: center;
+		gap: 18px;
+		margin-bottom: 12px;
 	}
 
 	.od-order-id {
 		margin: 0;
-		font-size: 1.95rem;
+		font-size: 2rem;
 		font-weight: 800;
-		line-height: 1;
+		line-height: 1.02;
+		display: flex;
+		align-items: center;
+		gap: 10px;
+		flex-wrap: wrap;
 	}
 
 	.od-status-pill {
 		display: inline-flex;
 		align-items: center;
-		padding: 4px 9px;
+		padding: 5px 12px;
 		border-radius: 999px;
-		font-size: 11px;
+		font-size: 12px;
 		font-weight: 800;
-		background: rgba(255, 255, 255, 0.2);
-		border: 1px solid rgba(255, 255, 255, 0.35);
-		margin-left: 6px;
+		line-height: 1;
+		background: rgba(121, 98, 184, 0.55);
+		border: 1px solid rgba(255, 255, 255, 0.52);
 	}
 
 	.od-service {
-		margin: 4px 0 7px;
-		font-size: 1.2rem;
-		font-weight: 600;
+		margin: 2px 0 0;
+		font-size: 1.45rem;
+		font-weight: 700;
+		line-height: 1.14;
 	}
 
 	.od-tools {
@@ -158,11 +166,12 @@ admin_render_layout_start('Chi Tiết Hóa Đơn', 'orders', $admin);
 
 	.od-progress-ring {
 		--p: 0;
-		width: 94px;
-		height: 94px;
-		padding: 5px;
+		width: 102px;
+		height: 102px;
+		padding: 6px;
 		border-radius: 50%;
-		background: conic-gradient(#b7f5d7 calc(var(--p) * 1%), rgba(255, 255, 255, 0.24) 0);
+		background: conic-gradient(#b7f5d7 calc(var(--p) * 1%), rgba(176, 241, 235, 0.42) 0);
+		box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.16);
 	}
 
 	.od-progress-core {
@@ -172,51 +181,91 @@ admin_render_layout_start('Chi Tiết Hóa Đơn', 'orders', $admin);
 		display: grid;
 		place-content: center;
 		text-align: center;
-		background: rgba(21, 81, 132, 0.45);
+		background: rgba(27, 96, 145, 0.65);
 	}
 
 	.od-progress-core strong {
-		font-size: 1.85rem;
+		font-size: 2rem;
 		line-height: 1;
 	}
 
 	.od-progress-core small {
-		font-size: 10px;
+		font-size: 0.78rem;
 		font-weight: 700;
+		line-height: 1.2;
 	}
 
 	.od-hero-grid {
-		margin-top: 10px;
+		margin-top: 8px;
 		display: grid;
 		grid-template-columns: repeat(3, minmax(0, 1fr));
-		gap: 8px;
+		gap: 12px;
 	}
 
 	.od-box {
-		border-radius: 8px;
-		padding: 10px;
-		border: 1px solid rgba(255, 255, 255, 0.25);
-		background: rgba(16, 62, 114, 0.2);
+		border-radius: 12px;
+		padding: 12px 14px;
+		border: 1px solid rgba(167, 225, 255, 0.34);
+		background: rgba(17, 93, 147, 0.24);
+	}
+
+	.od-box-head {
+		display: flex;
+		align-items: center;
+		gap: 10px;
+		margin-bottom: 2px;
+	}
+
+	.od-box-icon {
+		width: 30px;
+		height: 30px;
+		border-radius: 50%;
+		display: inline-flex;
+		align-items: center;
+		justify-content: center;
+		font-size: 14px;
+		color: #fff;
+		background: rgba(255, 255, 255, 0.12);
+		border: 1px solid rgba(255, 255, 255, 0.52);
 	}
 
 	.od-box-label {
 		margin: 0;
-		font-size: 10px;
+		font-size: 0.95rem;
 		font-weight: 700;
-		opacity: 0.88;
+		opacity: 0.95;
 	}
 
 	.od-box-value {
 		margin: 2px 0 0;
-		font-size: 1.92rem;
+		font-size: 1.6rem;
 		font-weight: 800;
-		line-height: 1.2;
+		line-height: 1.16;
+		word-break: break-word;
+	}
+
+	.od-box-value--price {
+		font-size: 2rem;
+		line-height: 1.06;
+	}
+
+	.od-box-value--time {
+		font-size: 1.75rem;
+		line-height: 1.06;
+	}
+
+	.od-box-value--address {
+		font-size: 1.35rem;
+		line-height: 1.35;
+		font-weight: 700;
+		white-space: normal;
+		overflow-wrap: anywhere;
 		word-break: break-word;
 	}
 
 	.od-box-sub {
-		margin: 1px 0 0;
-		font-size: 11px;
+		margin: 2px 0 0;
+		font-size: 0.98rem;
 		font-weight: 600;
 	}
 
@@ -523,14 +572,50 @@ admin_render_layout_start('Chi Tiết Hóa Đơn', 'orders', $admin);
 		.od-hero-top {
 			grid-template-columns: 1fr;
 			flex-direction: column;
+			align-items: flex-start;
+		}
+
+		.od-order-id {
+			font-size: 1.7rem;
+		}
+
+		.od-service {
+			font-size: 1.2rem;
+		}
+
+		.od-progress-ring {
+			width: 94px;
+			height: 94px;
+		}
+
+		.od-progress-core strong {
+			font-size: 1.65rem;
+		}
+
+		.od-progress-core small {
+			font-size: 0.72rem;
+		}
+
+		.od-box-value--price,
+		.od-box-value--time {
+			font-size: 1.45rem;
+		}
+
+		.od-box-value--address {
+			font-size: 1.1rem;
+			line-height: 1.35;
+		}
+
+		.od-box-sub {
+			font-size: 0.92rem;
 		}
 	}
 </style>
 
 <div class="od-head">
-	<h2 class="od-title">Chi tiết hóa đơn mẹ và bé</h2>
+	<!-- <h2 class="od-title">Chi tiết hóa đơn mẹ và bé</h2> -->
 	<div class="od-head-actions">
-		<span class="od-chip">Vai trò: Admin</span>
+		<!-- <span class="od-chip">Vai trò: Admin</span> -->
 		<a href="quan-ly-hoa-don.php" class="od-back-btn"><i class="bi bi-arrow-left-circle me-1"></i>Quay lại</a>
 	</div>
 </div>
@@ -538,21 +623,16 @@ admin_render_layout_start('Chi Tiết Hóa Đơn', 'orders', $admin);
 <?php if ($error !== '' || !is_array($row)): ?>
 	<div class="alert alert-warning"><?= admin_h($error !== '' ? $error : 'Không tìm thấy hóa đơn.') ?></div>
 <?php else: ?>
-	<div class="od-alert">Tải dữ liệu thành công</div>
 
 	<section class="od-grid">
 		<article class="od-card od-hero wide">
 			<div class="od-hero-top">
 				<div>
 					<h3 class="od-order-id">
-						Đơn #<?= admin_h((string)($row['id'] ?? '')) ?>
+						Đơn #<?= admin_h(str_pad((string)($row['id'] ?? ''), 7, '0', STR_PAD_LEFT)) ?>
 						<span class="od-status-pill"><?= admin_h($statusText !== '' ? $statusText : 'N/A') ?></span>
 					</h3>
 					<p class="od-service"><?= admin_h($serviceName) ?></p>
-					<div class="od-tools">
-						<span class="od-tool">Hỗ trợ</span>
-						<span class="od-tool">Mã HĐ: <?= admin_h((string)($row['id'] ?? '')) ?></span>
-					</div>
 				</div>
 				<div class="od-progress-ring" style="--p:<?= admin_h($progressText) ?>;">
 					<div class="od-progress-core">
@@ -563,17 +643,26 @@ admin_render_layout_start('Chi Tiết Hóa Đơn', 'orders', $admin);
 			</div>
 			<div class="od-hero-grid">
 				<div class="od-box">
-					<p class="od-box-label">Tổng tiền</p>
-					<p class="od-box-value"><?= admin_h($priceText) ?></p>
+					<div class="od-box-head">
+						<span class="od-box-icon"><i class="bi bi-currency-dollar"></i></span>
+						<p class="od-box-label">Tổng tiền</p>
+					</div>
+					<p class="od-box-value od-box-value--price"><?= admin_h($priceText) ?></p>
 				</div>
 				<div class="od-box">
-					<p class="od-box-label">Thời gian</p>
-					<p class="od-box-value"><?= admin_h($timeRange) ?></p>
+					<div class="od-box-head">
+						<span class="od-box-icon"><i class="bi bi-clock"></i></span>
+						<p class="od-box-label">Thời gian</p>
+					</div>
+					<p class="od-box-value od-box-value--time"><?= admin_h($timeRange) ?></p>
 					<p class="od-box-sub"><?= admin_h($dateRange) ?></p>
 				</div>
 				<div class="od-box">
-					<p class="od-box-label">Địa chỉ</p>
-					<p class="od-box-value"><?= admin_h($address) ?></p>
+					<div class="od-box-head">
+						<span class="od-box-icon"><i class="bi bi-geo-alt"></i></span>
+						<p class="od-box-label">Địa chỉ</p>
+					</div>
+					<p class="od-box-value od-box-value--address"><?= admin_h($address) ?></p>
 				</div>
 			</div>
 		</article>
@@ -581,7 +670,7 @@ admin_render_layout_start('Chi Tiết Hóa Đơn', 'orders', $admin);
 		<article class="od-card">
 			<div class="od-panel-head">
 				<h4 class="od-panel-title">Công việc cần thực hiện</h4>
-				<span class="od-job-count"><?= admin_h((string)$jobCount) ?>/<?= admin_h((string)$jobCount) ?> đã hoàn thành</span>
+				<!-- <span class="od-job-count"><?= admin_h((string)$jobCount) ?>/<?= admin_h((string)$jobCount) ?> đã hoàn thành</span> -->
 			</div>
 			<div class="od-jobs-body">
 				<ol class="od-jobs-list">
@@ -637,7 +726,7 @@ admin_render_layout_start('Chi Tiết Hóa Đơn', 'orders', $admin);
 				<img class="od-avatar" src="<?= admin_h($customerAvatar !== '' ? $customerAvatar : '../assets/logomvb.png') ?>" alt="Khách hàng">
 				<div>
 					<p class="od-name"><?= admin_h($customerName) ?></p>
-					<p class="od-rating"><i class="bi bi-star-fill"></i><?= admin_h($customerEmail) ?></p>
+					<p class="od-info-row"><i class="bi bi-envelope"></i><?= admin_h($customerEmail) ?></p>
 					<p class="od-info-row"><i class="bi bi-telephone"></i><?= admin_h($customerPhone) ?></p>
 					<p class="od-info-row"><i class="bi bi-geo-alt"></i><?= admin_h($customerAddress) ?></p>
 				</div>
@@ -654,7 +743,7 @@ admin_render_layout_start('Chi Tiết Hóa Đơn', 'orders', $admin);
 				<img class="od-avatar" src="<?= admin_h($supplierAvatar !== '' ? $supplierAvatar : '../assets/logomvb.png') ?>" alt="Nhà Cung Cấp">
 				<div>
 					<p class="od-name"><?= admin_h($supplierName !== '' ? $supplierName : 'Chưa phân công') ?></p>
-					<p class="od-rating"><i class="bi bi-star-fill"></i><?= admin_h($supplierRatingText) ?></p>
+					<!-- <p class="od-rating"><i class="bi bi-star-fill"></i><?= admin_h($supplierRatingText) ?></p> -->
 					<p class="od-info-row"><i class="bi bi-envelope"></i><?= admin_h($supplierEmail !== '' ? $supplierEmail : 'N/A') ?></p>
 					<p class="od-info-row"><i class="bi bi-telephone"></i><?= admin_h($supplierPhone !== '' ? $supplierPhone : 'N/A') ?></p>
 					<p class="od-info-row"><i class="bi bi-geo-alt"></i><?= admin_h($supplierAddress !== '' ? $supplierAddress : 'N/A') ?></p>
