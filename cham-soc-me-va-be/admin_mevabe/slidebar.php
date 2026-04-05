@@ -72,19 +72,45 @@ if (!function_exists('admin_render_layout_start')) {
                 body {
                     background: radial-gradient(circle at top right, #ebf4ff 0%, var(--admin-bg) 42%, #eef2f8 100%);
                     color: var(--admin-text);
+                    scrollbar-gutter: stable;
+                }
+
+                html,
+                body {
+                    overflow-x: hidden;
                 }
 
                 .admin-shell {
                     border: 1px solid var(--admin-border);
                     border-radius: 18px;
-                    overflow: hidden;
+                    overflow: visible;
                     box-shadow: 0 14px 40px rgba(15, 23, 42, 0.08);
                     background: var(--admin-panel);
+                    --bs-gutter-x: 0;
+                    margin-left: 0;
+                    margin-right: 0;
+                    align-items: flex-start;
                 }
 
                 .admin-sidebar {
                     background: linear-gradient(180deg, var(--admin-sidebar-a), var(--admin-sidebar-b));
-                    position: relative;
+                    position: -webkit-sticky;
+                    position: sticky;
+                    top: 0;
+                    z-index: 1020;
+                    align-self: flex-start;
+                    display: flex;
+                    flex-direction: column;
+                    max-height: 100vh;
+                    overflow-y: auto;
+                }
+
+                @media (min-width: 992px) {
+                    .admin-sidebar {
+                        height: 100vh;
+                        max-height: 100vh;
+                        overflow-y: auto;
+                    }
                 }
 
                 .admin-sidebar::after {
@@ -121,6 +147,21 @@ if (!function_exists('admin_render_layout_start')) {
                     background: transparent;
                 }
 
+                .admin-menu-toggle {
+                    width: 38px;
+                    height: 38px;
+                    padding: 0;
+                    border-radius: 10px;
+                    display: inline-flex;
+                    align-items: center;
+                    justify-content: center;
+                }
+
+                .admin-menu-toggle i {
+                    font-size: 1.2rem;
+                    line-height: 1;
+                }
+
                 .admin-sidebar .list-group-item {
                     background: transparent;
                     color: rgba(241, 245, 249, 0.9);
@@ -151,6 +192,7 @@ if (!function_exists('admin_render_layout_start')) {
 
                 .admin-main {
                     background: linear-gradient(180deg, #f9fbff, #f4f7fc);
+                    min-width: 0;
                 }
 
                 .card {
@@ -184,6 +226,25 @@ if (!function_exists('admin_render_layout_start')) {
                     .admin-shell {
                         border-radius: 12px;
                     }
+
+                    .admin-sidebar {
+                        position: -webkit-sticky !important;
+                        position: sticky !important;
+                        top: 0 !important;
+                        max-height: 70vh;
+                        overflow-y: auto;
+                    }
+
+                    .admin-sidebar-menu {
+                        margin-top: 0.5rem;
+                    }
+                }
+
+                @media (min-width: 992px) {
+                    .admin-sidebar-menu.collapse {
+                        display: block !important;
+                        height: auto !important;
+                    }
                 }
             </style>
         </head>
@@ -191,27 +252,36 @@ if (!function_exists('admin_render_layout_start')) {
         <div class="container-fluid p-2 p-lg-3">
             <div class="row min-vh-100 admin-shell">
                 <aside class="col-12 col-lg-2 admin-sidebar text-white p-3">
-                    <div class="d-flex align-items-center gap-2 mb-4">
-                        <div class="admin-brand-logo">
-                            <img src="../assets/logomvb.png" alt="logo">
+                    <div class="d-flex align-items-center justify-content-between mb-4">
+                        <div class="d-flex align-items-center gap-2">
+                            <div class="admin-brand-logo">
+                                <img src="../assets/logomvb.png" alt="logo">
+                            </div>
+                            <div>
+                                <div class="fw-bold">Chăm Sóc Mẹ và Bé</div>
+                                <small class="text-secondary">ADMIN PANEL</small>
+                            </div>
                         </div>
-                        <div>
-                            <div class="fw-bold">Chăm Sóc Mẹ và Bé</div>
-                            <small class="text-secondary">ADMIN PANEL</small>
-                        </div>
+                        <button
+                            class="btn btn-outline-light admin-menu-toggle d-lg-none"
+                            type="button"
+                            data-bs-toggle="collapse"
+                            data-bs-target="#adminSidebarMenu"
+                            aria-expanded="false"
+                            aria-controls="adminSidebarMenu"
+                        >
+                            <i class="bi bi-list"></i>
+                        </button>
                     </div>
 
-                    <small class="text-secondary d-block mb-2">MENU CHINH</small>
-                    <div class="list-group list-group-flush mb-3">
+                    <div id="adminSidebarMenu" class="collapse admin-sidebar-menu list-group list-group-flush mb-3">
                         <a href="index.php" class="<?= admin_h(admin_menu_link_class($activeKey, 'dashboard')) ?>"><i class="bi bi-speedometer2"></i>Tong quan</a>
                         <a href="quan-ly-hoa-don.php" class="<?= admin_h(admin_menu_link_class($activeKey, 'orders')) ?>"><i class="bi bi-receipt"></i>Quan ly don hang</a>
                         <a href="quan-ly-dich-vu.php" class="<?= admin_h(admin_menu_link_class($activeKey, 'services')) ?>"><i class="bi bi-grid"></i>Quan ly dich vu</a>
                         <a href="quan-ly-nhan-vien.php" class="<?= admin_h(admin_menu_link_class($activeKey, 'employees')) ?>"><i class="bi bi-people"></i>Quan ly nhan vien</a>
+                        <a href="logout.php" class="list-group-item list-group-item-action d-flex align-items-center gap-2 border-0 rounded-3 mt-2 px-3 py-2 fw-semibold"><i class="bi bi-box-arrow-right"></i>Dang xuat</a>
                     </div>
 
-                    <div class="mt-auto pt-3 border-top border-secondary-subtle">
-                        <a href="logout.php" class="btn btn-outline-light w-100"><i class="bi bi-box-arrow-right me-1"></i>Dang xuat</a>
-                    </div>
                 </aside>
 
                 <section class="col-12 col-lg-10 p-0 d-flex flex-column admin-main">
