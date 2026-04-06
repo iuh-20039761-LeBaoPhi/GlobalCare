@@ -93,27 +93,28 @@ async function login() {
 
         // 1. Phân loại đích đến dựa trên service và role
         let target = '';
+        const root = (typeof DVQTApp !== 'undefined' && DVQTApp.ROOT_URL !== undefined) ? DVQTApp.ROOT_URL : '/Test';
 
         if (!service || service === 'dvqt') {
             // Đăng nhập từ trang chủ DVQT -> Quay về trang chủ DVQT
-            target = '/Test/index.html';
+            target = root + '/index.html';
         } else {
             // Đăng nhập từ dự án con (thonha, thuexe, ...)
             const serviceHomes = {
-                'thonha': '/Test/tho-nha/index.html',
-                'thuexe': '/Test/thue-xe/index.html',
-                'giatuinhanh': '/Test/giat-ui-nhanh/index.html'
+                'thonha': root + '/tho-nha/index.html',
+                'thuexe': root + '/thue-xe/index.html',
+                'giatuinhanh': root + '/giat-ui-nhanh/index.html'
             };
             const serviceDashboards = {
-                'thonha': '/Test/tho-nha/pages/provider/trang-ca-nhan.html',
-                'thuexe': '/Test/thue-xe/views/pages/provider/bang-dieu-khien.html',
-                'giatuinhanh': '/Test/giat-ui-nhanh/nha-cung-cap.html'
+                'thonha': root + '/tho-nha/pages/provider/trang-ca-nhan.html',
+                'thuexe': root + '/thue-xe/views/pages/provider/bang-dieu-khien.html',
+                'giatuinhanh': root + '/giat-ui-nhanh/nha-cung-cap.html'
             };
 
             if (_currentRole === 'customer') {
-                target = serviceHomes[service] || '/Test/index.html';
+                target = serviceHomes[service] || root + '/index.html';
             } else {
-                target = serviceDashboards[service] || '/Test/index.html';
+                target = serviceDashboards[service] || root + '/index.html';
             }
         }
 
