@@ -9,6 +9,9 @@ require_once __DIR__ . '/xu-ly-phan-trang.php';
 
 $sessionUser = session_user_require_customer('../login.html', 'khach_hang/danh-sach-hoa-don.php');
 $sessionPhone = (string)($sessionUser['sodienthoai'] ?? '');
+$sessionAvatar = trim((string)($sessionUser['anh_dai_dien'] ?? $sessionUser['avatar'] ?? ''));
+
+sync_customer_avatar_to_orders($sessionPhone, $sessionAvatar);
 
 $result = getHoaDonBySessionSdt($sessionPhone);
 $rows = $result['rows'] ?? [];
@@ -60,6 +63,26 @@ function contains_text(string $haystack, string $needle): bool
     }
 
     return stripos($haystack, $needle) !== false;
+}
+
+function mevabe_format_invoice_id_display($value): string
+{
+    $raw = trim((string)$value);
+    if ($raw === '') {
+        return '---';
+    }
+
+    if (!is_numeric($raw)) {
+        return '---';
+    }
+
+    $num = (float)$raw;
+    if (!is_finite($num) || $num < 0) {
+        return '---';
+    }
+
+    $id = (int)$num;
+    return str_pad((string)$id, 7, '0', STR_PAD_LEFT);
 }
 
 if ($serviceFilter !== 'all' && !in_array($serviceFilter, $services, true)) {
@@ -292,6 +315,7 @@ $summaryTotal = count($rows);
                             <?php foreach ($paginatedRows as $item): ?>
                                 <?php
                                     $itemId = (int)($item['id'] ?? 0);
+                                    $displayItemId = mevabe_format_invoice_id_display($item['id'] ?? '');
                                     $service = trim((string)($item['dich_vu'] ?? ''));
                                     $customer = trim((string)($item['tenkhachhang'] ?? ''));
                                     $package = trim((string)($item['goi_dich_vu'] ?? ''));
@@ -306,7 +330,7 @@ $summaryTotal = count($rows);
                                     $cancelCheck = mevabe_can_cancel_invoice($item);
                                 ?>
                                 <tr>
-                                    <td><span class="badge text-bg-light border id-badge"><?= esc((string)$itemId) ?></span></td>
+                                    <td><span class="badge text-bg-light border id-badge"><?= esc($displayItemId) ?></span></td>
                                     <td>
                                         <div class="fw-semibold"><?= esc($service !== '' ? $service : '---') ?></div>
                                         <div class="small text-secondary">Khách: <?= esc($customer !== '' ? $customer : '---') ?></div>

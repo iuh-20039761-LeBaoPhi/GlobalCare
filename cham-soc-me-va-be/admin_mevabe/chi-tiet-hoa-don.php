@@ -764,7 +764,7 @@ admin_render_layout_start('Chi Tiết Hóa Đơn', 'orders', $admin);
 				<span class="od-job-count" style="background:#e8f7ff;color:#1c6aa8;border-color:#d0eafb;">Khách hàng</span>
 			</div>
 			<div class="od-profile-body">
-				<img class="od-avatar" src="<?= admin_h(trim((string)($row['anh_dai_dien'] ?? '')) !== '' ? (string)$row['anh_dai_dien'] : '../assets/logomvb.png') ?>" alt="Khách hàng">
+				<img class="od-avatar" src="../<?= admin_h(trim((string)($row['avatar_khachhang'] ?? '')) !== '' ? (string)$row['avatar_khachhang'] : 'assets/logomvb.png') ?>" alt="Khách hàng">
 				<div>
 					<p class="od-name"><?= admin_h(trim((string)($row['tenkhachhang'] ?? '')) !== '' ? (string)$row['tenkhachhang'] : 'N/A') ?></p>
 					<p class="od-info-row"><i class="bi bi-envelope"></i><?= admin_h(trim((string)($row['emailkhachhang'] ?? '')) !== '' ? (string)$row['emailkhachhang'] : 'N/A') ?></p>
@@ -781,7 +781,7 @@ admin_render_layout_start('Chi Tiết Hóa Đơn', 'orders', $admin);
 				<span class="od-job-count" style="<?= $supplierAssigned ? 'background:#def8ea;color:#138259;border-color:#c4edd5;' : 'background:#fff4df;color:#996316;border-color:#f0ddb4;' ?>"><?= $supplierAssigned ? 'Đã nhận' : 'Chưa nhận' ?></span>
 			</div>
 			<div class="od-profile-body">
-				<img class="od-avatar" src="<?= admin_h(trim((string)($row['avatar_ncc'] ?? '')) !== '' ? (string)$row['avatar_ncc'] : '../assets/logomvb.png') ?>" alt="Nhà Cung Cấp">
+				<img class="od-avatar" src="../<?= admin_h(trim((string)($row['avatar_ncc'] ?? '')) !== '' ? (string)$row['avatar_ncc'] : 'assets/logomvb.png') ?>" alt="Nhà Cung Cấp">
 				<div>
 					<p class="od-name"><?= admin_h(trim((string)($row['tenncc'] ?? '')) !== '' ? (string)$row['tenncc'] : (trim((string)($row['hotenncc'] ?? '')) !== '' ? (string)$row['hotenncc'] : (trim((string)($row['nhacungcapnhan'] ?? '')) !== '' ? (string)$row['nhacungcapnhan'] : 'Chua phan cong'))) ?></p>
 					<p class="od-info-row"><i class="bi bi-envelope"></i><?= admin_h(trim((string)($row['emailncc'] ?? '')) !== '' ? (string)$row['emailncc'] : 'N/A') ?></p>

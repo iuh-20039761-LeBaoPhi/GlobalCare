@@ -64,6 +64,81 @@ function list_table_rows(string $table): array
     return array_values(array_filter($rows, static fn($item): bool => is_array($item)));
 }
 
+function krud_update_row(string $table, int $id, array $data): bool
+{
+    if ($id <= 0 || !$data) {
+        return false;
+    }
+
+    $url = 'https://api.dvqt.vn/krud/';
+    $payload = json_encode([
+        'action' => 'update',
+        'table' => $table,
+        'id' => $id,
+        'data' => $data,
+    ], JSON_UNESCAPED_UNICODE);
+
+    if ($payload === false) {
+        return false;
+    }
+
+    $ch = curl_init($url);
+    curl_setopt_array($ch, [
+        CURLOPT_POST => true,
+        CURLOPT_RETURNTRANSFER => true,
+        CURLOPT_HTTPHEADER => ['Content-Type: application/json'],
+        CURLOPT_POSTFIELDS => $payload,
+        CURLOPT_CONNECTTIMEOUT => 8,
+        CURLOPT_TIMEOUT => 20,
+    ]);
+
+    $raw = curl_exec($ch);
+    curl_close($ch);
+
+    if (!is_string($raw) || $raw === '') {
+        return false;
+    }
+
+    $decoded = json_decode($raw, true);
+    if (!is_array($decoded)) {
+        return false;
+    }
+
+    return empty($decoded['error']) && (!isset($decoded['success']) || $decoded['success'] !== false);
+}
+
+function sync_customer_avatar_to_orders(string $sessionPhone, string $sessionAvatar): void
+{
+    $phoneNorm = normalize_sdt($sessionPhone);
+    if ($phoneNorm === '') {
+        return;
+    }
+
+    $avatar = trim($sessionAvatar);
+    $rows = list_table_rows('datlich_mevabe');
+
+    foreach ($rows as $row) {
+        if (!is_array($row)) {
+            continue;
+        }
+
+        if (normalize_sdt((string)($row['sdtkhachhang'] ?? '')) !== $phoneNorm) {
+            continue;
+        }
+
+        $id = (int)($row['id'] ?? 0);
+        if ($id <= 0) {
+            continue;
+        }
+
+        if (trim((string)($row['avatar_khachhang'] ?? '')) === $avatar) {
+            continue;
+        }
+
+        krud_update_row('datlich_mevabe', $id, ['avatar_khachhang' => $avatar]);
+    }
+}
+
 function getHoaDonBySessionSdt(string $sessionPhone, ?int $invoiceId = null): array
 {
     $sessionPhoneNorm = normalize_sdt($sessionPhone);

@@ -43,6 +43,26 @@ function mevabe_media_is_video(string $path): bool
     return in_array($ext, ['mp4', 'webm', 'ogg', 'mov'], true);
 }
 
+function mevabe_format_invoice_id_display($value): string
+{
+    $raw = trim((string)$value);
+    if ($raw === '') {
+        return '---';
+    }
+
+    if (!is_numeric($raw)) {
+        return '---';
+    }
+
+    $num = (float)$raw;
+    if (!is_finite($num) || $num < 0) {
+        return '---';
+    }
+
+    $id = (int)$num;
+    return str_pad((string)$id, 7, '0', STR_PAD_LEFT);
+}
+
 $sessionUser = session_user_require_customer('../login.html', 'khach_hang/chi-tiet-hoa-don.php' . (isset($_GET['id']) ? ('?id=' . urlencode((string)$_GET['id'])) : ''));
 $sessionPhone = (string)($sessionUser['sodienthoai'] ?? '');
 
@@ -64,7 +84,7 @@ if ($invoice) {
 }
 
 $idNumber = (int)($invoice['id'] ?? 0);
-$invoiceCode = $idNumber > 0 ? ('#' . str_pad((string)$idNumber, 6, '0', STR_PAD_LEFT)) : '---';
+$invoiceCode = mevabe_format_invoice_id_display($invoice['id'] ?? '');
 
 $statusText = trim((string)($invoice['trangthai'] ?? ''));
 if ($statusText === '') {
@@ -714,7 +734,7 @@ $flashMsg = trim((string)($_GET['msg'] ?? ''));
             <div class="hero-box">
                 <div class="hero-top">
                     <div>
-                        <h1 class="hero-title">Đơn <?= htmlspecialchars($invoiceCode, ENT_QUOTES, 'UTF-8') ?> <span class="hero-status"><?= htmlspecialchars($statusText, ENT_QUOTES, 'UTF-8') ?></span></h1>
+                        <h1 class="hero-title">Đơn #<?= htmlspecialchars($invoiceCode, ENT_QUOTES, 'UTF-8') ?> <span class="hero-status"><?= htmlspecialchars($statusText, ENT_QUOTES, 'UTF-8') ?></span></h1>
                         <p class="hero-subtitle"><?= htmlspecialchars($serviceName, ENT_QUOTES, 'UTF-8') ?></p>
                     </div>
                     <div class="hero-progress">
@@ -828,7 +848,7 @@ $flashMsg = trim((string)($_GET['msg'] ?? ''));
                     </div>
                     <div class="person-card">
                         <div class="person-head">
-                            <img class="avatar" src="<?= htmlspecialchars(trim((string)($sessionUser['anh_dai_dien'] ?? '')) !== '' ? (string)$sessionUser['anh_dai_dien'] : '../assets/logomvb.png', ENT_QUOTES, 'UTF-8') ?>" alt="avatar khách hàng">
+                            <img class="avatar" src="../<?= htmlspecialchars(trim((string)($invoice['avatar_khachhang'] ?? '')) !== '' ? (string)$invoice['avatar_khachhang'] : '../assets/logomvb.png', ENT_QUOTES, 'UTF-8') ?>" alt="avatar khách hàng">
                             <h3 class="person-name"><?= htmlspecialchars(trim((string)($invoice['tenkhachhang'] ?? '')) !== '' ? (string)$invoice['tenkhachhang'] : 'Khách hàng', ENT_QUOTES, 'UTF-8') ?></h3>
                         </div>
                         <div class="person-items">

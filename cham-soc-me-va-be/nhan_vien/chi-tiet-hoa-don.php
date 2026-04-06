@@ -58,8 +58,29 @@ function jobs_from_dot(string $value): array
 	return $items ?: ['---'];
 }
 
+function format_invoice_id_display($value): string
+{
+	$raw = trim((string)$value);
+	if ($raw === '') {
+		return '---';
+	}
+
+	if (!is_numeric($raw)) {
+		return '---';
+	}
+
+	$num = (float)$raw;
+	if (!is_finite($num) || $num < 0) {
+		return '---';
+	}
+
+	$id = (int)$num;
+	return str_pad((string)$id, 7, '0', STR_PAD_LEFT);
+}
+
 $hoadon = is_array($invoice) ? $invoice : [];
 $idNumber = (int)($hoadon['id'] ?? 0);
+$displayInvoiceId = format_invoice_id_display($hoadon['id'] ?? '');
 
 $progressText = trim((string)($hoadon['tien_do'] ?? '0'));
 if ($progressText === '') {
@@ -650,7 +671,7 @@ $actionReturn = 'chi-tiet-hoa-don.php?id=' . $idNumber;
 			<div class="hero-box">
 				<div class="hero-top">
 					<div>
-						<h1 class="hero-title">Đơn #<?= htmlspecialchars((string)($hoadon['id'] ?? '---'), ENT_QUOTES, 'UTF-8') ?> <span class="hero-status"><?= htmlspecialchars((string)($hoadon['trangthai'] ?? '---'), ENT_QUOTES, 'UTF-8') ?></span></h1>
+						<h1 class="hero-title">Đơn #<?= htmlspecialchars($displayInvoiceId, ENT_QUOTES, 'UTF-8') ?> <span class="hero-status"><?= htmlspecialchars((string)($hoadon['trangthai'] ?? '---'), ENT_QUOTES, 'UTF-8') ?></span></h1>
 						<p class="hero-subtitle"><?= htmlspecialchars((string)($hoadon['dich_vu'] ?? '---'), ENT_QUOTES, 'UTF-8') ?></p>
 					</div>
 					<div class="hero-progress">
@@ -787,7 +808,7 @@ $actionReturn = 'chi-tiet-hoa-don.php?id=' . $idNumber;
 					</div>
 					<div class="person-card">
 						<div class="person-head">
-							<img class="avatar" src="../assets/logomvb.png" alt="avatar khách hàng">
+							<img class="avatar" src="../<?= htmlspecialchars(trim((string)($hoadon['avatar_khachhang'] ?? '')) !== '' ? (string)$hoadon['avatar_khachhang'] : 'assets/logomvb.png', ENT_QUOTES, 'UTF-8') ?>" alt="avatar khách hàng">
 							<h3 class="person-name"><?= htmlspecialchars((string)($hoadon['tenkhachhang'] ?? 'Khách hàng'), ENT_QUOTES, 'UTF-8') ?></h3>
 						</div>
 						<div class="person-items">

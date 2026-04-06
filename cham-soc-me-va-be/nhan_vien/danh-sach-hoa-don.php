@@ -23,6 +23,26 @@ if ($isEmployeeApproved) {
 $flashOk = isset($_GET['ok']) ? ((string)$_GET['ok'] === '1') : null;
 $flashMsg = trim((string)($_GET['msg'] ?? ''));
 
+function format_invoice_id_display($value): string
+{
+    $raw = trim((string)$value);
+    if ($raw === '') {
+        return '---';
+    }
+
+    if (!is_numeric($raw)) {
+        return '---';
+    }
+
+    $num = (float)$raw;
+    if (!is_finite($num) || $num < 0) {
+        return '---';
+    }
+
+    $id = (int)$num;
+    return str_pad((string)$id, 7, '0', STR_PAD_LEFT);
+}
+
 $q = trim((string)($_GET['q'] ?? ''));
 $statusFilter = trim((string)($_GET['status'] ?? 'all'));
 $serviceFilter = trim((string)($_GET['service'] ?? 'all'));
@@ -364,7 +384,6 @@ $summaryTotal = count($rows);
                                 <th>ID</th>
                                 <th>Khách hàng</th>
                                 <th>Dịch vụ</th>
-                                <th>Gói</th>
                                 <th>Ngay bắt đàu</th>
                                 <th>Trạng thái</th>
                                 <th>Hành động</th>
@@ -373,16 +392,17 @@ $summaryTotal = count($rows);
                         <tbody>
                         <?php if ($loadError !== ''): ?>
                             <tr>
-                                <td colspan="7" class="empty-row py-4">Loi tai du lieu: <?= htmlspecialchars($loadError, ENT_QUOTES, 'UTF-8') ?></td>
+                                <td colspan="6" class="empty-row py-4">Loi tai du lieu: <?= htmlspecialchars($loadError, ENT_QUOTES, 'UTF-8') ?></td>
                             </tr>
                         <?php elseif (!$paginatedRows): ?>
                             <tr>
-                                <td colspan="7" class="empty-row py-4">Khong co hoa don phu hop bo loc.</td>
+                                <td colspan="6" class="empty-row py-4">Khong co hoa don phu hop bo loc.</td>
                             </tr>
                         <?php else: ?>
                             <?php foreach ($paginatedRows as $item): ?>
                                 <?php
                                     $itemId = (int)($item['id'] ?? 0);
+                                    $displayItemId = format_invoice_id_display($item['id'] ?? '');
                                     $statusValue = trim((string)($item['trangthai'] ?? ''));
                                     if ($statusValue === '') {
                                         $statusValue = 'chờ duyệt';
@@ -395,11 +415,9 @@ $summaryTotal = count($rows);
                                     } elseif ($statusValue === 'đã nhận') {
                                         $badgeClass = 'text-bg-success';
                                     }
-                                    $isReceived = ($statusValue === 'đã nhận');
-                                    $isAssigned = invoice_has_supplier_assignment($item);
                                 ?>
                                 <tr>
-                                    <td><span class="badge text-bg-light border id-badge"><?= htmlspecialchars((string)($item['id'] ?? 'N/A'), ENT_QUOTES, 'UTF-8') ?></span></td>
+                                    <td><span class="badge text-bg-light border id-badge"><?= htmlspecialchars($displayItemId, ENT_QUOTES, 'UTF-8') ?></span></td>
                                     <td>
                                         <div class="fw-semibold"><?= htmlspecialchars((string)($item['tenkhachhang'] ?? 'N/A'), ENT_QUOTES, 'UTF-8') ?></div>
                                         <?php if (trim((string)($item['sdtkhachhang'] ?? '')) !== ''): ?>
@@ -407,7 +425,6 @@ $summaryTotal = count($rows);
                                         <?php endif; ?>
                                     </td>
                                     <td><?= htmlspecialchars((string)($item['dich_vu'] ?? 'N/A'), ENT_QUOTES, 'UTF-8') ?></td>
-                                    <td><?= htmlspecialchars((string)($item['goi_dich_vu'] ?? 'N/A'), ENT_QUOTES, 'UTF-8') ?></td>
                                     <td><?= htmlspecialchars((string)($item['ngay_bat_dau_kehoach'] ?? 'N/A'), ENT_QUOTES, 'UTF-8') ?></td>
                                     <td><span class="badge rounded-pill <?= htmlspecialchars($badgeClass, ENT_QUOTES, 'UTF-8') ?>"><?= htmlspecialchars($statusValue, ENT_QUOTES, 'UTF-8') ?></span></td>
                                     <td>
