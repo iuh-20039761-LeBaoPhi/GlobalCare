@@ -421,7 +421,7 @@
         }
 
         setTimeout(function () {
-          window.location.href = "don-dat.html";
+          window.location.href = "khachhang/danh-sach-hoa-don.html";
         }, 900);
 
         form.reset();

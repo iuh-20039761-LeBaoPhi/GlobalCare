@@ -40,12 +40,12 @@
       ),
       orderLinks: Array.from(
         document.querySelectorAll(
-          '.nav-menu .auth-user-dropdown a[href*="don-dat.html"]',
+          '.nav-menu .auth-user-dropdown a[href*="khachhang/danh-sach-hoa-don.html"]',
         ),
       ),
       dashboardLinks: Array.from(
         document.querySelectorAll(
-          '.nav-menu .auth-user-dropdown a[href*="nha-cung-cap.html"]',
+          '.nav-menu .auth-user-dropdown a[href*="nhacungcap/danh-sach-hoa-don.html"]',
         ),
       ),
     };
