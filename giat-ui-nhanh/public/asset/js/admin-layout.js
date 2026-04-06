@@ -2,7 +2,7 @@
   function bindLogout(aside, config) {
     if (!aside) return;
 
-    var logoutNode = aside.querySelector("[data-admin-logout]");
+    var logoutNode = aside.querySelector("[data-logout]");
     if (!logoutNode || logoutNode.dataset.logoutBound === "true") return;
 
     logoutNode.dataset.logoutBound = "true";
@@ -40,12 +40,12 @@
   function applyAsideConfig(aside, config) {
     if (!aside) return;
 
-    var logoNode = aside.querySelector("[data-admin-logo]");
+    var logoNode = aside.querySelector("[data-logo]");
     if (logoNode && config.logoSrc) {
       logoNode.setAttribute("src", config.logoSrc);
     }
 
-    var logoutNode = aside.querySelector("[data-admin-logout]");
+    var logoutNode = aside.querySelector("[data-logout]");
     if (logoutNode && config.logoutHref) {
       logoutNode.setAttribute("href", config.logoutHref);
     }
@@ -55,6 +55,10 @@
     if (!aside) return;
 
     var currentPath = window.location.pathname.split("/").pop().toLowerCase();
+    var activePath = currentPath;
+    if (currentPath === "chi-tiet-hoa-don.html") {
+      activePath = "danh-sach-hoa-don.html";
+    }
     var navItems = aside.querySelectorAll(".sidebar-nav .nav-item");
 
     navItems.forEach(function (item) {
@@ -65,14 +69,14 @@
         .toLowerCase();
       if (!href || href === "#") return;
 
-      if (href === currentPath) {
+      if (href === activePath) {
         item.classList.add("active");
       }
     });
   }
 
-  function loadAdminAside() {
-    var mount = document.getElementById("adminAsideMount");
+  function loadAside() {
+    var mount = document.getElementById("asideMount");
     if (!mount) return;
 
     var asideSrc = mount.getAttribute("data-aside-src");
@@ -94,7 +98,7 @@
       .then(function (html) {
         mount.outerHTML = html;
 
-        var aside = document.getElementById("adminSidebar");
+        var aside = document.getElementById("sidebar");
         applyAsideConfig(aside, config);
         bindLogout(aside, config);
         markActiveNav(aside);
@@ -105,8 +109,8 @@
   }
 
   if (document.readyState === "loading") {
-    document.addEventListener("DOMContentLoaded", loadAdminAside);
+    document.addEventListener("DOMContentLoaded", loadAside);
   } else {
-    loadAdminAside();
+    loadAside();
   }
 })(window, document);

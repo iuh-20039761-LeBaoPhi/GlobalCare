@@ -1,5 +1,6 @@
 (function () {
   var BOOKING_TABLE = "datlich_giatuinhanh";
+  var shared = window.SharedOrderUtils || {};
   var orderDisplayUtils = window.OrderDisplayUtils || {};
   var parseOrderIdFromDisplayCode =
     typeof orderDisplayUtils.parseOrderIdFromDisplayCode === "function"
@@ -82,24 +83,37 @@
   }
 
   async function getSessionUser() {
-    var response = await fetch("public/asset/login-page.php", {
-      method: "GET",
-      credentials: "same-origin",
-      headers: {
-        "Content-Type": "application/json",
-        Accept: "application/json",
-      },
-    });
+    var config = window.ProviderOrderAcceptConfig || {};
+    var endpointCandidates = [
+      config.sessionEndpoint,
+      "public/asset/login-page.php",
+      "../public/asset/login-page.php",
+    ].filter(Boolean);
 
-    var result = await response.json().catch(function () {
-      return null;
-    });
+    for (var i = 0; i < endpointCandidates.length; i += 1) {
+      try {
+        var response = await fetch(endpointCandidates[i], {
+          method: "GET",
+          credentials: "same-origin",
+          headers: {
+            "Content-Type": "application/json",
+            Accept: "application/json",
+          },
+        });
 
-    if (!response.ok || !result || result.loggedIn !== true) {
-      throw new Error("Phien dang nhap khong hop le");
+        var result = await response.json().catch(function () {
+          return null;
+        });
+
+        if (response.ok && result && result.loggedIn === true) {
+          return result.user || {};
+        }
+      } catch (_error) {
+        // try next endpoint
+      }
     }
 
-    return result.user || {};
+    throw new Error("Phien dang nhap khong hop le");
   }
 
   async function getCurrentSupplier() {
@@ -121,6 +135,12 @@
   }
 
   async function getOrderById(orderId) {
+    if (typeof shared.fetchOrderById === "function") {
+      var sharedOrder = await shared.fetchOrderById(BOOKING_TABLE, orderId);
+      if (!sharedOrder) throw new Error("Khong tim thay don hang");
+      return sharedOrder;
+    }
+
     var result = await Promise.resolve(
       window.krudList({
         table: BOOKING_TABLE,
@@ -177,6 +197,16 @@
       diachi_ncc: supplier.diachi || "",
     };
 
+    if (typeof shared.acceptProviderOrder === "function") {
+      await shared.acceptProviderOrder(orderId, BOOKING_TABLE, payload);
+      return;
+    }
+
+    if (typeof shared.updateOrder === "function") {
+      await shared.updateOrder(BOOKING_TABLE, orderId, payload);
+      return;
+    }
+
     var result = await Promise.resolve(
       window.krud("update", BOOKING_TABLE, payload, orderId),
     );
@@ -189,9 +219,15 @@
   }
 
   async function handleAcceptOrder(orderId) {
+    var canUseSharedApi =
+      typeof shared.fetchOrderById === "function" &&
+      (typeof shared.acceptProviderOrder === "function" ||
+        typeof shared.updateOrder === "function");
+
     if (
-      typeof window.krudList !== "function" ||
-      typeof window.krud !== "function"
+      !canUseSharedApi &&
+      (typeof window.krudList !== "function" ||
+        typeof window.krud !== "function")
     ) {
       throw new Error("KRUD chua san sang");
     }
@@ -294,6 +330,9 @@
   }
 
   document.addEventListener("DOMContentLoaded", function () {
+    window.ProviderOrderAccept = {
+      handleAcceptOrder: handleAcceptOrder,
+    };
     bindAcceptOrderAction();
   });
 })();
