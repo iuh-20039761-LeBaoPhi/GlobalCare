@@ -14,23 +14,29 @@ $isEmployeeApproved = employee_account_is_approved($employeeStatus);
 $invoiceId = (int)($_GET['id'] ?? 0);
 $invoice = null;
 $loadError = '';
+$pageNotice = '';
 
 if (!$isEmployeeApproved) {
 	$loadError = 'Tài khoản của bạn đang chờ duyệt';
 } elseif ($invoiceId <= 0) {
 	$loadError = 'Thiếu mã hóa đơn để hiển thị chi tiết.';
 } else {
-	$result = getHoaDonData($invoiceId);
-	$invoice = $result['row'] ?? null;
-	$loadError = (string)($result['error'] ?? '');
+	$invoice = work_reload_order($invoiceId);
 
-	if (!is_array($invoice) && $loadError === '') {
+	if (!is_array($invoice)) {
 		$loadError = 'Không tìm thấy hóa đơn tương ứng.';
 	}
 
 	if (is_array($invoice) && !invoice_in_employee_scope($invoice, $sessionEmployeeId, $sessionUser)) {
 		$invoice = null;
 		$loadError = 'Bạn không có quyền xem hóa đơn này.';
+	}
+
+	if (is_array($invoice)) {
+		$statusLowerForNotice = lower_text_simple((string)($invoice['trangthai'] ?? ''));
+		if (!invoice_has_supplier_assignment($invoice) && status_is_overdue($statusLowerForNotice)) {
+			$pageNotice = 'Đơn hàng quá hạn';
+		}
 	}
 }
 
@@ -52,8 +58,29 @@ function jobs_from_dot(string $value): array
 	return $items ?: ['---'];
 }
 
+function format_invoice_id_display($value): string
+{
+	$raw = trim((string)$value);
+	if ($raw === '') {
+		return '---';
+	}
+
+	if (!is_numeric($raw)) {
+		return '---';
+	}
+
+	$num = (float)$raw;
+	if (!is_finite($num) || $num < 0) {
+		return '---';
+	}
+
+	$id = (int)$num;
+	return str_pad((string)$id, 7, '0', STR_PAD_LEFT);
+}
+
 $hoadon = is_array($invoice) ? $invoice : [];
 $idNumber = (int)($hoadon['id'] ?? 0);
+$displayInvoiceId = format_invoice_id_display($hoadon['id'] ?? '');
 
 $progressText = trim((string)($hoadon['tien_do'] ?? '0'));
 if ($progressText === '') {
@@ -68,8 +95,9 @@ $progressValue = max(0.0, min(100.0, $progressValue));
 
 $statusLower = lower_text_simple((string)($hoadon['trangthai'] ?? ''));
 $isCancelled = status_is_cancelled($statusLower);
+$isOverdue = status_is_overdue($statusLower);
 $isCompleted = status_is_completed($statusLower);
-$stateClass = $isCancelled ? 'danger' : ($isCompleted ? 'success' : 'warning');
+$stateClass = ($isCancelled || $isOverdue) ? 'danger' : ($isCompleted ? 'success' : 'warning');
 
 $staffAssigned = invoice_has_supplier_assignment($hoadon);
 $isMyOrder = $staffAssigned && invoice_assigned_to_employee($hoadon, $sessionUser);
@@ -81,14 +109,44 @@ $inPlanWindow = in_plan_window(
 	(string)($hoadon['ngay_ket_thuc_kehoach'] ?? '')
 );
 
-$canClaim = !$staffAssigned && !$isCancelled && !$isCompleted;
-$canStart = $isMyOrder && $inPlanWindow && (!$started || $ended) && !$isCancelled && !$isCompleted;
-$canEnd = $isMyOrder && $started && !$ended && !$isCancelled && !$isCompleted;
+$claimCheck = work_can_claim_invoice($hoadon);
+$canClaim = (($claimCheck['ok'] ?? false) === true);
+
+$startCheck = work_can_start_invoice($hoadon, $sessionUser);
+$canStart = (($startCheck['ok'] ?? false) === true) && $isMyOrder && $inPlanWindow;
+
+$endCheck = work_can_end_invoice($hoadon, $sessionUser);
+$canEnd = (($endCheck['ok'] ?? false) === true) && $isMyOrder && $started && !$ended;
+
+$actionMessage = '';
+if (!$canClaim && !$canStart && !$canEnd) {
+	$actionMessage = (string)($claimCheck['message'] ?? '');
+	if ($actionMessage === '') {
+		$actionMessage = (string)($startCheck['message'] ?? '');
+	}
+	if ($actionMessage === '') {
+		$actionMessage = (string)($endCheck['message'] ?? '');
+	}
+}
 
 $proofMedia = array_values(array_unique(array_merge(
 	work_parse_media((string)($hoadon['yeu_cau_khac'] ?? '')),
 	work_parse_media((string)($hoadon['ghi_chu'] ?? ''))
 )));
+
+$customerReviewText = trim((string)($hoadon['danhgia_khachhang'] ?? ''));
+$customerReviewTime = trim((string)($hoadon['thoigian_danhgia_khachhang'] ?? ''));
+$customerReviewMedia = work_parse_media((string)($hoadon['media_danhgia_khachhang'] ?? ''));
+$customerReviewHasData = $customerReviewText !== '' || $customerReviewTime !== '' || $customerReviewMedia !== [];
+
+$staffReviewText = trim((string)($hoadon['danhgia_nhanvien'] ?? ''));
+$staffReviewTime = trim((string)($hoadon['thoigian_danhgia_nhanvien'] ?? ''));
+$staffReviewMedia = work_parse_media((string)($hoadon['media_danhgia_nhanvien'] ?? ''));
+$staffReviewHasData = $staffReviewText !== '' || $staffReviewTime !== '' || $staffReviewMedia !== [];
+
+$staffReviewCheck = work_can_staff_review($hoadon, $sessionUser);
+$canStaffReview = (($staffReviewCheck['ok'] ?? false) === true);
+$staffReviewBlockedMessage = trim((string)($staffReviewCheck['message'] ?? ''));
 
 $actionReturn = 'chi-tiet-hoa-don.php?id=' . $idNumber;
 ?>
@@ -595,12 +653,268 @@ $actionReturn = 'chi-tiet-hoa-don.php?id=' . $idNumber;
 			}
 		}
 	</style>
+	<style>
+		:root {
+			--rose-50: #fff5fb;
+			--rose-100: #ffe9f4;
+			--rose-200: #ffd8ea;
+			--rose-300: #f3bdd7;
+			--rose-500: #d46b9f;
+			--rose-700: #8d2f60;
+			--peach-100: #fff1e8;
+			--peach-300: #f6d5c4;
+		}
+
+		body {
+			background: linear-gradient(180deg, #fff6fb 0%, #ffeef8 45%, #fff9fc 100%);
+			color: #6b3d58;
+		}
+
+		.detail-shell {
+			border-color: var(--rose-300);
+			background: #fff9fd;
+			box-shadow: 0 14px 34px rgba(151, 61, 107, 0.18);
+			border-radius: 16px;
+		}
+
+		.hero-box {
+			background: linear-gradient(95deg, #bf467f 0%, #e16aa3 58%, #f39a91 100%);
+			border-bottom: 1px solid rgba(255, 218, 236, 0.9);
+		}
+
+		.hero-status,
+		.hero-stat {
+			border-color: rgba(255, 236, 246, 0.68);
+			background: rgba(255, 246, 251, 0.18);
+		}
+
+		.hero-progress {
+			border-color: rgba(255, 236, 246, 0.88);
+			background: rgba(255, 238, 247, 0.28);
+			box-shadow: 0 8px 20px rgba(126, 30, 74, 0.2);
+		}
+
+		.panel {
+			border-color: var(--rose-300);
+			background: #fff8fc;
+			box-shadow: 0 10px 24px rgba(156, 65, 113, 0.12);
+			border-radius: 14px;
+		}
+
+		.panel-head {
+			background: linear-gradient(135deg, var(--rose-100), #ffeff8);
+			border-bottom-color: var(--rose-300);
+		}
+
+		.panel-title {
+			color: var(--rose-700);
+		}
+
+		.chip {
+			background: #ffe9f4;
+			color: #8d2f60;
+			border-color: #f1bfd8;
+		}
+
+		.chip.success {
+			background: #ffe2f0;
+			color: #8a2d5c;
+			border-color: #efb9d4;
+		}
+
+		.chip.warning {
+			background: var(--peach-100);
+			color: #9f5e2b;
+			border-color: var(--peach-300);
+		}
+
+		.chip.danger {
+			background: #ffe4ea;
+			color: #af355f;
+			border-color: #f6bfd0;
+		}
+
+		.jobs-list li {
+			border-color: #f1c2db;
+			background: #fff1f8;
+			color: #6e3a5a;
+		}
+
+		.jobs-list li::before {
+			background: var(--rose-500);
+		}
+
+		.jobs-meta {
+			border-top-color: #f0c5dc;
+		}
+
+		.jobs-meta-item {
+			border-color: #f1c8dd;
+			background: linear-gradient(135deg, #ffeaf5, #fff2fa);
+		}
+
+		.label-xs {
+			color: #9a5b80;
+		}
+
+		.value-sm {
+			color: #6f3558;
+		}
+
+		.progress-head {
+			color: #8a4f73;
+		}
+
+		.progress-wrap {
+			border-color: #f1c6dc;
+			background: #fce4f1;
+		}
+
+		.progress-bar {
+			background: linear-gradient(90deg, #cf5f98, #f08f8e);
+		}
+
+		.progress-bar.danger {
+			background: linear-gradient(90deg, #e16b9a, #cf4d79);
+		}
+
+		.time-table {
+			border-color: #f1c8dd;
+		}
+
+		.time-table th,
+		.time-table td {
+			border-bottom-color: #f4d3e5;
+			color: #744161;
+		}
+
+		.time-table th {
+			background: #ffeaf5;
+		}
+
+		.status-line {
+			color: #7f4a6f;
+		}
+
+		.muted-note {
+			color: #9a6785;
+		}
+
+		.avatar {
+			border-color: #f4c6de;
+			box-shadow: 0 8px 16px rgba(169, 73, 121, 0.2);
+		}
+
+		.person-name {
+			color: #7c345a;
+		}
+
+		.person-row {
+			color: #764363;
+		}
+
+		.person-row i {
+			color: #d26da2;
+		}
+
+		.review-box {
+			border-color: #f0c4dc;
+			background: #fff9fd;
+			box-shadow: 0 8px 18px rgba(156, 65, 113, 0.09);
+		}
+
+		.review-head {
+			background: #ffeef8;
+			border-bottom-color: #f1c7dd;
+		}
+
+		.review-title,
+		.review-text {
+			color: #6f3658;
+		}
+
+		.media-grid img,
+		.media-grid video {
+			border-color: #f0c7dc;
+			box-shadow: 0 6px 14px rgba(151, 61, 107, 0.1);
+		}
+
+		.media-empty {
+			border-color: #eebed8;
+			color: #8d5779;
+			background: #fff4fa;
+		}
+
+		.btn-primary {
+			border-color: #ef9fc7;
+			background: linear-gradient(135deg, #eb76af, #cf5e96);
+		}
+
+		.btn-primary:hover,
+		.btn-primary:focus {
+			border-color: #ea8ebb;
+			background: linear-gradient(135deg, #e066a5, #bf4f88);
+		}
+
+		.btn-success {
+			border-color: #e8acc9;
+			background: linear-gradient(135deg, #e57aaa, #c95992);
+		}
+
+		.btn-success:hover,
+		.btn-success:focus {
+			border-color: #df95b7;
+			background: linear-gradient(135deg, #d96b9e, #b84a83);
+		}
+
+		.btn-warning,
+		.btn-warning.btn-sm.text-white {
+			border-color: #efb0ca;
+			background: linear-gradient(135deg, #f4b08e, #ea86a7);
+			color: #fff !important;
+		}
+
+		.btn-warning:hover,
+		.btn-warning:focus {
+			border-color: #e6a3bf;
+			background: linear-gradient(135deg, #e7a27f, #dd7699);
+		}
+
+		.form-control,
+		.form-control-sm {
+			border-color: #efc5db;
+			background: #fffbfd;
+		}
+
+		.form-control:focus,
+		.form-control-sm:focus {
+			border-color: #e38ab8;
+			box-shadow: 0 0 0 0.2rem rgba(227, 138, 184, 0.2);
+		}
+
+		.alert-success {
+			color: #1f6148;
+			background: #e9f8f1;
+			border-color: #9dd9be;
+			box-shadow: 0 8px 18px rgba(31, 97, 72, 0.08);
+		}
+
+		.alert-warning {
+			color: #7d2d53;
+			background: #fff1f8;
+			border-color: #f1bfd8;
+			box-shadow: 0 8px 18px rgba(125, 45, 83, 0.08);
+		}
+	</style>
 </head>
 <body>
 <?php render_nhan_vien_header($sessionUser, 'Chi tiet hoa don nhan vien', 'orders'); ?>
 <div class="page-wrap">
 	<?php if ($flashMsg !== ''): ?>
 		<div class="alert <?= $flashOk ? 'alert-success' : 'alert-warning' ?> mb-3"><?= htmlspecialchars($flashMsg, ENT_QUOTES, 'UTF-8') ?></div>
+	<?php endif; ?>
+	<?php if ($pageNotice !== ''): ?>
+		<div class="alert alert-warning mb-3"><?= htmlspecialchars($pageNotice, ENT_QUOTES, 'UTF-8') ?></div>
 	<?php endif; ?>
 
 	<?php if ($loadError !== ''): ?>
@@ -610,7 +924,7 @@ $actionReturn = 'chi-tiet-hoa-don.php?id=' . $idNumber;
 			<div class="hero-box">
 				<div class="hero-top">
 					<div>
-						<h1 class="hero-title">Đơn #<?= htmlspecialchars((string)($hoadon['id'] ?? '---'), ENT_QUOTES, 'UTF-8') ?> <span class="hero-status"><?= htmlspecialchars((string)($hoadon['trangthai'] ?? '---'), ENT_QUOTES, 'UTF-8') ?></span></h1>
+						<h1 class="hero-title">Đơn #<?= htmlspecialchars($displayInvoiceId, ENT_QUOTES, 'UTF-8') ?> <span class="hero-status"><?= htmlspecialchars((string)($hoadon['trangthai'] ?? '---'), ENT_QUOTES, 'UTF-8') ?></span></h1>
 						<p class="hero-subtitle"><?= htmlspecialchars((string)($hoadon['dich_vu'] ?? '---'), ENT_QUOTES, 'UTF-8') ?></p>
 					</div>
 					<div class="hero-progress">
@@ -707,7 +1021,7 @@ $actionReturn = 'chi-tiet-hoa-don.php?id=' . $idNumber;
 
 						<div class="d-flex flex-wrap align-items-center gap-2 mt-1">
 							<?php if ($canClaim): ?>
-								<form method="post" action="xu-ly-cong-viec.php" class="d-inline">
+								<form method="post" action="xu-ly-cong-viec.php" class="d-inline" onsubmit="return confirm('Bạn xác nhận nhận việc cho đơn này?');">
 									<input type="hidden" name="invoice_id" value="<?= (int)($hoadon['id'] ?? 0) ?>">
 									<input type="hidden" name="action" value="claim">
 									<input type="hidden" name="return_to" value="<?= htmlspecialchars($actionReturn, ENT_QUOTES, 'UTF-8') ?>">
@@ -716,7 +1030,7 @@ $actionReturn = 'chi-tiet-hoa-don.php?id=' . $idNumber;
 							<?php endif; ?>
 
 							<?php if ($canStart): ?>
-								<form method="post" action="xu-ly-cong-viec.php" class="d-inline">
+								<form method="post" action="xu-ly-cong-viec.php" class="d-inline" onsubmit="return confirm('Bạn xác nhận bắt đầu công việc?');">
 									<input type="hidden" name="invoice_id" value="<?= (int)($hoadon['id'] ?? 0) ?>">
 									<input type="hidden" name="action" value="start">
 									<input type="hidden" name="return_to" value="<?= htmlspecialchars($actionReturn, ENT_QUOTES, 'UTF-8') ?>">
@@ -725,7 +1039,7 @@ $actionReturn = 'chi-tiet-hoa-don.php?id=' . $idNumber;
 							<?php endif; ?>
 
 							<?php if ($canEnd): ?>
-								<form method="post" action="xu-ly-cong-viec.php" class="d-inline">
+								<form method="post" action="xu-ly-cong-viec.php" class="d-inline" onsubmit="return confirm('Bạn xác nhận kết thúc công việc?');">
 									<input type="hidden" name="invoice_id" value="<?= (int)($hoadon['id'] ?? 0) ?>">
 									<input type="hidden" name="action" value="end">
 									<input type="hidden" name="return_to" value="<?= htmlspecialchars($actionReturn, ENT_QUOTES, 'UTF-8') ?>">
@@ -734,7 +1048,7 @@ $actionReturn = 'chi-tiet-hoa-don.php?id=' . $idNumber;
 							<?php endif; ?>
 
 							<?php if (!$canClaim && !$canStart && !$canEnd): ?>
-								<span class="muted-note">Không có thao tác khả dụng cho trạng thái hiện tại.</span>
+								<span class="muted-note"><?= htmlspecialchars($actionMessage !== '' ? $actionMessage : 'Không có thao tác khả dụng cho trạng thái hiện tại.', ENT_QUOTES, 'UTF-8') ?></span>
 							<?php endif; ?>
 						</div>
 					</div>
@@ -747,7 +1061,7 @@ $actionReturn = 'chi-tiet-hoa-don.php?id=' . $idNumber;
 					</div>
 					<div class="person-card">
 						<div class="person-head">
-							<img class="avatar" src="../assets/logomvb.png" alt="avatar khách hàng">
+							<img class="avatar" src="../<?= htmlspecialchars(trim((string)($hoadon['avatar_khachhang'] ?? '')) !== '' ? (string)$hoadon['avatar_khachhang'] : 'assets/logomvb.png', ENT_QUOTES, 'UTF-8') ?>" alt="avatar khách hàng">
 							<h3 class="person-name"><?= htmlspecialchars((string)($hoadon['tenkhachhang'] ?? 'Khách hàng'), ENT_QUOTES, 'UTF-8') ?></h3>
 						</div>
 						<div class="person-items">
@@ -788,38 +1102,68 @@ $actionReturn = 'chi-tiet-hoa-don.php?id=' . $idNumber;
 						<section class="review-box">
 							<div class="review-head">
 								<h3 class="review-title">Đánh giá khách hàng</h3>
-								<span class="chip warning">Chưa có</span>
+								<span class="chip <?= $customerReviewHasData ? 'success' : 'warning' ?>"><?= $customerReviewHasData ? 'Đã có' : 'Chưa có' ?></span>
 							</div>
 							<div class="review-body">
 								<p class="label-xs">Nội dung đánh giá</p>
-								<p class="review-text">Chưa có đánh giá</p>
+								<p class="review-text"><?= htmlspecialchars($customerReviewText !== '' ? $customerReviewText : 'Chưa có đánh giá', ENT_QUOTES, 'UTF-8') ?></p>
 								<p class="label-xs">Thời gian gửi</p>
-								<p class="review-text">---</p>
+								<p class="review-text"><?= htmlspecialchars($customerReviewTime !== '' ? $customerReviewTime : '---', ENT_QUOTES, 'UTF-8') ?></p>
 								<p class="label-xs">Ảnh/video đánh giá</p>
 								<div class="media-grid">
-									<div class="media-empty">Chưa có tệp</div>
+									<?php if (!$customerReviewMedia): ?>
+										<div class="media-empty">Chưa có tệp</div>
+									<?php else: ?>
+										<?php foreach ($customerReviewMedia as $media): ?>
+											<?php if (work_media_is_video($media)): ?>
+												<video src="<?= htmlspecialchars($media, ENT_QUOTES, 'UTF-8') ?>" controls playsinline></video>
+											<?php else: ?>
+												<img src="<?= htmlspecialchars($media, ENT_QUOTES, 'UTF-8') ?>" alt="media đánh giá khách hàng">
+											<?php endif; ?>
+										<?php endforeach; ?>
+									<?php endif; ?>
 								</div>
 							</div>
 						</section>
 
 						<section class="review-box">
 							<div class="review-head">
-								<h3 class="review-title">Đánh giá nhà cung cấp</h3>
-								<span class="chip warning">Chưa có</span>
+								<h3 class="review-title">Đánh giá nhân viên</h3>
+								<?php if ($staffReviewHasData): ?>
+									<span class="chip success">Đã có</span>
+								<?php elseif ($canStaffReview): ?>
+									<span class="chip">Được đánh giá</span>
+								<?php else: ?>
+									<span class="chip warning">Chưa có</span>
+								<?php endif; ?>
 							</div>
 							<div class="review-body">
 								<p class="label-xs">Nội dung đánh giá</p>
-								<p class="review-text">Chưa có đánh giá</p>
+								<p class="review-text"><?= htmlspecialchars($staffReviewText !== '' ? $staffReviewText : 'Chưa có đánh giá', ENT_QUOTES, 'UTF-8') ?></p>
 								<p class="label-xs">Thời gian gửi</p>
-								<p class="review-text">---</p>
+								<p class="review-text"><?= htmlspecialchars($staffReviewTime !== '' ? $staffReviewTime : '---', ENT_QUOTES, 'UTF-8') ?></p>
+								<?php if ($canStaffReview && !$staffReviewHasData): ?>
+									<form method="post" action="xu-ly-cong-viec.php" class="d-grid gap-2" onsubmit="return confirm('Bạn xác nhận lưu đánh giá nhân viên?');">
+										<input type="hidden" name="invoice_id" value="<?= (int)$idNumber ?>">
+										<input type="hidden" name="action" value="save_review">
+										<input type="hidden" name="return_to" value="<?= htmlspecialchars($actionReturn, ENT_QUOTES, 'UTF-8') ?>">
+										<label class="label-xs mb-0" for="review_text">Nội dung</label>
+										<textarea class="form-control form-control-sm" id="review_text" name="review_text" rows="3" placeholder="Nhập nội dung đánh giá"></textarea>
+										<label class="label-xs mb-0" for="review_media">Media</label>
+										<textarea class="form-control form-control-sm" id="review_media" name="review_media" rows="2" placeholder="Dán URL ảnh/video, cách nhau dấu phẩy hoặc xuống dòng"></textarea>
+										<button type="submit" class="btn btn-primary btn-sm"><i class="bi bi-save me-1"></i>Lưu đánh giá</button>
+									</form>
+								<?php elseif (!$staffReviewHasData && $staffReviewBlockedMessage !== ''): ?>
+									<p class="muted-note"><?= htmlspecialchars($staffReviewBlockedMessage, ENT_QUOTES, 'UTF-8') ?></p>
+								<?php endif; ?>
 								<p class="label-xs">Ảnh/video minh chứng</p>
 								<div class="media-grid">
-									<?php if (!$proofMedia): ?>
+									<?php $staffMediaForRender = $staffReviewMedia ?: $proofMedia; ?>
+									<?php if (!$staffMediaForRender): ?>
 										<div class="media-empty">Chưa có tệp</div>
 									<?php else: ?>
-										<?php foreach ($proofMedia as $media): ?>
-											<?php $isVideo = preg_match('/\.(mp4|webm|ogg|mov)(\?.*)?$/i', $media) === 1; ?>
-											<?php if ($isVideo): ?>
+										<?php foreach ($staffMediaForRender as $media): ?>
+											<?php if (work_media_is_video($media)): ?>
 												<video src="<?= htmlspecialchars($media, ENT_QUOTES, 'UTF-8') ?>" controls playsinline></video>
 											<?php else: ?>
 												<img src="<?= htmlspecialchars($media, ENT_QUOTES, 'UTF-8') ?>" alt="media minh chứng">

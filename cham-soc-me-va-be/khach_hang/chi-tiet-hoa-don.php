@@ -3,7 +3,65 @@ declare(strict_types=1);
 
 require_once __DIR__ . '/../session_user.php';
 require_once __DIR__ . '/get-hoadonsdt.php';
+require_once __DIR__ . '/xu-ly-huy.php';
 require_once __DIR__ . '/header-shared.php';
+
+function mevabe_parse_media_paths(string $raw): array
+{
+    $raw = trim($raw);
+    if ($raw === '') {
+        return [];
+    }
+
+    $paths = [];
+    $decoded = json_decode($raw, true);
+    if (is_array($decoded)) {
+        foreach ($decoded as $item) {
+            $path = trim((string)$item);
+            if ($path !== '') {
+                $paths[] = $path;
+            }
+        }
+    } else {
+        $parts = preg_split('/\s*[\r\n,;|]+\s*/', $raw) ?: [];
+        foreach ($parts as $item) {
+            $path = trim((string)$item);
+            if ($path !== '') {
+                $paths[] = $path;
+            }
+        }
+    }
+
+    return array_values(array_unique($paths));
+}
+
+function mevabe_media_is_video(string $path): bool
+{
+    $pathPart = parse_url($path, PHP_URL_PATH);
+    $normalized = is_string($pathPart) && $pathPart !== '' ? $pathPart : $path;
+    $ext = strtolower((string)pathinfo($normalized, PATHINFO_EXTENSION));
+    return in_array($ext, ['mp4', 'webm', 'ogg', 'mov'], true);
+}
+
+function mevabe_format_invoice_id_display($value): string
+{
+    $raw = trim((string)$value);
+    if ($raw === '') {
+        return '---';
+    }
+
+    if (!is_numeric($raw)) {
+        return '---';
+    }
+
+    $num = (float)$raw;
+    if (!is_finite($num) || $num < 0) {
+        return '---';
+    }
+
+    $id = (int)$num;
+    return str_pad((string)$id, 7, '0', STR_PAD_LEFT);
+}
 
 $sessionUser = session_user_require_customer('../login.html', 'khach_hang/chi-tiet-hoa-don.php' . (isset($_GET['id']) ? ('?id=' . urlencode((string)$_GET['id'])) : ''));
 $sessionPhone = (string)($sessionUser['sodienthoai'] ?? '');
@@ -21,9 +79,12 @@ if ($invoiceId > 0 && !$invoice && $loadError === '') {
 }
 
 $invoice = is_array($invoice) ? $invoice : [];
+if ($invoice) {
+    $invoice = mevabe_refresh_invoice_row($invoice);
+}
 
 $idNumber = (int)($invoice['id'] ?? 0);
-$invoiceCode = $idNumber > 0 ? ('#' . str_pad((string)$idNumber, 6, '0', STR_PAD_LEFT)) : '---';
+$invoiceCode = mevabe_format_invoice_id_display($invoice['id'] ?? '');
 
 $statusText = trim((string)($invoice['trangthai'] ?? ''));
 if ($statusText === '') {
@@ -109,6 +170,7 @@ if ($jobsRaw !== '') {
     if (is_array($jobsJson)) {
         foreach ($jobsJson as $job) {
             $jobText = trim((string)$job);
+            $jobText = ltrim($jobText, ", \t\n\r\0\x0B");
             if ($jobText !== '') {
                 $jobs[] = $jobText;
             }
@@ -117,6 +179,7 @@ if ($jobsRaw !== '') {
         $parts = preg_split('/\s*[\.\x{3002}\r\n;]+\s*/u', $jobsRaw) ?: [];
         foreach ($parts as $part) {
             $jobText = trim((string)$part);
+            $jobText = ltrim($jobText, ", \t\n\r\0\x0B");
             if ($jobText !== '') {
                 $jobs[] = $jobText;
             }
@@ -133,7 +196,22 @@ $staffAssigned =
     || (int)($invoice['id_nhacungcap'] ?? 0) > 0
     || trim((string)($invoice['nhacungcapnhan'] ?? '')) !== '';
 
-$canCancel = !$staffAssigned && $stateClass !== 'danger';
+$cancelCheck = mevabe_can_cancel_invoice($invoice);
+$canCancel = (($cancelCheck['ok'] ?? false) === true);
+
+$customerReviewText = trim((string)($invoice['danhgia_khachhang'] ?? ''));
+$customerReviewTime = trim((string)($invoice['thoigian_danhgia_khachhang'] ?? ''));
+$customerReviewMedia = mevabe_parse_media_paths((string)($invoice['media_danhgia_khachhang'] ?? ''));
+$customerReviewHasData = $customerReviewText !== '' || $customerReviewTime !== '' || $customerReviewMedia !== [];
+
+$supplierReviewText = trim((string)($invoice['danhgia_nhanvien'] ?? ''));
+$supplierReviewTime = trim((string)($invoice['thoigian_danhgia_nhanvien'] ?? ''));
+$supplierReviewMedia = mevabe_parse_media_paths((string)($invoice['media_danhgia_nhanvien'] ?? ''));
+$supplierReviewHasData = $supplierReviewText !== '' || $supplierReviewTime !== '' || $supplierReviewMedia !== [];
+
+$reviewCheck = mevabe_can_customer_review($invoice);
+$canReview = (($reviewCheck['ok'] ?? false) === true);
+$reviewBlockedMessage = trim((string)($reviewCheck['message'] ?? ''));
 
 $flashOk = isset($_GET['ok']) ? ((string)$_GET['ok'] === '1') : null;
 $flashMsg = trim((string)($_GET['msg'] ?? ''));
@@ -641,6 +719,248 @@ $flashMsg = trim((string)($_GET['msg'] ?? ''));
             }
         }
     </style>
+    <style>
+        :root {
+            --rose-50: #fff5fb;
+            --rose-100: #ffe9f4;
+            --rose-200: #ffd8ea;
+            --rose-300: #f3bdd7;
+            --rose-500: #d46b9f;
+            --rose-700: #8d2f60;
+            --peach-100: #fff1e8;
+            --peach-300: #f6d5c4;
+        }
+
+        body {
+            background: linear-gradient(180deg, #fff6fb 0%, #ffeef8 45%, #fff9fc 100%);
+            color: #6b3d58;
+        }
+
+        .detail-shell {
+            border-color: var(--rose-300);
+            background: #fff9fd;
+            box-shadow: 0 14px 34px rgba(151, 61, 107, 0.18);
+            border-radius: 16px;
+        }
+
+        .hero-box {
+            background: linear-gradient(95deg, #bf467f 0%, #e16aa3 58%, #f39a91 100%);
+            border-bottom: 1px solid rgba(255, 218, 236, 0.9);
+        }
+
+        .hero-status,
+        .hero-stat {
+            border-color: rgba(255, 236, 246, 0.68);
+            background: rgba(255, 246, 251, 0.18);
+        }
+
+        .hero-progress {
+            border-color: rgba(255, 236, 246, 0.88);
+            background: rgba(255, 238, 247, 0.28);
+            box-shadow: 0 8px 20px rgba(126, 30, 74, 0.2);
+        }
+
+        .panel {
+            border-color: var(--rose-300);
+            background: #fff8fc;
+            box-shadow: 0 10px 24px rgba(156, 65, 113, 0.12);
+            border-radius: 14px;
+        }
+
+        .panel-head {
+            background: linear-gradient(135deg, var(--rose-100), #ffeff8);
+            border-bottom-color: var(--rose-300);
+        }
+
+        .panel-title {
+            color: var(--rose-700);
+        }
+
+        .chip {
+            background: #ffe9f4;
+            color: #8d2f60;
+            border-color: #f1bfd8;
+        }
+
+        .chip.success {
+            background: #ffe2f0;
+            color: #8a2d5c;
+            border-color: #efb9d4;
+        }
+
+        .chip.warning {
+            background: var(--peach-100);
+            color: #9f5e2b;
+            border-color: var(--peach-300);
+        }
+
+        .chip.danger {
+            background: #ffe4ea;
+            color: #af355f;
+            border-color: #f6bfd0;
+        }
+
+        .jobs-list li {
+            border-color: #f1c2db;
+            background: #fff1f8;
+            color: #6e3a5a;
+        }
+
+        .jobs-list li::before {
+            background: var(--rose-500);
+        }
+
+        .jobs-meta {
+            border-top-color: #f0c5dc;
+        }
+
+        .jobs-meta-item {
+            border-color: #f1c8dd;
+            background: linear-gradient(135deg, #ffeaf5, #fff2fa);
+        }
+
+        .label-xs {
+            color: #9a5b80;
+        }
+
+        .value-sm {
+            color: #6f3558;
+        }
+
+        .progress-head {
+            color: #8a4f73;
+        }
+
+        .progress-wrap {
+            border-color: #f1c6dc;
+            background: #fce4f1;
+        }
+
+        .progress-bar {
+            background: linear-gradient(90deg, #cf5f98, #f08f8e);
+        }
+
+        .progress-bar.danger {
+            background: linear-gradient(90deg, #e16b9a, #cf4d79);
+        }
+
+        .time-table {
+            border-color: #f1c8dd;
+        }
+
+        .time-table th,
+        .time-table td {
+            border-bottom-color: #f4d3e5;
+            color: #744161;
+        }
+
+        .time-table th {
+            background: #ffeaf5;
+        }
+
+        .status-line {
+            color: #7f4a6f;
+        }
+
+        .muted-note {
+            color: #9a6785;
+        }
+
+        .avatar {
+            border-color: #f4c6de;
+            box-shadow: 0 8px 16px rgba(169, 73, 121, 0.2);
+        }
+
+        .person-name {
+            color: #7c345a;
+        }
+
+        .person-row {
+            color: #764363;
+        }
+
+        .person-row i {
+            color: #d26da2;
+        }
+
+        .review-box {
+            border-color: #f0c4dc;
+            background: #fff9fd;
+            box-shadow: 0 8px 18px rgba(156, 65, 113, 0.09);
+        }
+
+        .review-head {
+            background: #ffeef8;
+            border-bottom-color: #f1c7dd;
+        }
+
+        .review-title,
+        .review-text {
+            color: #6f3658;
+        }
+
+        .media-grid img,
+        .media-grid video {
+            border-color: #f0c7dc;
+            box-shadow: 0 6px 14px rgba(151, 61, 107, 0.1);
+        }
+
+        .media-empty {
+            border-color: #eebed8;
+            color: #8d5779;
+            background: #fff4fa;
+        }
+
+        .alert-success {
+            color: #1f6148;
+            background: #e9f8f1;
+            border-color: #9dd9be;
+            box-shadow: 0 8px 18px rgba(31, 97, 72, 0.08);
+        }
+
+        .alert-warning {
+            color: #7d2d53;
+            background: #fff1f8;
+            border-color: #f1bfd8;
+            box-shadow: 0 8px 18px rgba(125, 45, 83, 0.08);
+        }
+
+        .btn-primary {
+            border-color: #f29ac5;
+            background: linear-gradient(135deg, #eb76af, #cf5e96);
+        }
+
+        .btn-primary:hover,
+        .btn-primary:focus {
+            border-color: #ea8ebb;
+            background: linear-gradient(135deg, #e066a5, #bf4f88);
+        }
+
+        .btn-outline-danger {
+            color: #a63a61;
+            border-color: #e7a8c3;
+            background: #fff7fb;
+        }
+
+        .btn-outline-danger:hover,
+        .btn-outline-danger:focus {
+            color: #fff;
+            border-color: #cc5b91;
+            background: #cc5b91;
+        }
+
+        .form-control,
+        .form-control-sm {
+            border-color: #efc5db;
+            background: #fffbfd;
+        }
+
+        .form-control:focus,
+        .form-control-sm:focus {
+            border-color: #e38ab8;
+            box-shadow: 0 0 0 0.2rem rgba(227, 138, 184, 0.2);
+        }
+    </style>
 </head>
 <body>
 <?php render_khach_hang_header($sessionUser, 'Chi tiet hoa don khach hang', 'orders'); ?>
@@ -656,7 +976,7 @@ $flashMsg = trim((string)($_GET['msg'] ?? ''));
             <div class="hero-box">
                 <div class="hero-top">
                     <div>
-                        <h1 class="hero-title">Đơn <?= htmlspecialchars($invoiceCode, ENT_QUOTES, 'UTF-8') ?> <span class="hero-status"><?= htmlspecialchars($statusText, ENT_QUOTES, 'UTF-8') ?></span></h1>
+                        <h1 class="hero-title">Đơn #<?= htmlspecialchars($invoiceCode, ENT_QUOTES, 'UTF-8') ?> <span class="hero-status"><?= htmlspecialchars($statusText, ENT_QUOTES, 'UTF-8') ?></span></h1>
                         <p class="hero-subtitle"><?= htmlspecialchars($serviceName, ENT_QUOTES, 'UTF-8') ?></p>
                     </div>
                     <div class="hero-progress">
@@ -754,6 +1074,7 @@ $flashMsg = trim((string)($_GET['msg'] ?? ''));
                         <p class="muted-note">Số ngày kế hoạch: <?= (int)$daysPlan ?> ngày</p>
                         <?php if ($canCancel && $idNumber > 0): ?>
                             <form method="post" action="xu-ly-huy.php" onsubmit="return confirm('Bạn có chắc muốn hủy đơn này không?');">
+                                <input type="hidden" name="action" value="cancel">
                                 <input type="hidden" name="invoice_id" value="<?= (int)$idNumber ?>">
                                 <input type="hidden" name="return_to" value="<?= htmlspecialchars('chi-tiet-hoa-don.php?id=' . $idNumber, ENT_QUOTES, 'UTF-8') ?>">
                                 <button type="submit" class="btn btn-outline-danger btn-sm"><i class="bi bi-x-circle me-1"></i>Hủy đơn</button>
@@ -769,7 +1090,7 @@ $flashMsg = trim((string)($_GET['msg'] ?? ''));
                     </div>
                     <div class="person-card">
                         <div class="person-head">
-                            <img class="avatar" src="<?= htmlspecialchars(trim((string)($sessionUser['anh_dai_dien'] ?? '')) !== '' ? (string)$sessionUser['anh_dai_dien'] : '../assets/logomvb.png', ENT_QUOTES, 'UTF-8') ?>" alt="avatar khách hàng">
+                            <img class="avatar" src="../<?= htmlspecialchars(trim((string)($invoice['avatar_khachhang'] ?? '')) !== '' ? (string)$invoice['avatar_khachhang'] : '../assets/logomvb.png', ENT_QUOTES, 'UTF-8') ?>" alt="avatar khách hàng">
                             <h3 class="person-name"><?= htmlspecialchars(trim((string)($invoice['tenkhachhang'] ?? '')) !== '' ? (string)$invoice['tenkhachhang'] : 'Khách hàng', ENT_QUOTES, 'UTF-8') ?></h3>
                         </div>
                         <div class="person-items">
@@ -814,33 +1135,68 @@ $flashMsg = trim((string)($_GET['msg'] ?? ''));
                         <section class="review-box">
                             <div class="review-head">
                                 <h3 class="review-title">Đánh giá khách hàng</h3>
-                                <span class="chip warning">Chưa có</span>
+                                <span class="chip <?= $customerReviewHasData ? 'success' : 'warning' ?>"><?= $customerReviewHasData ? 'Đã có' : 'Chưa có' ?></span>
                             </div>
                             <div class="review-body">
                                 <p class="label-xs">Nội dung đánh giá</p>
-                                <p class="review-text">Chưa có đánh giá</p>
+                                <p class="review-text"><?= htmlspecialchars($customerReviewText !== '' ? $customerReviewText : 'Chưa có đánh giá', ENT_QUOTES, 'UTF-8') ?></p>
                                 <p class="label-xs">Thời gian gửi</p>
-                                <p class="review-text">---</p>
+                                <p class="review-text"><?= htmlspecialchars($customerReviewTime !== '' ? $customerReviewTime : '---', ENT_QUOTES, 'UTF-8') ?></p>
                                 <p class="label-xs">Ảnh/video đánh giá</p>
                                 <div class="media-grid">
-                                    <div class="media-empty">Chưa có tệp</div>
+                                    <?php if (!$customerReviewMedia): ?>
+                                        <div class="media-empty">Chưa có tệp</div>
+                                    <?php else: ?>
+                                        <?php foreach ($customerReviewMedia as $mediaPath): ?>
+                                            <?php if (mevabe_media_is_video($mediaPath)): ?>
+                                                <video controls preload="metadata" src="<?= htmlspecialchars($mediaPath, ENT_QUOTES, 'UTF-8') ?>"></video>
+                                            <?php else: ?>
+                                                <img src="<?= htmlspecialchars($mediaPath, ENT_QUOTES, 'UTF-8') ?>" alt="media đánh giá khách hàng">
+                                            <?php endif; ?>
+                                        <?php endforeach; ?>
+                                    <?php endif; ?>
                                 </div>
+
+                                <?php if ($canReview && $idNumber > 0): ?>
+                                    <form method="post" action="xu-ly-huy.php" enctype="multipart/form-data" class="mt-2 d-grid gap-2">
+                                        <input type="hidden" name="action" value="save_review">
+                                        <input type="hidden" name="invoice_id" value="<?= (int)$idNumber ?>">
+                                        <input type="hidden" name="return_to" value="<?= htmlspecialchars('chi-tiet-hoa-don.php?id=' . $idNumber, ENT_QUOTES, 'UTF-8') ?>">
+                                        <textarea name="review_text" class="form-control form-control-sm" rows="3" placeholder="Nhập nội dung đánh giá"><?= htmlspecialchars($customerReviewText, ENT_QUOTES, 'UTF-8') ?></textarea>
+                                        <input type="file" name="review_media[]" class="form-control form-control-sm" accept="image/*,video/*" multiple>
+                                        <div>
+                                            <button type="submit" class="btn btn-primary btn-sm"><i class="bi bi-save me-1"></i>Lưu đánh giá</button>
+                                        </div>
+                                    </form>
+                                <?php elseif (!$customerReviewHasData && $reviewBlockedMessage !== ''): ?>
+                                    <p class="muted-note mb-0"><?= htmlspecialchars($reviewBlockedMessage, ENT_QUOTES, 'UTF-8') ?></p>
+                                <?php endif; ?>
                             </div>
                         </section>
 
                         <section class="review-box">
                             <div class="review-head">
                                 <h3 class="review-title">Đánh giá nhà cung cấp</h3>
-                                <span class="chip warning">Chưa có</span>
+                                <span class="chip <?= $supplierReviewHasData ? 'success' : 'warning' ?>"><?= $supplierReviewHasData ? 'Đã có' : 'Chưa có' ?></span>
                             </div>
                             <div class="review-body">
                                 <p class="label-xs">Nội dung đánh giá</p>
-                                <p class="review-text">Chưa có đánh giá</p>
+                                <p class="review-text"><?= htmlspecialchars($supplierReviewText !== '' ? $supplierReviewText : 'Chưa có đánh giá', ENT_QUOTES, 'UTF-8') ?></p>
                                 <p class="label-xs">Thời gian gửi</p>
-                                <p class="review-text">---</p>
+                                <p class="review-text"><?= htmlspecialchars($supplierReviewTime !== '' ? $supplierReviewTime : '---', ENT_QUOTES, 'UTF-8') ?></p>
                                 <p class="label-xs">Ảnh/video đánh giá</p>
                                 <div class="media-grid">
-                                    <div class="media-empty">Chưa có tệp</div>
+                                    <?php if (!$supplierReviewMedia): ?>
+                                        <div class="media-empty">Chưa có tệp</div>
+                                    <?php else: ?>
+                                        <?php foreach ($supplierReviewMedia as $mediaPath): ?>
+                                            <?php if (mevabe_media_is_video($mediaPath)): ?>
+                                                <video controls preload="metadata" src="<?= htmlspecialchars($mediaPath, ENT_QUOTES, 'UTF-8') ?>"></video>
+                                            <?php else: ?>
+                                                <img src="<?= htmlspecialchars($mediaPath, ENT_QUOTES, 'UTF-8') ?>" alt="media đánh giá nhà cung cấp">
+                                            <?php endif; ?>
+                                        <?php endforeach; ?>
+                                    <?php endif; ?>
                                 </div>
                             </div>
                         </section>
