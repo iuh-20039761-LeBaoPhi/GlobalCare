@@ -23,6 +23,8 @@ $flashMsg = trim((string)($_GET['msg'] ?? ''));
 $q = trim((string)($_GET['q'] ?? ''));
 $statusFilter = trim((string)($_GET['status'] ?? 'all'));
 $serviceFilter = trim((string)($_GET['service'] ?? 'all'));
+$dateFromFilter = trim((string)($_GET['date_from'] ?? ''));
+$dateToFilter = trim((string)($_GET['date_to'] ?? ''));
 
 $rows = is_array($rows) ? $rows : [];
 $servicesMap = [];
@@ -65,6 +67,20 @@ function contains_text(string $haystack, string $needle): bool
     return stripos($haystack, $needle) !== false;
 }
 
+function parse_ymd_date(string $value): ?DateTimeImmutable
+{
+    if (!preg_match('/^\d{4}-\d{2}-\d{2}$/', $value)) {
+        return null;
+    }
+
+    $date = DateTimeImmutable::createFromFormat('Y-m-d', $value);
+    if (!$date) {
+        return null;
+    }
+
+    return $date->format('Y-m-d') === $value ? $date : null;
+}
+
 function mevabe_format_invoice_id_display($value): string
 {
     $raw = trim((string)$value);
@@ -92,7 +108,22 @@ if ($statusFilter !== 'all' && !in_array($statusFilter, $statuses, true)) {
     $statusFilter = 'all';
 }
 
-$filteredRows = array_values(array_filter($rows, static function (array $item) use ($q, $statusFilter, $serviceFilter): bool {
+$dateFromObj = parse_ymd_date($dateFromFilter);
+$dateToObj = parse_ymd_date($dateToFilter);
+
+if (!$dateFromObj) {
+    $dateFromFilter = '';
+}
+if (!$dateToObj) {
+    $dateToFilter = '';
+}
+if ($dateFromObj && $dateToObj && $dateFromObj > $dateToObj) {
+    [$dateFromObj, $dateToObj] = [$dateToObj, $dateFromObj];
+    $dateFromFilter = $dateFromObj->format('Y-m-d');
+    $dateToFilter = $dateToObj->format('Y-m-d');
+}
+
+$filteredRows = array_values(array_filter($rows, static function (array $item) use ($q, $statusFilter, $serviceFilter, $dateFromObj, $dateToObj): bool {
     $status = trim((string)($item['trangthai'] ?? ''));
     $service = trim((string)($item['dich_vu'] ?? ''));
 
@@ -102,6 +133,23 @@ $filteredRows = array_values(array_filter($rows, static function (array $item) u
 
     if ($serviceFilter !== 'all' && $service !== $serviceFilter) {
         return false;
+    }
+
+    if ($dateFromObj || $dateToObj) {
+        $startDateRaw = trim((string)($item['ngay_bat_dau_kehoach'] ?? ''));
+        $startDateObj = parse_ymd_date($startDateRaw);
+
+        if (!$startDateObj) {
+            return false;
+        }
+
+        if ($dateFromObj && $startDateObj < $dateFromObj) {
+            return false;
+        }
+
+        if ($dateToObj && $startDateObj > $dateToObj) {
+            return false;
+        }
     }
 
     if ($q !== '') {
@@ -139,6 +187,8 @@ $buildPageUrl = static fn(int $targetPage): string => pagination_build_url($targ
     'q' => $q,
     'status' => $statusFilter,
     'service' => $serviceFilter,
+    'date_from' => $dateFromFilter,
+    'date_to' => $dateToFilter,
 ], 'page', 'danh-sach-hoa-don.php');
 
 $summaryTotal = count($rows);
@@ -418,6 +468,14 @@ $summaryTotal = count($rows);
                             <?php endforeach; ?>
                         </select>
                     </div>
+                    <div class="col-6 col-md-3">
+                        <label class="form-label small text-secondary mb-1">Từ ngày</label>
+                        <input type="date" class="form-control" name="date_from" value="<?= esc($dateFromFilter) ?>">
+                    </div>
+                    <div class="col-6 col-md-3">
+                        <label class="form-label small text-secondary mb-1">Đến ngày</label>
+                        <input type="date" class="form-control" name="date_to" value="<?= esc($dateToFilter) ?>">
+                    </div>
                     <div class="col-12 d-flex gap-2 justify-content-md-end mt-1">
                         <button class="btn btn-primary" type="submit"><i class="bi bi-funnel me-1"></i>Lọc</button>
                         <a class="btn btn-outline-secondary" href="danh-sach-hoa-don.php"><i class="bi bi-arrow-counterclockwise"></i></a>
@@ -432,7 +490,6 @@ $summaryTotal = count($rows);
                         <tr>
                             <th>ID</th>
                             <th>Dịch vụ</th>
-                            <th>Gói</th>
                             <th>Ngày bắt đầu</th>
                             <th>Tổng tiền</th>
                             <th>Trạng thái</th>
@@ -443,11 +500,11 @@ $summaryTotal = count($rows);
                         <tbody>
                         <?php if ($loadError !== ''): ?>
                             <tr>
-                                <td colspan="8" class="empty-row py-4">Lỗi tải dữ liệu: <?= esc($loadError) ?></td>
+                                <td colspan="7" class="empty-row py-4">Lỗi tải dữ liệu: <?= esc($loadError) ?></td>
                             </tr>
                         <?php elseif (!$paginatedRows): ?>
                             <tr>
-                                <td colspan="8" class="empty-row py-4">Không có hóa đơn phù hợp bộ lọc.</td>
+                                <td colspan="7" class="empty-row py-4">Không có hóa đơn phù hợp bộ lọc.</td>
                             </tr>
                         <?php else: ?>
                             <?php foreach ($paginatedRows as $item): ?>
@@ -456,7 +513,6 @@ $summaryTotal = count($rows);
                                     $displayItemId = mevabe_format_invoice_id_display($item['id'] ?? '');
                                     $service = trim((string)($item['dich_vu'] ?? ''));
                                     $customer = trim((string)($item['tenkhachhang'] ?? ''));
-                                    $package = trim((string)($item['goi_dich_vu'] ?? ''));
                                     $startDate = trim((string)($item['ngay_bat_dau_kehoach'] ?? ''));
                                     $startTime = trim((string)($item['gio_bat_dau_kehoach'] ?? ''));
                                     $status = trim((string)($item['trangthai'] ?? ''));
@@ -473,7 +529,6 @@ $summaryTotal = count($rows);
                                         <div class="fw-semibold"><?= esc($service !== '' ? $service : '---') ?></div>
                                         <div class="small text-secondary">Khách: <?= esc($customer !== '' ? $customer : '---') ?></div>
                                     </td>
-                                    <td><?= esc($package !== '' ? $package : '---') ?></td>
                                     <td><?= esc(trim($startDate . ' ' . $startTime) !== '' ? trim($startDate . ' ' . $startTime) : '---') ?></td>
                                     <td class="fw-semibold text-danger-emphasis"><?= esc($amount !== '' ? $amount : '0') ?></td>
                                     <td><span class="badge rounded-pill text-bg-light border text-dark"><?= esc($status !== '' ? $status : 'Chờ xác nhận') ?></span></td>
