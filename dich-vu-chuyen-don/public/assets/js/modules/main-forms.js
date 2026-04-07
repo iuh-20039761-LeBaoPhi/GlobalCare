@@ -9,7 +9,6 @@
   const bookingMapModule = window.FastGoBookingMap || null;
   const bookingWizardModule = window.FastGoBookingWizard || null;
   const surveyMapModule = window.FastGoSurveyMap || null;
-  const requestHistoryModule = window.FastGoFormRequestHistory || null;
   const formSummariesModule = window.FastGoFormSummaries || null;
   const formMediaModule = window.FastGoFormMedia || null;
   const surveyFormsModule = window.FastGoSurveyForms || null;
@@ -76,6 +75,19 @@
   };
 
   let pricingReferencePromise = null;
+  function escapeHtml(value) {
+    if (typeof core.escapeHtml === "function") {
+      return core.escapeHtml(String(value ?? ""));
+    }
+
+    return String(value ?? "")
+      .replace(/&/g, "&amp;")
+      .replace(/</g, "&lt;")
+      .replace(/>/g, "&gt;")
+      .replace(/"/g, "&quot;")
+      .replace(/'/g, "&#039;");
+  }
+
   function onReady(fn) {
     if (document.readyState === "loading") {
       document.addEventListener("DOMContentLoaded", fn, { once: true });
@@ -182,15 +194,21 @@
     return labels;
   }
 
-  function buildGeneratedRequestCode(prefix) {
-    const now = new Date();
-    const datePart = [
-      now.getFullYear(),
-      String(now.getMonth() + 1).padStart(2, "0"),
-      String(now.getDate()).padStart(2, "0"),
-    ].join("");
-    const randomPart = Math.random().toString(36).slice(2, 7).toUpperCase();
-    return `${prefix}-${datePart}-${randomPart}`;
+  function formatRequestDateCode(value) {
+    const date = value instanceof Date ? value : new Date(value);
+    if (Number.isNaN(date.getTime())) return "";
+    const y = date.getFullYear();
+    const m = String(date.getMonth() + 1).padStart(2, "0");
+    const d = String(date.getDate()).padStart(2, "0");
+    return `${y}${m}${d}`;
+  }
+
+  function formatSystemRequestCode(recordId, createdAt = new Date()) {
+    const numericId = Number(recordId);
+    if (!Number.isFinite(numericId) || numericId <= 0) return "";
+    return `CDL-${formatRequestDateCode(createdAt)}-${String(
+      Math.trunc(Math.abs(numericId)),
+    ).padStart(7, "0")}`;
   }
 
   function getBookingInsertFn() {
@@ -200,6 +218,18 @@
 
     if (typeof window.krud === "function") {
       return (tableName, data) => window.krud("insert", tableName, data);
+    }
+
+    return null;
+  }
+
+  function getBookingUpdateFn() {
+    if (typeof window.crud === "function") {
+      return (tableName, data) => window.crud("update", tableName, data);
+    }
+
+    if (typeof window.krud === "function") {
+      return (tableName, data) => window.krud("update", tableName, data);
     }
 
     return null;
@@ -218,8 +248,6 @@
     const serviceSelect = scope.querySelector("#loai-dich-vu-dat-lich");
     const vehicleSelect = scope.querySelector("#loai-xe-dat-lich");
     const weatherInput = scope.querySelector("#thoi-tiet-du-kien-dat-lich-gui");
-    const code = buildGeneratedRequestCode("CDL");
-
     const imageFiles = getFileNames(scope, "#tep-anh-dat-lich");
     const videoFiles = getFileNames(scope, "#tep-video-dat-lich");
     const accessConditions = getCheckedLabels(
@@ -231,6 +259,7 @@
       "[data-nhom-chip='chi_tiet_van_phong_dat_lich'] input[type='checkbox']",
       "[data-nhom-chip='chi_tiet_kho_bai_dat_lich'] input[type='checkbox']",
     ]);
+    const pricingBreakdown = getBookingPricingBreakdown(scope);
     const totalAmount = Number(
       String(
         scope.querySelector("[data-tong-gia-chot-dat-lich]")?.textContent || "",
@@ -251,7 +280,7 @@
     }
 
     return {
-      ma_yeu_cau_noi_bo: code,
+      ma_yeu_cau_noi_bo: "",
       loai_bieu_mau: "dat_lich",
       loai_dich_vu: normalizeService(serviceSelect?.value || ""),
       ten_dich_vu: getSelectedLabel(serviceSelect),
@@ -278,6 +307,7 @@
       customer_email: String(identity.email || "").trim(),
       customer_role: String(identity.role || "khach-hang").trim(),
       created_at: new Date().toISOString(),
+      pricing_breakdown_json: JSON.stringify(pricingBreakdown),
       du_lieu_form_json: JSON.stringify(scalarValues),
     };
   }
@@ -390,6 +420,28 @@
         result?.data?.id ||
         "",
     ).trim();
+    const systemRequestCode =
+      formatSystemRequestCode(remoteId, payload.created_at || new Date()) || remoteId;
+
+    payload.ma_yeu_cau_noi_bo = systemRequestCode;
+
+    if (remoteId) {
+      const updateFn = getBookingUpdateFn();
+      if (updateFn) {
+        try {
+          await updateFn(bookingCrudTableName, {
+            id: remoteId,
+            ma_yeu_cau_noi_bo: systemRequestCode,
+            updated_at:
+              payload.created_at instanceof Date
+                ? payload.created_at.toISOString()
+                : String(payload.created_at || new Date().toISOString()).trim(),
+          });
+        } catch (error) {
+          console.warn("Không thể ghi ngược mã yêu cầu theo ID vào KRUD:", error);
+        }
+      }
+    }
 
     return {
       payload,
@@ -1048,7 +1100,72 @@
     return bookingFormsModule.init(scope, getBookingFormDeps());
   }
 
-  // Chặn submit thật ở bản demo hiện tại và hiển thị trạng thái hoàn thiện của biểu mẫu.
+  function getProjectUrl(path) {
+    return typeof core.toProjectUrl === "function" ? core.toProjectUrl(path) : path;
+  }
+
+  function renderBookingSuccessState(scope, bookingResult, options = {}) {
+    const submitStep = scope.querySelector('[data-booking-step="5"]');
+    const finalActions = scope.querySelector("[data-booking-final-actions]");
+    const notice = scope.querySelector("[data-thong-bao-bieu-mau]");
+    const requestCode =
+      bookingResult?.payload?.ma_yeu_cau_noi_bo || bookingResult?.remoteId || "CDL-00000000-0000000";
+    const statusMessage = String(options.statusMessage || "").trim();
+    const isLoggedIn = !!(window.FastGoCustomerPortalStore?.getSavedRole?.() === "khach-hang");
+    const secondaryActionHref = isLoggedIn
+      ? `khach-hang/chi-tiet-hoa-don.html?code=${encodeURIComponent(requestCode)}`
+      : "dang-nhap.html?vai-tro=khach-hang";
+    const secondaryActionLabel = isLoggedIn
+      ? "Xem chi tiết hóa đơn"
+      : "Đăng nhập để theo dõi";
+    const tertiaryAction = isLoggedIn
+      ? `
+          <a class="nut-phu" href="${escapeHtml(getProjectUrl("khach-hang/lich-su-yeu-cau.html"))}">Lịch sử yêu cầu</a>
+        `
+      : "";
+
+    if (!submitStep) return;
+
+    if (finalActions) {
+      finalActions.hidden = true;
+    }
+
+    if (notice) {
+      notice.hidden = true;
+      notice.classList.remove("is-pending", "is-success", "is-error");
+      notice.textContent = "";
+    }
+
+    submitStep.innerHTML = `
+      <div class="trang-thai-thanh-cong-dat-lich" tabindex="-1" data-booking-success-state>
+        <div class="trang-thai-thanh-cong-dat-lich__bieu-tuong">
+          <i class="fa-solid fa-check"></i>
+        </div>
+        <div>
+          <h3>Đặt lịch chuyển dọn thành công</h3>
+          <p>${escapeHtml(
+            statusMessage ||
+              "Yêu cầu của bạn đã được ghi nhận trên hệ thống và sẵn sàng cho bước điều phối tiếp theo.",
+          )}</p>
+        </div>
+        <div class="trang-thai-thanh-cong-dat-lich__ma">
+          Mã yêu cầu: ${escapeHtml(requestCode)}
+        </div>
+        <div class="trang-thai-thanh-cong-dat-lich__hanh-dong">
+          <a class="nut-chinh" href="${escapeHtml(getProjectUrl("dat-lich.html"))}">Tạo yêu cầu mới</a>
+          <a class="nut-phu" href="${escapeHtml(getProjectUrl(secondaryActionHref))}">${secondaryActionLabel}</a>
+          ${tertiaryAction}
+        </div>
+      </div>
+    `;
+
+    window.requestAnimationFrame(() => {
+      const successNode = scope.querySelector("[data-booking-success-state]");
+      successNode?.focus({ preventScroll: true });
+      successNode?.scrollIntoView({ behavior: "smooth", block: "start" });
+    });
+  }
+
   function initFormNotice(scope, formType) {
     const form = scope.querySelector("form[data-loai-bieu-mau]");
     const notice = scope.querySelector("[data-thong-bao-bieu-mau]");
@@ -1070,21 +1187,21 @@
       if (formType === "dat-lich" && !validateBookingBeforeSubmit(scope)) return;
       if (!form.reportValidity()) return;
 
-      syncSubmitState(true, "Đang ghi nhận...");
-      notice.hidden = false;
-      notice.classList.remove("is-success", "is-error");
-      notice.classList.add("is-pending");
-      notice.textContent =
-        formType === "khao-sat"
-          ? "Hệ thống đang rà lại dữ liệu khảo sát bạn vừa nhập."
-          : "Hệ thống đang rà lại thông tin đặt lịch và các hạng mục bạn vừa chọn.";
-      notice.scrollIntoView({ behavior: "smooth", block: "nearest" });
+      syncSubmitState(true, formType === "dat-lich" ? "Đang tạo yêu cầu..." : "Đang ghi nhận...");
+      if (formType === "khao-sat") {
+        notice.hidden = false;
+        notice.classList.remove("is-success", "is-error");
+        notice.classList.add("is-pending");
+        notice.textContent = "Hệ thống đang ghi nhận dữ liệu khảo sát bạn vừa nhập.";
+        notice.scrollIntoView({ behavior: "smooth", block: "nearest" });
+      } else {
+        notice.hidden = true;
+        notice.classList.remove("is-pending", "is-success", "is-error");
+        notice.textContent = "";
+      }
 
       window.setTimeout(async function () {
         const portalStore = window.FastGoCustomerPortalStore || null;
-        const historyPayload = requestHistoryModule?.buildPayload
-          ? requestHistoryModule.buildPayload({ scope, formType, portalStore })
-          : null;
 
         try {
           if (formType === "dat-lich") {
@@ -1107,40 +1224,29 @@
                 " Yêu cầu đã lưu KRUD nhưng chưa đồng bộ Google Sheets.";
             }
 
-            if (historyPayload && requestHistoryModule?.persistPayload) {
-              await requestHistoryModule.persistPayload(
-                {
-                  ...historyPayload,
-                  code: bookingResult.payload.ma_yeu_cau_noi_bo,
-                  source: "krud",
-                  summary:
-                    "Yêu cầu đặt lịch đã được lưu lên KRUD và sẵn sàng cho bước điều phối tiếp theo.",
-                  meta: bookingResult.payload.ten_loai_xe
-                    ? `Phương án xe đã chọn: ${bookingResult.payload.ten_loai_xe}`
-                    : historyPayload.meta,
-                },
-                portalStore,
-              );
-            }
-
-            notice.classList.remove("is-pending", "is-error");
-            notice.classList.add("is-success");
-            notice.textContent = `Đặt lịch thành công. Mã yêu cầu: ${bookingResult.payload.ma_yeu_cau_noi_bo}.${bookingResult.remoteId ? ` ID KRUD: ${bookingResult.remoteId}.` : ""}${sheetSyncNote}`;
+            renderBookingSuccessState(scope, bookingResult, {
+              statusMessage: `Yêu cầu đặt lịch đã được lưu thành công.${sheetSyncNote}`,
+            });
           } else {
-            if (historyPayload && requestHistoryModule?.persistPayload) {
-              await requestHistoryModule.persistPayload(historyPayload, portalStore);
-            }
-
             notice.classList.remove("is-pending", "is-error");
             notice.classList.add("is-success");
             notice.textContent =
-              "Biểu mẫu khảo sát demo đã được ghi nhận. Chức năng gửi yêu cầu chính thức đang được hoàn thiện, nhưng nội dung bạn vừa nhập đã sẵn sàng để đội ngũ dùng tiếp.";
+              "Yêu cầu khảo sát đã được ghi nhận. Bạn có thể quay lại lịch sử để tiếp tục theo dõi.";
           }
         } catch (error) {
-          notice.classList.remove("is-pending", "is-success");
-          notice.classList.add("is-error");
-          notice.textContent =
-            error?.message || "Không thể gửi yêu cầu đặt lịch lên KRUD ở thời điểm hiện tại.";
+          if (formType === "dat-lich") {
+            notice.hidden = false;
+            notice.classList.remove("is-pending", "is-success");
+            notice.classList.add("is-error");
+            notice.textContent =
+              error?.message || "Không thể tạo yêu cầu đặt lịch ở thời điểm hiện tại.";
+            notice.scrollIntoView({ behavior: "smooth", block: "nearest" });
+          } else {
+            notice.classList.remove("is-pending", "is-success");
+            notice.classList.add("is-error");
+            notice.textContent =
+              error?.message || "Không thể gửi yêu cầu khảo sát ở thời điểm hiện tại.";
+          }
         } finally {
           syncSubmitState(false, defaultSubmitLabel);
         }

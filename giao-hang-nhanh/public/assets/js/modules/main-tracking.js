@@ -277,19 +277,29 @@
     }
 
     if (typeof window.crud === "function") {
-      return (payload) =>
-        window.crud("list", payload.table, {
-          p: payload.page || 1,
+      return (payload) => {
+        const options = {
+          ...payload,
+          p: payload.page || payload.p || 1,
           limit: payload.limit || 100,
-        });
+        };
+        delete options.table;
+        delete options.page;
+        return window.crud("list", payload.table, options);
+      };
     }
 
     if (typeof window.krud === "function") {
-      return (payload) =>
-        window.krud("list", payload.table, {
-          p: payload.page || 1,
+      return (payload) => {
+        const options = {
+          ...payload,
+          p: payload.page || payload.p || 1,
           limit: payload.limit || 100,
-        });
+        };
+        delete options.table;
+        delete options.page;
+        return window.krud("list", payload.table, options);
+      };
     }
 
     return null;
@@ -324,6 +334,7 @@
     );
 
     return {
+      id: order.id || order.remote_id || "",
       order_code: order.order_code || order.id || "",
       type: summarizeItems(items),
       service_label: getServiceLabel(
@@ -381,42 +392,52 @@
     };
   }
 
+  function getTrackingIdentifierCandidates(record) {
+    return [
+      record?.order_code,
+      record?.ma_don_hang_noi_bo,
+      record?.ma_don_hang,
+      record?.id,
+      record?.insertId,
+      record?.insert_id,
+      record?.record_id,
+      getDisplayOrderCode(record),
+    ]
+      .map((value) => normalizeText(value).toUpperCase())
+      .filter(Boolean);
+  }
+
   function findLocalTrackingRecord(code) {
     const normalizedCode = String(code || "").trim().toUpperCase();
     const records = readLocalJson(localOrderStorageKey, []);
     const detail =
       (Array.isArray(records) ? records : []).find((item) => {
-        const itemCode = String(
-          item?.order?.order_code || item?.order?.id || "",
-        )
-          .trim()
-          .toUpperCase();
-        return itemCode === normalizedCode;
+        const candidates = [
+          item?.order?.krud_id,
+          item?.order?.remote_id,
+          item?.order?.id,
+          item?.order?.order_code,
+        ]
+          .map((value) => normalizeText(value).toUpperCase())
+          .filter(Boolean);
+        return candidates.includes(normalizedCode);
       }) || null;
 
     return detail ? normalizeLocalTrackingRecord(detail) : null;
   }
 
-  async function findKrudTrackingRecord(code) {
-    const listFn = getKrudListFn();
-    if (!listFn) {
-      return null;
-    }
+  function matchKrudTrackingRecordByIdentifier(rows, identifier) {
+    const normalizedIdentifier = normalizeText(identifier).toUpperCase();
+    if (!normalizedIdentifier) return null;
 
-    const normalizedCode = String(code || "").trim().toUpperCase();
-    const response = await listFn({
-      table: krudOrdersTable,
-      sort: { id: "desc" },
-      page: 1,
-      limit: 500,
-    });
+    return (
+      (Array.isArray(rows) ? rows : []).find((item) =>
+        getTrackingIdentifierCandidates(item).includes(normalizedIdentifier),
+      ) || null
+    );
+  }
 
-    const rows = extractRows(response);
-    const record = rows.find((item) => {
-      const itemCode = getDisplayOrderCode(item).trim().toUpperCase();
-      return itemCode === normalizedCode;
-    });
-
+  function buildTrackingRecordFromKrud(record) {
     if (!record) return null;
 
     const statusRaw = String(record.trang_thai || record.status || "pending");
@@ -443,6 +464,7 @@
     );
 
     return {
+      id: record.id || "",
       order_code: getDisplayOrderCode(record),
       type: parsedItems.length
         ? summarizeItems(parsedItems)
@@ -513,6 +535,77 @@
         },
       ],
     };
+  }
+
+  async function findKrudTrackingRecord(code) {
+    const listFn = getKrudListFn();
+    if (!listFn) {
+      return null;
+    }
+
+    const normalizedCode = String(code || "").trim().toUpperCase();
+    if (!normalizedCode) return null;
+
+    const exactFilters = [
+      { field: "ma_don_hang_noi_bo", operator: "=", value: normalizedCode },
+      { field: "ma_don_hang", operator: "=", value: normalizedCode },
+      { field: "order_code", operator: "=", value: normalizedCode },
+    ];
+
+    if (/^\d+$/.test(normalizedCode)) {
+      exactFilters.unshift({
+        field: "id",
+        operator: "=",
+        value: Number(normalizedCode),
+      });
+    }
+
+    for (const where of exactFilters) {
+      try {
+        const response = await listFn({
+          table: krudOrdersTable,
+          where: [where],
+          page: 1,
+          limit: 20,
+        });
+        const directMatch = matchKrudTrackingRecordByIdentifier(
+          extractRows(response),
+          normalizedCode,
+        );
+        if (directMatch) {
+          return buildTrackingRecordFromKrud(directMatch);
+        }
+      } catch (error) {
+        // Fallback to paginated scan below when the KRUD client does not support where.
+      }
+    }
+
+    const pageSize = 500;
+    for (let page = 1; page <= 5; page += 1) {
+      const response = await listFn({
+        table: krudOrdersTable,
+        sort: { id: "desc" },
+        page,
+        limit: pageSize,
+      });
+      const rows = extractRows(response);
+      const record = matchKrudTrackingRecordByIdentifier(rows, normalizedCode);
+      if (record) {
+        return buildTrackingRecordFromKrud(record);
+      }
+      if (rows.length < pageSize) break;
+    }
+
+    const response = await listFn({
+      table: krudOrdersTable,
+      page: 1,
+      limit: 500,
+    });
+    const fallbackRecord = matchKrudTrackingRecordByIdentifier(
+      extractRows(response),
+      normalizedCode,
+    );
+    return buildTrackingRecordFromKrud(fallbackRecord);
   }
 
   function getCancelOverrides() {
@@ -902,7 +995,6 @@
   function buildStandaloneDetailUrl(code) {
     const detailUrl = new URL("chi-tiet-don-hang.html", window.location.href);
     detailUrl.searchParams.set("madonhang", code);
-    detailUrl.searchParams.set("viewer", "public");
     return detailUrl.toString();
   }
 

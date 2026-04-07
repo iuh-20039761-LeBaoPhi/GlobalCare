@@ -3,6 +3,7 @@
 
   function createOrderDetailRenderer(deps) {
     const {
+      assetPaths,
       getRoot,
       escapeHtml,
       formatCurrency,
@@ -11,6 +12,7 @@
       normalizeMultilineText,
       getMilestones,
       deriveStatusKey,
+      getStatusBadge,
       buildActionButtons,
       pickFirstText,
       isImageExtension,
@@ -20,6 +22,15 @@
       bindShipperNoteForm,
       handleActionClick,
     } = deps || {};
+    const orderAssetPaths = {
+      mainLogo: assetPaths?.mainLogo || "public/assets/images/logo-dich-vu-quanh-ta.png",
+      brandLogo: assetPaths?.brandLogo || "public/assets/images/favicon.png",
+    };
+    const renderStatusBadge =
+      typeof getStatusBadge === "function"
+        ? getStatusBadge
+        : (status, label) =>
+            `<span class="customer-status-badge status-${escapeHtml(status || "")}">${escapeHtml(label || status || "--")}</span>`;
   function renderInfoRow(label, value, options = {}) {
     const safeLabel = options.labelHtml ? label || "--" : escapeHtml(label);
     const safeValue = options.valueHtml
@@ -780,7 +791,7 @@
         <section class="standalone-order-unified-card">
           <div class="standalone-order-topbar">
             <div class="standalone-order-topbar-logo">
-              <img src="public/assets/images/logo-dich-vu-quanh-ta.png" alt="Dịch Vụ Quanh Ta" />
+              <img src="${escapeHtml(orderAssetPaths.mainLogo)}" alt="Dịch Vụ Quanh Ta" />
             </div>
             
             <div class="standalone-order-topbar-center">
@@ -792,7 +803,7 @@
             </div>
 
             <div class="standalone-order-topbar-logo">
-              <img class="standalone-order-brand-logo-service" src="public/assets/images/favicon.png" alt="Logo Giao Hàng Nhanh" />
+              <img class="standalone-order-brand-logo-service" src="${escapeHtml(orderAssetPaths.brandLogo)}" alt="Logo Giao Hàng Nhanh" />
             </div>
           </div>
 
@@ -845,7 +856,7 @@
 
             <div class="standalone-order-header-footer-row">
               <div class="standalone-order-header-status-badge">
-                ${getStatusBadge(order.status, order.status_label)}
+                ${renderStatusBadge(order.status, order.status_label)}
               </div>
               <div class="standalone-order-actions-group">
                 ${buildActionButtons(detail, viewer)}

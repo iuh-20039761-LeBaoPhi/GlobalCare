@@ -196,7 +196,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         <div class="admin-login-card__header">
             <span class="admin-login-card__eyebrow">Admin Tam Thoi</span>
             <h1>Đăng nhập quản trị</h1>
-            <p>Tạm thời dùng so sánh tài khoản JSON nội bộ để vào module admin cũ, chưa đọc từ KRUD.</p>
+            <p>Tạm thời dùng so sánh tài khoản JSON nội bộ để vào dashboard admin hiện tại, chưa đọc từ KRUD.</p>
         </div>
 
         <div class="admin-login-card__body">
@@ -235,7 +235,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             </div>
 
             <p class="admin-login-card__meta">
-                Khi nào chốt lại luồng admin bằng KRUD, file này sẽ được thay lại. Hiện tại nó chỉ giữ session PHP để vào các trang admin cũ.
+                Khi nào chốt lại luồng admin bằng KRUD, file này sẽ được thay lại. Hiện tại nó chỉ giữ session PHP cho cụm trang admin hiện tại.
             </p>
         </div>
     </form>

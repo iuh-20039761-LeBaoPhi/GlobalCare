@@ -59,144 +59,48 @@
     `;
   }
 
-  function renderFacts(facts) {
-    if (!Array.isArray(facts) || !facts.length) return "";
-    return `
-      <ul class="service-fact-list">
-        ${facts
-          .map(
-            (item) => `
-              <li>
-                <strong>${escapeHtml(item?.label || "")}:</strong>
-                ${escapeHtml(item?.value || "")}
-              </li>
-            `,
-          )
-          .join("")}
-      </ul>
-    `;
-  }
-
-  function renderDecisionCards(items) {
-    if (!Array.isArray(items) || !items.length) return "";
-    return items
-      .map(
-        (item) => `
-          <h4>${escapeHtml(item?.title || "")}</h4>
-          <p>${escapeHtml(item?.body || "")}</p>
-        `,
-      )
-      .join("");
-  }
-
-  function renderScopeCards(items) {
-    if (!Array.isArray(items) || !items.length) return "";
-    return `
-      <div class="service-scope-grid">
-        ${items
-          .map(
-            (item) => `
-              <article class="service-scope-item">
-                <strong>${escapeHtml(item?.title || "")}</strong>
-                <p>${escapeHtml(item?.description || "")}</p>
-              </article>
-            `,
-          )
-          .join("")}
-      </div>
-    `;
-  }
-
-  function renderTextBlocks(service) {
-    const benefits = Array.isArray(service?.benefits) ? service.benefits : [];
-    const serviceItems = Array.isArray(service?.service_items)
-      ? service.service_items
-      : [];
-
-    if (!benefits.length && !serviceItems.length) return "";
-
-    return `
-      <div class="service-text-grid">
-        ${
-          benefits.length
-            ? `
-              <section class="service-text-card">
-                <h4>${escapeHtml(service?.benefits_title || "Lợi ích nổi bật")}</h4>
-                ${renderSimpleList(benefits, "service-bullet-list")}
-              </section>
-            `
-            : ""
-        }
-        ${
-          serviceItems.length
-            ? `
-              <section class="service-text-card">
-                <h4>${escapeHtml(
-                  service?.service_items_title || "Hạng mục có thể triển khai",
-                )}</h4>
-                ${renderSimpleList(serviceItems, "service-bullet-list")}
-              </section>
-            `
-            : ""
-        }
-      </div>
-    `;
-  }
-
   function renderService(service) {
     const cta = service?.cta || {};
+    const includedItems = Array.isArray(service?.service_items)
+      ? service.service_items.filter(Boolean)
+      : [];
 
     return `
       <article class="service-detail-panel" id="${escapeHtml(service?.id || "")}">
         <div class="service-detail-hero">
-          <div class="service-detail-copy">
-            <span class="service-detail-label">${escapeHtml(service?.label || "")}</span>
-            <h3>${escapeHtml(service?.title || "")}</h3>
-            <p>${escapeHtml(service?.summary || "")}</p>
-            ${renderFacts(service?.facts)}
-          </div>
           <figure class="service-detail-media">
             <img
               src="${escapeHtml(resolveAssetUrl(service?.image || ""))}"
               alt="${escapeHtml(service?.image_alt || service?.label || "")}"
             />
-            <figcaption>${escapeHtml(service?.image_caption || "")}</figcaption>
           </figure>
-        </div>
-
-        <div class="service-detail-grid">
-          <section class="service-detail-card">
-            <h4>${escapeHtml(service?.scope_title || "Phạm vi hỗ trợ chính")}</h4>
-            ${renderSimpleList(service?.scope, "service-check-list")}
-          </section>
-          <section class="service-detail-card service-detail-card--accent">
-            ${renderDecisionCards(service?.decision_cards)}
-          </section>
-        </div>
-
-        <section class="service-scope">
-          <h4>${escapeHtml(service?.items_title || "Các hạng mục thường dùng")}</h4>
-          ${renderScopeCards(service?.items)}
-        </section>
-
-        ${renderTextBlocks(service)}
-
-        <div class="service-detail-actions">
-          <a class="nut-hanh-dong nut-sang" href="${escapeHtml(
-            resolveProjectUrl(cta?.survey_url || "#"),
-          )}">
-            ${escapeHtml(cta?.survey_label || "Khảo sát")}
-          </a>
-          <a class="nut-hanh-dong nut-dat-lich" href="${escapeHtml(
+          <div class="service-detail-copy">
+            <span class="service-detail-label">${escapeHtml(service?.label || "")}</span>
+            <h3>${escapeHtml(service?.title || "")}</h3>
+            <p>${escapeHtml(service?.summary || "")}</p>
+            ${
+              includedItems.length
+                ? `
+                  <section class="service-detail-includes">
+                    <h4>Bao gồm</h4>
+                    ${renderSimpleList(includedItems, "service-bullet-list")}
+                  </section>
+                `
+                : ""
+            }
+            <div class="service-detail-actions">
+              <a class="nut-hanh-dong nut-dat-lich" href="${escapeHtml(
             resolveProjectUrl(cta?.booking_url || "#"),
           )}">
             ${escapeHtml(cta?.booking_label || "Đặt lịch")}
           </a>
-          <a class="nut-hanh-dong nut-vien" href="${escapeHtml(
-            resolveProjectUrl(cta?.pricing_url || "#"),
-          )}">
-            ${escapeHtml(cta?.pricing_label || "Xem bảng giá")}
-          </a>
+              <a class="nut-hanh-dong nut-vien" href="${escapeHtml(
+                resolveProjectUrl(cta?.pricing_url || "#"),
+              )}">
+                ${escapeHtml(cta?.pricing_label || "Xem bảng giá")}
+              </a>
+            </div>
+          </div>
         </div>
       </article>
     `;

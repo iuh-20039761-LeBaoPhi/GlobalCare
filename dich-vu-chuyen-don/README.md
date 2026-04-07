@@ -10,7 +10,7 @@ Project hiện ưu tiên `UI / CSS / nội dung / SEO / điều hướng / trả
 ## Phạm vi hiện tại
 
 - Landing page riêng cho chuyển dọn
-- Một trang dịch vụ duy nhất, đổi nội dung theo từng nhóm nhu cầu
+- Một trang dịch vụ tổng hợp cho 3 nhóm nhu cầu chính
 - 3 URL dịch vụ cũ giữ lại để chuyển hướng mềm
 - Trang bảng giá tham khảo
 - Cụm cẩm nang và trang chi tiết bài viết
@@ -63,6 +63,7 @@ dich-vu-chuyen-don/
         │   ├── main-core.js
         │   ├── shared-layout.js
         │   ├── data/
+        │   │   ├── services-hub.json
         │   │   ├── news-data.json
         │   │   └── bang-gia-minh-bach.json
         │   └── modules/
@@ -70,6 +71,7 @@ dich-vu-chuyen-don/
         │       ├── main-landing.js
         │       ├── main-news.js
         │       ├── main-pricing.js
+        │       ├── main-services-hub.js
         │       ├── main-transparent-pricing.js
         │       ├── main-forms.js
         │       └── main-auth.js
@@ -85,7 +87,7 @@ dich-vu-chuyen-don/
 | Trang | Vai trò |
 |---|---|
 | `index.html` | Landing page của dịch vụ chuyển dọn |
-| `dich-vu-chuyen-don.html` | Trang dịch vụ duy nhất, chuyển nội dung trong cùng trang theo 3 nhóm nhu cầu |
+| `dich-vu-chuyen-don.html` | Trang dịch vụ tổng hợp cho 3 nhóm nhu cầu chuyển dọn |
 | `bang-gia-chuyen-don.html` | Trang bảng giá tham khảo và minh bạch thông tin |
 | `khao-sat.html` | Trang khảo sát riêng |
 | `dat-lich.html` | Trang đặt lịch riêng |

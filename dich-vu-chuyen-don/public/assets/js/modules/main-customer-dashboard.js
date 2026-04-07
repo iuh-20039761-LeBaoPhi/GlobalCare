@@ -30,8 +30,21 @@
     return typeof core.toProjectUrl === "function" ? core.toProjectUrl(path) : path;
   }
 
-  function buildDetailUrl(code) {
-    return getProjectUrl(`khach-hang/chi-tiet-yeu-cau.html?code=${encodeURIComponent(code || "")}`);
+  function formatCurrency(value) {
+    const amount = Number(value || 0);
+    if (!Number.isFinite(amount) || amount <= 0) return "Chờ báo giá chốt";
+    return new Intl.NumberFormat("vi-VN", {
+      style: "currency",
+      currency: "VND",
+      maximumFractionDigits: 0,
+    }).format(amount);
+  }
+
+  function getStatusBadgeClass(statusClass) {
+    if (statusClass === "xac-nhan") return "completed";
+    if (statusClass === "dang-xu-ly") return "shipping";
+    if (statusClass === "da-huy" || statusClass === "huy") return "cancelled";
+    return "pending";
   }
 
   function renderDashboard(data) {
@@ -47,184 +60,214 @@
     const email = String(identity.email || "").trim();
     const requests = Array.isArray(data?.recent_requests)
       ? data.recent_requests
-      : store.getHistoryItems().slice(0, 3);
-    const stats = data?.stats || store.getDashboardStats(Array.isArray(data?.recent_requests) ? data.recent_requests : []);
+      : store.getHistoryItems().slice(0, 4);
+    const stats = data?.stats || store.getDashboardStats(store.getHistoryItems());
 
     root.innerHTML = `
-      <div class="luoi-dashboard-khach-hang">
-        <div class="dashboard-khach-hang-noi-dung">
-          <section class="the-dashboard-khach-hang the-dashboard-khach-hang--hero">
-            <span class="dashboard-khach-hang-nhan">
-              <i class="fa-solid fa-house-circle-check"></i>
-              Khu vực khách hàng
-            </span>
-            <div class="dashboard-khach-hang-dau">
-              <div>
-                <h2>Chào ${escapeHtml(displayName)}, đây là nơi theo dõi toàn bộ yêu cầu chuyển dọn của bạn.</h2>
-                <p class="dashboard-khach-hang-mo-ta">
-                  Bạn có thể đi tiếp sang khảo sát, đặt lịch và xem nhanh tiến độ xử lý các yêu cầu gần nhất
-                  từ cùng nguồn dữ liệu của khu khách hàng.
-                </p>
-                <div class="dashboard-khach-hang-hanh-dong">
-                  <a class="nut-hanh-dong nut-sang" href="${escapeHtml(getProjectUrl("dat-lich.html"))}">Tạo yêu cầu đặt lịch</a>
-                  <a class="nut-hanh-dong nut-vien" href="${escapeHtml(getProjectUrl("khao-sat.html"))}">Gửi yêu cầu khảo sát</a>
-                </div>
-              </div>
-              <div class="dashboard-khach-hang-thong-tin">
-                <div class="dashboard-chi-so">
-                  <span>Yêu cầu đang mở</span>
-                  <strong>${escapeHtml(String(stats.open_count))}</strong>
-                </div>
-                <div class="dashboard-chi-so">
-                  <span>Lịch đã xác nhận</span>
-                  <strong>${escapeHtml(String(stats.confirmed_count))}</strong>
-                </div>
-                <div class="dashboard-chi-so">
-                  <span>Khảo sát đã gửi</span>
-                  <strong>${escapeHtml(String(stats.survey_count))}</strong>
-                </div>
-              </div>
+      <div class="customer-portal-shell">
+        <section class="customer-panel customer-dashboard-hero">
+          <div class="customer-dashboard-hero-copy">
+            <p class="customer-section-kicker">Portal khách hàng</p>
+            <h2>Chào ${escapeHtml(displayName)}, toàn bộ yêu cầu chuyển dọn của bạn đang được gom về đây.</h2>
+            <p class="customer-dashboard-hero-text">
+              Giao diện đã chuyển sang cùng ngôn ngữ với portal bên giao hàng để khách hàng nhìn lịch sử,
+              đặt lịch và quản lý hồ sơ trong một khung quen thuộc hơn.
+            </p>
+            <div class="customer-dashboard-hero-actions">
+              <a class="customer-btn customer-btn-primary" href="${escapeHtml(getProjectUrl("dat-lich.html"))}">
+                <i class="fas fa-calendar-check"></i>
+                Đặt lịch chuyển dọn
+              </a>
+              <a class="customer-btn customer-btn-ghost" href="${escapeHtml(getProjectUrl("khao-sat.html"))}">
+                <i class="fas fa-clipboard-list"></i>
+                Gửi yêu cầu khảo sát
+              </a>
             </div>
-          </section>
+          </div>
+          <div class="customer-dashboard-hero-summary">
+            <p class="customer-dashboard-hero-state">
+              <i class="fas fa-circle-check"></i>&nbsp; Đồng bộ theo tài khoản hiện tại
+            </p>
+            <div class="customer-dashboard-highlight-list">
+              <article class="customer-dashboard-highlight">
+                <span>Yêu cầu đang mở</span>
+                <strong>${escapeHtml(String(stats.open_count || 0))}</strong>
+              </article>
+              <article class="customer-dashboard-highlight">
+                <span>Lịch đã xác nhận</span>
+                <strong>${escapeHtml(String(stats.confirmed_count || 0))}</strong>
+              </article>
+              <article class="customer-dashboard-highlight">
+                <span>Khảo sát đã gửi</span>
+                <strong>${escapeHtml(String(stats.survey_count || 0))}</strong>
+              </article>
+            </div>
+          </div>
+        </section>
 
-          <section class="the-dashboard-khach-hang">
-            <div class="dashboard-khach-hang-tieu-de">
-              <div>
-                <h3>Lối tắt nên dùng trước</h3>
-                <p>Ba hướng đi ngắn nhất để khách hàng không bị mất mạch sau khi đăng nhập.</p>
+        <div class="customer-grid-two customer-grid-dashboard">
+          <div class="customer-portal-main">
+            <section class="customer-panel customer-panel-orders">
+              <div class="customer-panel-head customer-panel-head-dashboard">
+                <div>
+                  <p class="customer-section-kicker">Yêu cầu gần đây</p>
+                  <h2>Nhịp xử lý mới nhất</h2>
+                  <p class="customer-panel-subtext">Danh sách này đọc cùng nguồn dữ liệu với lịch sử yêu cầu và chi tiết hóa đơn.</p>
+                </div>
+                <div class="customer-inline-actions">
+                  <a class="customer-btn customer-btn-ghost customer-btn-sm" href="${escapeHtml(getProjectUrl("khach-hang/lich-su-yeu-cau.html"))}">
+                    Xem toàn bộ lịch sử
+                  </a>
+                </div>
               </div>
-            </div>
-            <div class="dashboard-khach-hang-grid-nhanh">
-              <a class="the-link-nhanh" href="${escapeHtml(getProjectUrl("khao-sat.html"))}">
-                <i class="fa-solid fa-clipboard-list"></i>
-                <strong>Khởi tạo yêu cầu khảo sát</strong>
-                <span>Phù hợp khi chưa chắc khối lượng đồ hoặc cần điều phối gọi lại để chốt phương án.</span>
-              </a>
-              <a class="the-link-nhanh" href="${escapeHtml(getProjectUrl("dat-lich.html"))}">
-                <i class="fa-solid fa-calendar-check"></i>
-                <strong>Đặt lịch chuyển dọn ngay</strong>
-                <span>Đi thẳng vào biểu mẫu đặt lịch nếu đã đủ thông tin về tuyến đường, thời gian và hạng mục.</span>
-              </a>
-              <a class="the-link-nhanh" href="${escapeHtml(getProjectUrl("cam-nang.html"))}">
-                <i class="fa-solid fa-book-open-reader"></i>
-                <strong>Xem cẩm nang chuẩn bị</strong>
-                <span>Đọc checklist đóng gói, phân loại đồ và mẹo giảm phát sinh trước ngày chuyển.</span>
-              </a>
-              <a class="the-link-nhanh" href="${escapeHtml(getProjectUrl("khach-hang/ho-so.html"))}">
-                <i class="fa-solid fa-user-gear"></i>
-                <strong>Quản lý hồ sơ</strong>
-                <span>Cập nhật đầu mối liên hệ và kiểm tra thông tin đang dùng trong portal khách hàng.</span>
-              </a>
-              <a class="the-link-nhanh" href="${escapeHtml(getProjectUrl("khach-hang/lich-su-yeu-cau.html"))}">
-                <i class="fa-solid fa-clock-rotate-left"></i>
-                <strong>Vào lịch sử đơn</strong>
-                <span>Xem lại các lần đã gửi khảo sát hoặc đặt lịch để giữ đúng mạch xử lý với điều phối.</span>
-              </a>
-            </div>
-          </section>
+              <div class="customer-list customer-list-compact">
+                ${
+                  requests.length
+                    ? requests
+                        .map(
+                          (request) => `
+                            <article class="customer-order-card customer-order-card-compact">
+                              <div class="customer-order-topline">
+                                <div class="customer-order-heading">
+                                  <p class="customer-order-code">${escapeHtml(request.code || "--")}</p>
+                                  <p class="customer-order-recipient">${escapeHtml(request.title || "Yêu cầu chuyển dọn")}</p>
+                                </div>
+                                <span class="customer-status-badge status-${escapeHtml(
+                                  getStatusBadgeClass(request.status_class),
+                                )}">${escapeHtml(request.status_text || "Mới tiếp nhận")}</span>
+                              </div>
+                              <p class="customer-order-route">${escapeHtml(request.summary || "Đang chờ cập nhật thêm từ hệ thống.")}</p>
+                              <div class="customer-order-meta customer-order-meta-compact">
+                                <span><b>Dịch vụ</b>${escapeHtml(request.service_label || "--")}</span>
+                                <span><b>Lịch dự kiến</b>${escapeHtml(request.schedule_label || "--")}</span>
+                                <span><b>Tạm tính</b>${escapeHtml(formatCurrency(request.estimated_amount))}</span>
+                              </div>
+                              <div class="customer-order-actions customer-order-actions-compact">
+                                ${
+                                  request.type === "dat-lich"
+                                    ? `<a class="customer-btn customer-btn-primary" href="${escapeHtml(
+                                        getProjectUrl(
+                                          `khach-hang/chi-tiet-hoa-don.html?code=${encodeURIComponent(
+                                            request.code || "",
+                                          )}`,
+                                        ),
+                                      )}">Xem chi tiết</a>`
+                                    : ""
+                                }
+                                <a class="customer-btn customer-btn-ghost" href="${escapeHtml(
+                                  getProjectUrl(
+                                    request.type === "khao-sat" ? "khao-sat.html" : "dat-lich.html",
+                                  ),
+                                )}">Tạo lại</a>
+                              </div>
+                            </article>
+                          `,
+                        )
+                        .join("")
+                    : `
+                      <div class="customer-empty-state">
+                        <i class="fas fa-inbox"></i>
+                        <p>Chưa có yêu cầu nào trong tài khoản này. Bạn có thể bắt đầu từ biểu mẫu khảo sát hoặc đặt lịch.</p>
+                        <a class="customer-btn customer-btn-primary" href="${escapeHtml(
+                          getProjectUrl("dat-lich.html"),
+                        )}">Tạo yêu cầu đầu tiên</a>
+                      </div>
+                    `
+                }
+              </div>
+            </section>
 
-          <section class="the-dashboard-khach-hang dashboard-khach-hang-rong">
-            <div class="dashboard-khach-hang-tieu-de">
-              <div>
-                <h3>Yêu cầu gần đây</h3>
-                <p>Khối này đọc cùng nguồn dữ liệu với trang lịch sử đơn để khách hàng nhìn được nhịp xử lý gần nhất.</p>
+            <section class="customer-panel">
+              <div class="customer-panel-head">
+                <div>
+                  <p class="customer-section-kicker">Lối tắt</p>
+                  <h2>Các đường đi nên dùng trước</h2>
+                </div>
               </div>
-            </div>
-            <div class="danh-sach-yeu-cau">
-              ${requests.length
-                ? requests
-                .map(
-                  (request) => `
-                    <article class="trang-thai-yeu-cau">
-                      <div class="trang-thai-yeu-cau__dau">
-                        <div>
-                          <strong>${escapeHtml(request.title)}</strong>
-                          <span>${escapeHtml(request.code)}</span>
-                        </div>
-                        <span class="nhan-trang-thai-dashboard nhan-trang-thai-dashboard--${escapeHtml(request.status_class)}">
-                          ${escapeHtml(request.status_text)}
-                        </span>
-                      </div>
-                      <span>${escapeHtml(request.summary || "")}</span>
-                      <small>${escapeHtml(request.meta || "")}</small>
-                      <div class="the-don-khach-hang__hanh-dong">
-                        <a class="nut-phu" href="${escapeHtml(buildDetailUrl(request.code))}">Xem chi tiết</a>
-                      </div>
-                    </article>
-                  `,
-                )
-                .join("")
-                : `
-                  <article class="trang-thai-yeu-cau">
-                    <div class="trang-thai-yeu-cau__dau">
-                      <div>
-                        <strong>Chưa có yêu cầu nào</strong>
-                        <span>Bắt đầu từ biểu mẫu đầu tiên</span>
-                      </div>
-                    </div>
-                    <span>Lịch sử xử lý sẽ xuất hiện tại đây ngay khi bạn gửi khảo sát hoặc đặt lịch.</span>
-                  </article>
-                `}
-            </div>
-          </section>
+              <div class="customer-quicklinks-strip">
+                <a class="customer-quicklink-item" href="${escapeHtml(getProjectUrl("cam-nang.html"))}">
+                  <strong>Cẩm nang chuẩn bị</strong>
+                  <span>Đọc checklist đóng gói, phân loại đồ và mẹo giảm phát sinh trước ngày chuyển.</span>
+                </a>
+                <a class="customer-quicklink-item" href="${escapeHtml(getProjectUrl("khach-hang/ho-so.html"))}">
+                  <strong>Quản lý hồ sơ</strong>
+                  <span>Cập nhật đầu mối liên hệ, email và số điện thoại đang dùng trong portal.</span>
+                </a>
+                <a class="customer-quicklink-item" href="${escapeHtml(getProjectUrl("khach-hang/lich-su-yeu-cau.html"))}">
+                  <strong>Rà lại lịch sử</strong>
+                  <span>Đối chiếu các lần gửi khảo sát hoặc đặt lịch gần nhất ở một màn hình tổng.</span>
+                </a>
+              </div>
+            </section>
+          </div>
+
+          <aside class="customer-portal-sidebar">
+            <section class="customer-panel">
+              <div class="customer-panel-head">
+                <div>
+                  <p class="customer-section-kicker">Tài khoản</p>
+                  <h2>Hồ sơ đang dùng</h2>
+                </div>
+              </div>
+              <div class="customer-profile-summary">
+                <article>
+                  <span>Tên hiển thị</span>
+                  <strong>${escapeHtml(displayName)}</strong>
+                </article>
+                <article>
+                  <span>Email</span>
+                  <strong>${escapeHtml(email || "Chưa có dữ liệu")}</strong>
+                </article>
+                <article>
+                  <span>Số điện thoại</span>
+                  <strong>${escapeHtml(phone || "Chưa có dữ liệu")}</strong>
+                </article>
+              </div>
+            </section>
+
+            <section class="customer-panel">
+              <div class="customer-panel-head">
+                <div>
+                  <p class="customer-section-kicker">Nhắc việc</p>
+                  <h2>Bước nên làm tiếp</h2>
+                </div>
+              </div>
+              <div class="customer-list">
+                <article class="customer-todo info">
+                  <p>Kiểm tra lại hồ sơ liên hệ trước khi tạo đơn tiếp theo để điều phối có đúng đầu mối.</p>
+                </article>
+                <article class="customer-todo warning">
+                  <p>Nếu đơn đang mở chưa có breakdown phí, hãy tạo mới theo luồng hiện tại để hóa đơn lưu đầy đủ hơn.</p>
+                </article>
+                <article class="customer-todo success">
+                  <p>Các đơn đặt lịch mới giờ đã mở được chi tiết hóa đơn với breakdown giá ngay trong khu khách hàng.</p>
+                </article>
+              </div>
+            </section>
+
+            <section class="customer-panel">
+              <div class="customer-panel-head">
+                <div>
+                  <p class="customer-section-kicker">Phiên làm việc</p>
+                  <h2>Kết thúc phiên</h2>
+                </div>
+              </div>
+              <div class="customer-inline-actions">
+                <a class="customer-btn customer-btn-ghost" href="${escapeHtml(
+                  getProjectUrl("dang-nhap.html?vai-tro=khach-hang"),
+                )}" data-dashboard-logout>Đăng xuất</a>
+              </div>
+            </section>
+          </aside>
         </div>
-
-        <aside class="dashboard-khach-hang-canh">
-          <section class="the-dashboard-khach-hang">
-            <div class="dashboard-khach-hang-tieu-de">
-              <div>
-                <h3>Hồ sơ đang dùng</h3>
-                <p>Thông tin lấy từ dữ liệu đã lưu sau bước đăng nhập hoặc đăng ký.</p>
-              </div>
-            </div>
-            <div class="luoi-lien-he-dashboard">
-              <div class="the-hoso-dashboard">
-                <h4>Tên hiển thị</h4>
-                <p>${escapeHtml(displayName)}</p>
-              </div>
-              <div class="the-hoso-dashboard">
-                <h4>Email</h4>
-                <p>${escapeHtml(email || "Chưa có dữ liệu email")}</p>
-              </div>
-              <div class="the-hoso-dashboard">
-                <h4>Số điện thoại</h4>
-                <p>${escapeHtml(phone || "Chưa có dữ liệu số điện thoại")}</p>
-              </div>
-            </div>
-          </section>
-
-          <section class="the-dashboard-khach-hang">
-            <div class="dashboard-khach-hang-tieu-de">
-              <div>
-                <h3>Bước nên làm tiếp</h3>
-              </div>
-            </div>
-            <ol class="danh-sach-buoc-tiep">
-              <li>Gửi khảo sát hoặc đặt lịch mới để hệ thống lưu thêm yêu cầu vào lịch sử của bạn.</li>
-              <li>Kiểm tra lại thông tin liên hệ trong hồ sơ trước khi chốt đơn đầu tiên.</li>
-              <li>Theo dõi lịch sử đơn để giữ đúng mạch xử lý với điều phối.</li>
-            </ol>
-          </section>
-
-          <section class="the-dashboard-khach-hang">
-            <div class="dashboard-khach-hang-tieu-de">
-              <div>
-                <h3>Phiên làm việc</h3>
-                <p>Phiên này đang đồng bộ với tài khoản khách hàng hiện tại.</p>
-              </div>
-            </div>
-            <a class="nut-phu" href="${escapeHtml(getProjectUrl("dang-nhap.html?vai-tro=khach-hang"))}" data-dashboard-logout>Đăng xuất giao diện</a>
-          </section>
-        </aside>
       </div>
     `;
 
-    const logoutLink = root.querySelector("[data-dashboard-logout]");
-    if (logoutLink) {
-      logoutLink.addEventListener("click", function () {
-        store.clearAuthSession();
-      });
-    }
+    root.querySelector("[data-dashboard-logout]")?.addEventListener("click", function (event) {
+      event.preventDefault();
+      store.clearAuthSession();
+      window.location.href = getProjectUrl("dang-nhap.html");
+    });
   }
 
   (async function bootstrapDashboard() {

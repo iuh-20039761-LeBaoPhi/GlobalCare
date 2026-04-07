@@ -31,12 +31,11 @@ $unreadCount = 0;
                 <li class="<?php echo $currentPage === 'admin_stats.php' ? 'active' : ''; ?>">
                     <a href="admin_stats.php">Dashboard</a>
                 </li>
-                <li class="has-submenu <?php echo in_array($currentPage, ['orders_manage.php', 'users_manage.php', 'admin_refund_report.php'], true) ? 'active' : ''; ?>">
+                <li class="has-submenu <?php echo in_array($currentPage, ['orders_manage.php', 'users_manage.php'], true) ? 'active' : ''; ?>">
                     <a href="#" class="submenu-toggle">Quản lý <span class="arrow">▼</span></a>
                     <ul class="submenu">
                         <li class="<?php echo $currentPage === 'orders_manage.php' ? 'active' : ''; ?>"><a href="orders_manage.php">Đơn hàng</a></li>
                         <li class="<?php echo $currentPage === 'users_manage.php' ? 'active' : ''; ?>"><a href="users_manage.php">Người dùng</a></li>
-                        <li class="<?php echo $currentPage === 'admin_refund_report.php' ? 'active' : ''; ?>"><a href="admin_refund_report.php">Hoàn tiền</a></li>
                     </ul>
                 </li>
                 <li class="<?php echo $currentPage === 'contact_manage.php' ? 'active' : ''; ?>">

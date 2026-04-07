@@ -180,7 +180,7 @@
         <div class="dau-muc-trang">
           <span class="the-thong-tin-nhan">So sánh nhanh</span>
           <h2>Ba nhóm dịch vụ khác nhau ở phụ phí và phạm vi hỗ trợ</h2>
-          <p>Bạn có thể nhìn nhanh đơn giá theo km, nhóm hạng mục chính và mở đúng nội dung trên trang dịch vụ duy nhất khi cần xem sâu hơn.</p>
+          <p>Bạn có thể nhìn nhanh đơn giá theo km, nhóm hạng mục chính và mở đúng nội dung trên trang dịch vụ tổng hợp khi cần xem sâu hơn.</p>
         </div>
         <div class="luoi-so-sanh-dich-vu">
           ${data

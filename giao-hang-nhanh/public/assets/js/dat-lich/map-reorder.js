@@ -1,12 +1,12 @@
 /**
  * dat-lich/map-reorder.js
- * Chứa phần map và các luồng nạp dữ liệu hỗ trợ:
- * - khởi tạo bản đồ, marker, geocode, tính khoảng cách
- * - tự điền dữ liệu từ reorder / prefill / draft
- * - đồng bộ địa chỉ và tọa độ giữa UI với state
+ * Luồng map, prefill và reorder của form đặt lịch.
+ * - Khởi tạo bản đồ, marker, geocode, tính khoảng cách
+ * - Tự điền dữ liệu từ reorder / prefill / draft
+ * - Đồng bộ địa chỉ và tọa độ giữa UI với state
  *
  * Liên quan trực tiếp:
- * - dat-lich/core.js: cung cấp state chung, helper và biến map/marker
+ * - dat-lich/core.js: cung cấp state chung, helper và fetch reorder từ KRUD
  * - dat-lich/pricing.js: đọc khoảng cách mới để cập nhật giá
  * - dat-lich/flow-submit.js: dùng dữ liệu đã resolve để review và submit
  */
@@ -621,18 +621,17 @@ async function initReorderPrefill() {
   if (!reorderId) return;
 
   try {
-    const storedDetail = getLocalOrderDetailById(reorderId);
-    if (!storedDetail) {
-      throw new Error("Không tìm thấy dữ liệu đơn cần đặt lại trong local.");
-    }
-    const reorderData = mapStoredDetailToReorderData(storedDetail);
+    const reorderData = await fetchReorderDataFromCrud(reorderId);
     if (!reorderData) {
-      throw new Error("Dữ liệu đơn cần đặt lại không hợp lệ.");
+      throw new Error("Không tìm thấy dữ liệu đơn cần đặt lại từ hệ thống.");
     }
     await applyReorderPrefill(reorderData);
   } catch (error) {
     console.warn("Không thể tải dữ liệu đặt lại:", error);
-    hien_thi_loi(1, error.message || "Không thể tải dữ liệu đơn cũ để đặt lại.");
+    hien_thi_loi(
+      1,
+      error.message || "Không thể tải dữ liệu đơn cũ từ hệ thống để đặt lại.",
+    );
   }
 }
 

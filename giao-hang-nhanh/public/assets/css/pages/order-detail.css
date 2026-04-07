@@ -88,6 +88,8 @@
   display: flex;
   align-items: center;
   justify-content: space-between;
+  gap: 16px;
+  flex-wrap: wrap;
   padding: 18px 24px;
   background: linear-gradient(115deg, var(--primary-navy-dark) 0%, var(--primary-navy) 48%, var(--primary-blue) 100%);
   border-radius: var(--radius-lg) var(--radius-lg) 0 0;
@@ -107,6 +109,15 @@
   backdrop-filter: blur(4px);
 }
 
+.standalone-order-topbar-center {
+  flex: 1 1 280px;
+  min-width: 0;
+  display: grid;
+  gap: 8px;
+  justify-items: center;
+  text-align: center;
+}
+
 .standalone-order-card-header {
   display: grid;
   gap: 20px;
@@ -121,6 +132,8 @@
 
 .standalone-order-topbar-meta {
   display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
   gap: 16px;
   font-size: 11px;
   font-weight: 600;
@@ -149,6 +162,7 @@
   display: flex;
   justify-content: space-between;
   align-items: flex-start;
+  flex-wrap: wrap;
   gap: 30px;
 }
 
@@ -228,7 +242,7 @@
 
 .standalone-order-hero-metrics {
   display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
   gap: 12px;
 }
 
@@ -361,12 +375,15 @@
 .standalone-order-progress-info {
   display: grid;
   gap: 4px;
+  min-width: 0;
 }
 
 .standalone-order-header-footer-row {
   display: flex;
   justify-content: space-between;
-  align-items: center;
+  align-items: flex-start;
+  flex-wrap: wrap;
+  gap: 12px 16px;
   padding: 14px 20px;
   background: rgba(0, 0, 0, 0.2);
   border-radius: var(--radius-sm);
@@ -466,7 +483,7 @@
 .standalone-order-summary-grid,
 .standalone-order-contact-grid {
   display: grid;
-  grid-template-columns: 1fr 1fr;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
   gap: 18px;
 }
 
@@ -564,6 +581,7 @@
   display: flex;
   align-items: flex-start;
   justify-content: space-between;
+  flex-wrap: wrap;
   gap: 14px;
 }
 
@@ -639,6 +657,7 @@
   line-height: 1.5;
   text-align: right;
   word-break: break-word;
+  overflow-wrap: anywhere;
   font-weight: 600;
 }
 
@@ -731,6 +750,7 @@
   display: flex;
   justify-content: space-between;
   align-items: flex-start;
+  flex-wrap: wrap;
   gap: 14px;
 }
 
@@ -1126,10 +1146,6 @@
     grid-template-columns: 1fr;
   }
 
-  .standalone-order-hero-metrics {
-    grid-template-columns: 1fr;
-  }
-
   .standalone-order-progress-card {
     grid-template-columns: 1fr;
     justify-items: start;
@@ -1184,14 +1200,27 @@
 
 @media (max-width: 640px) {
   .standalone-order-shell {
-    width: min(100%, calc(100% - 12px));
-    padding: 12px 0 24px;
+    width: 100%;
+    padding: 0 0 24px;
+  }
+
+  .standalone-order-unified-card {
+    border-radius: 0;
+    border-left: 0;
+    border-right: 0;
+    box-shadow: none;
+  }
+
+  .standalone-order-topbar,
+  .standalone-order-card-header {
+    border-radius: 0;
   }
 
   .standalone-order-topbar {
     padding: 12px 16px;
     gap: 12px;
-    flex-wrap: nowrap; /* Ép một hàng */
+    justify-content: space-between;
+    flex-wrap: nowrap;
   }
 
   .standalone-order-topbar-logo {
@@ -1200,16 +1229,22 @@
     flex-shrink: 0;
   }
 
+  .standalone-order-topbar-center {
+    flex: 1 1 auto;
+    min-width: 0;
+    gap: 4px;
+  }
+
   .standalone-order-topbar-title {
     font-size: 1rem;
     text-align: center;
+    white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
-    white-space: nowrap;
   }
 
   .standalone-order-topbar-meta {
-    display: none; /* Ẩn bớt meta trên mobile cực nhỏ để giữ hàng */
+    display: none;
   }
 
   .standalone-order-header-main-content {
@@ -1228,27 +1263,23 @@
   }
 
   .standalone-order-hero-metrics {
-    grid-template-columns: repeat(3, 1fr); /* Ép một hàng */
-    gap: 6px;
-    padding: 8px;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 8px;
   }
 
   .standalone-order-hero-metric {
-    min-height: 84px;
-    flex-direction: column;
-    align-items: center;
-    text-align: center;
-    padding: 8px 4px;
+    min-height: 0;
+    padding: 10px 12px;
   }
 
   .standalone-order-hero-metric:last-child {
-    border-right: 0;
+    grid-column: 1 / -1;
   }
 
   .standalone-order-hero-metric-icon {
-    width: 20px;
-    height: 20px;
-    font-size: 9px;
+    width: 28px;
+    height: 28px;
+    font-size: 12px;
   }
 
   .standalone-order-hero-metric-copy strong {
@@ -1264,22 +1295,31 @@
 
   .standalone-order-header-footer-row {
     flex-direction: column;
-    gap: 12px;
+    align-items: flex-start;
+    gap: 10px;
     padding: 12px;
   }
 
   .standalone-order-actions-group {
-    width: 100%;
-    flex-direction: column;
+    width: auto;
+    flex-direction: row;
+    justify-content: flex-start;
   }
 
   .standalone-order-actions-group .customer-btn {
-    width: 100%;
+    width: auto;
+    flex: 0 0 auto;
     justify-content: center;
+    padding: 8px 14px;
+    font-size: 12px;
   }
 
-  .standalone-order-hero-metric-copy span,
-  .standalone-order-hero-metric-copy small {
-    display: none; /* Ẩn bớt text thừa trên metric mobile để đủ chỗ nằm ngang */
+  .standalone-order-info-row {
+    grid-template-columns: 1fr;
+    gap: 6px;
+  }
+
+  .standalone-order-info-value {
+    text-align: left;
   }
 }
