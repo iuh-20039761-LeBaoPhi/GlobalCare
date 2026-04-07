@@ -96,6 +96,9 @@
                     Ngày nhận: <strong id="heroReceivedDate">---</strong>
                   </p>
                   <p class="invoice-service-meta-item">
+                    Ngày bắt đầu: <strong id="heroStartedDate">---</strong>
+                  </p>
+                  <p class="invoice-service-meta-item">
                     Ngày hoàn thành:
                     <strong id="heroCompletedDate">---</strong>
                   </p>
@@ -104,6 +107,23 @@
             </div>
 
             <div class="hero-progress">
+              <section class="standalone-action d-none" id="detailActionBar">
+                <p class="standalone-action-meta mb-0" id="detailActionHint">
+                  ---
+                </p>
+                <button
+                  type="button"
+                  class="btn btn-outline-danger"
+                  id="detailActionBtn"
+                >
+                  Cập nhật trạng thái
+                </button>
+              </section>
+              <div
+                class="alert d-none standalone-alert"
+                id="detailActionAlert"
+                role="alert"
+              ></div>
               <div class="hero-progress-ring" id="heroProgressRing">
                 <div class="hero-progress-content">
                   <strong id="heroProgressPercent">0%</strong>
@@ -290,22 +310,6 @@
             </div>
           </div>
         </article>
-
-        <section class="standalone-action d-none" id="detailActionBar">
-          <p class="standalone-action-meta mb-0" id="detailActionHint">---</p>
-          <button
-            type="button"
-            class="btn btn-outline-danger"
-            id="detailActionBtn"
-          >
-            Cập nhật trạng thái
-          </button>
-        </section>
-        <div
-          class="alert d-none standalone-alert"
-          id="detailActionAlert"
-          role="alert"
-        ></div>
       </div>
     </main>
 
