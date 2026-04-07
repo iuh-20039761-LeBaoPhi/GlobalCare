@@ -73,55 +73,41 @@ const ThoNhaOrderService = (() => {
      * Hàm chính: Tải, Lọc và Chuẩn hóa đơn hàng theo vai trò.
      */
     async function getOrders(role, profile) {
-        console.log(`[OrderService] Getting orders for role: ${role}`, profile);
+        console.log(`[OrderService] Role: ${role}, Phone: ${profile ? profile.phone : 'N/A'}`);
         const rows = await fetchRawOrders();
-        console.log(`[OrderService] Raw rows from DB:`, rows.length);
-
+        
         let filtered = [];
         const utils = window.ThoNhaOrderViewUtils;
         if (!utils) return rows; 
 
-        switch (role) {
+        // Ưu tiên dùng role từ profile nếu có, tránh sai lệch từ shell
+        const activeRole = profile && profile.role ? profile.role : role;
+
+        switch (activeRole) {
             case 'admin':    
                 filtered = rows; 
                 break;
             case 'provider': 
                 if (!profile || !profile.id) break;
                 const pId = String(profile.id);
-                const catsRaw = profile.categories || profile.danh_muc_thuc_hien || '';
-                const cats = String(catsRaw).split(',').map(s => s.trim()).filter(Boolean);
-                console.log(`[OrderService] Provider ID: ${pId}, Categories:`, cats);
                 filtered = rows.filter(r => {
                     const owner = String(r.id_nhacungcap || '').trim();
-                    // Hiển thị đơn mình đã nhận
-                    if (owner === pId) return true;
-                    // Hiển thị đơn chưa có ai nhận (bỏ qua id_danhmuc)
-                    return !owner;
+                    // Hiển thị đơn mình đã nhận HOẶC đơn chưa ai nhận (cho phép thầu)
+                    return owner === pId || !owner;
                 });
                 break;
             case 'customer': 
                 if (!profile || !profile.phone) break;
                 const searchPhone = normalizePhone(profile.phone);
-                console.log(`[OrderService] Customer Search Phone (9 digits): ${searchPhone}`);
                 
-                // Debug 5 rows to see what's inside
-                if (rows.length > 0) {
-                    console.log('[OrderService] Sample Row Data (first 3):', rows.slice(0, 3).map(r => ({
-                        id: r.id, 
-                        sdtkhachhang: r.sdtkhachhang, 
-                        sodienthoai: r.sodienthoai,
-                        raw: r
-                    })));
-                }
-
                 filtered = rows.filter(r => {
                     const dbPhone = normalizePhone(r.sdtkhachhang || r.sodienthoai);
-                    const match = dbPhone && dbPhone === searchPhone;
-                    return match;
+                    return dbPhone && dbPhone === searchPhone;
                 });
                 break;
         }
-        console.log(`[OrderService] Filtered results:`, filtered.length);
+
+        console.log(`[OrderService] Done. Found ${filtered.length} matching orders.`);
 
         // CHUẨN HÓA: Biến dữ liệu thô thành đối tượng chuẩn UI Milestone
         return filtered.map((row, index) => {

@@ -16,72 +16,44 @@ const ThoNhaOrderDetailRenderer = (() => {
     function render(order, role, container) {
         if (!container) return;
 
-        // 1. Text Data
-        setText(container, 'heroOrderCode', '#' + order.orderCode);
-        setText(container, 'heroServiceName', order.service);
-        setText(container, 'heroBookingDate', utils.formatDateTime(order.dates.ordered));
-        setText(container, 'heroServiceFee', utils.formatCurrencyVn(order.estimated_price));
-        setText(container, 'heroTransportFee', utils.formatCurrencyVn(order._raw.phidichuyen || 0));
-        setText(container, 'heroPaymentStatus', order.actualCost > 0 ? 'Đã báo giá' : 'Chưa báo giá');
-        
-        setText(container, 'heroTotalAmount', utils.formatCurrencyVn(order.total_price));
-        setText(container, 'heroTimeRange', utils.formatDateTime(order.dates.ordered));
-        setText(container, 'heroAddress', order.address);
+        // 1. Binder Map: Tự động điền dữ liệu theo ID
+        const bindings = {
+            heroOrderCode: '#' + order.orderCode,
+            heroServiceName: order.service,
+            heroBookingDate: utils.formatDateTime(order.dates.ordered),
+            heroServiceFee: utils.formatCurrencyVn(order.estimated_price),
+            heroTransportFee: utils.formatCurrencyVn(order._raw.phidichuyen || 0),
+            heroPaymentStatus: order.actualCost > 0 ? 'Đã báo giá' : 'Chưa báo giá',
+            heroTotalAmount: utils.formatCurrencyVn(order.total_price),
+            heroAddress: order.address,
+            detailCreatedAt: utils.formatDateTime(order.dates.ordered),
+            detailExecutionStart: utils.formatDateTime(order.dates.accepted),
+            detailExecutionEnd: utils.formatDateTime(order.dates.completed),
+            detailNote: order.note || 'Không có ghi chú.',
+            detailCustomerName: order.customer.name,
+            detailCustomerPhone: order.customer.phone,
+            detailProviderName: order.provider.company || order.provider.name || 'Chưa nhận đơn',
+            detailProviderPhone: order.provider.phone || '---'
+        };
+        Object.entries(bindings).forEach(([id, val]) => setText(container, id, val));
 
-        // 2. Status Badge
+        // 2. Status & Progress Sync
         const badgeNode = container.querySelector('#heroStatusBadge');
-        if (badgeNode) {
-            badgeNode.innerHTML = utils.buildStatusBadge(order.status);
-            badgeNode.style.background = 'none'; // Re-re-sync
-        }
+        if (badgeNode) badgeNode.innerHTML = utils.buildStatusBadge(order.status);
 
-        // 4. Progress Sync (Đồng bộ % hoàn thành)
         const progress = order.progress || 0;
         const progressStr = progress.toFixed(0) + '%';
-        setText(container, 'heroProgressPercent', progressStr);
-        setText(container, 'detailProgressText', progressStr);
+        ['heroProgressPercent', 'detailProgressText'].forEach(id => setText(container, id, progressStr));
         
         const ring = container.querySelector('#heroProgressRing');
-        if (ring) {
-            // Cập nhật gradient hình tròn theo % tiến độ
-            ring.style.background = `conic-gradient(var(--detail-primary) ${progress}%, #e2e8f0 ${progress}%)`;
-        }
-
-        const bar = container.querySelector('#detailProgressBar');
-        if (bar) {
-            bar.style.width = progressStr;
-        }
-
-        // 5. Timeline & Descriptive Status
-        setText(container, 'detailCreatedAt', utils.formatDateTime(order.dates.ordered));
-        setText(container, 'detailExecutionStart', utils.formatDateTime(order.dates.accepted));
-        setText(container, 'detailExecutionEnd', utils.formatDateTime(order.dates.completed));
-
-        // 5. Tasks (Dịch vụ)
-        renderTasks(container, order);
-
-        // 6. Notes
-        setText(container, 'detailNote', order.note || 'Không có ghi chú đặc biệt.');
-
-        // 7. Identity (KH & NCC)
-        setText(container, 'detailCustomerName', order.customer.name);
-        setText(container, 'detailCustomerPhone', order.customer.phone);
-        setText(container, 'detailCustomerAddress', order.customer.address);
-
-        setText(container, 'detailProviderName', order.provider.company || order.provider.name || 'Chưa nhận đơn');
-        setText(container, 'detailProviderCompany', order.provider.company || '---');
-        setText(container, 'detailProviderPhone', order.provider.phone || '---');
+        if (ring) ring.style.background = `conic-gradient(var(--detail-primary) ${progress}%, #e2e8f0 ${progress}%)`;
         
-        const providerChip = container.querySelector('#providerStateChip');
-        if (providerChip) {
-            providerChip.textContent = order.provider.id ? 'Đang thực hiện' : 'Chưa nhận';
-            providerChip.className = 'panel-chip ' + (order.provider.id ? 'success' : 'warn');
-        }
+        const bar = container.querySelector('#detailProgressBar');
+        if (bar) bar.style.width = progressStr;
 
-        // 8. Reviews & Evidence (KH & NCC Feedback)
+        // 3. Render sub-sections
+        renderTasks(container, order);
         renderReviews(container, order, role);
-
-        // 9. Action Area (Linh động theo vai trò)
         renderActions(container, order, role);
     }
 
@@ -164,32 +136,35 @@ const ThoNhaOrderDetailRenderer = (() => {
 
         let html = '';
         if (role === 'customer') {
-            // Khách chỉ được hủy khi đơn chưa có thợ nhận (id_nhacungcap trống)
+            // Khách chỉ được hủy khi đơn chưa có thợ nhận
             if (!order.provider.id && order.status === 'new') {
-                html = `<button class="btn btn-danger px-4 shadow-sm" data-action="cancel-order" data-id="${order.id}" data-code="${order.orderCode}" style="border-radius:12px; font-weight:800; border:2px solid rgba(255,255,255,0.2);">Hủy đơn ngay</button>`;
+                html = `<button class="btn-cancel" data-action="cancel-order" data-id="${order.id}" data-code="${order.orderCode}">Hủy đơn ngay</button>`;
             } else if (order.status === 'done' && (!order.actualCost || order.actualCost === 0)) {
-                // Form trợ giá ĐỂ DÀNH CHO KHÁCH HÀNG (Sẽ hiện ở vùng chi phí hoặc dưới hero)
                 html = `
-                <div class="card p-2 shadow-sm" style="border-radius:12px; border: 1px dashed #10b981; background: #f0fdf4;">
-                    <p class="small mb-1 fw-bold text-success"><i class="fas fa-gift me-1"></i>Nhập giá & Nhận trợ giá 5%</p>
-                    <div class="input-group">
-                        <input type="number" id="inputActualPrice" class="form-control" placeholder="Giá thợ báo">
-                        <button class="btn btn-success" data-action="submit-actual-price" data-id="${order.id}">Gửi</button>
+                <div class="pricing-input-box">
+                    <div class="pricing-title">
+                        <i class="fas fa-gift"></i> NHẬP GIÁ & NHẬN TRỢ GIÁ
+                    </div>
+                    <div class="pricing-group">
+                        <input type="number" id="inputActualPrice" class="pricing-field" placeholder="Giá thực tế đã trả...">
+                        <button class="pricing-submit" data-action="submit-actual-price" data-id="${order.id}">Gửi</button>
+                    </div>
+                    <div class="pricing-tip">
+                        Nhận ngay <b>cấp trợ giá 5%</b> cứu cánh túi tiền!
                     </div>
                 </div>`;
             }
         } else if (role === 'provider') {
-            // Nhà cung cấp có quy trình: Nhận -> Bắt đầu -> Hoàn thành
+            // Nhà cung cấp: Nhận -> Bắt đầu -> Hoàn thành
             if (!order.provider.id && order.status === 'new') {
-                html = `<button class="btn btn-primary px-4 shadow-sm" data-action="accept-order" data-id="${order.id}" style="border-radius:12px; font-weight:800; border:2px solid rgba(16,185,129,0.2);">NHẬN ĐƠN NGAY</button>`;
+                html = `<button class="btn-emerald" data-action="accept-order" data-id="${order.id}"><i class="fas fa-handshake me-2"></i>NHẬN ĐƠN NGAY</button>`;
             } else if (order.status === 'confirmed' || order.status === 'pending') {
-                html = `<button class="btn btn-warning px-4 shadow-sm" data-action="start-order" data-id="${order.id}" style="border-radius:12px; font-weight:800; color:#000;">BẮT ĐẦU LÀM</button>`;
+                html = `<button class="btn-emerald" style="background:#f59e0b;" data-action="start-order" data-id="${order.id}"><i class="fas fa-play me-2"></i>BẮT ĐẦU LÀM</button>`;
             } else if (order.status === 'doing' || order.status === 'working') {
-                html = `<button class="btn btn-success px-4 shadow-sm" data-action="complete-order" data-id="${order.id}" style="border-radius:12px; font-weight:800;">XÁC NHẬN XONG</button>`;
+                html = `<button class="btn-emerald" data-action="complete-order" data-id="${order.id}"><i class="fas fa-check-double me-2"></i>XÁC NHẬN XONG</button>`;
             }
         } else if (role === 'admin') {
-            // Admin chỉ được xem trong trang này theo yêu cầu
-            html = `<span class="badge bg-secondary" style="font-size:0.8rem; border-radius:8px; padding:8px 16px;">CHẾ ĐỘ XEM (ADMIN)</span>`;
+            html = `<span class="invoice-status-chip">CHẾ ĐỘ XEM (ADMIN)</span>`;
         }
 
         area.innerHTML = html;

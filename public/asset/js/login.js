@@ -41,56 +41,22 @@ async function login() {
     msg.innerHTML = '';
 
     try {
-        const krud = window.DVQTKrud;
-        if (!krud) throw new Error('Hệ thống chưa sẵn sàng. Vui lòng tải lại trang.');
+        if (!window.DVQTApp) throw new Error('Hệ thống chưa sẵn sàng. Vui lòng tải lại trang.');
 
-        // 1. Đảm bảo bảng nguoidung tồn tại
-        await krud.ensureNguoidungTable();
+        // 1. Gọi hàm login tập trung của DVQTApp (Hàm này tự động lưu Cookie)
+        const profile = await window.DVQTApp.login(phone, password);
 
-        // 2. Lấy toàn bộ danh sách từ bảng nguoidung
-        const rows = await krud.listTable('nguoidung');
-
-        // 2. Tìm user theo SĐT
-        const phoneNorm = phone.replace(/\D/g, '');
-        const user = rows.find(r => {
-            const dbPhone = String(r.sodienthoai || r.phone || '').replace(/\D/g, '');
-            return dbPhone === phoneNorm;
-        });
-
-        if (!user) throw new Error('Tài khoản không tồn tại trên hệ thống.');
-
-        // 3. So khớp mật khẩu
-        const stored = String(user.matkhau || user.password || user.mat_khau || '');
-        if (stored !== password) throw new Error('Mật khẩu không chính xác.');
-
-        // 4. Lưu thông tin vào localStorage
-        const profile = {
-            id: user.id,
-            name: user.hovaten || user.name || 'Người dùng',
-            phone: user.sodienthoai || user.phone || phone,
-            email: user.email || '',
-            address: user.diachi || user.dia_chi || user.address || '',
-            id_dichvu: user.id_dichvu || 0,
-            avatartenfile: user.avatartenfile || '',
-            cccdmattruoctenfile: user.cccdmattruoctenfile || '',
-            cccdmatsautenfile: user.cccdmatsautenfile || ''
-        };
-
-        localStorage.setItem('dvqt_logged_in', 'true');
-        localStorage.setItem('dvqt_user_id', profile.id);
-        localStorage.setItem('dvqt_user_profile', JSON.stringify(profile));
-
-        // 5. Hiển thị thành công
+        // 2. Hiển thị thành công
         document.querySelector('.auth-card').classList.add('login-success');
         msg.innerHTML = '<span class="text-success small"><i class="fas fa-check-circle me-1"></i>Đăng nhập thành công!</span>';
 
-        // 6. Điều hướng
+        // 3. Điều hướng
         const urlParams = new URLSearchParams(window.location.search);
         const redirectUrl = urlParams.get('redirect');
         const service = urlParams.get('service');
-        const root = (typeof DVQTApp !== 'undefined' && DVQTApp.ROOT_URL !== undefined) ? DVQTApp.ROOT_URL : '/Test';
+        const root = window.DVQTApp.ROOT_URL || '/Test';
 
-        let target = root + '/index.html'; // Mặc định về trang chủ
+        let target = root + '/index.html';
 
         if (redirectUrl) {
             target = decodeURIComponent(redirectUrl);
@@ -126,36 +92,39 @@ async function login() {
 /* ============================
    INIT
    ============================ */
-document.addEventListener('DOMContentLoaded', () => {
-    // Kiểm tra đã đăng nhập chưa (dựa vào localStorage)
-    if (localStorage.getItem('dvqt_logged_in') === 'true') {
-        const urlParams = new URLSearchParams(window.location.search);
-        const redirectUrl = urlParams.get('redirect');
-        const service = urlParams.get('service');
-        const root = (typeof DVQTApp !== 'undefined' && DVQTApp.ROOT_URL !== undefined) ? DVQTApp.ROOT_URL : '/Test';
+document.addEventListener('DOMContentLoaded', async () => {
+    // Kiểm tra đã đăng nhập chưa từ Cookie (thông qua DVQTApp)
+    if (window.DVQTApp) {
+        const session = await window.DVQTApp.checkSession();
+        if (session && session.logged_in) {
+            const urlParams = new URLSearchParams(window.location.search);
+            const redirectUrl = urlParams.get('redirect');
+            const service = urlParams.get('service');
+            const root = window.DVQTApp.ROOT_URL || '/Test';
 
-        let target = root + '/index.html';
-        if (redirectUrl) {
-            target = decodeURIComponent(redirectUrl);
-        } else if (service) {
-            const serviceHomes = {
-                'thonha': root + '/tho-nha/index.html',
-                'thuexe': root + '/thue-xe/index.html',
-                'giatuinhanh': root + '/giat-ui-nhanh/index.html',
-                'mevabe': root + '/cham-soc-me-va-be/index.html',
-                'nguoibenh': root + '/cham-soc-nguoi-benh/index.html',
-                'nguoigia': root + '/cham-soc-nguoi-gia/index.html',
-                'donvesinh': root + '/dich-vu-don-ve-sinh/index.html',
-                'vuonnha': root + '/cham-soc-vuon-nha/index.html',
-                'giaohangnhanh': root + '/giao-hang-nhanh/index.html',
-                'suaxe': root + '/sua-xe-luu-dong/index.html',
-                'chuyendon': root + '/dich-vu-chuyen-don/index.html',
-                'laixeho': root + '/dich-vu-lai-xe-ho/index.html'
-            };
-            target = serviceHomes[service] || target;
+            let target = root + '/index.html';
+            if (redirectUrl) {
+                target = decodeURIComponent(redirectUrl);
+            } else if (service) {
+                const serviceHomes = {
+                    'thonha': root + '/tho-nha/index.html',
+                    'thuexe': root + '/thue-xe/index.html',
+                    'giatuinhanh': root + '/giat-ui-nhanh/index.html',
+                    'mevabe': root + '/cham-soc-me-va-be/index.html',
+                    'nguoibenh': root + '/cham-soc-nguoi-benh/index.html',
+                    'nguoigia': root + '/cham-soc-nguoi-gia/index.html',
+                    'donvesinh': root + '/dich-vu-don-ve-sinh/index.html',
+                    'vuonnha': root + '/cham-soc-vuon-nha/index.html',
+                    'giaohangnhanh': root + '/giao-hang-nhanh/index.html',
+                    'suaxe': root + '/sua-xe-luu-dong/index.html',
+                    'chuyendon': root + '/dich-vu-chuyen-don/index.html',
+                    'laixeho': root + '/dich-vu-lai-xe-ho/index.html'
+                };
+                target = serviceHomes[service] || target;
+            }
+            window.location.href = target;
+            return;
         }
-        window.location.href = target;
-        return;
     }
 
     initTogglePassword();

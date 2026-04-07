@@ -1,83 +1,93 @@
-<!-- Tho Nha Customer Order Management (Premium v4.1) -->
-<div class="invoice-page-container">
-    <section class="invoice-sidebar" aria-label="Bộ lọc nhanh">
-        <header class="sidebar-head">
-            <h3><i class="fa-solid fa-filter"></i> Phân loại</h3>
-        </header>
-        <div class="sidebar-body">
-            <button class="sidebar-item active" id="filter-all">
-                <div class="sidebar-item-info"><span>Tất cả đơn hàng</span><b id="stat-all-count">0</b></div>
-            </button>
-            <button class="sidebar-item" id="filter-new">
-                <div class="sidebar-item-info"><span>Chờ xác nhận</span><b id="stat-new-count">0</b></div>
-            </button>
-            <button class="sidebar-item" id="filter-doing">
-                <div class="sidebar-item-info"><span>Đang thực hiện</span><b id="stat-doing-count">0</b></div>
-            </button>
-            <button class="sidebar-item" id="filter-done">
-                <div class="sidebar-item-info"><span>Đã hoàn thành</span><b id="stat-done-count">0</b></div>
-            </button>
+<!-- Tho Nha Customer Order Management (Master Layout 2026) -->
+<div class="customer-dashboard-grid">
+    
+    <!-- Bước 1: Bộ lọc (Card trên cùng) -->
+    <section class="dashboard-card">
+        <div class="d-card-header">
+            <h3 class="d-card-title"><i class="fa-solid fa-layer-group"></i> Phân loại</h3>
         </div>
-    </section>
-
-    <section class="invoice-main">
-        <section class="invoice-toolbar">
-            <label class="search-wrap" for="searchInput">
-                <i class="fa-solid fa-magnifying-glass"></i>
-                <input id="searchInput" type="text" placeholder="Tìm theo mã đơn, dịch vụ...">
-            </label>
-        </section>
-
-        <!-- Order List Section (Default) -->
-        <div id="orderListSection">
-            <div class="dash-header">
-                <h2><i class="fa-solid fa-file-invoice"></i> Lịch sử đặt lịch cá nhân</h2>
-                <button id="refreshCustomerBtn" class="btn-refresh"><i class="fa-solid fa-rotate"></i> Làm mới đơn</button>
-            </div>
-
-            <div class="invoice-page-shell" style="margin:0; width:100%;">
-                <section class="invoice-card">
-                    <header class="board-header">
-                        <div><h3>Danh sách đơn hàng Thợ Nhà</h3></div>
-                    </header>
-                    <div class="desktop-table-wrap">
-                        <table class="invoice-table">
-                            <thead><tr><th>Mã đơn</th><th>Dịch vụ</th><th>Địa chỉ</th><th>Trạng thái</th><th>Thao tác</th></tr></thead>
-                            <tbody id="customerOrderBody"><tr><td colspan="5" class="table-loading">Đang tải đơn hàng...</td></tr></tbody>
-                        </table>
-                    </div>
-                    <div class="mobile-list" id="customerMobileList"></div>
-                    <div id="customerEmptyState" class="empty-state" hidden><i class="fa-regular fa-face-smile"></i><h4>Chưa có đơn hàng nào</h4></div>
-                </section>
-            </div>
-        </div>
-
-        <!-- Order Detail Section (Hidden by Default) -->
-        <div id="orderDetailSection" hidden>
-            <div class="mb-4 d-flex justify-content-between align-items-center">
-                <button class="back-btn btn btn-outline-secondary px-3 py-2 fw-bold" data-action="back-to-list" style="border-radius:12px; border: 2px solid #e2e8f0; color: #4b5563; background: #fff;">
-                    <i class="fas fa-arrow-left me-2"></i> Quay lại danh sách
+        <div class="d-card-body">
+            <div class="filter-pills">
+                <button class="pill-item active" id="filter-all">
+                    Tất cả đơn hàng <span class="pill-badge" id="stat-all-count">0</span>
                 </button>
-                <div class="text-muted small">Xem chi tiết đơn hàng #ThoNha</div>
+                <button class="pill-item" id="filter-new">
+                    Chờ xác nhận <span class="pill-badge" id="stat-new-count">0</span>
+                </button>
+                <button class="pill-item" id="filter-doing">
+                    Đang thực hiện <span class="pill-badge" id="stat-doing-count">0</span>
+                </button>
+                <button class="pill-item" id="filter-done">
+                    Đã hoàn thành <span class="pill-badge" id="stat-done-count">0</span>
+                </button>
             </div>
-            <!-- ThoNhaOrderUI.renderDetails will inject content here -->
         </div>
     </section>
-</div>
 
-<!-- Modal Nhập Phí (Giữ lại nếu cần) -->
-<div id="costInputModal" class="order-detail-modal" hidden>
-    <button class="order-detail-backdrop" type="button" data-action="close-cost"></button>
-    <section class="order-detail-dialog" role="dialog" aria-modal="true" style="max-width: 400px; padding: 20px;">
-        <header style="display:flex; justify-content:space-between; align-items:center; margin-bottom: 15px;">
-            <h3 style="margin:0; font-size: 1.2rem; color: #111827;">Nhập chi phí thực tế</h3>
-            <button type="button" style="background:none; border:none; font-size:1.5rem; cursor:pointer;" data-action="close-cost">&times;</button>
-        </header>
-        <div style="margin-bottom: 20px;">
-            <input type="number" id="actualCostInput" placeholder="VD: 500000" style="width: 100%; padding: 10px; border: 1px solid #d1d5db; border-radius: 6px;">
-        </div>
-        <div style="display:flex; justify-content:flex-end; gap: 10px;">
-            <button type="button" id="submitCostBtn" class="btn btn-success">Xác nhận gửi</button>
+    <!-- Bước 2: Thanh tìm kiếm (Card độc lập - đổ bóng) -->
+    <section class="dashboard-card" style="padding: 10px 24px; box-shadow: var(--shadow-sm);">
+        <div class="dashboard-search-wrap">
+            <i class="fa-solid fa-magnifying-glass"></i>
+            <input id="searchInput" type="text" placeholder="Tìm theo mã đơn, dịch vụ...">
         </div>
     </section>
+
+    <!-- Bước 3: Lịch sử đặt lịch (Card dưới cùng) -->
+    <div id="orderListSection">
+        <section class="dashboard-card">
+            <div class="d-card-header d-flex-between" style="padding: 25px 30px;">
+                <div class="d-flex align-items-center gap-4">
+                    <div class="header-icon-box">
+                        <i class="fa-solid fa-bag-shopping"></i>
+                    </div>
+                    <div>
+                        <h3 class="d-card-title" style="margin-bottom:4px;">Danh sách đơn hàng thợ nhà</h3>
+                        <p style="font-size: 13px; color: var(--text-sub); font-weight: 500;">Quản lý và theo dõi các đơn hàng dịch vụ sửa chữa, bảo trì trong nhà</p>
+                    </div>
+                </div>
+                <button id="refreshCustomerBtn" class="btn-refresh-modern">
+                    <i class="fa-solid fa-sync-alt"></i> Làm mới đơn
+                </button>
+            </div>
+            
+            <div class="d-card-body" style="padding: 0 30px 30px;">
+                <!-- Table View -->
+                <div class="d-table-responsive">
+                    <table class="modern-table">
+                        <thead>
+                            <tr>
+                                <th><i class="fa-solid fa-qrcode me-2" style="color: #6366f1;"></i>Mã đơn</th>
+                                <th>DỊCH VỤ</th>
+                                <th><i class="fa-solid fa-calendar-days me-2" style="color: #3b82f6;"></i>NGÀY ĐẶT</th>
+                                <th><i class="fa-solid fa-bookmark me-2" style="color: #6366f1;"></i>TRẠNG THÁI</th>
+                                <th><i class="fa-solid fa-gear me-2" style="color: #3b82f6;"></i>THAO TÁC</th>
+                            </tr>
+                        </thead>
+                        <tbody id="customerOrderBody">
+                            <!-- JS Inject -->
+                        </tbody>
+                    </table>
+                </div>
+
+                <!-- Mobile View -->
+                <div id="customerMobileList" style="display:none;"></div>
+
+                <div id="customerEmptyState" class="modern-empty" hidden style="text-align:center; padding:40px;">
+                    <img src="https://api.dvqt.vn/images/empty-box.png" alt="Empty" style="width:80px; opacity:0.3; margin-bottom:15px;">
+                    <p style="color:var(--text-sub);">Bạn chưa có đơn đặt lịch nào.</p>
+                </div>
+            </div>
+        </section>
+    </div>
+
+    <!-- View Chi tiết (Ẩn mặc định) -->
+    <div id="orderDetailSection" hidden>
+        <div style="margin-bottom:20px;">
+            <button class="pill-item" data-action="back-to-list" style="border:none;">
+                <i class="fas fa-chevron-left"></i> Quay lại danh sách
+            </button>
+        </div>
+        <div id="orderDetailContent"></div>
+    </div>
+
 </div>

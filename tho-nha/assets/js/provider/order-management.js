@@ -140,7 +140,7 @@ window.initProviderOrders = function() {
     }
 
     function bindEvents() {
-        document.addEventListener('click', e => {
+        document.addEventListener('click', async e => {
             const btn = e.target.closest('[data-action]');
             if (!btn) return;
             
@@ -149,15 +149,53 @@ window.initProviderOrders = function() {
 
             if (action === 'view-detail') {
                 e.preventDefault();
-                state.selectedOrderId = id;
-                render();
+                const orders = store.getOrders();
+                const order = orders.find(o => String(o.id) === String(id));
+                if (!order) return;
+
+                // 1. Chuyển đổi View
+                const listSec = document.getElementById('providerListSection');
+                const detailSec = document.getElementById('providerDetailSection');
+                if (listSec) listSec.hidden = true;
+                if (detailSec) detailSec.hidden = false;
+
+                // 2. Nạp Partial và Render
+                let detailContainer = document.getElementById('providerDetailSection');
+                // Create a content div inside if it doesn't exist to not lose the Back button
+                let contentDiv = detailContainer.querySelector('.order-detail-content-wrap');
+                if (!contentDiv) {
+                    contentDiv = document.createElement('div');
+                    contentDiv.className = 'order-detail-content-wrap';
+                    detailContainer.appendChild(contentDiv);
+                }
+
+                contentDiv.innerHTML = '<div class="text-center py-5"><i class="fas fa-spinner fa-spin fa-2x text-primary"></i></div>';
+                try {
+                    const res = await fetch('../../partials/chi-tiet-hoa-don-tho-nha.html');
+                    contentDiv.innerHTML = await res.text();
+                    
+                    const renderer = window.ThoNhaOrderDetailRenderer;
+                    if (renderer) renderer.render(order, 'provider', contentDiv);
+
+                    // 3. Khởi tạo hành động (Cập nhật trạng thái)
+                    if (window.ThoNhaOrderActions) {
+                        const sess = await DVQTApp.checkSession();
+                        window.ThoNhaOrderActions.init(contentDiv, sess, () => {
+                            loadOrdersFromApi(true); // Tải lại danh sách đơn
+                        });
+                    }
+                } catch (err) {
+                    contentDiv.innerHTML = '<div class="alert alert-danger">Lỗi nạp chi tiết.</div>';
+                }
                 return;
             }
 
             if (action === 'back-to-list') {
                 e.preventDefault();
-                state.selectedOrderId = null;
-                render();
+                const listSec = document.getElementById('providerListSection');
+                const detailSec = document.getElementById('providerDetailSection');
+                if (listSec) listSec.hidden = false;
+                if (detailSec) detailSec.hidden = true;
                 return;
             }
 

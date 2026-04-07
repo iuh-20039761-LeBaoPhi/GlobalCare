@@ -48,8 +48,6 @@ const _BD_BASE = window.BD_BASE || '../../';
 // KRUD client + table lưu booking từ modal
 const _BD_KRUD_SCRIPT_URL = window.BD_KRUD_SCRIPT_URL || 'https://api.dvqt.vn/js/krud.js';
 const _BD_KRUD_TABLE = window.BD_KRUD_TABLE || 'datlich_thonha';
-const _BD_CUSTOMER_LOGIN_KEY = 'customer_logged_in';
-const _BD_CUSTOMER_PROFILE_KEY = 'thonha_customer_profile_v1';
 
 // Google Apps Script Web App URL — thay bằng URL thật sau khi deploy
 const _BD_GSHEET_URL = window.GSHEET_URL || 'https://script.google.com/macros/s/AKfycbx8J5infIIqf-VOFCNq89L7W1xRfluTU0Dt4R8Vijl81zhid59aql3vURdT01dwaaKgPQ/exec';
@@ -67,22 +65,13 @@ function _bdSafeParse(raw, fallback) {
     }
 }
 
-// Lấy hồ sơ khách hàng đã lưu trong localStorage.
-function _bdGetCustomerProfileFromStorage() {
-    try {
-        return _bdSafeParse(localStorage.getItem(_BD_CUSTOMER_PROFILE_KEY), {}) || {};
-    } catch (_err) {
-        return {};
-    }
-}
+
 
 // Kiểm tra khách hàng đã đăng nhập hợp lệ hay chưa.
-function _bdIsCustomerLoggedIn() {
+async function _bdIsCustomerLoggedIn() {
     try {
-        const logged = localStorage.getItem(_BD_CUSTOMER_LOGIN_KEY) === 'true';
-        if (!logged) return false;
-        const profile = _bdGetCustomerProfileFromStorage();
-        return !!(profile && (profile.phone || profile.name));
+        const session = await DVQTApp.checkSession();
+        return !!(session && session.logged_in);
     } catch (_err) {
         return false;
     }
@@ -95,59 +84,214 @@ function _bdGetCustomerLoginUrl() {
 }
 
 // Hiển thị banner trạng thái đăng nhập trên form đặt lịch.
-function _bdRenderAuthBanner() {
+async function _bdRenderAuthBanner() {
     const banner = document.getElementById('bookingAuthBanner');
     if (!banner) return;
 
-    if (_bdIsCustomerLoggedIn()) {
-        const p = _bdGetCustomerProfileFromStorage();
-        const name = String(p.name || localStorage.getItem('customer_name') || 'Khách hàng');
-        const phone = String(p.phone || '');
+    // 1. Kiểm tra session thật
+    const session = await DVQTApp.checkSession();
+    if (session.logged_in) {
+        const name = String(session.name || 'Khách hàng');
+        const phone = String(session.phone || '');
         banner.innerHTML = '<div class="alert alert-success py-2 mb-0"><i class="fas fa-check-circle me-1"></i>Đang đặt lịch bằng tài khoản: <strong>' +
             name + '</strong>' + (phone ? ' - ' + phone : '') + '</div>';
         banner.style.display = '';
         return;
     }
 
-    banner.innerHTML = '<div class="alert alert-warning py-2 mb-0"><i class="fas fa-exclamation-triangle me-1"></i>Bạn cần <strong>đăng nhập khách hàng</strong> trước khi đặt lịch. <a href="' +
+    // 2. Kiểm tra xác thực uỷ quyền qua URL (Express Mode)
+    const params = new URLSearchParams(window.location.search);
+    if (params.get('sdt') && params.get('password')) {
+        // Nếu đã gọi _bdRequireCustomerLogin và thành công thì ẩn luôn
+        if (_urlAuthCache && _urlAuthCache.valid) {
+            banner.style.display = 'none';
+            return;
+        }
+    }
+
+    banner.innerHTML = '<div class="alert alert-warning py-2 mb-0"><i class="fas fa-exclamation-triangle me-1"></i>Bạn cần <strong>đăng nhập</strong> trước khi đặt lịch. <a href="' +
         _bdGetCustomerLoginUrl() + '">Đăng nhập ngay</a></div>';
     banner.style.display = '';
 }
 
-// Điền sẵn thông tin khách hàng vào form nếu đã có profile.
-function _bdPrefillCustomerProfileToForm() {
-    if (!_bdIsCustomerLoggedIn()) return;
-    const profile = _bdGetCustomerProfileFromStorage();
+// Điền sẵn thông tin khách hàng vào form từ URL hoặc Profile (đã đăng nhập).
+async function _bdPrefillCustomerProfileToForm() {
+    const params = new URLSearchParams(window.location.search);
+    
+    // 1. Lấy dữ liệu từ URL (Ưu tiên hàng đầu cho Express Mode)
+    const urlPhone = params.get('sdt');
+    const urlName = params.get('ten') || params.get('ho_ten');
+
+    // 2. Lấy dữ liệu từ Session (Nếu đã đăng nhập)
+    const session = await DVQTApp.checkSession();
+    const profile = session.logged_in ? (session.profile || session) : null;
+    
     const hotenEl = document.getElementById('hoten');
     const sdtEl = document.getElementById('sodienthoai');
     const diachiEl = document.getElementById('diachi');
 
-    if (hotenEl && !String(hotenEl.value || '').trim() && profile.name) {
-        hotenEl.value = String(profile.name);
+    // Điền Họ tên
+    if (hotenEl && !hotenEl.value) {
+        hotenEl.value = urlName || (profile ? (profile.name || '') : '');
     }
-    if (sdtEl && !String(sdtEl.value || '').trim() && profile.phone) {
-        sdtEl.value = String(profile.phone);
+    // Điền SĐT
+    if (sdtEl && !sdtEl.value) {
+        sdtEl.value = urlPhone || (profile ? (profile.phone || '') : '');
     }
-    if (diachiEl && !String(diachiEl.value || '').trim() && profile.address) {
+    // Điền Địa chỉ
+    if (diachiEl && !diachiEl.value && profile && profile.address) {
         diachiEl.value = String(profile.address);
     }
 }
 
 // Chuẩn bị trạng thái auth ban đầu cho luồng đặt lịch.
-function _bdPrepareBookingAuthState() {
-    _bdRenderAuthBanner();
-    _bdPrefillCustomerProfileToForm();
+async function _bdPrepareBookingAuthState() {
+    // Thử xác thực thầm lặng qua URL nếu có đủ tham số (không hiện alert nếu thất bại ở giai đoạn này)
+    const params = new URLSearchParams(window.location.search);
+    if (params.get('sdt') && params.get('password')) {
+        const isValid = await _bdRequireCustomerLogin(true); 
+        
+        // Nếu xác thực thành công qua URL -> Hiện thông báo chào mừng rực rỡ
+        if (isValid && _urlAuthCache && _urlAuthCache.profile) {
+            const userName = _urlAuthCache.profile.hovaten || _urlAuthCache.profile.name || 'Quý khách';
+            Swal.fire({
+                title: '<span style="color:#11998e">Chào mừng ' + userName + '!</span>',
+                html: 'Tài khoản của bạn đã được xác thực qua liên kết. Bạn có thể tiến hành đặt lịch ngay bây giờ.',
+                icon: 'success',
+                toast: true,
+                position: 'top-end',
+                showConfirmButton: false,
+                timer: 4000,
+                timerProgressBar: true,
+                borderRadius: '12px'
+            });
+        }
+    }
+
+    await _bdRenderAuthBanner();
+    await _bdPrefillCustomerProfileToForm();
 }
 
-// Chặn thao tác đặt lịch nếu khách chưa đăng nhập.
-function _bdRequireCustomerLogin() {
-    if (_bdIsCustomerLoggedIn()) return true;
+// Biến lưu kết quả xác thực URL để tránh gọi API nhiều lần
+let _urlAuthCache = null;
 
-    _bdRenderAuthBanner();
-    const banner = document.getElementById('bookingAuthBanner');
-    if (banner) banner.scrollIntoView({ behavior: 'smooth', block: 'center' });
-    alert('Vui lòng đăng nhập tài khoản khách hàng trước khi đặt lịch.');
+// Kiểm tra khách hàng đã đăng nhập hợp lệ hay chưa, hoặc có URL hợp lệ không.
+async function _bdRequireCustomerLogin(isSilent = false) {
+    const currentCatId = String(_bdCurCatId || '9');
+
+    // 1. Nếu đã có Session Cookie (Đã đăng nhập thực sự)
+    const session = await DVQTApp.checkSession();
+    if (session && session.logged_in) {
+        // KIỂM TRA QUYỀN
+        const userDichVuIds = String(session.id_dichvu || '').split(',').map(v => v.trim());
+        if (userDichVuIds.includes(currentCatId)) {
+            Swal.fire({
+                title: '<span style="color:#11998e">Rất tiếc!</span>',
+                html: 'Bạn không thể đặt lịch dịch vụ do chính mình thực hiện.',
+                icon: 'warning',
+                confirmButtonColor: '#11998e',
+                borderRadius: '12px'
+            });
+            return false;
+        }
+        return true;
+    }
+
+    // 2. Kiểm tra chế độ EXPRESS qua URL (sdt + password)
+    const params = new URLSearchParams(window.location.search);
+    const sdt = params.get('sdt');
+    const pass = params.get('password');
+
+    if (sdt && pass) {
+        if (_urlAuthCache !== null) return !!_urlAuthCache.valid;
+
+        try {
+            console.log('🔄 Đang xác thực thông tin uỷ quyền từ URL...');
+            const krud = window.DVQTKrud;
+            if (!krud) throw new Error('KRUD not found');
+
+            const rows = await krud.listTable('nguoidung', { limit: 1000 });
+            const user = rows.find(r => {
+                const dbPhone = String(r.sodienthoai || r.phone || '').replace(/\D/g, '');
+                const targetPhone = String(sdt).replace(/\D/g, '');
+                return dbPhone === targetPhone;
+            });
+
+            if (user) {
+                const storedPass = String(user.matkhau || user.password || user.mat_khau || '');
+                if (storedPass === String(pass)) {
+                    // KIỂM TRA QUYỀN
+                    const userDichVuIds = String(user.id_dichvu || '').split(',').map(v => v.trim());
+                    if (userDichVuIds.includes(currentCatId)) {
+                        Swal.fire({
+                            title: '<span style="color:#11998e">Rất tiếc!</span>',
+                            html: 'Bạn không thể đặt lịch dịch vụ do chính mình thực hiện (Tài khoản uỷ quyền).',
+                            icon: 'warning',
+                            confirmButtonColor: '#11998e',
+                            borderRadius: '12px'
+                        });
+                        _urlAuthCache = { valid: false };
+                        return false;
+                    }
+
+                    console.log('✅ Xác thực uỷ quyền thành công cho:', user.hovaten);
+                    _urlAuthCache = { valid: true, profile: user };
+                    await _bdPrefillFromExpressUser(user);
+                    return true;
+                }
+            }
+            throw new Error('Mật khẩu hoặc SĐT không đúng.');
+        } catch (e) {
+            console.error('❌ Xác thực uỷ quyền thất bại:', e.message);
+            _urlAuthCache = { valid: false };
+            Swal.fire({
+                title: '<span style="color:#ef4444">Xác thực thất bại</span>',
+                html: 'Thông tin tài khoản từ liên kết không đúng hoặc đã bị thay đổi.',
+                icon: 'error',
+                confirmButtonColor: '#ef4444',
+                borderRadius: '12px'
+            });
+        }
+    }
+
+    // 3. Nếu không có URL hoặc xác thực URL thất bại -> Hiện Alert đăng nhập nếu không phải silent
+    if (!isSilent) {
+        await _bdRenderAuthBanner();
+        const banner = document.getElementById('bookingAuthBanner');
+        if (banner) banner.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        
+        Swal.fire({
+            title: '<span style="color:#11998e">Yêu cầu đăng nhập</span>',
+            html: 'Bạn cần đăng nhập tài khoản khách hàng để thực hiện đặt lịch.',
+            icon: 'info',
+            showCancelButton: true,
+            confirmButtonText: 'Đăng nhập ngay',
+            cancelButtonText: 'Để sau',
+            confirmButtonColor: '#11998e',
+            cancelButtonColor: '#94a3b8',
+            borderRadius: '12px'
+        }).then((result) => {
+            if (result.isConfirmed) {
+                // Chuyển hướng đến trang đăng nhập chung (Kèm redirect để quay lại đúng trang hiện tại)
+                const root = (window.DVQTApp && window.DVQTApp.ROOT_URL) ? window.DVQTApp.ROOT_URL : window.location.pathname.split('/tho-nha/')[0];
+                const loginUrl = root + '/public/dang-nhap.html';
+                window.location.href = loginUrl + '?redirect=' + encodeURIComponent(window.location.href);
+            }
+        });
+    }
     return false;
+}
+
+// Điền thông tin profile uỷ quyền từ URL vào form (Không kích hoạt banner đăng nhập)
+async function _bdPrefillFromExpressUser(user) {
+    if (!user) return;
+    const hotenEl = document.getElementById('hoten');
+    const sdtEl = document.getElementById('sodienthoai');
+    const diachiEl = document.getElementById('diachi');
+
+    if (hotenEl)  hotenEl.value  = user.hovaten || user.name || '';
+    if (sdtEl)    sdtEl.value    = user.sodienthoai || user.phone || '';
+    if (diachiEl) diachiEl.value = user.diachi || user.dia_chi || user.address || '';
 }
 
 // ===================================================================
@@ -245,8 +389,8 @@ async function _bdTravelFromCoords(inLat, inLng) {
     _bdRefreshBreakdown();
 
     try {
-        // Tận dụng logic tính khoảng cách từ dvqt-map.js — Chỉnh sửa: Không lọc theo catId nữa để tìm thợ gần nhất toàn hệ thống
-        const result = await mapPicker.calculateDistance(lat, lng, 'nhacungcap_thonha', null);
+        // Tận dụng logic tính khoảng cách từ dvqt-map.js — Sử dụng bảng nguoidung hợp nhất với id_dichvu = 9
+        const result = await mapPicker.calculateDistance(lat, lng, 'nguoidung', '9');
         if (result && result.km != null) {
             // Sau khi có khoảng cách, Thợ Nhà tự tính phí theo config riêng
             const feeResult = _bdCalculateTravelFee(result.km, _bdTravelCfg);
@@ -287,10 +431,6 @@ function _bdCalculateTravelFee(km, config) {
 /** 
  * Tìm nhà cung cấp gần nhất phù hợp (Hàm fallback để tương thích mã cũ) 
  */
-async function _bdFindNearestProvider(lat, lng, catId) {
-    const res = await mapPicker.calculateDistance(lat, lng, 'nhacungcap_thonha', catId);
-    return res ? res.provider : null;
-}
 window._bdTravelFromCoords = _bdTravelFromCoords;
 
 /**
@@ -385,9 +525,24 @@ function _bdUpdateBreakdown(price, travelFee, surveyFee) {
         
         if (isPerKm) {
             if (_bdTravelStatus === 'ok' && _bdTravelAmt > 0) {
-                bdTravel.innerHTML = `<div style="text-align:right;"><span style="font-weight:700; color:#11998e;">${_bdFmt(_bdTravelAmt)}</span><br><small class="text-muted" style="font-size:0.75rem;">(từ thợ gần nhất)</small></div>`;
+                const distInfo = _bdTravelDistKm > 0 ? `<br><small class="text-muted" style="font-size:0.75rem;">(Khoảng cách: ${_bdTravelDistKm.toFixed(1)} km)</small>` : '';
+                bdTravel.innerHTML = `
+                    <div style="text-align:right;">
+                        <span style="font-weight:700; color:#11998e; font-size:1.05rem;">${_bdFmt(_bdTravelAmt)}</span>
+                        ${distInfo}
+                    </div>`;
+            } else if (_bdTravelStatus === 'loading') {
+                bdTravel.innerHTML = `
+                    <div style="text-align:right; color:#11998e;">
+                        <i class="fas fa-circle-notch fa-spin me-1"></i>
+                        <small style="font-weight:600;">Đang tính phí...</small>
+                    </div>`;
             } else {
-                bdTravel.innerHTML = `<div style="text-align:right;"><span style="font-weight:600;">${_bdFmt(tMin)} – ${_bdFmt(tMax)}</span><br><small class="text-muted" style="font-size:0.75rem;">(tạm tính)</small></div>`;
+                bdTravel.innerHTML = `
+                    <div style="text-align:right;">
+                        <span style="font-weight:600;">${_bdFmt(tMin)} – ${_bdFmt(tMax)}</span>
+                        <br><small class="text-muted" style="font-size:0.75rem;">(Tạm tính theo thợ gần nhất)</small>
+                    </div>`;
             }
         } else {
             // Chế độ cố định (fixed)
@@ -399,9 +554,9 @@ function _bdUpdateBreakdown(price, travelFee, surveyFee) {
     if (bdTotal) {
         if (isPerKm && _bdTravelStatus !== 'ok') {
             const priceLabel = price > 0 ? _bdFmt(price) : 'Miễn phí';
-            bdTotal.innerHTML = `${priceLabel} <span style="color:#94a3b8;font-size:0.82rem;">+ phí di chuyển</span>`;
+            bdTotal.innerHTML = `${priceLabel} <span style="color:#94a3b8;font-size:0.85rem;font-weight:normal;">+ phí di chuyển</span>`;
         } else {
-            bdTotal.textContent = _bdFmt(p.total);
+            bdTotal.innerHTML = `<span style="color:#11998e;font-weight:800;font-size:1.2rem;">${_bdFmt(p.total)}</span>`;
         }
     }
 
@@ -736,61 +891,36 @@ function _bdBuildKrudBookingRecord(pendingData) {
     };
 }
 
-// Ghi nhớ thông tin khách hàng để prefill cho lần đặt lịch sau.
+// Ghi nhớ thông tin khách hàng (Đã bỏ localStorage - thông tin tự động lấy từ Cookie)
 function _bdRememberCustomerProfile(pendingData) {
-    try {
-        var payload = {
-            name: pendingData && pendingData.name ? pendingData.name : 'Khách hàng',
-            phone: pendingData && pendingData.phone ? pendingData.phone : '',
-            address: pendingData && pendingData.address ? pendingData.address : ''
-        };
-        localStorage.setItem('thonha_customer_profile_v1', JSON.stringify(payload));
-    } catch (_err) {
-        // Bỏ qua lỗi localStorage để không ảnh hưởng luồng đặt lịch.
-    }
+    // Luồng mới không lưu vào localStorage nữa để đảm bảo tính riêng tư
 }
 
 /**
  * Tạo bản ghi đặt lịch mới qua ThoNhaApp.
- * @param {Object} pendingData - Payload từ _bdBuildPendingData()
- * @returns {Promise<{orderCode: string, result: *}>}
  */
 async function _bdInsertBookingWithKrud(pendingData) {
     const row = _bdBuildKrudBookingRecord(pendingData);
-    
-    // Sử dụng DVQTApp để tạo đơn hàng (Buộc phải truyền tên bảng 'datlich_thonha')
     const result = await DVQTApp.createOrder(row, 'datlich_thonha');
-    
-    const newId = (result && result.data && result.data.id) || (result && result.id) || 0;
-    const orderCode = String(newId).padStart(7, '0');
-
-    return { orderCode, result };
+    const newId = (result && (result.data?.id || result.id)) || 0;
+    return { orderCode: String(newId).padStart(7, '0'), result };
 }
 
 /**
- * Hàm chính submit đơn hàng: KRUD insert → Google Sheets → callback.
- * Quản lý trạng thái nút (disabled/spinner) và error handling.
- * @param {Object}      pendingData - Payload từ _bdBuildPendingData()
- * @param {HTMLElement} submitBtn   - Nút submit để toggle trạng thái
- * @param {Function}    onSuccess   - Callback(orderCode) khi thành công
+ * Hàm chính submit đơn hàng: Tận dụng DVQTApp để gửi đơn & xử lý UI.
  */
 async function _bdSubmitApi(pendingData, submitBtn, onSuccess) {
     submitBtn.disabled  = true;
     submitBtn.innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span>Đang gửi...';
-    const resetBtn = () => {
-        submitBtn.disabled  = false;
-        submitBtn.innerHTML = '<i class="fas fa-check-circle me-2"></i> Xác nhận';
-    };
 
     try {
         const inserted = await _bdInsertBookingWithKrud(pendingData);
-        _bdRememberCustomerProfile(pendingData);
         _bdSendToSheet(pendingData, inserted.orderCode);
         onSuccess(inserted.orderCode || null);
     } catch (err) {
-        console.error('[booking-detail] Submit failed:', err);
-        alert('❌ ' + (err?.message || 'Không thể kết nối API đặt lịch. Vui lòng thử lại sau!'));
-        resetBtn();
+        alert('❌ ' + (err?.message || 'Lỗi đặt lịch. Thử lại sau!'));
+        submitBtn.disabled = false;
+        submitBtn.innerHTML = '<i class="fas fa-check-circle me-2"></i> Xác nhận';
     }
 }
 

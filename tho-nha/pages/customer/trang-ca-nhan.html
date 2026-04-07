@@ -1,98 +1,237 @@
 <!DOCTYPE html>
 <html lang="vi">
-  <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Customer Dashboard - Thợ Nhà</title>
-    <!-- CSS Standard -->
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" />
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" />
-    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Public+Sans:wght@300;400;500;600;700&display=swap" />
-    <link rel="stylesheet" href="../../assets/css/admin-dashboard.css?v=1.4" />
-    <link rel="stylesheet" href="../../assets/css/order-panel.css?v=1.4" />
-    <link rel="stylesheet" href="../../assets/css/order-detail-custom.css?v=1.4" />
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" />
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Trang cá nhân khách hàng | Thợ Nhà</title>
+    <!-- Modern Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="../../assets/css/order-detail-custom.css">
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <style>
-      :root {
-          /* Premium Neutral Palette (Slate/Blue) - Thợ Nhà Khách Hàng */
-          --admin-bg: #f8fafc; 
-          --admin-border: #e2e8f0;
-          --admin-panel: #ffffff;
-          --admin-text: #0f172a;
-          --admin-muted: #64748b;
-          --admin-primary: #10b981; /* Emerald Label */
-          --admin-primary-2: #059669;
-          --admin-dark: #0f172a; /* Deep Navy Sidebar */
-          --admin-dark-2: #1e293b;
-      }
-      .admin-shell { display: flex; width: 100%; min-height: 100vh; background: var(--admin-bg); }
-      .sidebar-shell { width: 280px !important; flex-shrink: 0; }
-      .content-shell { flex: 1; min-width: 0; }
-    </style>
-      .nav-item { cursor: pointer; }
-      #pageContent { min-height: 400px; }
-    </style>
-  </head>
-  <body>
-    <div class="admin-shell">
-      <!-- Sidebar Partial Placeholder -->
-      <div id="sidebarMount"></div>
+        :root {
+            --primary: #10b981;
+            --primary-dark: #059669;
+            --primary-soft: rgba(16, 185, 129, 0.1);
+            --bg: #f3f6f9;
+            --sidebar-bg: #1e293b;
+            --card-bg: #ffffff;
+            --text-main: #1e293b;
+            --text-sub: #64748b;
+            --border: #e2e8f0;
+            --radius-md: 12px;
+            --radius-lg: 16px;
+            --shadow-sm: 0 1px 3px 0 rgb(0 0 0 / 0.1), 0 1px 2px -1px rgb(0 0 0 / 0.1);
+            --shadow-md: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
+            --shadow-lg: 0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -4px rgb(0 0 0 / 0.1);
+        }
 
-      <main class="content-shell">
-        <header class="topbar">
-          <div class="topbar-left">
-            <button class="btn btn-sm sidebar-toggler d-lg-none" type="button" data-bs-toggle="offcanvas" data-bs-target="#sidebar">
-              <i class="fas fa-bars"></i>
-            </button>
-            <h2 id="pageTitleDisplay">Trang cá nhân</h2>
-          </div>
+        * { margin:0; padding:0; box-sizing:border-box; }
+        body { font-family: 'Inter', sans-serif; background: var(--bg); color: var(--text-main); display: flex; min-height: 100vh; font-size: 14px; overflow-x: hidden; }
 
-          <div class="topbar-actions">
-            <a href="../../index.html" class="btn btn-sm top-icon-btn" title="Về trang chủ">
-                <i class="fas fa-home"></i>
-            </a>
-            <div class="admin-chip">
-              <span class="admin-avatar" id="userAvatar">K</span>
-              <span class="admin-email" id="adminUsernameDisplay">Khách hàng</span>
+        /* ================= SIDEBAR ================= */
+        .sidebar { width: 260px; background: var(--sidebar-bg); color: #fff; display: flex; flex-direction: column; flex-shrink: 0; position: fixed; height: 100vh; z-index: 1000; box-shadow: 4px 0 20px rgba(0,0,0,0.1); }
+        .sidebar-header { padding: 40px 24px; display: flex; align-items: center; gap: 14px; }
+        .logo-box { width: 44px; height: 44px; background: #fff; border-radius: 12px; display: flex; align-items: center; justify-content: center; overflow: hidden; box-shadow: 0 0 15px rgba(255,255,255,0.2); }
+        .logo-box img { width: 100%; height: 100%; object-fit: cover; }
+        .brand-name { font-weight: 800; font-size: 1.3rem; letter-spacing: -0.5px; }
+        .brand-tag { font-size: 10px; color: #94a3b8; text-transform: uppercase; letter-spacing: 1.5px; opacity: 0.8; }
+
+        .nav-group { padding: 10px 0; }
+        .nav-label { padding: 0 28px; font-size: 11px; font-weight: 700; color: #64748b; text-transform: uppercase; letter-spacing: 2px; margin-bottom: 12px; }
+        .nav-link { 
+            display: flex; align-items: center; gap: 14px; padding: 14px 28px; color: #94a3b8; text-decoration: none; 
+            transition: 0.3s; margin: 4px 16px; border-radius: 12px;
+        }
+        .nav-link:hover { color: #fff; background: rgba(255,255,255,0.05); }
+        .nav-link.active { background: var(--primary); color: #fff; font-weight: 600; box-shadow: 0 10px 15px -3px rgba(16, 185, 129, 0.4); }
+        .nav-link i { font-size: 1.1rem; }
+
+        .logout-area { margin-top: auto; padding: 30px 20px; }
+        .logout-btn { 
+            display: flex; align-items: center; gap: 12px; padding: 14px 16px; 
+            color: #fca5a5; text-decoration: none; border-radius: 12px; transition: 0.3s; font-weight: 600;
+        }
+        .logout-btn:hover { background: rgba(239, 68, 68, 0.1); }
+
+        /* ================= MAIN WRAPPER ================= */
+        .main-wrapper { flex: 1; margin-left: 260px; min-width:0; }
+        .top-bar { 
+            height: 80px; background: rgba(255,255,255,0.8); backdrop-filter: blur(10px); 
+            display: flex; align-items: center; justify-content: space-between; padding: 0 40px; 
+            border-bottom: 1px solid var(--border); position: sticky; top: 0; z-index: 900;
+        }
+        .top-h1 { font-size: 1.5rem; font-weight: 800; letter-spacing: -0.5px; }
+
+        .user-pill { 
+            display: flex; align-items: center; gap: 12px; padding: 6px 16px 6px 6px; 
+            background: #fff; border: 1px solid var(--border); border-radius: 50px; box-shadow: var(--shadow-sm);
+        }
+        .user-avatar { 
+            width: 36px; height: 36px; background: var(--primary); color: #fff; 
+            border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: 800; font-size: 1.1rem;
+        }
+        .user-role { font-size: 12px; font-weight: 700; color: var(--text-sub); }
+
+        /* ================= DASHBOARD COMPONENTS (DASH-CARD) ================= */
+        .content-area { padding: 30px 40px; }
+        .customer-dashboard-grid { display: flex; flex-direction: column; gap: 30px; }
+
+        .dashboard-card { background: #fff; border-radius: var(--radius-lg); border: 1px solid var(--border); box-shadow: var(--shadow-md); overflow: hidden; }
+        .d-card-header { padding: 20px 24px; border-bottom: 1px solid #f1f5f9; }
+        .d-card-title { display: flex; align-items: center; gap: 12px; font-weight: 800; font-size: 1.1rem; color: var(--text-main); }
+        .d-card-title i { color: var(--primary); font-size: 1.2rem; }
+        .d-card-body { padding: 24px; }
+        .d-card-subheader { padding: 0 24px 15px; font-weight: 700; color: var(--text-sub); font-size: 13px; text-transform: uppercase; letter-spacing: 0.5px; }
+
+        /* Filter Pills */
+        .filter-pills { display: flex; flex-wrap: wrap; gap: 14px; margin-bottom: 24px; }
+        .pill-item { 
+            background: #f8fafc; border: 1px solid var(--border); color: var(--text-sub); 
+            padding: 10px 20px; border-radius: 50px; font-weight: 600; cursor: pointer; transition: 0.3s;
+            display: flex; align-items: center; gap: 10px; font-size: 13px;
+        }
+        .pill-item:hover { border-color: #cbd5e1; background: #f1f5f9; }
+        .pill-item.active { background: var(--primary-soft); color: var(--primary); border-color: var(--primary); box-shadow: 0 4px 12px rgba(16, 185, 129, 0.1); }
+        .pill-badge { background: #e2e8f0; color: #475569; padding: 2px 10px; border-radius: 10px; font-size: 11px; font-weight: 800; }
+        .active .pill-badge { background: var(--primary); color: #fff; }
+
+        /* Modern Search Input */
+        .dashboard-search-wrap { position: relative; margin-top: 10px; }
+        .dashboard-search-wrap i { position: absolute; left: 16px; top: 16px; color: #94a3b8; font-size: 1.1rem; z-index: 10; }
+        .dashboard-search-wrap input { 
+            width: 100%; height: 52px; background: #f8fafc; border: 1px solid var(--border); 
+            border-radius: 14px; padding: 0 20px 0 52px; font-family: inherit; font-size: 14px; outline: none; transition: 0.3s;
+        }
+        .dashboard-search-wrap input:focus { border-color: var(--primary); background: #fff; box-shadow: 0 0 0 4px rgba(16, 185, 129, 0.05); }
+
+        /* Modern Table */
+        .d-table-responsive { width: 100%; overflow-x: auto; }
+        .modern-table { width: 100%; border-collapse: collapse; min-width: 800px; }
+        .modern-table th { padding: 20px 24px; background: #f8fafc; text-align: left; font-size: 11px; font-weight: 800; color: #475569; text-transform: uppercase; letter-spacing: 1.5px; border-bottom: 1px solid #e2e8f0; }
+        .modern-table td { padding: 24px; border-bottom: 1px solid #f1f5f9; vertical-align: middle; transition: 0.2s; }
+        .modern-table tr:hover td { background: #f8fafc; }
+
+        /* Cell Styling Master UI */
+        .cell-service { max-width: 350px; }
+        .header-icon-box { width: 50px; height: 50px; background: #eff6ff; color: #3b82f6; border-radius: 12px; display: flex; align-items: center; justify-content: center; font-size: 1.5rem; }
+        .code-badge { background: #eff6ff; color: #3b82f6; padding: 10px 18px; border-radius: 8px; font-weight: 800; font-size: 14px; text-align: center; border: 1px solid #dbeafe; display: inline-block; min-width: 100px; }
+        .service-name { font-weight: 800; font-size: 14px; color: #1e293b; margin-bottom: 6px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 100%; }
+        .service-note { font-size: 12px; color: #94a3b8; font-weight: 500; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 100%; }
+        .date-item { font-weight: 700; font-size: 13px; color: #334155; margin-bottom: 4px; display: flex; align-items: center; white-space: nowrap; }
+        .time-item { font-size: 12px; color: #94a3b8; font-weight: 500; display: flex; align-items: center; }
+        .btn-view-modern { background: #fff; color: #3b82f6; border: 1.5px solid #3b82f6; padding: 10px 20px; border-radius: 10px; font-weight: 600; font-size: 13px; cursor: pointer; transition: 0.3s; display: flex; align-items: center; gap: 8px; }
+        .btn-view-modern:hover { background: #eff6ff; transform: translateY(-1px); box-shadow: 0 4px 12px rgba(59, 130, 246, 0.15); }
+
+        .btn-refresh-modern { 
+            background: var(--primary); color: #fff; border: none; padding: 10px 20px; 
+            border-radius: 12px; font-weight: 700; cursor: pointer; display: flex; align-items: center; gap: 8px; transition: 0.3s;
+        }
+        .btn-refresh-modern:hover { background: var(--primary-dark); transform: scale(1.02); box-shadow: 0 8px 20px rgba(16, 185, 129, 0.2); }
+
+        .d-flex-between { display: flex; align-items: center; justify-content: space-between; }
+
+        /* ================= MOBILE TARGETING ================= */
+        #customerMobileList { display: none !important; }
+
+        @media (max-width: 1024px) {
+            .sidebar { width: 0; display: none; }
+            .main-wrapper { margin-left: 0; }
+            .top-bar { padding: 0 20px; }
+            .content-area { padding: 20px; }
+            .d-table-responsive { display: none !important; }
+            #customerMobileList { 
+                display: flex !important; flex-direction: column; gap: 16px; padding: 10px 0; 
+            }
+            
+            .mobile-card { background: #fff; border-radius: 18px; padding: 22px; box-shadow: var(--shadow-md); border: 1px solid #f1f5f9; position: relative; }
+            .mobile-card::after { content: ""; position: absolute; left: 0; top: 15%; width: 5px; height: 70%; background: var(--primary); border-radius: 0 10px 10px 0; }
+            .mobile-card-head { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 15px; }
+            .mobile-title { font-size: 1.05rem; font-weight: 800; color: var(--text-main); margin-bottom: 5px; }
+            .mobile-code { font-size: 11px; font-weight: 700; color: #94a3b8; text-transform: uppercase; letter-spacing: 1px; }
+            .mobile-row { display: flex; justify-content: space-between; font-size: 13px; padding-top: 10px; border-top: 1px dashed #e2e8f0; margin-top: 10px; }
+            .mobile-row span { color: var(--text-sub); }
+            .mobile-row strong { color: var(--text-main); font-weight: 700; }
+            .mobile-actions { margin-top: 20px; display: flex; justify-content: flex-end; }
+        }
+
+        /* Status Badges */
+        .badge { padding: 6px 12px; border-radius: 8px; font-size: 11px; font-weight: 800; text-transform: uppercase; letter-spacing: 0.5px; display: inline-block; }
+        .badge-new { background: #dcfce7; color: #10b981; }
+        .badge-confirmed { background: #eff6ff; color: #3b82f6; }
+        .badge-doing { background: #fef9c3; color: #ca8a04; }
+        .badge-done { background: #dbeafe; color: #3b82f6; }
+        .badge-cancel { background: #f1f5f9; color: #64748b; }
+
+    </style>
+</head>
+<body>
+
+    <!-- Sidebar -->
+    <aside class="sidebar">
+        <a href="../../index.html" style="text-decoration: none; color: inherit; display: block;">
+            <div class="sidebar-header">
+                <div class="logo-box">
+                    <img src="../../assets/images/tho-nha-logo-thuong-hieu-cropped.jpg" alt="Logo" onerror="this.src='https://api.dvqt.vn/images/logo.png'">
+                </div>
+                <div>
+                    <div class="brand-name">Thợ Nhà</div>
+                    <div class="brand-tag">Customer Panel</div>
+                </div>
             </div>
-          </div>
+        </a>
+
+        <div class="nav-group" id="sidebarNav">
+            <div class="nav-label">Phân vùng</div>
+            <a href="#" class="nav-link active" data-page="quan-ly-don">
+                <i class="fa-solid fa-rectangle-list"></i>
+                Đơn hàng của tôi
+            </a>
+
+            <div class="nav-label" style="margin-top:20px;">Cá nhân</div>
+            <a href="#" class="nav-link" data-page="tai-khoan">
+                <i class="fa-solid fa-user-gear"></i>
+                Hồ sơ cá nhân
+            </a>
+        </div>
+
+        <div class="logout-area">
+            <a href="javascript:void(0)" onclick="logoutCustomer()" class="logout-btn">
+                <i class="fa-solid fa-arrow-right-from-bracket"></i>
+                <span>Đăng xuất</span>
+            </a>
+        </div>
+    </aside>
+
+    <!-- Main Wrapper -->
+    <main class="main-wrapper">
+        <header class="top-bar">
+            <h1 class="top-h1">Trang cá nhân</h1>
+            <div class="user-pill">
+                <div class="user-avatar" id="accAvatarHead">K</div>
+                <div class="user-role">Khách hàng</div>
+            </div>
         </header>
 
-        <section class="container-fluid py-4">
-           <div id="pageContent">
-              <!-- Content will be injected here -->
-           </div>
-        </section>
-      </main>
-    </div>
+        <!-- Nơi các Partial HTML được inject vào qua shell.js -->
+        <div class="content-area" id="pageContent">
+            <div style="text-align:center; padding:100px; color:#94a3b8;">
+                <i class="fas fa-circle-notch fa-spin fa-2x"></i>
+                <p style="margin-top:15px; font-weight:500;">Đang khởi tạo ứng dụng...</p>
+            </div>
+        </div>
+    </main>
 
-    <!-- Modals placeholder -->
-    <div id="modalsContainer"></div>
-
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
-    <script src="../../../public/asset/js/dvqt-krud.js"></script>
+    <!-- Scripts -->
     <script src="../../../public/asset/js/dvqt-app.js"></script>
-    <script src="../../assets/js/shared/order-store.js"></script>
+    <script src="../../../public/asset/js/dvqt-krud.js"></script>
     <script src="../../assets/js/shared/order-view-utils.js"></script>
+    <script src="../../assets/js/shared/order-store.js"></script>
     <script src="../../assets/js/shared/order-service.js"></script>
-    <script src="../../assets/js/shared/order-detail-renderer.js"></script>
     <script src="../../assets/js/shared/order-ui-composer.js"></script>
+    <script src="../../assets/js/shared/order-detail-renderer.js"></script>
+    <script src="../../assets/js/shared/order-actions.js"></script>
     <script src="../../assets/js/customer/shell.js"></script>
-
-    <script>
-      // Injection for Sidebar
-      fetch('partials/aside.html')
-        .then(res => res.text())
-        .then(html => {
-          document.getElementById('sidebarMount').innerHTML = html;
-          if(typeof setupNavigation === 'function') setupNavigation();
-          
-          // Mark active path
-          const currentPath = window.location.pathname.split('/').pop() || 'trang-ca-nhan.html';
-          document.querySelectorAll('.nav-item').forEach(item => {
-             if(item.getAttribute('href') === currentPath) item.classList.add('active');
-          });
-        });
-    </script>
-  </body>
+</body>
 </html>

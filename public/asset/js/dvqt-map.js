@@ -205,7 +205,8 @@ window.mapPicker = (function () {
                 const c1 = String(r.id_danhmuc || '');
                 const c2 = String(r.danh_muc_thuc_hien || '');
                 const c3 = String(r.loai_hinh_kinh_doanh || '');
-                const allCats = (c1 + ',' + c2 + ',' + c3).split(',').map(s => s.trim()).filter(Boolean);
+                const c4 = String(r.id_dichvu || ''); // ID dịch vụ trong bảng nguoidung
+                const allCats = (c1 + ',' + c2 + ',' + c3 + ',' + c4).split(',').map(s => s.trim()).filter(Boolean);
                 return !catStr || allCats.includes(catStr);
             });
 

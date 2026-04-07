@@ -33,19 +33,20 @@
             return s || 'pending';
         };
 
-        const isProvider = raw.id_dichvu && raw.id_dichvu !== '0';
+        const ids = String(raw.id_dichvu || '').split(',');
+        const isThoNhaProvider = ids.includes('9');
+        const roleStr = isThoNhaProvider ? 'Nhà cung cấp Thợ Nhà' : (raw.id_dichvu && raw.id_dichvu !== '0' ? 'Nhà cung cấp khác' : 'Khách hàng');
+        
         return {
             id: raw.id,
             full_name: raw.hovaten || raw.name || 'N/A',
             email: raw.email || '',
             phone: raw.sodienthoai || raw.phone || '',
-            company_name: raw.tencua_hang || raw.company || '',
             address: raw.diachi || raw.address || '',
             description: raw.motadichvu || raw.description || '',
             status: normalizeStatus(raw.trangthai || raw.status),
-            rejection_reason: raw.lydotuchoi || raw.rejection_reason || '',
-            role: isProvider ? 'Nhà cung cấp' : 'Khách hàng',
-            isProvider: isProvider,
+            role: roleStr,
+            isThoNhaProvider: isThoNhaProvider,
             avatar: raw.avatartenfile || '',
             cccd_front: raw.cccdmattruoctenfile || '',
             cccd_back: raw.cccdmatsautenfile || '',
@@ -65,7 +66,8 @@
 
         try {
             const rows = await krud.listTable(PROVIDER_TABLE);
-            providersData = rows.map(mapProviderRow).filter(item => !!item.id);
+            // Mặc định chỉ lấy những tài khoản có id_dichvu (là NCC hoặc Thợ)
+            providersData = rows.map(mapProviderRow).filter(item => item.id && item._raw.id_dichvu && item._raw.id_dichvu !== '0');
             renderProviders();
             if (typeof updateProviderBadge === 'function') updateProviderBadge();
         } catch (err) {
@@ -81,8 +83,8 @@
             ? providersData.filter(p => p.status === currentStatusFilter)
             : providersData;
         
-        if (currentRoleFilter === 'customer') filtered = filtered.filter(p => !p.isProvider);
-        if (currentRoleFilter === 'provider') filtered = filtered.filter(p => p.isProvider);
+        if (currentRoleFilter === 'customer') filtered = filtered.filter(p => !p.isThoNhaProvider);
+        if (currentRoleFilter === 'provider') filtered = filtered.filter(p => p.isThoNhaProvider);
 
         const tbody = document.getElementById('providersBody');
         if (!tbody) return;
@@ -95,11 +97,10 @@
         tbody.innerHTML = filtered.map(p => {
             const sc = STATUS_CONFIG[p.status] || { label: p.status, style: '' };
             const actions = buildActions(p);
-            const roleBadge = p.isProvider ? 'bg-primary' : 'bg-info';
+            const roleBadge = p.isThoNhaProvider ? 'bg-primary' : (p.role === 'Khách hàng' ? 'bg-info' : 'bg-secondary');
             return `<tr>
                 <td><strong>${p.full_name}</strong><br><small class="text-muted">${p.phone}</small></td>
                 <td><span class="badge ${roleBadge}">${p.role}</span></td>
-                <td>${p.isProvider ? (p.company_name || '<small class="text-muted italic">Cá nhân</small>') : '<span class="text-muted">-</span>'}</td>
                 <td><span class="badge" style="${sc.style}">${sc.label}</span></td>
                 <td>${actions}</td>
             </tr>`;
@@ -111,7 +112,7 @@
         if (p.status === 'blocked') {
             btns += `<button class="btn btn-sm btn-outline-success me-1" onclick="handleProviderAction('${p.id}', 'active')" title="Mở khóa tài khoản"><i class="fas fa-unlock"></i></button>`;
         } else {
-            btns += `<button class="btn btn-sm btn-outline-danger me-1" onclick="openReasonModal('${p.id}', 'blocked')" title="Khóa tài khoản"><i class="fas fa-lock"></i></button>`;
+            btns += `<button class="btn btn-sm btn-outline-danger me-1" onclick="handleProviderAction('${p.id}', 'blocked')" title="Khóa tài khoản"><i class="fas fa-lock"></i></button>`;
         }
         return btns;
     }
@@ -144,7 +145,6 @@
                     </div>
                     <div class="col-8">
                         <h5 class="mb-1">${p.full_name}</h5>
-                        <p class="text-muted mb-0 small"><i class="fas fa-store me-1"></i>${p.company_name}</p>
                         <p class="text-muted mb-0 small"><i class="fas fa-phone me-1"></i>${p.phone}</p>
                     </div>
                 </div>
@@ -172,32 +172,13 @@
                     </div>
                 </div>
 
-                ${p.rejection_reason ? `<div class="mt-3 p-2 bg-danger-subtle text-danger rounded border border-danger-subtle small"><strong>Lý do từ chối/khóa:</strong> ${p.rejection_reason}</div>` : ''}
-                <div class="mt-3 text-end">
-                    <span class="badge" style="${STATUS_CONFIG[p.status]?.style || ''}">${STATUS_CONFIG[p.status]?.label || p.status}</span>
                 </div>
             </div>
         `;
         modal.show();
     };
 
-    window.openReasonModal = (id, action) => {
-        pendingProviderId = id;
-        pendingAction = action;
-        const modal = new bootstrap.Modal(document.getElementById('reasonModal'));
-        document.getElementById('reasonModalTitle').textContent = (action === 'rejected' ? 'Lý do từ chối' : 'Lý do khóa');
-        modal.show();
-    };
 
-    window.submitReason = async () => {
-        const reason = document.getElementById('reasonInput').value.trim();
-        if (!reason) return alert('Vui lòng nhập lý do');
-        
-        const modal = bootstrap.Modal.getInstance(document.getElementById('reasonModal'));
-        if (modal) modal.hide();
-        
-        await handleProviderAction(pendingProviderId, pendingAction, reason);
-    };
 
     window.handleProviderAction = async (id, status, reason = '') => {
         if (!confirm('Xác nhận thực hiện thao tác này?')) return;
