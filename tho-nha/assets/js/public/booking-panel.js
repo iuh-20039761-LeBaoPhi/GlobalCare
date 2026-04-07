@@ -141,16 +141,16 @@
                         return;
                     }
                     _loaded = true;
-                    _ensureMap(function () {
-                        _initForm(serviceName);
+                    _ensureMap(async function () {
+                        await _initForm(serviceName);
                     });
                 });
                 return;
             }
 
             _loaded = true;
-            _ensureMap(function () {
-                _initForm(serviceName);
+            _ensureMap(async function () {
+                await _initForm(serviceName);
             });
         });
     }
@@ -362,7 +362,7 @@
     /* ------------------------------------------------------------------ */
     /*  Khởi tạo form (gọi booking-detail.js standalone handler)           */
     /* ------------------------------------------------------------------ */
-    function _initForm(serviceName) {
+    async function _initForm(serviceName) {
         if (_initialized) {
             // Form đã init, chỉ prefill lại nếu có service
             if (serviceName || _prefillMeta) _prefillServiceInForm(serviceName);
@@ -371,11 +371,32 @@
         _initialized = true;
 
         if (typeof _bdInitStandalone === 'function') {
-            _bdInitStandalone();
+            await _bdInitStandalone();
+        }
+
+        // Tự động điền thông tin người dùng nếu đã đăng nhập
+        if (window.DVQTApp && window.DVQTApp.checkSession) {
+            try {
+                const session = await window.DVQTApp.checkSession();
+                if (session && session.logged_in) {
+                    const nameInput = document.getElementById('hoten');
+                    const phoneInput = document.getElementById('sodienthoai');
+                    const addrInput = document.getElementById('diachi');
+                    
+                    if (nameInput && !nameInput.value) nameInput.value = session.name || '';
+                    if (phoneInput && !phoneInput.value) phoneInput.value = session.phone || '';
+                    if (addrInput && !addrInput.value) addrInput.value = session.address || '';
+                }
+            } catch (err) { console.warn('[BookingPanel] Prefill user info failed:', err); }
         }
 
         // Prefill sau khi _bdLoadStandaloneServices chạy xong
         if (serviceName || _prefillMeta) _prefillServiceInForm(serviceName);
+
+        // Tự động định vị GPS (sau khi form đã init)
+        if (window.mapPicker && typeof window.mapPicker.gps === 'function') {
+            setTimeout(() => window.mapPicker.gps(), 500);
+        }
 
         // Khi modal đóng: reset form về trạng thái ban đầu
         var modalEl = document.getElementById('bpModal');
@@ -405,15 +426,55 @@
         }
     }
 
+    // Tự động điền dữ liệu người dùng khi đã đăng nhập hoặc từ URL (Express mode)
+    function autoFillUserForm() {
+        const params = new URLSearchParams(window.location.search);
+        
+        // Ưu tiên 1: Lấy từ URL (Chế độ Express)
+        const urlPhone = params.get('sdt');
+        const urlName = params.get('ten') || params.get('ho_ten');
+
+        // Ưu tiên 2: Lấy từ Cookie/Session (Chế độ đã đăng nhập)
+        const userPhone = (typeof DVQTApp !== 'undefined' && DVQTApp.getCookie) ? DVQTApp.getCookie('dvqt_u') : null;
+        const userData = (typeof DVQTApp !== 'undefined') ? DVQTApp.getProfile() : null;
+
+        const nameInput = document.getElementById('hoten');
+        const phoneInput = document.getElementById('sodienthoai');
+        const addrInput = document.getElementById('diachi');
+
+        // Điền Tên
+        if (nameInput && !nameInput.value) {
+            nameInput.value = urlName || (userData ? (userData.ho_ten || '') : '');
+        }
+        // Điền SĐT
+        if (phoneInput && !phoneInput.value) {
+            phoneInput.value = urlPhone || userPhone || '';
+        }
+        // Điền Địa chỉ
+        if (addrInput && !addrInput.value && userData) {
+            addrInput.value = userData.dia_chi || '';
+        }
+    }
+
+    document.addEventListener('DOMContentLoaded', autoFillUserForm);
+    document.addEventListener('auth-synced', autoFillUserForm);
+
     /* ------------------------------------------------------------------ */
     /*  Intercept .booking-btn click — CAPTURE PHASE                       */
     /* ------------------------------------------------------------------ */
-    document.addEventListener('click', function (e) {
+    document.addEventListener('click', async function (e) {
         var btn = e.target.closest('.booking-btn');
         if (!btn) return;
 
         e.preventDefault();
         e.stopImmediatePropagation(); // ngăn booking-detail.js mở modal cũ
+
+        // 1. Kiểm tra trạng thái hiện tại (Đăng nhập hoặc Uỷ quyền URL) qua hàm dùng chung
+        // Hàm này sẽ tự động kiểm tra Cookie, URL, và cả quyền id_dichvu=9
+        if (typeof _bdRequireCustomerLogin === 'function') {
+            const isAuthValid = await _bdRequireCustomerLogin(); 
+            if (!isAuthValid) return; // Nếu không hợp lệ (Bị chặn hoặc chưa có auth), dừng lại
+        }
 
         var serviceName = btn.getAttribute('data-service-name') || '';
         var card = btn.closest('.service-item-card');

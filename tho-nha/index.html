@@ -98,6 +98,8 @@
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
     <!-- Custom CSS -->
     <link rel="stylesheet" href="assets/css/style.css">
+    <!-- SweetAlert2 -->
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <!-- Leaflet Map -->
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
 </head>
@@ -764,6 +766,10 @@
                 // Active nav link for trang-chu
                 const homeLink = document.querySelector('#header-container a[href="index.html"]');
                 if (homeLink) homeLink.classList.add('active');
+                
+                // Cập nhật trạng thái đăng nhập ngay khi có header
+                if (typeof initAuthNav === 'function') initAuthNav();
+
                 // Navbar scroll effect
                 window.addEventListener('scroll', () => {
                     const navbar = document.querySelector('.navbar');
@@ -794,28 +800,30 @@
         });
 
         // Contact form submit (demo)
-        document.getElementById('contactForm').addEventListener('submit', function (e) {
-            e.preventDefault();
-            const btn = this.querySelector('button[type="submit"]');
-            btn.innerHTML = '<i class="fas fa-check me-2"></i> Đã gửi! Chúng tôi sẽ liên hệ sớm';
-            btn.disabled = true;
-            btn.style.background = 'linear-gradient(135deg, #28a745, #20c997)';
-        });
+        if (document.getElementById('contactForm')) {
+            document.getElementById('contactForm').addEventListener('submit', function (e) {
+                e.preventDefault();
+                const btn = this.querySelector('button[type="submit"]');
+                btn.innerHTML = '<i class="fas fa-check me-2"></i> Đã gửi! Chúng tôi sẽ liên hệ sớm';
+                btn.disabled = true;
+                btn.style.background = 'linear-gradient(135deg, #28a745, #20c997)';
+            });
+        }
     </script>
 
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
     <script src="../public/asset/js/dvqt-map.js"></script>
-    <!-- BD_BASE = './' vì index.html ở tho-nha root, không phải pages/public/ -->
+    <!-- BD_BASE = './' vì index.html ở tho-nha root -->
     <script>window.BD_BASE = './';</script>
     <script src="../public/asset/js/dvqt-krud.js"></script>
     <script src="../public/asset/js/dvqt-app.js"></script>
+    <script src="assets/js/public/booking-panel.js"></script>
+    <script src="assets/js/shared/auth-nav.js"></script>
     <script src="assets/js/public/booking-detail-shared.js"></script>
     <script src="assets/js/public/booking-detail-modal.js"></script>
     <script src="assets/js/public/booking-detail-standalone.js"></script>
     <script src="assets/js/public/booking-detail.js"></script>
     <script src="assets/js/public/order-tracking.js"></script>
-    <script src="assets/js/shared/auth-nav.js"></script>
-    <script src="assets/js/public/booking-panel.js"></script>
 </body>
 </html>
 

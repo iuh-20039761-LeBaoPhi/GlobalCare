@@ -87,7 +87,8 @@ window.DVQTKrud = (function () {
                 cccdmattruoctenfile: 'text',
                 cccdmatsautenfile: 'text',
                 id_dichvu: 'text',
-                trangthai: 'text'
+                trangthai: 'text',
+                motadichvu: 'text'
             };
             return window.DVQTKrud.ensureTable('nguoidung', fields);
         },

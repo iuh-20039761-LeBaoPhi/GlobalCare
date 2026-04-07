@@ -74,6 +74,20 @@
         return dd + '/' + mm + '/' + yyyy + ' ' + hh + ':' + min;
     }
 
+    function formatDate(value) {
+        if (!value) return 'N/A';
+        var date = new Date(value);
+        if (Number.isNaN(date.getTime())) return 'N/A';
+        return String(date.getDate()).padStart(2, '0') + '/' + String(date.getMonth() + 1).padStart(2, '0') + '/' + date.getFullYear();
+    }
+
+    function formatTime(value) {
+        if (!value) return 'N/A';
+        var date = new Date(value);
+        if (Number.isNaN(date.getTime())) return 'N/A';
+        return String(date.getHours()).padStart(2, '0') + ':' + String(date.getMinutes()).padStart(2, '0');
+    }
+
     /**
      * Định dạng số thành tiền tệ VND (đ).
      * @param {number|string} value - Số tiền.
@@ -103,27 +117,29 @@
      */
     function getProviderIdFromOrderRow(row) {
         var raw = row || {};
-        // Ưu tiên id_nhacungcap vì các trường cũ sẽ bị xóa khỏi database
         var value = raw.id_nhacungcap || raw.idnhacungcap || raw.nhacungcapid || raw.provider_id || raw.providerId || '';
-        return String(value || '').trim();
+        var pid = String(value || '').trim();
+        // CHÍNH XÁC: Nếu ID là "0" hoặc trống thì coi như chưa có thợ
+        if (!pid || pid === '0' || pid === 'null') return null;
+        return pid;
     }
 
     /**
-     * Ánh xạ bản ghi tài khoản thợ từ bảng nhacungcap_thonha.
+     * Ánh xạ bản ghi tài khoản người dùng từ bảng 'nguoidung'.
      * @param {Object} row - Dữ liệu thô.
-     * @returns {Object|null} Đối tượng thợ chuẩn hoá.
+     * @returns {Object|null} Đối tượng đã chuẩn hoá.
      */
     function mapProviderAccountRow(row) {
         var raw = row || {};
-        var providerId = String(raw.id || '').trim();
-        if (!providerId) return null;
+        var userId = String(raw.id || '').trim();
+        if (!userId) return null;
 
         return {
-            id: providerId,
-            name: raw.hovaten || raw.ho_ten || raw.name || 'Nhà cung cấp',
-            phone: raw.sodienthoai || raw.so_dien_thoai || raw.phone || '',
-            company: raw.tencua_hang || raw.ten_cua_hang || raw.company || '',
-            categories: raw.danh_muc_thuc_hien || raw.categories || ''
+            id: userId,
+            name: raw.hovaten || raw.name || 'Người dùng',
+            phone: raw.sodienthoai || raw.phone || '',
+            categories: raw.id_dichvu || '',
+            role: (raw.id_dichvu && raw.id_dichvu !== '0') ? 'provider' : 'customer'
         };
     }
 
@@ -140,7 +156,7 @@
             return null;
         }
 
-        // Chỉ trả về ID, thông tin chi tiết sẽ được lấy qua join/lookup bảng nhacungcap_thonha
+        // Chỉ trả về ID, thông tin chi tiết sẽ được lấy qua join/lookup bảng 'nguoidung'
         return {
             id: providerId,
             name: 'Nhà cung cấp',
@@ -179,7 +195,9 @@
         if (row.ngayhuy) return 'cancel';
         if (row.ngayhoanthanhthucte) return 'done';
         if (row.ngaybatdauthucte || row.ngaythuchienthucte) return 'doing';
-        if (row.ngaynhan) return 'confirmed';
+        // Nếu có ngày nhận HOẶC đã có ID nhà cung cấp thì coi như đã xác nhận
+        var providerId = String(row.id_nhacungcap || '').trim();
+        if (row.ngaynhan || (providerId && providerId !== '0' && providerId !== 'null')) return 'confirmed';
         if (row.ngaydat) return 'new';
         // Fallback
         return row.trangthai || row.status || 'new';
@@ -261,10 +279,15 @@
      * @param {Object} statusClassMap - Mapping CSS class.
      * @returns {string} HTML span.
      */
-    function buildStatusBadge(status, statusMeta, statusClassMap) {
-        var meta = (statusMeta && statusMeta[status]) || { label: status };
-        var cls = (statusClassMap && statusClassMap[status]) || 'status-new';
-        return '<span class="status-badge ' + cls + '">' + escapeHtml(meta.label) + '</span>';
+    function buildStatusBadge(status) {
+        switch (status) {
+            case 'new':       return '<span class="invoice-status-chip status-new">Mới</span>';
+            case 'confirmed': return '<span class="invoice-status-chip status-doing"><i class="fa-solid fa-check-circle me-1"></i>Đã nhận</span>';
+            case 'doing':     return '<span class="invoice-status-chip status-doing"><i class="fa-solid fa-spinner fa-spin me-1"></i>Đang làm</span>';
+            case 'done':      return '<span class="invoice-status-chip status-done"><i class="fa-solid fa-check-double me-1"></i>Hoàn thành</span>';
+            case 'cancel':    return '<span class="invoice-status-chip status-canceled">Đã hủy</span>';
+            default:          return '<span class="invoice-status-chip status-canceled">' + escapeHtml(status) + '</span>';
+        }
     }
 
     /**
@@ -414,6 +437,8 @@
         normalizeDateTime: normalizeDateTime,
         sortByCreatedDesc: sortByCreatedDesc,
         formatDateTime: formatDateTime,
+        formatDate: formatDate,
+        formatTime: formatTime,
         formatCurrencyVn: formatCurrencyVn,
         moneyOrFree: moneyOrFree,
         getProviderIdFromOrderRow: getProviderIdFromOrderRow,

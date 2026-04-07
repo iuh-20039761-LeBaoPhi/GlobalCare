@@ -2,6 +2,8 @@
 (function () {
     'use strict';
 
+    let _currentSession = null;
+
     /**
      * Xác thực phiên đăng nhập của khách hàng (Route Guard).
      * Kiểm tra cả LocalStorage và Server Session (PHP).
@@ -9,16 +11,18 @@
     async function verifySession() {
         const session = await DVQTApp.checkSession();
         if (!session || !session.logged_in) {
-            window.location.href = '../../public/dang-nhap.html';
+            const root = (window.DVQTApp && window.DVQTApp.ROOT_URL) ? window.DVQTApp.ROOT_URL : window.location.pathname.split('/tho-nha/')[0];
+            window.location.href = root + '/public/dang-nhap.html?service=thonha';
             return;
         }
 
+        _currentSession = session;
+        window._dvqt_session_cache = session;
+
         const ids = String(session.id_dichvu || '0').split(',');
-        const isThoNhaProvider = ids.includes('9') || session.role === 'admin';
+        const isThoNhaProvider = ids.includes('9') || (session.profile && session.profile.role === 'admin');
 
         if (isThoNhaProvider) {
-            // Nếu là thợ hoặc admin thì chuyển sang trang NCC (nếu muốn) 
-            // Ở đây user yêu cầu: id=9 sang trang NCC
             window.location.href = '../provider/trang-ca-nhan.html';
         }
     }
@@ -104,14 +108,20 @@
          * Đổ dữ liệu tài khoản từ Store vào các thành phần HTML của trang Tài khoản.
          */
         function bindAccountInfo() {
-            const profile = window.ThoNhaOrderStore ? window.ThoNhaOrderStore.getCustomerProfile() : null;
+            const profile = _currentSession;
             if (profile) {
                 const n = document.getElementById('accName');
                 const p = document.getElementById('accPhone');
                 const a = document.getElementById('accAddress');
+                const headAv = document.getElementById('accAvatarHead');
+
                 if (n) n.textContent = profile.name || 'Khách hàng';
                 if (p) p.textContent = profile.phone || 'Chưa cập nhật';
-                if (a) a.textContent = profile.address || 'Chưa cập nhật';
+                if (a) a.textContent = profile.address || (profile.profile ? profile.profile.address : 'Chưa cập nhật');
+                
+                if (headAv && profile.name) {
+                    headAv.textContent = profile.name.charAt(0).toUpperCase();
+                }
             }
         }
 
@@ -127,18 +137,30 @@
     });
 
     /**
-     * Xử lý đăng xuất khách hàng: Xóa LocalStorage và xóa Session PHP.
+     * Xử lý đăng xuất khách hàng: Sử dụng SweetAlert2 và đồng bộ với hệ thống.
      */
     window.logoutCustomer = function () {
-        if (confirm('Bạn có chắc chắn muốn đăng xuất không?')) {
-            if (window.DVQTApp && window.DVQTApp.logout) {
-                window.DVQTApp.logout().then(() => {
-                    window.location.href = '../../index.html';
-                });
-            } else {
-                localStorage.clear();
-                window.location.href = '../../index.html';
+        Swal.fire({
+            title: '<span style="color:#ef4444">Đăng xuất?</span>',
+            text: 'Bạn có chắc chắn muốn thoát khỏi phiên làm việc này không?',
+            icon: 'question',
+            showCancelButton: true,
+            confirmButtonText: 'Đăng xuất ngay',
+            cancelButtonText: 'Để sau',
+            confirmButtonColor: '#ef4444',
+            cancelButtonColor: '#94a3b8',
+            borderRadius: '12px'
+        }).then((result) => {
+            if (result.isConfirmed) {
+                if (window.DVQTApp && window.DVQTApp.logout) {
+                    window.DVQTApp.logout();
+                } else {
+                    localStorage.clear();
+                }
+                // Chuyển hướng về trang chủ
+                const root = (window.DVQTApp && window.DVQTApp.ROOT_URL) ? window.DVQTApp.ROOT_URL : window.location.pathname.split('/tho-nha/')[0];
+                window.location.href = root + '/tho-nha/index.html';
             }
-        }
+        });
     };
 })();
