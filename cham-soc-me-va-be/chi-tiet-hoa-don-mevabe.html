@@ -1409,12 +1409,13 @@
 						</div>
 
 						<div id="staffWorkForm" class="forms d-grid gap-2 hidden">
-							<label class="field-label" for="staffNote">Ghi chú công việc</label>
+							<label class="field-label" for="staffNote">Ghi chú công việc trong ngày</label>
 							<textarea id="staffNote" class="form-control" style="min-height:84px;resize:vertical;"
-								placeholder="Nhập ghi chú công việc..."></textarea>
-							<button id="btnSaveStaffLog" class="btn btn-light btn-sm" type="button">Lưu ghi chú và minh
-								chứng</button>
+								placeholder="Nhập ghi chú công việc hôm nay..."></textarea>
+							<button id="btnSaveStaffLog" class="btn btn-light btn-sm" type="button">Lưu ghi chú</button>
 						</div>
+
+						<div id="workHistoryTable" style="margin-top:4px;"></div>
 
 						<div class="actions d-flex flex-wrap align-items-center mt-auto" style="gap:8px;">
 							<span id="badgeProgress" class="badge" style="display:none;">0%</span>
@@ -1539,6 +1540,7 @@
 			const TABLE_CUSTOMER = 'khachhang';
 			const TABLE_STAFF = 'nhacungcap_mevabe';
 			const TABLE_ORDER = 'datlich_mevabe';
+			const TABLE_HISTORY = 'lich_su_lam_viec';
 			const REVIEW_UPLOAD_API = 'upload-review-media.php';
 
 			const app = {
@@ -1548,7 +1550,9 @@
 				$khachhang: [],
 				$nhacungcap_mevabe: [],
 				$datlich_mevabe: null,
-				stateTimer: null
+				stateTimer: null,
+				// id của record lich_su_lam_viec đang mở trong ngày (sau khi nhấn btnStart)
+				currentWorkLogId: null
 			};
 
 			const $ = (id) => document.getElementById(id);
@@ -1558,6 +1562,11 @@
 				const d = now();
 				const p = (n) => String(n).padStart(2, '0');
 				return `${d.getFullYear()}-${p(d.getMonth() + 1)}-${p(d.getDate())} ${p(d.getHours())}:${p(d.getMinutes())}:${p(d.getSeconds())}`;
+			};
+			const nowTimeSql = () => {
+				const d = now();
+				const p = (n) => String(n).padStart(2, '0');
+				return `${p(d.getHours())}:${p(d.getMinutes())}:${p(d.getSeconds())}`;
 			};
 			const show = (el, ok = true) => el && el.classList.toggle('hidden', !ok);
 			const setText = (id, value) => {
@@ -1686,7 +1695,28 @@
 
 			async function updateById(tableName, id, data) {
 				if (id == null || id === '') throw new Error('Thiếu id để cập nhật dữ liệu');
-				return krud('update', tableName, data, id);
+				const result = await krud('update', tableName, data, id);
+				if (result && result.success === false) throw new Error(result.message || 'Cập nhật thất bại');
+				return result;
+			}
+
+			async function insertRow(tableName, data) {
+				const result = await krud('insert', tableName, data);
+				if (result && result.success === false) throw new Error(result.message || 'Lưu dữ liệu thất bại');
+				// krud trả về id mới hoặc object chứa id
+				if (result && result.id) return result.id;
+				if (result && result.data && result.data.id) return result.data.id;
+				if (typeof result === 'number' || (typeof result === 'string' && result)) return result;
+				return result;
+			}
+
+			async function listHistoryByOrder(idDv) {
+				try {
+					const rows = await listTableRows(TABLE_HISTORY);
+					return rows.filter(r => String(r.id_dv) === String(idDv));
+				} catch {
+					return [];
+				}
 			}
 
 			function getUrlParams() {
@@ -1958,22 +1988,58 @@
 			}
 
 			function renderActionButtons() {
-				const el = id => document.getElementById(id), $ = app.$datlich_mevabe;
+				const el = id => document.getElementById(id);
+				const $ = app.$datlich_mevabe;
 				if (!$) return;
 				const isStaff = app.role === 'staff', isCust = app.role === 'customer';
-				const assigned = toNum($.id_nhacungcap) > 0, isMe = (isStaff && toNum($.id_nhacungcap) === toNum(app.$user.id)) || (isCust && String($.sdtkhachhang) === String(app.$user.sodienthoai));
-				const status = String($.trangthai || '').toLowerCase(), isCancel = status.includes('hủy'), isDone = status.includes('hoàn thành'), isOver = status.includes('quá hạn');
+				const assigned = toNum($.id_nhacungcap) > 0;
+				const isMe = (isStaff && toNum($.id_nhacungcap) === toNum(app.$user.id))
+					|| (isCust && String($.sdtkhachhang) === String(app.$user.sodienthoai));
+				const status = String($.trangthai || '').toLowerCase();
+				const isCancel = status.includes('hủy'), isDone = status.includes('hoàn thành'), isOver = status.includes('quá hạn');
 				const startVal = buildPlanDateTime($.ngay_bat_dau_kehoach, $.gio_bat_dau_kehoach);
 				const canClaim = isStaff && !assigned && !isCancel && !isDone && !isOver && (startVal && now() < startVal);
 				const started = !!$.thoigian_batdau_thucte, ended = !!$.thoigian_ketthuc_thucte;
 
 				show(el('btnHdrClaim'), canClaim);
-				const canStart = isMe && assigned && !started && !isCancel && !isDone && !isOver;
-				show(el('btnStart'), canStart); show(el('btnHdrStart'), canStart);
-				const canEnd = isMe && started && !ended && !isCancel && !isDone && !isOver;
-				show(el('btnEnd'), canEnd); show(el('btnHdrEnd'), canEnd);
+
+				// btnHdrStart: chỉ hiện khi chưa bắt đầu tổng thể (thoigian_batdau_thucte chưa có)
+				const canHdrStart = isMe && assigned && !started && !isCancel && !isDone && !isOver;
+				show(el('btnHdrStart'), canHdrStart);
+				const canHdrEnd = isMe && assigned && started && !ended && !isCancel && !isDone && !isOver;
+				show(el('btnHdrEnd'), canHdrEnd);
+
+				// btnStart / btnEnd: chỉ hiện cho staff, khi đã nhấn btnHdrStart (thoigian_batdau_thucte đã có)
+				// và ngày hôm nay nằm trong khoảng kế hoạch
+				const todayStr = (() => {
+					const d = now();
+					const p = n => String(n).padStart(2, '0');
+					return `${d.getFullYear()}-${p(d.getMonth() + 1)}-${p(d.getDate())}`;
+				})();
+				const startPlanDate = ($.ngay_bat_dau_kehoach || '').slice(0, 10);
+				const endPlanDate = ($.ngay_ket_thuc_kehoach || '').slice(0, 10);
+				const inPlanRange = isMe && assigned && started && !isCancel && !isDone && !isOver
+					&& startPlanDate <= todayStr && todayStr <= endPlanDate;
+				const pastEndDate = endPlanDate && todayStr > endPlanDate;
+
+				if (pastEndDate || !inPlanRange) {
+					show(el('btnStart'), false);
+					show(el('btnEnd'), false);
+				} else {
+					const history = app.$workHistory || [];
+					// Theo yêu cầu: nếu có bất kỳ bản ghi nào của ngày hôm nay (trùng ngay_lam) thì không hiện btnStart
+					const hasRecordToday = history.some(r => (r.ngay_lam || '').slice(0, 10) === todayStr);
+					
+					// Tìm bản ghi đã bắt đầu làm việc trong ngày hôm nay (có giờ bắt đầu)
+					const logToday = history.find(r => (r.ngay_lam || '').slice(0, 10) === todayStr && r.gio_bat_dau_trong_ngay);
+					const todayStarted = !!logToday;
+					const todayEnded = logToday && logToday.gio_ket_thuc_trong_ngay;
+
+					show(el('btnStart'), !hasRecordToday && !isDone);
+					show(el('btnEnd'), todayStarted && !todayEnded && !isDone);
+				}
+
 				show(el('btnCancelService'), isCust && (startVal && now() < startVal.getTime() - 3600000) && !isCancel && !isDone && !started);
-				show(el('staffWorkForm'), false);
 			}
 
 			function renderUI() {
@@ -2029,15 +2095,72 @@
 				setText('invoiceProgressHero', `${Math.round(progress)}%`);
 				const ring = $('invoiceProgressRing');
 				if (ring) ring.style.setProperty('--p', progress.toFixed(2));
-				setText('progressHint', 'Tiến độ cộng dồn theo từng ngày làm việc.');
+				const totalDayCount = Math.max(1, diffDays($datlich_mevabe.ngay_bat_dau_kehoach, $datlich_mevabe.ngay_ket_thuc_kehoach) + 1);
+				const perDayPct = (100 / totalDayCount).toFixed(2);
+				setText('progressHint', `Mỗi ngày cộng ${perDayPct}% (tổng ${totalDayCount} ngày). Tiến độ cộng dồn theo từng ngày làm việc.`);
 				setText('timeDayHint', `${formatDateDisplay($datlich_mevabe.ngay_bat_dau_kehoach)} -> ${formatDateDisplay($datlich_mevabe.ngay_ket_thuc_kehoach)}`);
-				setText('timeMessage', `Số ngày kế hoạch: ${diffDays($datlich_mevabe.ngay_bat_dau_kehoach, $datlich_mevabe.ngay_ket_thuc_kehoach)} ngày`);
+				setText('timeMessage', `Số ngày kế hoạch: ${totalDayCount} ngày`);
+				// Render bảng lịch sử làm việc (staff xem)
+				if (app.role === 'staff') renderWorkHistoryTable();
 
 				$('badgeStaff').textContent = toNum($datlich_mevabe.id_nhacungcap) > 0 ? 'Đã nhận' : 'Chưa nhận';
 				$('badgeStaff').className = toNum($datlich_mevabe.id_nhacungcap) > 0 ? 'profile-status badge success' : 'profile-status badge warning';
 
 				renderActionButtons();
 				renderReview();
+			}
+
+			// =============================================
+			// RENDER BẢNG LỊCH SỬ LÀM VIỆC
+			// =============================================
+			function renderWorkHistoryTable() {
+				const container = document.getElementById('workHistoryTable');
+				if (!container) return;
+				const rawRows = app.$workHistory || [];
+				const endPlanTime = app.$datlich_mevabe ? app.$datlich_mevabe.gio_ket_thuc_kehoach : '';
+
+				// Gộp các row theo ngày
+				const groups = {};
+				rawRows.forEach(r => {
+					const d = (r.ngay_lam || '').slice(0, 10);
+					if (!d) return;
+					if (!groups[d]) groups[d] = { ngay_lam: d, start: '', end: '', note: '', isAuto: false };
+					if (r.gio_bat_dau_trong_ngay) groups[d].start = r.gio_bat_dau_trong_ngay;
+					if (r.gio_ket_thuc_trong_ngay) groups[d].end = r.gio_ket_thuc_trong_ngay;
+					if (r.ghichu_cv_ngay) groups[d].note = r.ghichu_cv_ngay;
+					if (r.is_auto_end == 1) groups[d].isAuto = true;
+				});
+				const rows = Object.values(groups).sort((a, b) => a.ngay_lam > b.ngay_lam ? -1 : 1);
+
+				if (!rows.length) {
+					container.innerHTML = '<p style="font-size:12px;color:#8b5f74;margin:0;">Chưa có lịch sử làm việc.</p>';
+					return;
+				}
+				let html = `<div style="overflow-x:auto;margin-top:4px;">
+					<table style="width:100%;border-collapse:collapse;font-size:12px;">
+						<thead>
+							<tr style="background:#e779c1;color:#000;">
+								<th style="padding:6px 8px;text-align:left;">Ngày làm</th>
+								<th style="padding:6px 8px;text-align:left;">Bắt đầu</th>
+								<th style="padding:6px 8px;text-align:left;">Kết thúc</th>
+								<th style="padding:6px 8px;text-align:left;">Ghi chú</th>
+							</tr>
+						</thead>
+						<tbody>`;
+				rows.forEach(r => {
+					const isAutoEnd = r.isAuto || (endPlanTime && r.end === endPlanTime);
+					const endCell = r.end
+						? `${r.end} ${isAutoEnd ? '<i class="fa fa-info-circle text-warning" title="NCC quên nhấn Kết Thúc" style="cursor:pointer;color:#f0ba2c;" onclick="alert(\'NCC quên nhấn Kết Thúc\')"></i>' : ''}`
+						: '<span style="color:#b0597a;">Chưa kết thúc</span>';
+					html += `<tr style="border-bottom:1px solid #f0d4e3;">
+						<td style="padding:5px 8px;">${formatDateDisplay(r.ngay_lam)}</td>
+						<td style="padding:5px 8px;">${formatTimeDisplay(r.start)}</td>
+						<td style="padding:5px 8px;">${endCell}</td>
+						<td style="padding:5px 8px;">${r.note || ''}</td>
+					</tr>`;
+				});
+				html += '</tbody></table></div>';
+				container.innerHTML = html;
 			}
 
 			async function reloadOrder() {
@@ -2112,7 +2235,8 @@
 				await reloadOrder();
 			}
 
-			async function handleStart() {
+			// handleHdrStart: bắt đầu tổng thể dịch vụ (lần duy nhất)
+			async function handleHdrStart() {
 				await updateById(TABLE_ORDER, app.$datlich_mevabe.id, {
 					trangthai: 'đang thực hiện',
 					thoigian_batdau_thucte: nowSql(),
@@ -2121,19 +2245,141 @@
 				await reloadOrder();
 			}
 
-			async function handleEnd() {
-				if (!confirm('Bạn có chắc chắn muốn kết thúc dịch vụ bây giờ?')) return;
-				const endAt = nowSql();
+			// handleHdrEnd: kết thúc tổng thể dịch vụ, chuyển trạng thái "hoàn thành"
+			async function handleHdrEnd() {
+				if (!confirm('Bạn có chắc chắn muốn hoàn thành dịch vụ?')) return;
 				await updateById(TABLE_ORDER, app.$datlich_mevabe.id, {
 					trangthai: 'hoàn thành',
-					thoigian_ketthuc_thucte: endAt
+					thoigian_ketthuc_thucte: nowSql(),
+					tien_do: 100
+				});
+				await reloadOrder();
+			}
+
+			// handleStart: bắt đầu làm trong ngày - insert mới vào lich_su_lam_viec
+			async function handleStart() {
+				const idDv = app.$datlich_mevabe.id;
+				const todayStr = (() => {
+					const d = now();
+					const p = n => String(n).padStart(2, '0');
+					return `${d.getFullYear()}-${p(d.getMonth() + 1)}-${p(d.getDate())}`;
+				})();
+				// Insert record mới cho ngày hôm nay
+				const newId = await insertRow(TABLE_HISTORY, {
+					id_dv: idDv,
+					ngay_lam: todayStr,
+					gio_bat_dau_trong_ngay: nowTimeSql()
+				});
+				app.currentWorkLogId = newId;
+				// Tính tiến độ: percentPerDay = 100 / totalDay
+				const totalDay = Math.max(1, diffDays(app.$datlich_mevabe.ngay_bat_dau_kehoach, app.$datlich_mevabe.ngay_ket_thuc_kehoach) + 1);
+				const percentPerDay = 100 / totalDay;
+				const nextProgress = Math.min(100, toNum(app.$datlich_mevabe.tien_do || 0) + percentPerDay);
+				await updateById(TABLE_ORDER, idDv, { tien_do: Number(nextProgress.toFixed(2)) });
+				// Làm mới lịch sử và UI
+				app.$workHistory = await listHistoryByOrder(idDv);
+
+				const todayLog = app.$workHistory.find(r => (r.ngay_lam || '').slice(0, 10) === todayStr && !r.gio_ket_thuc_trong_ngay);
+				app.todayWorkLog = todayLog || null;
+
+				await reloadOrder();
+			}
+
+			// handleEnd: kết thúc ngày làm - update vào đúng dòng của btnStart
+			async function handleEnd() {
+				if (!confirm('Bạn có chắc chắn muốn kết thúc ngày hôm nay?')) return;
+				const curTime = nowTimeSql();
+
+				// Tìm id record cần update
+				let workLogId = app.currentWorkLogId;
+				if (!workLogId) {
+					// fallback: tìm từ danh sách lịch sử
+					const todayStr = (() => {
+						const d = now();
+						const p = n => String(n).padStart(2, '0');
+						return `${d.getFullYear()}-${p(d.getMonth() + 1)}-${p(d.getDate())}`;
+					})();
+					const log = (app.$workHistory || []).find(r => (r.ngay_lam || '').slice(0, 10) === todayStr && !r.gio_ket_thuc_trong_ngay);
+					workLogId = log ? log.id : null;
+				}
+
+				if (workLogId) {
+					await updateById(TABLE_HISTORY, workLogId, {
+						gio_ket_thuc_trong_ngay: curTime
+					});
+				}
+
+				app.currentWorkLogId = null;
+				app.todayWorkLog = null;
+				app.$workHistory = await listHistoryByOrder(app.$datlich_mevabe.id);
+
+				const btnE = document.getElementById('btnEnd');
+				if (btnE) btnE.classList.add('hidden');
+				const form = document.getElementById('staffWorkForm');
+				if (form) {
+					form.classList.remove('hidden');
+					form.dataset.workLogId = workLogId || '';
+				}
+				await reloadOrder();
+			}
+
+			// handleSaveStaffLog: lưu ghi chú vào đúng dòng vừa kết thúc
+			async function handleSaveStaffLog() {
+				const note = document.getElementById('staffNote');
+				const form = document.getElementById('staffWorkForm');
+				const todayStr = (() => {
+					const d = now();
+					const p = n => String(n).padStart(2, '0');
+					return `${d.getFullYear()}-${p(d.getMonth() + 1)}-${p(d.getDate())}`;
+				})();
+
+				await insertRow(TABLE_HISTORY, {
+					id_dv: app.$datlich_mevabe.id,
+					ngay_lam: todayStr,
+					ghichu_cv_ngay: note ? note.value.trim() : ''
 				});
 
-				await loadOrderById();
-				const progressDay = calcProgressDay(app.$datlich_mevabe);
-				const nextProgress = Math.min(100, toNum(app.$datlich_mevabe.tien_do || 0) + progressDay);
-				await updateById(TABLE_ORDER, app.$datlich_mevabe.id, { tien_do: Number(nextProgress.toFixed(2)) });
-				await reloadOrder();
+				if (note) note.value = '';
+				if (form) form.classList.add('hidden');
+				app.$workHistory = await listHistoryByOrder(app.$datlich_mevabe.id);
+				renderWorkHistoryTable();
+				setState('Đã lưu ghi chú công việc', 'info');
+			}
+
+			// checkAutoEndPreviousWorkDay: nếu có record chưa kết thúc từ ngày trước
+			async function checkAutoEndPreviousWorkDay() {
+				if (app.role !== 'staff') return;
+				if (!app.$datlich_mevabe) return;
+				const idDv = app.$datlich_mevabe.id;
+				const history = await listHistoryByOrder(idDv);
+				app.$workHistory = history;
+				const todayStr = (() => {
+					const d = now();
+					const p = n => String(n).padStart(2, '0');
+					return `${d.getFullYear()}-${p(d.getMonth() + 1)}-${p(d.getDate())}`;
+				})();
+				// Tìm record chưa kết thúc từ ngày trước (không phải hôm nay)
+				const incompleteOld = history.filter(r =>
+					r.gio_bat_dau_trong_ngay
+					&& !history.some(h => (h.ngay_lam || '').slice(0, 10) === (r.ngay_lam || '').slice(0, 10) && h.gio_ket_thuc_trong_ngay)
+					&& (r.ngay_lam || '').slice(0, 10) < todayStr
+				);
+				const autoEndTime = app.$datlich_mevabe.gio_ket_thuc_kehoach || '23:59:59';
+				for (const r of incompleteOld) {
+					// UPDATE dòng cũ
+					await updateById(TABLE_HISTORY, r.id, {
+						gio_ket_thuc_trong_ngay: autoEndTime,
+						is_auto_end: 1
+					});
+				}
+				// Làm mới sau khi auto-end
+				app.$workHistory = await listHistoryByOrder(idDv);
+				// Khôi phục currentWorkLogId nếu đang làm việc dở dang hôm nay
+				const todayLog = app.$workHistory.find(r => (r.ngay_lam || '').slice(0, 10) === todayStr);
+				app.todayWorkLog = todayLog || null;
+				if (todayLog && todayLog.gio_bat_dau_trong_ngay && !todayLog.gio_ket_thuc_trong_ngay) {
+					app.currentWorkLogId = todayLog.id;
+				}
 			}
 
 			async function uploadReviewMedia(reviewRole, fileList) {
@@ -2196,11 +2442,14 @@
 				try {
 					if (action === 'claim') await handleClaim();
 					if (action === 'cancel') await handleCancel();
+					if (action === 'hdrStart') await handleHdrStart();
+					if (action === 'hdrEnd') await handleHdrEnd();
 					if (action === 'start') await handleStart();
 					if (action === 'end') await handleEnd();
+					if (action === 'saveStaffLog') await handleSaveStaffLog();
 					if (action === 'saveCustomerReview') await handleSaveCustomerReview();
 					if (action === 'saveStaffReview') await handleSaveStaffReview();
-					setState('Đã cập nhật thành công', 'info');
+					if (action !== 'saveStaffLog') setState('Đã cập nhật thành công', 'info');
 				} catch (e) {
 					setState(e.message || 'Có lỗi xảy ra', 'error');
 				}
@@ -2231,6 +2480,9 @@
 
 					await loadOrderById();
 
+					// Kiểm tra và auto-end nếu NCC quên nhấn btnEnd từ ngày trước
+					await checkAutoEndPreviousWorkDay();
+
 					renderUI();
 					show($('mainGrid'), true);
 					const statusText = String(app.$datlich_mevabe?.trangthai || '').toLowerCase();
@@ -2251,10 +2503,11 @@
 
 			bindClick('btnHdrClaim', 'claim');
 			bindClick('btnCancelService', 'cancel');
-			bindClick('btnStart', 'start');
-			bindClick('btnHdrStart', 'start');
-			bindClick('btnEnd', 'end');
-			bindClick('btnHdrEnd', 'end');
+			bindClick('btnStart', 'start');       // bắt đầu làm trong ngày
+			bindClick('btnHdrStart', 'hdrStart'); // bắt đầu tổng thể dịch vụ (độc lập)
+			bindClick('btnEnd', 'end');           // kết thúc ngày
+			bindClick('btnHdrEnd', 'hdrEnd');     // hoàn thành dịch vụ
+			bindClick('btnSaveStaffLog', 'saveStaffLog');
 			bindClick('btnSaveReview', 'saveCustomerReview');
 			bindClick('btnSaveStaffReview', 'saveStaffReview');
 			bindReviewPreview('customerMediaInput', 'customerReviewMediaGrid', 'media_danhgia_khachhang');
