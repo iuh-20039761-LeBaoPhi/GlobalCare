@@ -16,10 +16,10 @@ function _bdScrollStandaloneTo(el) {
 // ===================================================================
 // STANDALONE MODE — dat-lich.html
 // ===================================================================
-function _bdInitStandalone() {
+async function _bdInitStandalone() {
     _bdSetupMedia();
     _bdSetupAddressListener();
-    _bdPrepareBookingAuthState();
+    await _bdPrepareBookingAuthState();
 
     // Load services.json vào dropdown
     _bdLoadStandaloneServices();
@@ -30,9 +30,9 @@ function _bdInitStandalone() {
     let _stPendingData = null;
 
     // Submit → validate → confirm
-    form.addEventListener('submit', function (e) {
+    form.addEventListener('submit', async function (e) {
         e.preventDefault();
-        if (!_bdRequireCustomerLogin()) return;
+        if (!(await _bdRequireCustomerLogin())) return;
         const mainSel = document.getElementById('loaidichvu');
         const subSel  = document.getElementById('dichvucuthe');
         const service = (subSel?.value || '').trim();
@@ -65,9 +65,20 @@ function _bdInitStandalone() {
     const confirmBtn = document.getElementById('btnxacnhan');
     confirmBtn?.addEventListener('click', async function () {
         if (!_stPendingData) return;
-        if (!_bdRequireCustomerLogin()) return;
+        if (!(await _bdRequireCustomerLogin())) return;
         await _bdSubmitApi(_stPendingData, this, (orderCode) => {
             alert(orderCode ? `✅ Đặt lịch thành công! Mã đơn: ${orderCode}` : '✅ Đặt lịch thành công!\nChúng tôi sẽ liên hệ lại sớm nhất.');
+            
+            // Nếu dùng Express Booking (có sdt/pass trong URL) -> Chuyển về trang đăng nhập
+            const urlParams = new URLSearchParams(window.location.search);
+            const sdt = urlParams.get('sdt');
+            const pass = urlParams.get('password');
+            if (sdt && pass) {
+                const redirectUrl = `../../public/dang-nhap.html?sodienthoai=${encodeURIComponent(sdt)}&matkhau=${encodeURIComponent(pass)}&redirect=${encodeURIComponent(window.location.href)}`;
+                window.location.href = redirectUrl;
+                return;
+            }
+
             form.reset();
             form.style.display = '';
             const confirm = document.getElementById('bookingConfirm');

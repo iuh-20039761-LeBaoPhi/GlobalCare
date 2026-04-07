@@ -124,27 +124,54 @@ window.initCustomerOrders = function() {
             });
         });
 
-        document.addEventListener('click', e => {
+        document.addEventListener('click', async e => {
             const viewBtn = e.target.closest('[data-action="view-detail"]');
             if (viewBtn) {
                 e.preventDefault();
-                state.selectedOrderId = viewBtn.dataset.id;
-                render();
+                const id = viewBtn.dataset.id;
+                const order = store.getOrders().find(o => String(o.id) === String(id));
+                if (!order) return;
+
+                // 1. Chuyển đổi View
+                const listSec = document.getElementById('orderListSection');
+                const detailSec = document.getElementById('orderDetailSection');
+                const detailContent = document.getElementById('orderDetailContent');
+                
+                if (listSec) listSec.hidden = true;
+                if (detailSec) detailSec.hidden = false;
+
+                // 2. Nạp Partial và Render (Dùng đúng thiết kế Emerald Premium)
+                if (detailContent) {
+                    detailContent.innerHTML = '<div class="text-center py-5"><i class="fas fa-spinner fa-spin fa-2x text-primary"></i></div>';
+                    try {
+                        const res = await fetch('../../partials/chi-tiet-hoa-don-tho-nha.html');
+                        detailContent.innerHTML = await res.text();
+                        
+                        const renderer = window.ThoNhaOrderDetailRenderer;
+                        if (renderer) renderer.render(order, 'customer', detailContent);
+
+                        // 3. Khởi tạo hành động (Cập nhật trạng thái)
+                        if (window.ThoNhaOrderActions) {
+                            const session = await DVQTApp.checkSession();
+                            window.ThoNhaOrderActions.init(detailContent, session, () => {
+                                loadOrdersFromApi(true); // Tải lại danh sách đơn
+                            });
+                        }
+                    } catch (err) {
+                        detailContent.innerHTML = '<div class="alert alert-danger">Không thể nạp dữ liệu chi tiết.</div>';
+                    }
+                }
                 return;
             }
 
-            const backBtn = e.target.closest('.back-btn, [data-action="back-to-list"]');
+            const backBtn = e.target.closest('[data-action="back-to-list"]');
             if (backBtn) {
                 e.preventDefault();
-                state.selectedOrderId = null;
-                render();
+                const listSec = document.getElementById('orderListSection');
+                const detailSec = document.getElementById('orderDetailSection');
+                if (listSec) listSec.hidden = false;
+                if (detailSec) detailSec.hidden = true;
                 return;
-            }
-
-            const cancelBtn = e.target.closest('[data-action="cancel-order"]');
-            if (cancelBtn) {
-                e.preventDefault();
-                handleCancelOrder(cancelBtn.dataset.id, cancelBtn.dataset.code);
             }
         });
 

@@ -12,14 +12,14 @@ const ThoNhaOrderUI = (() => {
      * Vẽ hàng bảng (Table Row) chuẩn .
      */
     function buildRowHtml(order, role) {
-        const orderCode = `<td class="mono"><strong>${order.orderCode}</strong></td>`;
-        const time = `<td>${utils.formatDateTime(order.createdAt)}</td>`;
+        const utils = window.ThoNhaOrderViewUtils;
         const statusBadge = `<td class="status-cell">${utils.buildStatusBadge(order.status)}</td>`;
-        const actionBtn = `<td class="detail-cell">${utils.buildDetailActionButton(order.id)}${role === 'admin' ? ` <button class="btn btn-sm btn-outline-success ms-1" onclick="updateOrderStatus(${order.id})"><i class="fas fa-edit"></i></button>` : ''}</td>`;
 
         // GIAO DIỆN ADMIN CHUẨN 9 CỘT 
         if (role === 'admin') {
+            const orderCode = `<td class="mono"><strong>${order.orderCode}</strong></td>`;
             const providerName = order.provider.id ? utils.escapeHtml(order.provider.name) : '<em class="text-muted">Chưa nhận</em>';
+            const actionBtn = `<td class="detail-cell">${utils.buildDetailActionButton(order.id)} <button class="btn btn-sm btn-outline-success ms-1" onclick="updateOrderStatus(${order.id})"><i class="fas fa-edit"></i></button></td>`;
             return `
                 <tr>
                     ${orderCode}
@@ -29,7 +29,7 @@ const ThoNhaOrderUI = (() => {
                     <td><div class="small text-muted">${providerName}</div></td>
                     <td><span class="text-danger fw-bold small">${utils.formatCurrencyVn(order.total_price)}</span></td>
                     ${statusBadge}
-                    ${time}
+                    <td>${utils.formatDateTime(order.createdAt)}</td>
                     ${actionBtn}
                 </tr>
             `;
@@ -37,14 +37,36 @@ const ThoNhaOrderUI = (() => {
 
         // GIAO DIỆN THỢ (PROVIDER)
         if (role === 'provider') {
+            const orderCode = `<td class="mono"><strong>${order.orderCode}</strong></td>`;
             const info = `<td><strong>${utils.escapeHtml(order.customer.name)}</strong><span class="sub-note">${utils.escapeHtml(order.customer.phone)}</span></td>`;
             const service = `<td><strong>${utils.escapeHtml(order.service)}</strong></td>`;
+            const time = `<td>${utils.formatDateTime(order.createdAt)}</td>`;
+            const actionBtn = `<td class="detail-cell">${utils.buildDetailActionButton(order.id)}</td>`;
             return `<tr>${orderCode}${info}${service}${time}${statusBadge}${actionBtn}</tr>`;
         }
 
-        // GIAO DIỆN KHÁCH HÀNG (CUSTOMER)
-        const info = `<td><strong>${utils.escapeHtml(order.service)}</strong><span class="sub-note">${utils.escapeHtml(order.note || 'Không có ghi chú')}</span></td>`;
-        return `<tr>${orderCode}${info}${time}${statusBadge}${actionBtn}</tr>`;
+        // GIAO DIỆN KHÁCH HÀNG (CUSTOMER) - MASTER UI 2026
+        const orderCodeId = `<td class="cell-code"><div class="code-badge">${order.orderCode}</div></td>`;
+        const serviceInfo = `
+            <td class="cell-service">
+                <div class="service-name">${utils.escapeHtml(order.service)}</div>
+                <div class="service-note"><i class="fa-regular fa-file-lines me-1"></i>${utils.escapeHtml(order.note || 'Không có ghi chú')}</div>
+            </td>
+        `;
+        const dateHtml = `
+            <td class="cell-date">
+                <div class="date-item"><i class="fa-regular fa-calendar me-2"></i>${utils.formatDate(order.createdAt)}</div>
+                <div class="time-item"><i class="fa-regular fa-clock me-2"></i>${utils.formatTime(order.createdAt)}</div>
+            </td>
+        `;
+        const actionHtml = `
+            <td class="cell-action">
+                <button class="btn-view-modern" data-action="view-detail" data-id="${order.id}">
+                    <i class="fa-regular fa-eye me-2"></i>Xem chi tiết
+                </button>
+            </td>
+        `;
+        return `<tr>${orderCodeId}${serviceInfo}${dateHtml}${statusBadge}${actionHtml}</tr>`;
     }
 
     /**

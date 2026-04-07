@@ -18,6 +18,8 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="../assets/css/style.css">
+    <!-- SweetAlert2 -->
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <!-- Leaflet Map -->
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
 
@@ -470,6 +472,10 @@
                 .then(r => r.text())
                 .then(html => {
                     document.getElementById('header-container').innerHTML = html;
+                    
+                    // Cập nhật trạng thái đăng nhập
+                    if (typeof initAuthNav === 'function') initAuthNav();
+
                     document.querySelectorAll('#header-container [src], #header-container [href]').forEach(el => {
                         ['src', 'href'].forEach(attr => {
                             const val = el.getAttribute(attr);
@@ -527,6 +533,9 @@
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
     <script src="../../public/asset/js/dvqt-map.js"></script>
     <script src="../../public/asset/js/dvqt-krud.js"></script>
+    <script src="../../public/asset/js/dvqt-app.js"></script>
+    <script src="../assets/js/public/booking-panel.js"></script>
+    <script src="../assets/js/shared/auth-nav.js"></script>
     <script src="../assets/js/public/booking-detail-shared.js"></script>
     <script src="../assets/js/public/booking-detail-modal.js"></script>
     <script src="../assets/js/public/booking-detail-standalone.js"></script>

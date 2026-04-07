@@ -113,27 +113,25 @@
             if (stored !== password) throw new Error('Mật khẩu không chính xác');
 
             // 4. Chuẩn bị thông tin profile
+            const idDichvu = String(user.id_dichvu || '0');
+            const role = (idDichvu === '0' || idDichvu === '') ? 'customer' : 'provider';
+
             const profile = {
                 id: user.id,
                 name: user.hovaten || user.name || 'Người dùng',
                 phone: user.sodienthoai || user.phone || phone,
                 email: user.email || '',
                 address: user.diachi || user.dia_chi || user.address || '',
-                id_dichvu: user.id_dichvu || 0,
-                company: user.tencua_hang || user.company || '',
-                danh_muc_thuc_hien: user.danh_muc_thuc_hien || '',
+                id_dichvu: idDichvu,
+                role: role, // Gán vai trò rõ ràng
                 avatartenfile: user.avatartenfile || '',
                 cccdmattruoctenfile: user.cccdmattruoctenfile || '',
                 cccdmatsautenfile: user.cccdmatsautenfile || ''
             };
 
-            // 5. Lưu vào Cookie & LocalStorage
+            // 5. Lưu vào Cookie (Duy nhất)
             Utils.setCookie('dvqt_u', phone);
             Utils.setCookie('dvqt_p', password);
-
-            localStorage.setItem('dvqt_logged_in', 'true');
-            localStorage.setItem('dvqt_user_id', profile.id);
-            localStorage.setItem('dvqt_user_profile', JSON.stringify(profile));
 
             return profile;
         },
@@ -148,6 +146,8 @@
             let u = params.get('u') || params.get('username');
             let p = params.get('p') || params.get('pass');
 
+            // 1. Ưu tiên credential từ URL (nếu có, ví dụ từ redirect)
+            // 2. Nếu không có, lấy từ Cookie
             if (!u || !p) {
                 u = Utils.getCookie('dvqt_u');
                 p = Utils.getCookie('dvqt_p');
@@ -163,23 +163,19 @@
                 }
             }
 
-            // Fallback về localStorage cũ
-            const loggedIn = localStorage.getItem('dvqt_logged_in') === 'true';
-            if (!loggedIn) return { logged_in: false };
+            return { logged_in: false };
+        },
 
-            try {
-                const profile = JSON.parse(localStorage.getItem('dvqt_user_profile') || '{}');
-                return {
-                    logged_in: true,
-                    user_id: profile.id || localStorage.getItem('dvqt_user_id'),
-                    name: profile.name || '',
-                    phone: profile.phone || '',
-                    id_dichvu: profile.id_dichvu || 0,
-                    profile: profile
-                };
-            } catch (e) {
-                return { logged_in: false };
-            }
+        /**
+         * Kiểm tra số điện thoại đã tồn tại chưa
+         * @param {string} phone 
+         * @returns {Promise<boolean>}
+         */
+        isAccountExists: async (phone) => {
+            const krudHelper = Utils.getKrudHelper();
+            const rows = await krudHelper.listTable(API_CONFIG.TABLE_USER);
+            const phoneNorm = Utils.normalizePhone(phone);
+            return rows.some(r => Utils.normalizePhone(r.sodienthoai || r.phone) === phoneNorm);
         },
 
         /**
@@ -189,6 +185,11 @@
         register: async (data) => {
             const krudHelper = Utils.getKrudHelper();
             await krudHelper.ensureNguoidungTable();
+
+            // Tự động kiểm tra trùng trước khi đăng ký
+            const exists = await DVQTCore.isAccountExists(data.sodienthoai || data.phone);
+            if (exists) throw new Error('Số điện thoại này đã được đăng ký trên hệ thống.');
+
             const payload = {
                 ...data,
                 created_date: Utils.nowSql(),
@@ -288,22 +289,15 @@
         logout: () => {
             Utils.setCookie('dvqt_u', '', -1);
             Utils.setCookie('dvqt_p', '', -1);
-            localStorage.removeItem('dvqt_logged_in');
-            localStorage.removeItem('dvqt_user_id');
-            localStorage.removeItem('dvqt_user_profile');
-            // Xóa luôn các key cũ nếu còn sót
-            localStorage.removeItem('customer_logged_in');
-            localStorage.removeItem('customer_id');
-            localStorage.removeItem('dvqt_customer_profile');
-            localStorage.removeItem('provider_logged_in');
-            localStorage.removeItem('provider_id');
-            localStorage.removeItem('dvqt_provider_profile');
-            localStorage.removeItem('admin_logged_in');
-            localStorage.removeItem('admin_username');
+            
+            // Xóa sạch localStorage cũ để tránh xung đột
+            localStorage.clear(); 
             return true;
         },
 
         // Tiện ích export
+        getCookie: (name) => Utils.getCookie(name),
+        setCookie: (name, value, days) => Utils.setCookie(name, value, days),
         getApiPath: (suffix) => Utils.getApiPath(suffix),
         ROOT_URL: ROOT_URL,
         TABLE_USER: API_CONFIG.TABLE_USER

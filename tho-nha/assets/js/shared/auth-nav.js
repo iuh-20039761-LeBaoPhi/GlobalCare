@@ -34,16 +34,10 @@
     function buildPathMaps(basePrefix) {
         var base = ensureTrailingSlash(basePrefix);
         return {
-            checkSessionUrl: base + 'api/public/check-session.php',
             dashMap: {
                 customer: base + 'pages/customer/trang-ca-nhan.html',
                 provider: base + 'pages/provider/trang-ca-nhan.html',
                 admin: base + 'pages/admin/quan-tri.html'
-            },
-            logoutMap: {
-                customer: base + '../public/api/auth/logout.php',
-                provider: base + '../public/api/auth/logout.php',
-                admin: base + 'api/admin/auth/logout.php'
             },
             loginMap: {
                 customer: base + '../public/dang-nhap.html?service=thonha',
@@ -54,11 +48,11 @@
     }
 
     function clearLocalAuth() {
-        [
-            'customer_logged_in', 'customer_name', 'thonha_customer_profile_v1',
-            'provider_logged_in', 'provider_name', 'provider_company', 'thonha_provider_profile_v1',
-            'admin_logged_in', 'admin_username'
-        ].forEach(function (k) { localStorage.removeItem(k); });
+        if (window.DVQTApp && window.DVQTApp.logout) {
+            window.DVQTApp.logout();
+        } else {
+            localStorage.clear();
+        }
     }
 
     function initAuthNav() {
@@ -66,12 +60,12 @@
         if (!loadingEl || loadingEl.dataset.init) return; // Chặn double-init
         loadingEl.dataset.init = '1';
 
-        const guestEl      = document.getElementById('auth-guest');
-        const userEl       = document.getElementById('auth-user');
+        const guestEl = document.getElementById('auth-guest');
+        const userEl = document.getElementById('auth-user');
         const loadingMobile = document.getElementById('auth-loading-mobile');
-        const avatarMobile  = document.getElementById('auth-avatar-mobile');
-        const mobileGuest   = document.getElementById('mobile-auth-guest');
-        const mobileUser    = document.getElementById('mobile-auth-user');
+        const avatarMobile = document.getElementById('auth-avatar-mobile');
+        const mobileGuest = document.getElementById('mobile-auth-guest');
+        const mobileUser = document.getElementById('mobile-auth-user');
 
         var paths = buildPathMaps(getBasePrefix());
 
@@ -88,45 +82,44 @@
             if (avatarMobile) avatarMobile.style.display = 'none';
         }
 
-        function bindDashboard(linkEl, role, phone, serviceTable) {
+        function bindDashboard(linkEl, role) {
             if (!linkEl) return;
             const dashUrl = paths.dashMap[role] || paths.dashMap.customer;
-            
-            linkEl.onclick = async function(e) {
-                if (role === 'provider' && serviceTable) {
-                    e.preventDefault();
-                    try {
-                        const hasAccess = await window.DVQTApp.checkAccess(serviceTable, phone);
-                        if (hasAccess) {
-                            window.location.href = dashUrl;
-                        } else {
-                            alert("Tài khoản của bạn chưa đăng ký làm nhà cung cấp của dịch vụ này!");
-                        }
-                    } catch (err) {
-                        console.error('Access check failed:', err);
-                        window.location.href = dashUrl; // Fallback
-                    }
-                } else {
-                    // Mặc định cho customer hoặc role khác
-                    linkEl.href = dashUrl;
-                }
-            };
+            linkEl.href = dashUrl;
         }
 
-        function bindLogout(linkEl, role) {
+        function bindLogout(linkEl) {
             if (!linkEl) return;
-            linkEl.onclick = async function (e) {
+            linkEl.onclick = function (e) {
                 e.preventDefault();
-                clearLocalAuth();
 
-                if (window.DVQTApp && window.DVQTApp.logout) {
-                    await window.DVQTApp.logout();
-                } else {
-                    var logoutUrl = paths.logoutMap[role] || paths.logoutMap.customer;
-                    await fetch(logoutUrl).catch(() => null);
-                }
+                // Hiện popup xác nhận đăng xuất tinh tế
+                Swal.fire({
+                    title: '<span style="color:#ef4444">Đăng xuất?</span>',
+                    text: 'Bạn có chắc chắn muốn thoát khỏi phiên làm việc này không?',
+                    icon: 'question',
+                    showCancelButton: true,
+                    confirmButtonText: 'Đăng xuất ngay',
+                    cancelButtonText: 'Để sau',
+                    confirmButtonColor: '#ef4444',
+                    cancelButtonColor: '#94a3b8',
+                    borderRadius: '12px'
+                }).then((result) => {
+                    if (result.isConfirmed) {
+                        // 1. Thực hiện đăng xuất (Xoá Cookie/LocalStorage) qua DVQTApp
+                        if (window.DVQTApp && window.DVQTApp.logout) {
+                            window.DVQTApp.logout();
+                        } else {
+                            localStorage.clear();
+                            document.cookie = "dvqt_u=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;";
+                            document.cookie = "dvqt_p=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;";
+                        }
 
-                window.location.href = paths.loginMap[role] || paths.loginMap.customer;
+                        // 2. Chuyển hướng ngay lập tức về trang đăng nhập chung
+                        const root = (window.DVQTApp && window.DVQTApp.ROOT_URL) ? window.DVQTApp.ROOT_URL : window.location.pathname.split('/tho-nha/')[0];
+                        window.location.href = root + '/public/dang-nhap.html?service=thonha';
+                    }
+                });
             };
         }
 
@@ -134,37 +127,23 @@
             var role = String(authData && authData.role || 'customer');
             var name = String(authData && authData.name || 'User');
             var phone = authData.phone || '';
-            
-            // Đồng bộ ngược lại LocalStorage cho các thư viện cũ
-            localStorage.setItem(role + '_logged_in', 'true');
-            localStorage.setItem(role + '_name', name);
-            if (phone) {
-                if (role === 'customer') {
-                   localStorage.setItem('thonha_customer_profile_v1', JSON.stringify({
-                       name: name, phone: phone, address: authData.address || ''
-                   }));
-                }
-            }
-            
+
             var initial = name.charAt(0).toUpperCase();
 
             if (guestEl) guestEl.style.display = 'none';
             if (mobileGuest) mobileGuest.style.display = 'none';
 
             if (userEl) userEl.style.display = '';
-            const nameEl   = document.getElementById('auth-name');
+            const nameEl = document.getElementById('auth-name');
             const avatarEl = document.getElementById('auth-avatar');
             if (nameEl) nameEl.textContent = name;
             if (avatarEl) avatarEl.textContent = initial;
 
-            // Đăng ký bảng NCC cho Thợ Nhà
-            const serviceTable = 'nhacungcap_thonha';
-
             const dashLink = document.getElementById('auth-dashboard-link');
-            bindDashboard(dashLink, role, phone, serviceTable);
+            bindDashboard(dashLink, role);
 
             const logoutLink = document.getElementById('auth-logout-link');
-            bindLogout(logoutLink, role);
+            bindLogout(logoutLink);
 
             if (avatarMobile) {
                 avatarMobile.textContent = initial;
@@ -173,15 +152,15 @@
 
             if (mobileUser) mobileUser.style.display = '';
             const mobileAvatarInner = document.getElementById('mobile-auth-avatar-inner');
-            const mobileNameEl      = document.getElementById('mobile-auth-name');
+            const mobileNameEl = document.getElementById('mobile-auth-name');
             if (mobileAvatarInner) mobileAvatarInner.textContent = initial;
             if (mobileNameEl) mobileNameEl.textContent = name;
 
             const mobileDashLink = document.getElementById('mobile-auth-dashboard-link');
-            bindDashboard(mobileDashLink, role, phone, serviceTable);
+            bindDashboard(mobileDashLink, role);
 
             const mobileLogout = document.getElementById('mobile-auth-logout-link');
-            bindLogout(mobileLogout, role);
+            bindLogout(mobileLogout);
         }
 
         if (window.DVQTApp && window.DVQTApp.checkSession) {
@@ -202,27 +181,8 @@
                 applyGuestUi();
             });
         } else {
-            // Fallback for legacy
-            fetch(paths.checkSessionUrl, { cache: 'no-store' })
-                .then(r => r.json())
-                .then(function (data) {
-                    setLoadingOff();
-
-                    if (data && data.logged_in) {
-                        applyLoggedInUi({
-                            role: data.role || 'customer',
-                            name: data.name || 'User',
-                            phone: data.phone || '',
-                            address: (data.meta && data.meta.address) ? data.meta.address : ''
-                        });
-                    } else {
-                        applyGuestUi();
-                    }
-                })
-                .catch(function () {
-                    setLoadingOff();
-                    applyGuestUi();
-                });
+            setLoadingOff();
+            applyGuestUi();
         }
     }
 
