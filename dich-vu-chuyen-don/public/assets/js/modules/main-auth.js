@@ -5,7 +5,6 @@
   const core = window.FastGoCore || {};
   const storageKeyRole = "fastgo-auth-role";
   const storageKeyIdentity = "fastgo-auth-identity";
-  const storageKeyUsers = "fastgo-auth-users";
   const authTableByRole = {
     "khach-hang": "dich_vu_chuyen_don_customers",
     "doi-tac": "dich_vu_chuyen_don_partners",
@@ -21,26 +20,6 @@
     } catch (error) {
       console.error("Cannot parse auth payload:", error);
       return fallback;
-    }
-  }
-
-  function readUsers() {
-    try {
-      const users = safeParse(window.localStorage.getItem(storageKeyUsers), []);
-      return Array.isArray(users) ? users : [];
-    } catch (error) {
-      console.error("Cannot read auth users:", error);
-      return [];
-    }
-  }
-
-  function writeUsers(users) {
-    try {
-      window.localStorage.setItem(storageKeyUsers, JSON.stringify(users));
-      return true;
-    } catch (error) {
-      console.error("Cannot persist auth users:", error);
-      return false;
     }
   }
 
@@ -161,6 +140,40 @@
     return extractRows(response).map((row) => normalizeKrudUserRecord(role, row));
   }
 
+  function normalizeRole(value) {
+    const role = String(value || "").trim().toLowerCase();
+    return validRoles.has(role) ? role : "";
+  }
+
+  function getLoginRoleCandidates(preferredRole) {
+    const normalizedPreferredRole = normalizeRole(preferredRole);
+    const roles = [];
+
+    if (normalizedPreferredRole) {
+      roles.push(normalizedPreferredRole);
+    }
+
+    Object.keys(authTableByRole).forEach((role) => {
+      if (role !== normalizedPreferredRole) {
+        roles.push(role);
+      }
+    });
+
+    return roles;
+  }
+
+  async function getUsersForRole(role) {
+    const normalizedRole = normalizeRole(role);
+    if (!normalizedRole) return [];
+
+    try {
+      return await listUsersFromKrud(normalizedRole);
+    } catch (error) {
+      console.error("Cannot read auth users from KRUD:", error);
+      throw new Error("Không thể tải dữ liệu tài khoản từ KRUD.");
+    }
+  }
+
   async function insertUserToKrud(payload) {
     const insertFn = getInsertFn();
     const tableName = getAuthTable(payload?.role);
@@ -187,6 +200,7 @@
       window.localStorage.setItem(
         storageKeyIdentity,
         JSON.stringify({
+          id: String(payload?.id || "").trim(),
           role: String(payload?.role || "").trim(),
           email: String(payload?.email || "").trim(),
           phone: normalizePhone(payload?.phone || ""),
@@ -202,26 +216,16 @@
   }
 
   async function requestAuth(mode, payload) {
-    const role = String(payload?.role || "khach-hang").trim().toLowerCase();
+    const requestedRole = normalizeRole(payload?.role);
+    const role = requestedRole || "khach-hang";
     const email = String(payload?.email || "").trim().toLowerCase();
     const password = String(payload?.password || "");
-    let users = [];
-
-    try {
-      users = await listUsersFromKrud(role);
-    } catch (error) {
-      console.error("Cannot read auth users from KRUD:", error);
-      users = [];
-    }
-
-    if (!users.length) {
-      users = readUsers();
-    }
-
-    const userKey = getUserKey(role, email);
-    const existingUser = users.find((user) => user.key === userKey);
 
     if (mode === "register") {
+      const users = await getUsersForRole(role);
+      const userKey = getUserKey(role, email);
+      const existingUser = users.find((user) => user.key === userKey);
+
       if (existingUser) {
         throw new Error("Email này đã được dùng cho vai trò đã chọn.");
       }
@@ -242,37 +246,46 @@
         krudInsertSucceeded = true;
       } catch (error) {
         console.error("Cannot insert auth user to KRUD:", error);
+        throw new Error("Không thể đăng ký tài khoản lên KRUD ở thời điểm hiện tại.");
       }
 
-      writeUsers([nextUser, ...users]);
       saveIdentityToStorage(nextUser);
 
       return {
         status: "success",
         message: krudInsertSucceeded
           ? "Đăng ký thành công và đã lưu lên KRUD."
-          : "Đăng ký thành công trong chế độ lưu trữ cục bộ.",
+          : "Đăng ký thành công.",
         user: nextUser,
       };
     }
 
-    if (!existingUser || existingUser.password !== password) {
-      throw new Error("Email, mật khẩu hoặc vai trò chưa đúng.");
+    const loginRoleCandidates = getLoginRoleCandidates(requestedRole || getPreferredRole());
+    for (const candidateRole of loginRoleCandidates) {
+      const users = await getUsersForRole(candidateRole);
+      const userKey = getUserKey(candidateRole, email);
+      const existingUser = users.find((user) => user.key === userKey);
+
+      if (!existingUser || existingUser.password !== password) {
+        continue;
+      }
+
+      const nextUser = normalizeUserRecord({
+        ...existingUser,
+        role: candidateRole,
+        updated_at: new Date().toISOString(),
+      });
+
+      saveIdentityToStorage(nextUser);
+
+      return {
+        status: "success",
+        message: "Đăng nhập thành công.",
+        user: nextUser,
+      };
     }
 
-    const nextUser = normalizeUserRecord({
-      ...existingUser,
-      updated_at: new Date().toISOString(),
-    });
-    const nextUsers = users.map((user) => (user.key === userKey ? nextUser : user));
-    writeUsers(nextUsers);
-    saveIdentityToStorage(nextUser);
-
-    return {
-      status: "success",
-      message: "Đăng nhập thành công trong chế độ lưu trữ cục bộ.",
-      user: nextUser,
-    };
+    throw new Error("Email hoặc mật khẩu chưa đúng.");
   }
 
   function showFieldError(input, message) {
@@ -657,7 +670,7 @@
 
       function getDefaultRedirect(role) {
         const fallback =
-          role === "doi-tac" ? "index.html" : "khach-hang/dashboard.html";
+          role === "doi-tac" ? "doi-tac/dashboard.html" : "khach-hang/dashboard.html";
         return typeof core.toProjectUrl === "function" ? core.toProjectUrl(fallback) : fallback;
       }
 
@@ -748,15 +761,18 @@
         try {
           const result = await requestAuth(mode, payload);
           const user = result.user || {};
+          const resolvedRole = normalizeRole(user.role || role) || getPreferredRole();
+
           saveIdentityToStorage({
-            role,
+            role: resolvedRole,
             email: user.email || payload.email,
             phone: user.phone || payload.phone,
             full_name: user.full_name || payload.full_name,
             contact_person: user.contact_person || payload.contact_person,
           });
 
-          const redirectUrl = resolveRedirectUrl(result, role);
+          syncRole(resolvedRole);
+          const redirectUrl = resolveRedirectUrl(result, resolvedRole);
           setFeedback(
             feedback,
             `${result.message || "Xử lý tài khoản thành công."}${redirectUrl ? " Đang chuyển trang..." : ""}`,
@@ -771,7 +787,7 @@
         } catch (error) {
           setFeedback(
             feedback,
-            error?.message || "Không thể xử lý tài khoản trong chế độ lưu trữ cục bộ.",
+            error?.message || "Không thể xử lý tài khoản từ nguồn KRUD hiện tại.",
             "error",
           );
         } finally {

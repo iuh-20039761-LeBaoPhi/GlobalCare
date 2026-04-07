@@ -1,14 +1,14 @@
 /**
  * dat-lich/flow-submit.js
- * Gom phần điều hướng và hoàn tất đơn:
- * - validate từng bước của form
- * - dựng màn review cuối
- * - build payload và submit qua KRUD / API liên quan
+ * Điều hướng cuối form và submit đơn.
+ * - Validate từng bước của form
+ * - Dựng màn review cuối
+ * - Build payload, insert KRUD, đồng bộ mã đơn, gửi Google Sheet
  *
  * Liên quan trực tiếp:
- * - dat-lich/core.js: state form, helper chung, local detail
+ * - dat-lich/core.js: state form, helper chung, helper KRUD
  * - dat-lich/pricing.js: cung cấp quote/breakdown đã tính
- * - admin-giaohang/api/booking.php: backend nhận payload tạo đơn
+ * - driveUtil.js: bridge gửi dữ liệu sang Google Sheet
  */
 function chon_tuy_chon(groupId, btn) {
   document
@@ -542,28 +542,36 @@ function buildBookingSheetPayload(payload, orderCode) {
   };
 }
 
-function saveBookingToGoogleSheet(payload, orderCode) {
+function ensureBookingGoogleSheetBridge() {
   if (typeof window.saveToGoogleSheet !== "function") {
-    return Promise.reject(new Error("driveUtil.js chưa được nạp."));
+    throw new Error("driveUtil.js chưa được nạp.");
+  }
+}
+
+function normalizeBookingGoogleSheetResult(result) {
+  const isSuccess =
+    result && (result.status === "success" || result.success === true);
+
+  if (!isSuccess) {
+    const serverMessage =
+      (result && (result.error || result.message)) ||
+      "Gửi dữ liệu Google Sheet thất bại.";
+    throw new Error(serverMessage);
   }
 
-  const sheetPayload = buildBookingSheetPayload(payload, orderCode);
+  return result;
+}
 
+function saveBookingSheetPayload(sheetPayload) {
+  ensureBookingGoogleSheetBridge();
   return Promise.resolve(window.saveToGoogleSheet(sheetPayload)).then(
-    (result) => {
-      const isSuccess =
-        result && (result.status === "success" || result.success === true);
-
-      if (!isSuccess) {
-        const serverMessage =
-          (result && (result.error || result.message)) ||
-          "Gửi dữ liệu Google Sheet thất bại.";
-        throw new Error(serverMessage);
-      }
-
-      return result;
-    },
+    normalizeBookingGoogleSheetResult,
   );
+}
+
+function saveBookingToGoogleSheet(payload, orderCode) {
+  const sheetPayload = buildBookingSheetPayload(payload, orderCode);
+  return saveBookingSheetPayload(sheetPayload);
 }
 
 async function gui_don_hang() {
@@ -610,21 +618,8 @@ async function gui_don_hang() {
         " Đơn hàng đã được lưu hệ thống nhưng chưa đồng bộ Google Sheets.";
     }
 
-    const localDetail = buildLocalOrderDetail(payload, finalOrderCode);
-    const returnedRecordId = orderMeta.id;
-    if (returnedRecordId) {
-      localDetail.order.id = returnedRecordId;
-      localDetail.order.remote_id = returnedRecordId;
-    }
-    const savedLocally = persistLocalCustomerOrder(localDetail);
-    if (!savedLocally) {
-      console.warn(
-        "Không thể lưu bản sao đơn hàng vào bộ nhớ tạm của trình duyệt sau khi tạo đơn.",
-      );
-    }
-
     renderSubmitSuccessState(
-      localDetail.order.order_code || finalOrderCode || "GHN-00000000-0000000",
+      finalOrderCode || "GHN-00000000-0000000",
       !!syncBookingLoginState()
         ? `Đơn hàng đã được tạo thành công. Bạn có thể theo dõi đơn ngay trong tài khoản của mình.${googleSheetWarning}`
         : `Đơn hàng đã được tạo thành công. Hãy lưu lại mã đơn để tra cứu sau.${googleSheetWarning}`,

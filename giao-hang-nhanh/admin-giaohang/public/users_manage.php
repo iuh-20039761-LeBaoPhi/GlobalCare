@@ -718,18 +718,11 @@ if (!isset($_SESSION['user_id']) || ($_SESSION['role'] ?? '') !== 'admin') {
                 tbody.innerHTML = users.map((user) => {
                     const canMutate = Number(user.id) !== currentAdminId;
                     const avatar = escapeHtml((user.username || "U").charAt(0).toUpperCase());
-                    const historyUrl = `user_history.php?id=${encodeURIComponent(user.id)}`;
                     const editUrl = `user_form.php?id=${encodeURIComponent(user.id)}`;
-                    const shipperUrl = `admin_shipper_detail.php?id=${encodeURIComponent(user.id)}`;
 
                     const actionButtons = [
-                        `<a href="${historyUrl}" class="btn-sm btn-view-site-pill" title="Lịch sử hoạt động" style="color:#0a2a66; background:rgba(10,42,102,0.1);"><i class="fa-solid fa-clock-rotate-left"></i></a>`,
                         `<a href="${editUrl}" class="btn-sm btn-view-site-pill" title="Sửa" style="color:#ff7a00; background:rgba(255,122,0,0.1);"><i class="fa-solid fa-pen-to-square"></i></a>`,
                     ];
-
-                    if (user.role === "shipper") {
-                        actionButtons.push(`<a href="${shipperUrl}" class="btn-sm btn-view-site-pill" title="Hiệu suất Shipper" style="color:#6610f2; background:rgba(102,16,242,0.1);"><i class="fa-solid fa-chart-line"></i></a>`);
-                    }
 
                     if (user.role === "shipper" && !user.is_approved) {
                         actionButtons.push(`<button type="button" class="btn-sm btn-view-site-pill" data-user-action="approve" data-user-id="${user.id}" title="Duyệt" style="color:#2e7d32; background:rgba(46,125,50,0.1);"><i class="fa-solid fa-check"></i></button>`);

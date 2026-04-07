@@ -1,18 +1,21 @@
 (function (window) {
   if (window.FastGoCustomerPortalStore) return;
 
+  const bookingCrudTableName = "dich_vu_chuyen_don_dat_lich";
   const storageKeys = {
     role: "fastgo-auth-role",
     identity: "fastgo-auth-identity",
-    history: "fastgo-customer-history",
-    users: "fastgo-auth-users",
+  };
+  const authTableByRole = {
+    "khach-hang": "dich_vu_chuyen_don_customers",
+    "doi-tac": "dich_vu_chuyen_don_partners",
   };
 
   function safeParse(raw, fallback) {
     try {
       return raw ? JSON.parse(raw) : fallback;
     } catch (error) {
-      console.error("Cannot parse local payload:", error);
+      console.error("Cannot parse stored payload:", error);
       return fallback;
     }
   }
@@ -21,7 +24,7 @@
     try {
       return safeParse(window.localStorage.getItem(key), fallback);
     } catch (error) {
-      console.error("Cannot read local payload:", error);
+      console.error("Cannot read stored payload:", error);
       return fallback;
     }
   }
@@ -31,18 +34,138 @@
       window.localStorage.setItem(key, JSON.stringify(value));
       return true;
     } catch (error) {
-      console.error("Cannot write local payload:", error);
+      console.error("Cannot write stored payload:", error);
       return false;
     }
   }
 
-  function getSavedUsers() {
-    const users = readJson(storageKeys.users, []);
-    return Array.isArray(users) ? users : [];
+  function normalizeText(value) {
+    return String(value || "").replace(/\s+/g, " ").trim();
   }
 
-  function saveUsers(users) {
-    return writeJson(storageKeys.users, Array.isArray(users) ? users : []);
+  function normalizeLowerText(value) {
+    return normalizeText(value).toLowerCase();
+  }
+
+  function normalizePhone(value) {
+    return String(value || "").replace(/[^\d+]/g, "");
+  }
+
+  function parseNumber(value) {
+    if (value == null || value === "") return 0;
+    const normalized = String(value).replace(",", ".").replace(/[^\d.-]/g, "");
+    const parsed = Number(normalized);
+    return Number.isFinite(parsed) ? parsed : 0;
+  }
+
+  function splitPipeValues(value) {
+    return String(value || "")
+      .split("|")
+      .map((item) => normalizeText(item))
+      .filter(Boolean);
+  }
+
+  function parseJsonObject(value) {
+    const parsed = safeParse(value, {});
+    return parsed && typeof parsed === "object" && !Array.isArray(parsed) ? parsed : {};
+  }
+
+  function parseJsonArray(value) {
+    const parsed = safeParse(value, []);
+    return Array.isArray(parsed) ? parsed : [];
+  }
+
+  function toLabelFromKey(key) {
+    return String(key || "")
+      .split("_")
+      .filter(Boolean)
+      .map((part) => part.charAt(0).toUpperCase() + part.slice(1))
+      .join(" ");
+  }
+
+  const bookingFormFieldLabels = {
+    loai_dich_vu: "Loại dịch vụ",
+    ho_ten: "Người liên hệ",
+    so_dien_thoai: "Số điện thoại",
+    ten_cong_ty: "Tên công ty / đơn vị",
+    dia_chi_di: "Địa chỉ điểm đi",
+    dia_chi_den: "Địa chỉ điểm đến",
+    ngay_thuc_hien: "Ngày thực hiện",
+    khung_gio_thuc_hien: "Khung giờ thực hiện",
+    khung_gio_tinh_gia: "Khung giờ tính giá",
+    thoi_tiet_du_kien: "Thời tiết dự kiến",
+    loai_xe: "Loại xe",
+    ghi_chu: "Ghi chú",
+    co_thang_may_diem_di: "Điểm đi có thang máy",
+    co_thang_may_diem_den: "Điểm đến có thang máy",
+    xe_tai_do_xa_diem_di: "Xe tải đỗ xa ở điểm đi",
+    duong_cam_tai: "Đường cấm tải / giới hạn xe",
+    co_thang_bo_hep: "Cầu thang bộ hẹp",
+    can_trung_chuyen: "Cần trung chuyển",
+    can_thao_lap_noi_that: "Cần tháo lắp",
+    can_dong_goi_do_dac: "Cần đóng gói",
+    co_do_gia_tri_cao: "Có đồ giá trị cao",
+    co_do_de_vo: "Có đồ dễ vỡ",
+    co_do_cong_kenh: "Có đồ cồng kềnh",
+    can_dong_goi_ho_so: "Cần đóng gói hồ sơ",
+    can_bao_mat_tai_lieu: "Bảo mật tài liệu",
+    can_di_doi_server: "Di dời server / thiết bị IT",
+    can_thao_lap_noi_that_van_phong: "Cần tháo lắp nội thất",
+    co_thiet_bi_nang_van_phong: "Có thiết bị nặng",
+    can_thuc_hien_cuoi_tuan: "Cần làm cuối tuần",
+    can_luan_chuyen_pallet: "Cần luân chuyển pallet",
+    can_xe_nang_dat_lich: "Cần xe nâng",
+    can_xe_cau_dat_lich: "Cần xe cẩu",
+    can_gia_co_hang_hoa: "Cần gia cố hàng hóa",
+    can_kiem_ke_hang_hoa: "Kiểm kê trước và sau chuyển",
+  };
+
+  function normalizeBookingFormRows(value) {
+    const ignoredKeys = new Set([
+      "vi_tri_diem_di_lat",
+      "vi_tri_diem_di_lng",
+      "vi_tri_diem_den_lat",
+      "vi_tri_diem_den_lng",
+    ]);
+
+    return Object.entries(parseJsonObject(value))
+      .filter(([key, rawValue]) => {
+        if (ignoredKeys.has(key)) return false;
+        return String(rawValue || "").trim() !== "";
+      })
+      .map(([key, rawValue]) => ({
+        key,
+        label: bookingFormFieldLabels[key] || toLabelFromKey(key),
+        value: String(rawValue || "").trim() === "1" ? "Có" : normalizeText(rawValue),
+      }))
+      .filter((item) => item.value);
+  }
+
+  function normalizeBookingPricingBreakdown(value) {
+    return parseJsonArray(value)
+      .map((item, index, list) => {
+        if (!item || typeof item !== "object") return null;
+
+        const label = normalizeText(item.label || item.title || "");
+        const amount = normalizeText(item.amount || item.value || "");
+        const detail = normalizeText(item.detail || item.note || "");
+        const amountValue = parseNumber(item.amount_value || item.amount || item.value || 0);
+        const isTotal =
+          item.is_total === true ||
+          /tong/i.test(label) ||
+          (index === list.length - 1 && amountValue > 0);
+
+        if (!label && !amount && !detail) return null;
+
+        return {
+          label: label || `Hạng mục ${index + 1}`,
+          amount,
+          detail,
+          amount_value: amountValue,
+          is_total: isTotal,
+        };
+      })
+      .filter(Boolean);
   }
 
   function getUserKey(role, email) {
@@ -54,82 +177,6 @@
     return getUserKey(getSavedRole(), identity.email || "");
   }
 
-  function updateStoredUser(mutator, options = {}) {
-    const currentKey = String(options.currentKey || getCurrentUserKey()).trim();
-    if (!currentKey || currentKey === "::") return null;
-
-    const users = getSavedUsers();
-    const currentUser = users.find((user) => user.key === currentKey);
-    if (!currentUser) return null;
-
-    const nextUser = mutator && typeof mutator === "function" ? mutator(currentUser) : currentUser;
-    if (!nextUser || typeof nextUser !== "object") return null;
-
-    const normalizedUser = {
-      ...currentUser,
-      ...nextUser,
-      key: getUserKey(nextUser.role || currentUser.role, nextUser.email || currentUser.email),
-      updated_at: new Date().toISOString(),
-    };
-    saveUsers(users.map((user) => (user.key === currentKey ? normalizedUser : user)));
-    return normalizedUser;
-  }
-
-  function buildSampleItems() {
-    return [
-      {
-        code: "DL-240328-07",
-        type: "dat-lich",
-        type_label: "Đặt lịch",
-        title: "Đặt lịch chuyển nhà trọn gói",
-        service_label: "Chuyển nhà",
-        status_class: "xac-nhan",
-        status_text: "Đã xác nhận",
-        summary: "Lịch chuyển dọn đã được xác nhận, chờ đội vận hành khóa phương án xe và nhân sự.",
-        meta: "Dự kiến triển khai lúc 08:00, cần bọc kính và đồ điện tử",
-        from_address: "Sunrise City, Quận 7, TP.HCM",
-        to_address: "Vinhomes Grand Park, TP. Thủ Đức",
-        created_at: "2026-03-28T09:30:00+07:00",
-        schedule_label: "31/03/2026 • 08:00 - 10:00",
-        estimated_amount: 4200000,
-        source: "sample",
-      },
-      {
-        code: "KS-240330-01",
-        type: "khao-sat",
-        type_label: "Khảo sát",
-        title: "Khảo sát chuyển căn hộ 2 phòng ngủ",
-        service_label: "Chuyển nhà",
-        status_class: "moi",
-        status_text: "Mới tiếp nhận",
-        summary: "Đầu việc đã gửi, điều phối sẽ gọi lại để chốt lịch khảo sát trong khung giờ bạn chọn.",
-        meta: "Ưu tiên khảo sát tại Quận 7, cuối tuần này",
-        from_address: "Sunrise City, Quận 7, TP.HCM",
-        to_address: "",
-        created_at: "2026-03-30T14:15:00+07:00",
-        schedule_label: "02/04/2026 • 09:00 - 11:00",
-        estimated_amount: 0,
-        source: "sample",
-      },
-      {
-        code: "DL-240325-03",
-        type: "dat-lich",
-        type_label: "Đặt lịch",
-        title: "Yêu cầu chuyển văn phòng mini",
-        service_label: "Chuyển văn phòng",
-        status_class: "dang-xu-ly",
-        status_text: "Đang xử lý",
-        summary: "Điều phối đang rà phương án bốc xếp và lộ trình phù hợp để gửi lại báo giá chốt.",
-        meta: "Có 1 tủ hồ sơ lớn và 6 bộ bàn ghế cần tháo lắp",
-        from_address: "Tân Bình, TP.HCM",
-        to_address: "Quận 3, TP.HCM",
-        created_at: "2026-03-25T16:40:00+07:00",
-        schedule_label: "30/03/2026 • 13:30 - 16:30",
-        estimated_amount: 6800000,
-        source: "sample",
-      },
-    ];
-  }
 
   function normalizeHistoryItem(item) {
     const statusMap = {
@@ -143,24 +190,27 @@
       statusMap[String(item?.status_class || "").trim()] || "moi";
 
     return {
-      code: String(item?.code || "").trim(),
-      type: String(item?.type || "dat-lich").trim(),
-      type_label: String(item?.type_label || (item?.type === "khao-sat" ? "Khảo sát" : "Đặt lịch")).trim(),
-      title: String(item?.title || "").trim(),
-      service_label: String(item?.service_label || "").trim(),
+      code: normalizeText(item?.code || ""),
+      type: normalizeText(item?.type || "dat-lich"),
+      type_label: normalizeText(
+        item?.type_label || (item?.type === "khao-sat" ? "Khảo sát" : "Đặt lịch"),
+      ),
+      title: normalizeText(item?.title || ""),
+      service_label: normalizeText(item?.service_label || ""),
       status_class: normalizedStatusClass,
-      status_text: String(item?.status_text || "Mới tiếp nhận").trim(),
-      summary: String(item?.summary || "").trim(),
-      meta: String(item?.meta || "").trim(),
-      from_address: String(item?.from_address || "").trim(),
-      to_address: String(item?.to_address || "").trim(),
-      created_at: String(item?.created_at || new Date().toISOString()).trim(),
-      schedule_label: String(item?.schedule_label || "").trim(),
+      status_text: normalizeText(item?.status_text || "Mới tiếp nhận"),
+      summary: normalizeText(item?.summary || ""),
+      meta: normalizeText(item?.meta || ""),
+      from_address: normalizeText(item?.from_address || ""),
+      to_address: normalizeText(item?.to_address || ""),
+      created_at: normalizeText(item?.created_at || new Date().toISOString()),
+      schedule_label: normalizeText(item?.schedule_label || ""),
       estimated_amount: Number(item?.estimated_amount || 0),
-      contact_name: String(item?.contact_name || "").trim(),
-      contact_phone: String(item?.contact_phone || "").trim(),
-      note: String(item?.note || "").trim(),
-      source: String(item?.source || "local").trim(),
+      contact_name: normalizeText(item?.contact_name || ""),
+      contact_phone: normalizeText(item?.contact_phone || ""),
+      note: normalizeText(item?.note || ""),
+      source: normalizeText(item?.source || "krud"),
+      remote_id: normalizeText(item?.remote_id || item?.id || ""),
     };
   }
 
@@ -172,37 +222,8 @@
     });
   }
 
-  function getStoredHistoryItems() {
-    const items = readJson(storageKeys.history, []);
-    return Array.isArray(items) ? items.map(normalizeHistoryItem) : [];
-  }
-
   function getHistoryItems() {
-    const combined = [...getStoredHistoryItems(), ...buildSampleItems()].map(normalizeHistoryItem);
-    const unique = new Map();
-    combined.forEach((item) => {
-      if (!item.code) return;
-      if (!unique.has(item.code)) {
-        unique.set(item.code, item);
-      }
-    });
-    return sortByCreatedAt(Array.from(unique.values()));
-  }
-
-  function getHistoryItemByCode(code) {
-    const normalizedCode = String(code || "").trim().toUpperCase();
-    if (!normalizedCode) return null;
-    return (
-      getHistoryItems().find((item) => String(item.code || "").trim().toUpperCase() === normalizedCode) || null
-    );
-  }
-
-  function saveHistoryItem(item) {
-    const nextItem = normalizeHistoryItem(item);
-    const items = getStoredHistoryItems().filter((entry) => entry.code !== nextItem.code);
-    items.unshift(nextItem);
-    writeJson(storageKeys.history, items);
-    return nextItem;
+    return [];
   }
 
   function readIdentity() {
@@ -226,13 +247,13 @@
     }
 
     return saveIdentity({
-      fullName: String(profile.full_name || profile.fullName || "").trim(),
-      full_name: String(profile.full_name || profile.fullName || "").trim(),
-      contact_person: String(profile.contact_person || profile.contactPerson || "").trim(),
-      contactPerson: String(profile.contact_person || profile.contactPerson || "").trim(),
-      email: String(profile.email || "").trim(),
-      phone: String(profile.phone || "").trim(),
-      status: String(profile.status || "").trim(),
+      fullName: normalizeText(profile.full_name || profile.fullName || ""),
+      full_name: normalizeText(profile.full_name || profile.fullName || ""),
+      contact_person: normalizeText(profile.contact_person || profile.contactPerson || ""),
+      contactPerson: normalizeText(profile.contact_person || profile.contactPerson || ""),
+      email: normalizeText(profile.email || ""),
+      phone: normalizeText(profile.phone || ""),
+      status: normalizeText(profile.status || ""),
     });
   }
 
@@ -247,8 +268,8 @@
 
   function getDisplayName(identity) {
     return (
-      String(identity?.fullName || identity?.full_name || "").trim() ||
-      String(identity?.email || "").trim() ||
+      normalizeText(identity?.fullName || identity?.full_name || "") ||
+      normalizeText(identity?.email || "") ||
       "khách hàng"
     );
   }
@@ -275,6 +296,400 @@
     }
   }
 
+  function getAuthTableName(role) {
+    return authTableByRole[String(role || "").trim().toLowerCase()] || "";
+  }
+
+  function getKrudListFn() {
+    if (typeof window.krudList === "function") {
+      return (payload) => window.krudList(payload);
+    }
+
+    if (typeof window.crud === "function") {
+      return (payload) =>
+        window.crud("list", payload.table, {
+          p: payload.page || 1,
+          limit: payload.limit || 300,
+          where: payload.where,
+          sort: payload.sort,
+        });
+    }
+
+    if (typeof window.krud === "function") {
+      return (payload) =>
+        window.krud("list", payload.table, {
+          p: payload.page || 1,
+          limit: payload.limit || 300,
+          where: payload.where,
+          sort: payload.sort,
+        });
+    }
+
+    return null;
+  }
+
+  function getKrudUpdateFn() {
+    if (typeof window.crud === "function") {
+      return (tableName, data) => window.crud("update", tableName, data);
+    }
+
+    if (typeof window.krud === "function") {
+      return (tableName, data) => window.krud("update", tableName, data);
+    }
+
+    return null;
+  }
+
+  function extractRows(payload, depth) {
+    const level = Number(depth || 0);
+    if (level > 4 || payload == null) return [];
+    if (Array.isArray(payload)) return payload;
+    if (typeof payload !== "object") return [];
+
+    const candidateKeys = ["data", "items", "rows", "list", "result", "payload"];
+    for (const key of candidateKeys) {
+      const value = payload[key];
+      if (Array.isArray(value)) return value;
+      const nested = extractRows(value, level + 1);
+      if (nested.length) return nested;
+    }
+
+    return [];
+  }
+
+  function formatDateLabel(dateValue, timeValue) {
+    const rawDate = normalizeText(dateValue);
+    if (!rawDate) return "";
+
+    const date = new Date(rawDate);
+    const dateText = Number.isNaN(date.getTime())
+      ? rawDate
+      : date.toLocaleDateString("vi-VN", {
+          day: "2-digit",
+          month: "2-digit",
+          year: "numeric",
+        });
+    const timeText = normalizeText(timeValue);
+    return timeText ? `${dateText} • ${timeText}` : dateText;
+  }
+
+  function getBookingStatusMeta(row) {
+    const rawStatus = normalizeLowerText(row?.status || row?.trang_thai || "");
+
+    if (
+      ["da_xac_nhan", "xac_nhan", "confirmed", "accepted", "da_chot_lich"].includes(rawStatus)
+    ) {
+      return {
+        status_class: "xac-nhan",
+        status_text: "Đã xác nhận",
+      };
+    }
+
+    if (
+      ["dang_xu_ly", "processing", "in_progress", "dang_dieu_phoi", "dang_trien_khai"].includes(
+        rawStatus,
+      )
+    ) {
+      return {
+        status_class: "dang-xu-ly",
+        status_text: "Đang xử lý",
+      };
+    }
+
+    if (["cancelled", "canceled", "huy", "da_huy", "huy_bo"].includes(rawStatus)) {
+      return {
+        status_class: "dang-xu-ly",
+        status_text: "Đã hủy",
+      };
+    }
+
+    return {
+      status_class: "moi",
+      status_text: "Mới tiếp nhận",
+    };
+  }
+
+  function buildBookingSummary(row, statusText) {
+    if (statusText === "Đã xác nhận") {
+      return "Yêu cầu đặt lịch đã được ghi nhận trên hệ thống và đang chờ đội vận hành khóa phương án cuối.";
+    }
+
+    if (statusText === "Đang xử lý") {
+      return "Điều phối đang rà phương án xe, tuyến đường và khối lượng phù hợp cho yêu cầu đặt lịch này.";
+    }
+
+    if (statusText === "Đã hủy") {
+      return "Yêu cầu đặt lịch đã được đánh dấu hủy trên hệ thống và được giữ lại trong lịch sử theo dõi.";
+    }
+
+    return "Yêu cầu đặt lịch đã được lưu lên hệ thống và sẵn sàng cho bước điều phối tiếp theo.";
+  }
+
+  function mapKrudBookingToHistoryItem(row) {
+    const statusMeta = getBookingStatusMeta(row);
+    const code =
+      normalizeText(row?.ma_yeu_cau_noi_bo || row?.ma_don_hang_noi_bo || row?.order_code || row?.id || "");
+    const serviceLabel =
+      normalizeText(row?.ten_dich_vu || row?.loai_dich_vu || "Chuyển dọn");
+    const vehicleLabel = normalizeText(row?.ten_loai_xe || row?.loai_xe || "");
+    const contactName = normalizeText(row?.ho_ten || row?.contact_name || "");
+    const contactPhone = normalizeText(row?.so_dien_thoai || row?.phone || "");
+
+    return normalizeHistoryItem({
+      code,
+      type: "dat-lich",
+      type_label: "Đặt lịch",
+      title: `Đặt lịch ${serviceLabel || "chuyển dọn"}`,
+      service_label: serviceLabel,
+      status_class: statusMeta.status_class,
+      status_text: statusMeta.status_text,
+      summary: buildBookingSummary(row, statusMeta.status_text),
+      meta: vehicleLabel
+        ? `Phương án xe đã chọn: ${vehicleLabel}`
+        : normalizeText(row?.ten_cong_ty || row?.ghi_chu || ""),
+      from_address: normalizeText(row?.dia_chi_di || ""),
+      to_address: normalizeText(row?.dia_chi_den || ""),
+      created_at: normalizeText(row?.created_at || row?.created_date || new Date().toISOString()),
+      schedule_label: formatDateLabel(
+        row?.ngay_thuc_hien,
+        row?.ten_khung_gio_thuc_hien || row?.khung_gio_thuc_hien,
+      ),
+      estimated_amount: Number(row?.tong_tam_tinh || 0),
+      contact_name: contactName,
+      contact_phone: contactPhone,
+      note: normalizeText(row?.ghi_chu || ""),
+      source: "krud",
+      remote_id: normalizeText(row?.id || ""),
+    });
+  }
+
+  function normalizeBookingInvoiceDetail(rawRow, requestItem) {
+    const row = rawRow && typeof rawRow === "object" ? rawRow : {};
+    const fallbackRequest = requestItem ? normalizeHistoryItem(requestItem) : null;
+    const mappedRequest =
+      row && Object.keys(row).length ? mapKrudBookingToHistoryItem(row) : fallbackRequest;
+    const request =
+      mappedRequest && fallbackRequest
+        ? {
+            ...fallbackRequest,
+            ...mappedRequest,
+            summary: normalizeText(mappedRequest.summary || fallbackRequest.summary || ""),
+            meta: normalizeText(mappedRequest.meta || fallbackRequest.meta || ""),
+            note: normalizeText(mappedRequest.note || fallbackRequest.note || ""),
+          }
+        : mappedRequest || fallbackRequest;
+    const formRows = normalizeBookingFormRows(row?.du_lieu_form_json);
+    const pricingBreakdown = normalizeBookingPricingBreakdown(row?.pricing_breakdown_json);
+
+    return {
+      code: normalizeText(
+        row?.ma_yeu_cau_noi_bo ||
+          request?.code ||
+          row?.ma_don_hang_noi_bo ||
+          row?.order_code ||
+          row?.id ||
+          "",
+      ),
+      remote_id: normalizeText(row?.id || request?.remote_id || ""),
+      type: "dat-lich",
+      type_label: "Đặt lịch",
+      title: normalizeText(request?.title || "Hóa đơn chi tiết đặt lịch chuyển dọn"),
+      service_label: normalizeText(
+        row?.ten_dich_vu || request?.service_label || row?.loai_dich_vu || "Chuyển dọn",
+      ),
+      status_class: normalizeText(request?.status_class || "moi") || "moi",
+      status_text: normalizeText(request?.status_text || "Mới tiếp nhận") || "Mới tiếp nhận",
+      summary: normalizeText(request?.summary || ""),
+      created_at: normalizeText(row?.created_at || row?.created_date || request?.created_at || ""),
+      schedule_label: normalizeText(
+        request?.schedule_label ||
+          formatDateLabel(
+            row?.ngay_thuc_hien,
+            row?.ten_khung_gio_thuc_hien || row?.khung_gio_thuc_hien,
+          ) ||
+          "",
+      ),
+      estimated_amount: Number(row?.tong_tam_tinh || request?.estimated_amount || 0),
+      contact_name: normalizeText(row?.ho_ten || request?.contact_name || ""),
+      contact_phone: normalizeText(row?.so_dien_thoai || request?.contact_phone || ""),
+      customer_email: normalizeText(row?.customer_email || ""),
+      company_name: normalizeText(row?.ten_cong_ty || ""),
+      from_address: normalizeText(row?.dia_chi_di || request?.from_address || ""),
+      to_address: normalizeText(row?.dia_chi_den || request?.to_address || ""),
+      schedule_date: normalizeText(row?.ngay_thuc_hien || ""),
+      schedule_time: normalizeText(
+        row?.ten_khung_gio_thuc_hien || row?.khung_gio_thuc_hien || "",
+      ),
+      weather_label: normalizeText(row?.thoi_tiet_du_kien || ""),
+      vehicle_label: normalizeText(row?.ten_loai_xe || row?.loai_xe || ""),
+      distance_km: parseNumber(row?.khoang_cach_km || 0),
+      access_conditions: splitPipeValues(row?.dieu_kien_tiep_can),
+      service_details: splitPipeValues(row?.chi_tiet_dich_vu),
+      note: normalizeText(row?.ghi_chu || request?.note || ""),
+      meta: normalizeText(request?.meta || ""),
+      pricing_breakdown: pricingBreakdown,
+      image_attachments: splitPipeValues(row?.anh_dinh_kem),
+      video_attachments: splitPipeValues(row?.video_dinh_kem),
+      form_rows: formRows,
+      form_payload: parseJsonObject(row?.du_lieu_form_json),
+      source: normalizeText(request?.source || "krud"),
+      request,
+      raw_row: row,
+    };
+  }
+
+  function isRowOwnedByIdentity(row, identity) {
+    const identityEmail = normalizeLowerText(identity?.email || "");
+    const identityPhone = normalizePhone(identity?.phone || "");
+    const identityNames = [
+      identity?.fullName,
+      identity?.full_name,
+      identity?.contact_person,
+      identity?.contactPerson,
+    ]
+      .map(normalizeLowerText)
+      .filter(Boolean);
+
+    const rowEmail = normalizeLowerText(row?.customer_email || row?.email || "");
+    const rowPhone = normalizePhone(row?.so_dien_thoai || row?.phone || "");
+    const rowName = normalizeLowerText(row?.ho_ten || row?.contact_name || "");
+
+    if (identityEmail && rowEmail && identityEmail === rowEmail) return true;
+    if (identityPhone && rowPhone && identityPhone === rowPhone) return true;
+    if (!identityEmail && !identityPhone && identityNames.length && rowName) {
+      return identityNames.includes(rowName);
+    }
+
+    return false;
+  }
+
+  function mergeHistoryItems(items) {
+    const unique = new Map();
+
+    (Array.isArray(items) ? items : []).forEach((item) => {
+      const normalized = normalizeHistoryItem(item);
+      if (!normalized.code) return;
+
+      const key = normalizeLowerText(normalized.code);
+      const current = unique.get(key);
+      if (!current || normalized.source === "krud") {
+        unique.set(key, normalized);
+      }
+    });
+
+    return sortByCreatedAt(Array.from(unique.values()));
+  }
+
+  async function fetchKrudBookingItems(identity) {
+    const listFn = getKrudListFn();
+    if (!listFn) return [];
+
+    const profile = identity && typeof identity === "object" ? identity : readIdentity();
+    const hasLookupIdentity =
+      normalizeText(profile?.email || "") ||
+      normalizeText(profile?.phone || "") ||
+      normalizeText(profile?.fullName || profile?.full_name || profile?.contact_person || "");
+    if (!hasLookupIdentity) return [];
+
+    const limit = 200;
+    const maxPages = 10;
+    const rows = [];
+
+    for (let page = 1; page <= maxPages; page += 1) {
+      let response;
+
+      try {
+        response = await Promise.resolve(
+          listFn({
+            table: bookingCrudTableName,
+            page,
+            limit,
+            sort: {
+              created_at: "desc",
+            },
+          }),
+        );
+      } catch (error) {
+        console.error("Cannot load booking records from KRUD:", error);
+        break;
+      }
+
+      const pageRows = extractRows(response);
+      if (!pageRows.length) break;
+
+      rows.push(...pageRows);
+      if (pageRows.length < limit) break;
+    }
+
+    return mergeHistoryItems(
+      rows
+        .filter((row) => isRowOwnedByIdentity(row, profile))
+        .map(mapKrudBookingToHistoryItem),
+    );
+  }
+
+  async function findKrudBookingRowByCode(code, identity) {
+    const listFn = getKrudListFn();
+    if (!listFn) return null;
+
+    const normalizedCode = normalizeLowerText(code);
+    if (!normalizedCode) return null;
+
+    const profile = identity && typeof identity === "object" ? identity : readIdentity();
+    const hasLookupIdentity =
+      normalizeText(profile?.email || "") ||
+      normalizeText(profile?.phone || "") ||
+      normalizeText(profile?.fullName || profile?.full_name || profile?.contact_person || "");
+    if (!hasLookupIdentity) return null;
+
+    const limit = 200;
+    const maxPages = 10;
+
+    for (let page = 1; page <= maxPages; page += 1) {
+      let response;
+
+      try {
+        response = await Promise.resolve(
+          listFn({
+            table: bookingCrudTableName,
+            page,
+            limit,
+            sort: {
+              created_at: "desc",
+            },
+          }),
+        );
+      } catch (error) {
+        console.error("Cannot load booking detail from KRUD:", error);
+        return null;
+      }
+
+      const pageRows = extractRows(response);
+      if (!pageRows.length) break;
+
+      const matchedRow = pageRows.find((row) => {
+        const rowCode = normalizeLowerText(
+          row?.ma_yeu_cau_noi_bo || row?.ma_don_hang_noi_bo || row?.order_code || row?.id || "",
+        );
+        return rowCode === normalizedCode && isRowOwnedByIdentity(row, profile);
+      });
+
+      if (matchedRow) {
+        return matchedRow;
+      }
+
+      if (pageRows.length < limit) break;
+    }
+
+    return null;
+  }
+
+  async function getAllHistoryItems(profile) {
+    const identity = syncIdentityFromProfile(profile || readIdentity());
+    const krudBookingItems = await fetchKrudBookingItems(identity);
+    return mergeHistoryItems(krudBookingItems);
+  }
+
   async function fetchProfile() {
     const profile = syncIdentityFromProfile(readIdentity());
     return profile || null;
@@ -282,7 +697,7 @@
 
   async function fetchDashboard() {
     const profile = syncIdentityFromProfile(readIdentity());
-    const items = getHistoryItems();
+    const items = await getAllHistoryItems(profile);
     return {
       profile,
       stats: getDashboardStats(items),
@@ -294,41 +709,72 @@
     const profile = syncIdentityFromProfile(readIdentity());
     return {
       profile,
-      history: getHistoryItems(),
+      history: await getAllHistoryItems(profile),
     };
   }
 
   async function fetchDetail(code) {
     const profile = syncIdentityFromProfile(readIdentity());
+    const normalizedCode = normalizeLowerText(code);
+    const history = await getAllHistoryItems(profile);
     return {
       profile,
-      request: code ? getHistoryItemByCode(code) : null,
+      request: history.find((item) => normalizeLowerText(item.code) === normalizedCode) || null,
+    };
+  }
+
+  async function fetchBookingInvoiceDetail(code) {
+    const profile = syncIdentityFromProfile(readIdentity());
+    const normalizedCode = normalizeLowerText(code);
+    const history = await getAllHistoryItems(profile);
+    const request = history.find((item) => normalizeLowerText(item.code) === normalizedCode) || null;
+    const rawRow = await findKrudBookingRowByCode(code, profile);
+
+    if (!rawRow && (!request || request.type !== "dat-lich")) {
+      return {
+        profile,
+        request,
+        invoice: null,
+      };
+    }
+
+    return {
+      profile,
+      request,
+      invoice: normalizeBookingInvoiceDetail(rawRow, request),
     };
   }
 
   async function saveRequest(payload) {
-    if (!payload || typeof payload !== "object") return null;
-    return saveHistoryItem(payload);
+    return payload && typeof payload === "object" ? normalizeHistoryItem(payload) : null;
   }
 
   async function updateProfile(payload) {
     const currentIdentity = readIdentity();
-    const currentKey = getUserKey(getSavedRole(), currentIdentity.email || "");
     const nextProfile = syncIdentityFromProfile({
       ...currentIdentity,
       ...(payload && typeof payload === "object" ? payload : {}),
     });
+    const updateFn = getKrudUpdateFn();
+    const tableName = getAuthTableName(getSavedRole() || "khach-hang");
+    const remoteId = normalizeText(currentIdentity.id || "");
 
-    updateStoredUser((currentUser) => ({
-      ...currentUser,
-      full_name: String(nextProfile.full_name || currentUser.full_name || "").trim(),
-      fullName: String(nextProfile.fullName || nextProfile.full_name || currentUser.fullName || "").trim(),
-      contact_person: String(nextProfile.contact_person || currentUser.contact_person || "").trim(),
-      contactPerson: String(nextProfile.contactPerson || nextProfile.contact_person || currentUser.contactPerson || "").trim(),
-      email: String(nextProfile.email || currentUser.email || "").trim().toLowerCase(),
-      phone: String(nextProfile.phone || currentUser.phone || "").trim(),
-      role: String(getSavedRole() || currentUser.role || "khach-hang").trim(),
-    }), { currentKey });
+    if (!updateFn || !tableName || !remoteId) {
+      throw new Error("Không tìm thấy thông tin tài khoản KRUD hiện tại để cập nhật hồ sơ.");
+    }
+
+    await Promise.resolve(
+      updateFn(tableName, {
+        id: remoteId,
+        full_name: normalizeText(nextProfile.full_name || currentIdentity.full_name || ""),
+        contact_person: normalizeText(
+          nextProfile.contact_person || currentIdentity.contact_person || "",
+        ),
+        email: normalizeText(nextProfile.email || currentIdentity.email || "").toLowerCase(),
+        phone: normalizeText(nextProfile.phone || currentIdentity.phone || ""),
+        updated_at: new Date().toISOString(),
+      }),
+    );
 
     return nextProfile;
   }
@@ -346,31 +792,49 @@
       throw new Error("Mật khẩu xác nhận chưa khớp.");
     }
 
-    const updatedUser = updateStoredUser((currentUser) => {
-      if (String(currentUser.password || "") !== currentPassword) {
-        throw new Error("Mật khẩu hiện tại chưa đúng.");
-      }
+    const identity = readIdentity();
+    const remoteId = normalizeText(identity.id || "");
+    const tableName = getAuthTableName(getSavedRole() || "khach-hang");
+    const listFn = getKrudListFn();
+    const updateFn = getKrudUpdateFn();
 
-      return {
-        ...currentUser,
-        password: newPassword,
-      };
-    });
-
-    if (!updatedUser) {
-      throw new Error("Không tìm thấy tài khoản hiện tại để cập nhật mật khẩu.");
+    if (!remoteId || !tableName || !listFn || !updateFn) {
+      throw new Error("Không tìm thấy thông tin tài khoản KRUD hiện tại để đổi mật khẩu.");
     }
+
+    const response = await Promise.resolve(
+      listFn({
+        table: tableName,
+        page: 1,
+        limit: 1,
+        where: {
+          id: remoteId,
+        },
+      }),
+    );
+    const currentRow = extractRows(response)[0] || null;
+    const storedPassword = String(currentRow?.password || currentRow?.mat_khau || "");
+
+    if (storedPassword && storedPassword !== currentPassword) {
+      throw new Error("Mật khẩu hiện tại chưa đúng.");
+    }
+
+    await Promise.resolve(
+      updateFn(tableName, {
+        id: remoteId,
+        password: newPassword,
+        mat_khau: newPassword,
+        updated_at: new Date().toISOString(),
+      }),
+    );
 
     return { status: "success" };
   }
 
   window.FastGoCustomerPortalStore = {
     storageKeys,
-    buildSampleItems,
-    getStoredHistoryItems,
+    bookingCrudTableName,
     getHistoryItems,
-    getHistoryItemByCode,
-    saveHistoryItem,
     readIdentity,
     saveIdentity,
     syncIdentityFromProfile,
@@ -381,6 +845,7 @@
     fetchDashboard,
     fetchHistory,
     fetchDetail,
+    fetchBookingInvoiceDetail,
     saveRequest,
     updateProfile,
     changePassword,

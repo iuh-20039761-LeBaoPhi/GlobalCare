@@ -7,6 +7,19 @@
   const storageKey = "ghn-customer-orders";
   const trackingHistoryKey = "trackingHistory";
   const krudOrdersTable = "giaohangnhanh_dat_lich";
+  const currentPath = String(window.location.pathname || "").replace(/\\/g, "/");
+  const currentPathLower = currentPath.toLowerCase();
+  const projectMarker = "/giao-hang-nhanh/";
+  const projectMarkerIndex = currentPathLower.lastIndexOf(projectMarker);
+  const projectBase =
+    projectMarkerIndex !== -1
+      ? currentPath.slice(0, projectMarkerIndex + projectMarker.length)
+      : "./";
+  const assetPaths = {
+    favicon: `${projectBase}public/assets/images/favicon.ico`,
+    mainLogo: `${projectBase}public/assets/images/logo-dich-vu-quanh-ta.png`,
+    brandLogo: `${projectBase}public/assets/images/favicon.png`,
+  };
 
   let currentDetail = null;
   let currentViewer = "public";
@@ -29,6 +42,18 @@
       return false;
     }
   }
+
+  function applyFavicon() {
+    let faviconLink = document.querySelector("link[rel='icon']");
+    if (!faviconLink) {
+      faviconLink = document.createElement("link");
+      faviconLink.rel = "icon";
+      faviconLink.type = "image/x-icon";
+      document.head.appendChild(faviconLink);
+    }
+    faviconLink.href = assetPaths.favicon;
+  }
+
   const escapeHtml =
     typeof core.escapeHtml === "function"
       ? (value) => core.escapeHtml(value)
@@ -509,19 +534,29 @@
           }
 
           if (typeof window.crud === "function") {
-            return (payload) =>
-              window.crud("list", payload.table, {
-                p: payload.page || 1,
+            return (payload) => {
+              const options = {
+                ...payload,
+                p: payload.page || payload.p || 1,
                 limit: payload.limit || 100,
-              });
+              };
+              delete options.table;
+              delete options.page;
+              return window.crud("list", payload.table, options);
+            };
           }
 
           if (typeof window.krud === "function") {
-            return (payload) =>
-              window.krud("list", payload.table, {
-                p: payload.page || 1,
+            return (payload) => {
+              const options = {
+                ...payload,
+                p: payload.page || payload.p || 1,
                 limit: payload.limit || 100,
-              });
+              };
+              delete options.table;
+              delete options.page;
+              return window.krud("list", payload.table, options);
+            };
           }
 
           return null;
@@ -567,24 +602,90 @@
           return [];
         };
 
+  function matchKrudRecordByIdentifier(rows, identifier) {
+    const normalizedIdentifier = normalizeText(identifier).toUpperCase();
+    const list = Array.isArray(rows) ? rows : [];
+    return (
+      list.find((row) => {
+        const candidates = [
+          row.ma_don_hang_noi_bo,
+          row.ma_don_hang,
+          row.order_code,
+          row.id,
+        ]
+          .map((value) => normalizeText(value).toUpperCase())
+          .filter(Boolean);
+        return candidates.includes(normalizedIdentifier);
+      }) || null
+    );
+  }
+
   async function findKrudRecord(identifier) {
     const listFn = getKrudListFn();
     if (!listFn) return null;
+
+    const normalizedIdentifier = normalizeText(identifier);
+    if (!normalizedIdentifier) return null;
+    const exactFilters = [
+      { field: "ma_don_hang_noi_bo", operator: "=", value: normalizedIdentifier },
+      { field: "ma_don_hang", operator: "=", value: normalizedIdentifier },
+      { field: "order_code", operator: "=", value: normalizedIdentifier },
+    ];
+    if (/^\d+$/.test(normalizedIdentifier)) {
+      exactFilters.unshift({
+        field: "id",
+        operator: "=",
+        value: Number(normalizedIdentifier),
+      });
+    }
+
+    for (const where of exactFilters) {
+      try {
+        const response = await listFn({
+          table: krudOrdersTable,
+          where: [where],
+          page: 1,
+          limit: 20,
+        });
+        const directMatch = matchKrudRecordByIdentifier(
+          extractRows(response),
+          normalizedIdentifier,
+        );
+        if (directMatch) return directMatch;
+      } catch (error) {
+        // Fallback to paginated scan below when the KRUD client does not support where.
+      }
+    }
+
+    const pageSize = 500;
+    for (let page = 1; page <= 5; page += 1) {
+      const response = await listFn({
+        table: krudOrdersTable,
+        sort: { id: "desc" },
+        page,
+        limit: pageSize,
+      });
+      const rows = extractRows(response);
+      const record = matchKrudRecordByIdentifier(rows, normalizedIdentifier);
+      if (record) return record;
+      if (rows.length < pageSize) break;
+    }
 
     const response = await listFn({
       table: krudOrdersTable,
       page: 1,
       limit: 500,
     });
-
-    const normalizedIdentifier = normalizeText(identifier).toUpperCase();
     const rows = extractRows(response);
     const record = rows.find((row) => {
       const code = normalizeText(
         row.ma_don_hang_noi_bo || row.ma_don_hang || row.order_code || row.id,
       ).toUpperCase();
       const rowId = normalizeText(row.id).toUpperCase();
-      return code === normalizedIdentifier || rowId === normalizedIdentifier;
+      return (
+        code === normalizedIdentifier.toUpperCase() ||
+        rowId === normalizedIdentifier.toUpperCase()
+      );
     });
 
     return record || null;
@@ -750,6 +851,16 @@
     );
   }
 
+  function getUrlAccessParams() {
+    const params = new URLSearchParams(window.location.search);
+    const username = normalizeText(params.get("username") || "");
+    const password = String(params.get("password") || "");
+    return {
+      username,
+      password,
+    };
+  }
+
   function getViewer(session) {
     const params = new URLSearchParams(window.location.search);
     if (session && session.role === "shipper") return "shipper";
@@ -758,6 +869,39 @@
     return (
       normalizeText(params.get("viewer") || "public").toLowerCase() || "public"
     );
+  }
+
+  function syncDisplayUrl(identifier, viewer) {
+    if (!identifier || !window.history || typeof window.history.replaceState !== "function") {
+      return;
+    }
+
+    const access = getUrlAccessParams();
+    let targetUrl = null;
+    if (viewer === "customer") {
+      targetUrl = new URL("public/khach-hang/chi-tiet-don-hang.html", window.location.href);
+    } else if (viewer === "shipper") {
+      targetUrl = new URL("public/nha-cung-cap/chi-tiet-don-hang.html", window.location.href);
+    } else {
+      targetUrl = new URL("chi-tiet-don-hang.html", window.location.href);
+    }
+
+    targetUrl.searchParams.set("madonhang", identifier);
+    targetUrl.searchParams.delete("viewer");
+    targetUrl.searchParams.delete("code");
+    targetUrl.searchParams.delete("id");
+    if (access.username && access.password) {
+      targetUrl.searchParams.set("username", access.username);
+      targetUrl.searchParams.set("password", access.password);
+    } else {
+      targetUrl.searchParams.delete("username");
+      targetUrl.searchParams.delete("password");
+    }
+
+    const nextUrl = targetUrl.toString();
+    if (nextUrl !== window.location.href) {
+      window.history.replaceState(window.history.state, "", nextUrl);
+    }
   }
 
   function canCancel(order, viewer) {
@@ -1018,6 +1162,7 @@
     },
   });
   ({ render, renderState } = orderDetailRendererFactory({
+    assetPaths,
     getRoot,
     escapeHtml,
     formatCurrency,
@@ -1026,6 +1171,7 @@
     normalizeMultilineText,
     getMilestones,
     deriveStatusKey,
+    getStatusBadge,
     buildActionButtons,
     pickFirstText,
     isImageExtension,
@@ -1330,6 +1476,7 @@
 
   async function init() {
     const identifier = normalizeText(getCurrentIdentifier());
+    applyFavicon();
     if (!identifier) {
       renderState("Thiếu mã đơn hàng để hiển thị chi tiết.", "error");
       return;
@@ -1338,6 +1485,7 @@
     renderState("Đang tải chi tiết đơn hàng...");
     currentSession = await ensureUrlAuth();
     currentViewer = getViewer(currentSession);
+    syncDisplayUrl(identifier, currentViewer);
 
     try {
       currentDetail = await loadDetail(identifier);

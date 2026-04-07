@@ -180,6 +180,7 @@ Ghi chú:
 ### 5. Dọn sạch fallback mock cũ
 
 - Một số luồng trong portal/tracking vẫn còn fallback local/mock để không vỡ giao diện
+- Cụm admin/API đọc bảng `don_hang` cũ đã được gỡ khỏi repo
 - Cần dọn tiếp nếu muốn chạy `KRUD-only`
 
 ---

@@ -147,8 +147,8 @@
   }
 
   function escapeHtml(text) {
-    if (!text) return "";
-    return text
+    if (text == null) return "";
+    return String(text)
       .replace(/&/g, "&amp;")
       .replace(/</g, "&lt;")
       .replace(/>/g, "&gt;")
@@ -555,6 +555,83 @@
     });
   }
 
+  function getCurrentPathWithSearch() {
+    return `${window.location.pathname}${window.location.search}`;
+  }
+
+  function buildLoginRedirect(loginUrl = `${projectBasePath}dang-nhap.html`) {
+    const target = getCurrentPathWithSearch();
+    const baseLoginUrl = String(loginUrl || `${projectBasePath}dang-nhap.html`).trim();
+    return `${baseLoginUrl}?redirect=${encodeURIComponent(target)}`;
+  }
+
+  function getPortalRoutes(portalType) {
+    const type = normalizeText(portalType).toLowerCase();
+
+    if (type === "shipper") {
+      return {
+        home: "../../index.html",
+        login: "../../dang-nhap.html",
+        logout: "../../dang-nhap.html",
+        dashboard: "dashboard.html",
+        orders: "don-hang.html",
+        detail: "../../chi-tiet-don-hang.html",
+        profile: "ho-so.html",
+      };
+    }
+
+    return {
+      login: "../../dang-nhap.html",
+      logout: "../../dang-nhap.html",
+      booking: "../../dat-lich-giao-hang-nhanh.html",
+      dashboard: "dashboard.html",
+      orders: "lich-su-don-hang.html",
+      detail: "chi-tiet-don-hang.html",
+      profile: "ho-so.html",
+    };
+  }
+
+  function getPortalLoginRedirect(portalType) {
+    const routes = getPortalRoutes(portalType);
+    return buildLoginRedirect(routes.login);
+  }
+
+  function bindPortalLogoutActions(root, options = {}) {
+    if (!root || root.dataset.portalLogoutBound === "1") return;
+
+    const selector = String(options.selector || "[data-local-logout]").trim() || "[data-local-logout]";
+    const redirectUrl = String(options.redirectUrl || `${projectBasePath}dang-nhap.html`).trim();
+    const auth = options.localAuth || window.GiaoHangNhanhLocalAuth || null;
+
+    root.dataset.portalLogoutBound = "1";
+    root.addEventListener("click", function (event) {
+      const trigger = event.target.closest(selector);
+      if (!trigger || !root.contains(trigger)) return;
+
+      event.preventDefault();
+
+      if (auth && typeof auth.logout === "function") {
+        auth.logout(redirectUrl);
+        return;
+      }
+
+      if (auth && typeof auth.clearSession === "function") {
+        auth.clearSession();
+      } else {
+        window.localStorage.removeItem("ghn-auth-session");
+        document.dispatchEvent(
+          new CustomEvent("ghn:auth-changed", {
+            detail: {
+              session: null,
+            },
+          }),
+        );
+      }
+
+      window.location.href = redirectUrl;
+    });
+  }
+
   function createStatusBadge(status, label) {
     return `<span class="customer-status-badge status-${escapeHtml(status || "")}">${escapeHtml(label || status || "--")}</span>`;
   }
@@ -611,6 +688,11 @@
     formatCurrency,
     formatDateTime,
     formatDateOnly,
+    getCurrentPathWithSearch,
+    buildLoginRedirect,
+    getPortalRoutes,
+    getPortalLoginRedirect,
+    bindPortalLogoutActions,
     extractRows,
     getKrudListFn,
     getStatusLabel,

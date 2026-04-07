@@ -2312,24 +2312,44 @@
   }
 
   .customer-panel-head-dashboard {
-    flex-direction: column;
+    flex-direction: column !important;
     align-items: stretch;
     gap: 12px;
   }
 
+  .customer-panel-head-dashboard > div:first-child {
+    width: 100%;
+  }
+
+  .customer-panel-head-dashboard h2 {
+    white-space: normal;
+    overflow: visible;
+    text-overflow: clip;
+    line-height: 1.35;
+  }
+
   .customer-inline-actions-dashboard {
     flex-direction: column;
+    align-items: stretch;
     width: 100% !important;
     gap: 10px;
   }
 
   .customer-quick-search {
+    align-items: stretch;
     max-width: none;
   }
 
   .customer-quick-search input {
+    min-width: 0;
     height: 44px;
     font-size: 14px;
+  }
+
+  .customer-inline-actions-dashboard .customer-quick-search .customer-btn {
+    width: 44px;
+    min-width: 44px;
+    flex: 0 0 44px;
   }
 
   .customer-inline-actions-dashboard .customer-btn {

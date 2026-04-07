@@ -23,7 +23,6 @@
     "modules/main-form-booking-map.js",
     "modules/main-form-booking-wizard.js",
     "modules/main-form-survey-map.js",
-    "modules/main-form-request-history.js",
     "modules/main-form-summaries.js",
     "modules/main-form-media.js",
     "modules/main-form-survey-ui.js",
@@ -32,8 +31,8 @@
     "modules/main-auth.js",
     "modules/main-customer-dashboard.js",
     "modules/main-customer-history.js",
-    "modules/main-customer-detail.js",
     "modules/main-customer-profile.js",
+    "modules/main-provider-dashboard.js",
   ];
 
   const versionSuffix =

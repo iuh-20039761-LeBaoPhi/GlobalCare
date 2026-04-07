@@ -163,6 +163,38 @@
     registerItem.hidden = true;
   }
 
+  function performLogout() {
+    if (
+      window.GiaoHangNhanhLocalAuth &&
+      typeof window.GiaoHangNhanhLocalAuth.logout === "function"
+    ) {
+      window.GiaoHangNhanhLocalAuth.logout(`${projectBase}dang-nhap.html`);
+    } else {
+      window.localStorage.removeItem(authSessionKey);
+      document.dispatchEvent(
+        new CustomEvent("ghn:auth-changed", {
+          detail: {
+            session: null,
+          },
+        }),
+      );
+      window.location.href = `${projectBase}dang-nhap.html`;
+    }
+  }
+
+  function bindLogoutActions(root) {
+    if (!root || root.dataset.logoutDelegated === "1") return;
+
+    root.dataset.logoutDelegated = "1";
+    root.addEventListener("click", function (event) {
+      const link = event.target.closest("[data-local-logout]");
+      if (!link || !root.contains(link)) return;
+
+      event.preventDefault();
+      performLogout();
+    });
+  }
+
   function applyLinks(root, linkMap) {
     root.querySelectorAll("[data-layout-link]").forEach((element) => {
       const key = element.getAttribute("data-layout-link");
@@ -399,6 +431,7 @@
   if (headerHost) applyLinks(headerHost, linkMap);
   if (headerHost) applyActiveNav(headerHost);
   if (headerHost) syncAuthNav(headerHost);
+  if (headerHost) bindLogoutActions(headerHost);
   if (footerHost) applyLinks(footerHost, linkMap);
   document.dispatchEvent(
     new CustomEvent("ghn:layout-ready", {

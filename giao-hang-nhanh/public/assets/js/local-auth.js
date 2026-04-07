@@ -130,6 +130,15 @@
     }
   }
 
+  function logout(redirectUrl = "") {
+    clearSession();
+
+    const target = String(redirectUrl || "").trim();
+    if (target) {
+      window.location.href = target;
+    }
+  }
+
   function getDashboardPath(role) {
     return role === "shipper"
       ? "public/nha-cung-cap/dashboard.html"
@@ -740,6 +749,7 @@
     getUsers,
     getSession,
     clearSession,
+    logout,
     getDashboardPath,
     listAllKrudUsers,
     listPendingShippers,

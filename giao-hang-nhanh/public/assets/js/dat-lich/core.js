@@ -1,15 +1,15 @@
 /**
  * dat-lich/core.js
- * Chứa state chung và helper nền của form đặt lịch:
- * - state đơn hàng, draft, item list
- * - helper cơ bản cho config, local storage, format, DOM
- * - các hàm nền cho map / thời tiết / dữ liệu form
+ * State và helper nền của form đặt lịch.
+ * - Quản lý state form, item list, config, format, DOM helper
+ * - Cung cấp helper KRUD cho tạo đơn và đồng bộ mã đơn hệ thống
+ * - Giữ draft tạm trong sessionStorage để resume sau đăng nhập
  *
  * Liên quan trực tiếp:
- * - dat-lich.js: bootstrap nạp file này đầu tiên
- * - dat-lich/map-reorder.js: dùng state và helper map/reorder từ file này
+ * - dat-lich.js: bootstrap, nạp file này đầu tiên
+ * - dat-lich/map-reorder.js: dùng state và helper prefill / reorder
  * - dat-lich/pricing.js: đọc orderItems, khoang_cach_km, selectedService
- * - dat-lich/flow-submit.js: dùng state/payload builder để submit đơn
+ * - dat-lich/flow-submit.js: build payload và submit đơn qua KRUD / Google Sheet
  */
 
 // ========== STATE ==========
@@ -24,7 +24,6 @@ let isResolvingPickupLocation = false;
 let recalculateDistanceRequestToken = 0;
 const BOOKING_DRAFT_STORAGE_KEY = "ghn_booking_login_resume_v1";
 const BOOKING_DRAFT_TTL_MS = 6 * 60 * 60 * 1000;
-const LOCAL_CUSTOMER_ORDER_STORAGE_KEY = "ghn-customer-orders";
 let orderItems = [
   {
     loai_hang: "",
@@ -138,42 +137,6 @@ function requireBookingLogin(options = {}) {
   return null;
 }
 
-function getLocalCustomerOrders() {
-  const orders = readLocalJson(LOCAL_CUSTOMER_ORDER_STORAGE_KEY, []);
-  return Array.isArray(orders) ? orders : [];
-}
-
-function normalizeStorageOrderId(value) {
-  return String(value || "").trim().toUpperCase();
-}
-
-function persistLocalCustomerOrder(detail) {
-  const current = getLocalCustomerOrders();
-  const nextId = normalizeStorageOrderId(
-    detail?.order?.id || detail?.order?.order_code,
-  );
-  const filtered = current.filter((item) => {
-    const itemId = normalizeStorageOrderId(
-      item?.order?.id || item?.order?.order_code,
-    );
-    return itemId !== nextId;
-  });
-  filtered.unshift(detail);
-  return writeLocalJson(LOCAL_CUSTOMER_ORDER_STORAGE_KEY, filtered);
-}
-
-function getLocalOrderDetailById(orderId) {
-  const normalizedId = normalizeStorageOrderId(orderId);
-  return (
-    getLocalCustomerOrders().find((item) => {
-      const itemId = normalizeStorageOrderId(
-        item?.order?.id || item?.order?.order_code,
-      );
-      return itemId === normalizedId;
-    }) || null
-  );
-}
-
 function buildPaymentMethodLabel(value) {
   return String(value || "").toLowerCase() === "chuyen_khoan"
     ? "Chuyển khoản"
@@ -208,156 +171,6 @@ function formatSystemOrderCode(orderId, createdAt = new Date()) {
   return `GHN-${formatOrderDateCode(createdAt)}-${String(Math.trunc(Math.abs(numericId))).padStart(7, "0")}`;
 }
 
-function buildGeneratedOrderCode() {
-  return `TMP-${Date.now()}-${Math.random().toString(36).slice(2, 6).toUpperCase()}`;
-}
-
-function getSelectedUploadMeta() {
-  return getSelectedUploadFiles().map((entry, index) => {
-    const name = String(entry?.file?.name || `tep-${index + 1}`);
-    const extension = name.includes(".")
-      ? name.split(".").pop().toLowerCase()
-      : "";
-    return {
-      id: `${Date.now()}-${index}`,
-      name,
-      extension,
-      url: "",
-      created_at: new Date().toISOString(),
-    };
-  });
-}
-
-function mapStoredDetailToReorderData(detail) {
-  if (!detail || typeof detail !== "object") return null;
-  const order = detail.order || {};
-  return {
-    source_order_id: order.id || order.order_code || "",
-    source_order_code: order.order_code || order.id || "",
-    sender_name: order.sender_name || "",
-    sender_phone: order.sender_phone || "",
-    receiver_name: order.receiver_name || "",
-    receiver_phone: order.receiver_phone || "",
-    search_pickup: order.pickup_address || "",
-    search_delivery: order.delivery_address || "",
-    pickup_address: order.pickup_address || "",
-    delivery_address: order.delivery_address || "",
-    pickup_date:
-      order.service_meta?.pickup_date || order.pickup_date || order.ngay_lay_hang || "",
-    pickup_slot:
-      order.service_meta?.pickup_slot || order.pickup_slot || order.khung_gio_lay_hang || "",
-    pickup_slot_label:
-      order.service_meta?.pickup_slot_label ||
-      order.pickup_slot_label ||
-      order.ten_khung_gio_lay_hang ||
-      "",
-    notes: order.clean_note || order.notes || "",
-    cod_value: order.cod_amount || order.cod_value || 0,
-    payment_method: order.payment_method || "tien_mat",
-    fee_payer: order.fee_payer || "gui",
-    service_type: order.service_type || "",
-    service_name: order.service_label || order.service_name || "",
-    estimated_eta:
-      order.service_meta?.estimated_eta || order.estimated_delivery || "",
-    vehicle: order.vehicle_type || order.vehicle || "",
-    vehicle_label:
-      order.service_meta?.vehicle_label || order.vehicle_label || order.vehicle_type || "",
-    khoang_cach_km:
-      order.service_meta?.distance_km || order.khoang_cach_km || 0,
-    items: Array.isArray(detail.items) ? detail.items : [],
-  };
-}
-
-function buildLocalOrderDetail(payload, orderCode = buildGeneratedOrderCode()) {
-  const session = getLocalSession();
-  const now = new Date().toISOString();
-  const pricingBreakdown = chuan_hoa_chi_tiet_gia_cuoc_da_luu(
-    payload.chi_tiet_gia_cuoc || {},
-  );
-  const serviceType = getInternalServiceType(payload.dich_vu);
-  const uploadedMeta = getSelectedUploadMeta();
-
-  return {
-    status: "success",
-    order: {
-      id: orderCode,
-      order_code: orderCode,
-      created_at: now,
-      pickup_time: payload.ngay_lay_hang || "",
-      pickup_date: payload.ngay_lay_hang || "",
-      pickup_slot: payload.khung_gio_lay_hang || "",
-      pickup_slot_label: payload.ten_khung_gio_lay_hang || "",
-      status: "pending",
-      status_label: "Chờ xử lý",
-      sender_name: payload.nguoi_gui_ho_ten || "",
-      sender_phone: payload.nguoi_gui_so_dien_thoai || "",
-      receiver_name: payload.nguoi_nhan_ho_ten || "",
-      receiver_phone: payload.nguoi_nhan_so_dien_thoai || "",
-      pickup_address: payload.dia_chi_lay_hang || "",
-      delivery_address: payload.dia_chi_giao_hang || "",
-      service_type: serviceType,
-      service_name: payload.ten_dich_vu || "",
-      service_label: payload.ten_dich_vu || "",
-      vehicle_type: payload.ten_phuong_tien || payload.phuong_tien || "",
-      vehicle_label: payload.ten_phuong_tien || payload.phuong_tien || "",
-      payment_method: payload.phuong_thuc_thanh_toan || "tien_mat",
-      payment_method_label: buildPaymentMethodLabel(
-        payload.phuong_thuc_thanh_toan,
-      ),
-      fee_payer: payload.nguoi_tra_cuoc || "gui",
-      payer_label: buildFeePayerLabel(payload.nguoi_tra_cuoc),
-      cod_amount: Number(payload.gia_tri_thu_ho_cod || 0),
-      total_fee: Number(payload.tong_cuoc || 0),
-      shipping_fee: Number(payload.tong_cuoc || 0),
-      notes: payload.ghi_chu_tai_xe || "",
-      clean_note: payload.ghi_chu_tai_xe || "",
-      estimated_delivery: payload.du_kien_giao_hang || "",
-      payment_status_label: "Chưa hoàn tất",
-      khoang_cach_km: Number(payload.khoang_cach_km || 0),
-      ngayhuy: "",
-      thoidiemnhandon: "",
-      ngaynhan: "",
-      ngaybatdauthucte: "",
-      ngayhoanthanhthucte: "",
-      fee_breakdown: pricingBreakdown,
-      pricing_breakdown: pricingBreakdown,
-      service_meta: {
-        pickup_date: payload.ngay_lay_hang || "",
-        pickup_slot: payload.khung_gio_lay_hang || "",
-        pickup_slot_label: payload.ten_khung_gio_lay_hang || "",
-        estimated_eta: payload.du_kien_giao_hang || "",
-        vehicle_label: payload.ten_phuong_tien || payload.phuong_tien || "",
-        distance_km: Number(payload.khoang_cach_km || 0),
-        payer_label: buildFeePayerLabel(payload.nguoi_tra_cuoc),
-        payment_method_label: buildPaymentMethodLabel(
-          payload.phuong_thuc_thanh_toan,
-        ),
-      },
-    },
-    provider: {
-      attachments: uploadedMeta,
-      shipper_reports: [],
-      feedback_media: [],
-    },
-    customer: {
-      id: session?.id || "",
-      username: session?.username || "",
-      fullname: session?.fullname || payload.nguoi_gui_ho_ten || "",
-      phone: session?.phone || payload.nguoi_gui_so_dien_thoai || "",
-      email: session?.email || "",
-    },
-    items: Array.isArray(payload.mat_hang) ? payload.mat_hang : [],
-    logs: [
-      {
-        old_status_label: "Mới tạo",
-        new_status_label: "Chờ xử lý",
-        created_at: now,
-        note: "Đơn hàng đã được tạo thành công.",
-      },
-    ],
-  };
-}
-
 function getBookingCrudInsertFn() {
   if (typeof window.crud === "function") {
     return (tableName, data) => window.crud("insert", tableName, data);
@@ -377,6 +190,172 @@ function getBookingCrudUpdateFn() {
 
   if (typeof window.krud === "function") {
     return (tableName, data) => window.krud("update", tableName, data);
+  }
+
+  return null;
+}
+
+function getBookingCrudListFn() {
+  if (typeof window.krudList === "function") {
+    return (payload) => window.krudList(payload);
+  }
+
+  if (typeof window.crud === "function") {
+    return (payload) => {
+      const options = {
+        ...payload,
+        p: payload.page || payload.p || 1,
+        limit: payload.limit || 100,
+      };
+      delete options.table;
+      delete options.page;
+      return window.crud("list", payload.table, options);
+    };
+  }
+
+  if (typeof window.krud === "function") {
+    return (payload) => {
+      const options = {
+        ...payload,
+        p: payload.page || payload.p || 1,
+        limit: payload.limit || 100,
+      };
+      delete options.table;
+      delete options.page;
+      return window.krud("list", payload.table, options);
+    };
+  }
+
+  return null;
+}
+
+function extractCrudRows(payload, depth = 0) {
+  if (depth > 4 || payload == null) return [];
+  if (Array.isArray(payload)) return payload;
+  if (typeof payload !== "object") return [];
+
+  const candidateKeys = ["data", "items", "rows", "list", "result", "payload"];
+  for (const key of candidateKeys) {
+    const value = payload[key];
+    if (Array.isArray(value)) return value;
+    const nested = extractCrudRows(value, depth + 1);
+    if (nested.length) return nested;
+  }
+
+  return [];
+}
+
+function parseCrudJsonSafe(value, fallback) {
+  if (value == null || value === "") return fallback;
+  if (typeof value === "object") return value;
+  try {
+    return JSON.parse(value);
+  } catch (error) {
+    return fallback;
+  }
+}
+
+function getReorderIdentifierCandidates(row) {
+  return [
+    row?.ma_don_hang_noi_bo,
+    row?.ma_don_hang,
+    row?.order_code,
+    row?.id,
+    formatSystemOrderCode(row?.id, row?.created_at || row?.created_date || new Date()),
+  ]
+    .map((value) => String(value || "").trim().toUpperCase())
+    .filter(Boolean);
+}
+
+function mapKrudRowToReorderData(row) {
+  if (!row || typeof row !== "object") return null;
+  const parsedItems = parseCrudJsonSafe(row.mat_hang_json || row.items_json, []);
+  const fallbackOrderCode =
+    String(row.ma_don_hang_noi_bo || row.ma_don_hang || row.order_code || "").trim() ||
+    formatSystemOrderCode(row.id, row.created_at || row.created_date || new Date()) ||
+    String(row.id || "").trim();
+
+  return {
+    source_order_id: row.id || null,
+    source_order_code: fallbackOrderCode,
+    nguoi_gui_ho_ten: row.ho_ten_nguoi_gui || "",
+    nguoi_gui_so_dien_thoai: row.so_dien_thoai_nguoi_gui || "",
+    nguoi_nhan_ho_ten: row.ho_ten_nguoi_nhan || "",
+    nguoi_nhan_so_dien_thoai: row.so_dien_thoai_nguoi_nhan || "",
+    dia_chi_lay_hang: row.dia_chi_lay_hang || "",
+    dia_chi_giao_hang: row.dia_chi_giao_hang || "",
+    ghi_chu_tai_xe: row.ghi_chu || "",
+    gia_tri_thu_ho_cod: Number(row.gia_tri_thu_ho_cod || 0),
+    phuong_thuc_thanh_toan: row.phuong_thuc_thanh_toan || "tien_mat",
+    nguoi_tra_cuoc: row.nguoi_tra_cuoc || "gui",
+    dich_vu: row.dich_vu || row.loai_dich_vu || "",
+    service_type: row.loai_dich_vu || row.dich_vu || "",
+    ten_dich_vu: row.ten_dich_vu || "",
+    phuong_tien: row.phuong_tien || "",
+    ten_phuong_tien: row.ten_phuong_tien || "",
+    ngay_lay_hang: row.ngay_lay_hang || "",
+    khung_gio_lay_hang: row.khung_gio_lay_hang || "",
+    ten_khung_gio_lay_hang: row.ten_khung_gio_lay_hang || "",
+    du_kien_giao_hang: row.du_kien_giao_hang || "",
+    khoang_cach_km: Number(row.khoang_cach_km || 0),
+    mat_hang: Array.isArray(parsedItems) ? parsedItems : [],
+    items: Array.isArray(parsedItems) ? parsedItems : [],
+  };
+}
+
+async function fetchReorderDataFromCrud(identifier) {
+  const listFn = getBookingCrudListFn();
+  const normalizedIdentifier = String(identifier || "").trim().toUpperCase();
+  if (!listFn || !normalizedIdentifier) return null;
+
+  const exactFilters = [
+    { field: "ma_don_hang_noi_bo", operator: "=", value: normalizedIdentifier },
+    { field: "ma_don_hang", operator: "=", value: normalizedIdentifier },
+    { field: "order_code", operator: "=", value: normalizedIdentifier },
+  ];
+  if (/^\d+$/.test(normalizedIdentifier)) {
+    exactFilters.unshift({
+      field: "id",
+      operator: "=",
+      value: Number(normalizedIdentifier),
+    });
+  }
+
+  for (const where of exactFilters) {
+    try {
+      const response = await listFn({
+        table: "giaohangnhanh_dat_lich",
+        where: [where],
+        page: 1,
+        limit: 20,
+      });
+      const matchedRow = extractCrudRows(response).find((row) =>
+        getReorderIdentifierCandidates(row).includes(normalizedIdentifier),
+      );
+      if (matchedRow) {
+        return mapKrudRowToReorderData(matchedRow);
+      }
+    } catch (error) {
+      // Fallback to paginated scan below when where is unsupported.
+    }
+  }
+
+  const pageSize = 500;
+  for (let page = 1; page <= 5; page += 1) {
+    const response = await listFn({
+      table: "giaohangnhanh_dat_lich",
+      sort: { id: "desc" },
+      page,
+      limit: pageSize,
+    });
+    const rows = extractCrudRows(response);
+    const matchedRow = rows.find((row) =>
+      getReorderIdentifierCandidates(row).includes(normalizedIdentifier),
+    );
+    if (matchedRow) {
+      return mapKrudRowToReorderData(matchedRow);
+    }
+    if (rows.length < pageSize) break;
   }
 
   return null;

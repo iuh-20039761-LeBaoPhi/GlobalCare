@@ -2,6 +2,10 @@
   if (window.__fastGoSharedLayoutLoaded) return;
   window.__fastGoSharedLayoutLoaded = true;
 
+  const storageKeys = {
+    role: "fastgo-auth-role",
+    identity: "fastgo-auth-identity",
+  };
   const currentPath = String(window.location.pathname || "").replace(/\\/g, "/");
   const currentPathLower = currentPath.toLowerCase();
   const inPublicDir = currentPathLower.includes("/public/");
@@ -30,6 +34,49 @@
     "dashboard.html": "account",
     "lich-su-yeu-cau.html": "account",
   };
+
+  function safeParse(raw, fallback) {
+    try {
+      return raw ? JSON.parse(raw) : fallback;
+    } catch (error) {
+      console.error("Cannot parse auth payload:", error);
+      return fallback;
+    }
+  }
+
+  function readIdentity() {
+    try {
+      const identity = safeParse(window.localStorage.getItem(storageKeys.identity), {});
+      return identity && typeof identity === "object" ? identity : {};
+    } catch (error) {
+      console.error("Cannot read auth identity:", error);
+      return {};
+    }
+  }
+
+  function getSavedRole() {
+    try {
+      return String(window.localStorage.getItem(storageKeys.role) || "").trim().toLowerCase();
+    } catch (error) {
+      console.error("Cannot read auth role:", error);
+      return "";
+    }
+  }
+
+  function getDisplayName(identity, role) {
+    const value =
+      identity?.contact_person ||
+      identity?.contactPerson ||
+      identity?.fullName ||
+      identity?.full_name ||
+      identity?.email ||
+      (role === "doi-tac" ? "Đối tác" : "Khách hàng");
+    return String(value || "")
+      .trim()
+      .split(/\s+/)
+      .filter(Boolean)
+      .slice(-1)[0] || (role === "doi-tac" ? "Đối tác" : "Khách hàng");
+  }
 
   function loadPartial(url) {
     try {
@@ -82,8 +129,8 @@
       "moving-house": `${servicesLink}#chuyen-nha`,
       "moving-warehouse": `${servicesLink}#chuyen-kho-bai`,
       "moving-office": `${servicesLink}#chuyen-van-phong`,
-      "news": `${projectBase}cam-nang.html`,
-      "brandLogo": `${publicBase}assets/images/favicon.png`,
+      news: `${projectBase}cam-nang.html`,
+      brandLogo: `${publicBase}assets/images/favicon.png`,
 
       "svc-giao-hang-nhanh": `${parentBase}giao-hang-nhanh/dich-vu-giao-hang.html`,
       "svc-dich-vu-chuyen-don": `${projectBase}dich-vu-chuyen-don.html`,
@@ -110,6 +157,115 @@
         }
       }
     });
+  }
+
+  function resolveAccountLinks(role) {
+    if (role === "doi-tac") {
+      return {
+        dashboard: `${projectBase}doi-tac/dashboard.html`,
+        secondary: `${projectBase}bang-gia-chuyen-don.html`,
+        secondaryLabel: "Bảng giá minh bạch",
+      };
+    }
+
+    return {
+      dashboard: `${projectBase}khach-hang/dashboard.html`,
+      orders: `${projectBase}khach-hang/lich-su-yeu-cau.html`,
+      profile: `${projectBase}khach-hang/ho-so.html`,
+    };
+  }
+
+  function performLogout() {
+    try {
+      window.localStorage.removeItem(storageKeys.identity);
+      window.localStorage.removeItem(storageKeys.role);
+    } catch (error) {
+      console.error("Cannot clear auth session:", error);
+    }
+    window.location.href = `${projectBase}dang-nhap.html`;
+  }
+
+  function bindLogoutActions(root) {
+    if (!root || root.dataset.logoutDelegated === "1") return;
+
+    root.dataset.logoutDelegated = "1";
+    root.addEventListener("click", function (event) {
+      const link = event.target.closest("[data-local-logout]");
+      if (!link || !root.contains(link)) return;
+      event.preventDefault();
+      performLogout();
+    });
+  }
+
+  function syncAuthNav(root) {
+    if (!root) return;
+
+    const loginItem = root.querySelector("#nav-login-item");
+    const registerItem = root.querySelector("#nav-register-item");
+    if (!loginItem || !registerItem) return;
+
+    const role = getSavedRole();
+    const identity = readIdentity();
+    if (!role || !identity || !Object.keys(identity).length) {
+      loginItem.className = "";
+      loginItem.hidden = false;
+      loginItem.innerHTML =
+        '<a data-layout-link="login" href="dang-nhap.html">Đăng nhập</a>';
+      registerItem.hidden = false;
+      registerItem.innerHTML =
+        '<a data-layout-link="register" href="dang-ky.html" class="btn-primary nav-auth-cta">Đăng ký</a>';
+      applyLinks(root, linkMap);
+      return;
+    }
+
+    const firstName = escapeHtml(getDisplayName(identity, role));
+    const summary = escapeHtml(
+      String(identity.phone || "").trim() ||
+        String(identity.email || "").trim() ||
+        (role === "doi-tac" ? "Khu vực đối tác" : "Khu vực khách hàng"),
+    );
+    const links = resolveAccountLinks(role);
+
+    loginItem.hidden = false;
+    loginItem.className = "dropdown has-submenu customer-nav-dropdown";
+    loginItem.innerHTML =
+      role === "doi-tac"
+        ? `
+          <a data-layout-link="account" href="${links.dashboard}">Xin chào, ${firstName}</a>
+          <ul class="dropdown-menu customer-nav-dropdown-menu" style="text-align: left;">
+            <li class="customer-nav-dropdown-summary">
+              <div class="customer-nav-dropdown-avatar">${firstName.charAt(0)}</div>
+              <div class="customer-nav-dropdown-user">
+                <strong>${firstName}</strong>
+                <span>${summary}</span>
+              </div>
+            </li>
+            <li><a href="${links.dashboard}"><i class="fas fa-chart-line"></i> Dashboard đối tác</a></li>
+            <li><a href="${links.secondary}"><i class="fas fa-file-invoice-dollar"></i> ${escapeHtml(
+              links.secondaryLabel,
+            )}</a></li>
+            <li class="customer-nav-logout-wrapper"><a href="${projectBase}dang-nhap.html" class="customer-nav-logout" data-local-logout="1"><i class="fas fa-arrow-right-from-bracket"></i> Đăng xuất</a></li>
+          </ul>
+        `
+        : `
+          <a data-layout-link="account" href="${links.dashboard}">Xin chào, ${firstName}</a>
+          <ul class="dropdown-menu customer-nav-dropdown-menu" style="text-align: left;">
+            <li class="customer-nav-dropdown-summary">
+              <div class="customer-nav-dropdown-avatar">${firstName.charAt(0)}</div>
+              <div class="customer-nav-dropdown-user">
+                <strong>${firstName}</strong>
+                <span>${summary}</span>
+              </div>
+            </li>
+            <li><a href="${links.dashboard}"><i class="fas fa-chart-line"></i> Tổng quan</a></li>
+            <li><a href="${links.orders}"><i class="fas fa-box"></i> Lịch sử yêu cầu</a></li>
+            <li><a href="${links.profile}"><i class="fas fa-user"></i> Hồ sơ cá nhân</a></li>
+            <li class="customer-nav-logout-wrapper"><a href="${projectBase}dang-nhap.html" class="customer-nav-logout" data-local-logout="1"><i class="fas fa-arrow-right-from-bracket"></i> Đăng xuất</a></li>
+          </ul>
+        `;
+
+    registerItem.hidden = true;
+    registerItem.innerHTML = "";
   }
 
   function resolveActiveLinkKey() {
@@ -155,160 +311,13 @@
     }
   }
 
-  const PROMO_POPUP_ALLOWED_PAGES = new Set();
-  const PROMO_POPUP_STORAGE_KEY = "moving_promo_popup_seen_date_v1";
-
-  function getVietnamDateToken() {
-    try {
-      return new Intl.DateTimeFormat("en-CA", {
-        timeZone: "Asia/Ho_Chi_Minh",
-        year: "numeric",
-        month: "2-digit",
-        day: "2-digit",
-      }).format(new Date());
-    } catch (error) {
-      const now = new Date();
-      const year = now.getFullYear();
-      const month = String(now.getMonth() + 1).padStart(2, "0");
-      const day = String(now.getDate()).padStart(2, "0");
-      return `${year}-${month}-${day}`;
-    }
-  }
-
-  function canUseLocalStorage() {
-    try {
-      const probeKey = "__moving_promo_popup_probe__";
-      window.localStorage.setItem(probeKey, "1");
-      window.localStorage.removeItem(probeKey);
-      return true;
-    } catch (error) {
-      return false;
-    }
-  }
-
-  function shouldShowPromoPopup() {
-    if (!PROMO_POPUP_ALLOWED_PAGES.has(currentPage)) return false;
-    if (!canUseLocalStorage()) return true;
-    return (
-      window.localStorage.getItem(PROMO_POPUP_STORAGE_KEY) !==
-      getVietnamDateToken()
-    );
-  }
-
-  function markPromoPopupSeen() {
-    if (!canUseLocalStorage()) return;
-    try {
-      window.localStorage.setItem(
-        PROMO_POPUP_STORAGE_KEY,
-        getVietnamDateToken(),
-      );
-    } catch (error) {
-      console.warn("Không thể lưu trạng thái popup quảng cáo:", error);
-    }
-  }
-
-  function ensurePromoPopup(linkMap) {
-    const existing = document.getElementById("promo-popup-overlay");
-    if (existing) return existing;
-
-    const overlay = document.createElement("div");
-    overlay.id = "promo-popup-overlay";
-    overlay.className = "promo-popup-overlay";
-    overlay.setAttribute("role", "dialog");
-    overlay.setAttribute("aria-modal", "true");
-    overlay.setAttribute("aria-labelledby", "promo-popup-title");
-    overlay.innerHTML = `
-      <div class="promo-popup-card">
-        <button type="button" class="promo-popup-close" aria-label="Đóng thông báo">&times;</button>
-        <div class="promo-popup-body">
-          <div class="promo-popup-copy">
-            <span class="promo-popup-kicker">
-              <i class="fas fa-box-open"></i>
-              Ưu đãi chuyển dọn trong ngày
-            </span>
-            <h2 class="promo-popup-title" id="promo-popup-title">
-              Chuyển dọn <strong>trọn gói</strong> gọn nhẹ trong ngày
-            </h2>
-            <p class="promo-popup-desc">
-              Khảo sát miễn phí, báo giá rõ ràng, đội ngũ chuyên nghiệp bọc lót cẩn thận.
-            </p>
-            <div class="promo-popup-highlights">
-              <div class="promo-popup-chip">
-                <strong>Khảo sát miễn phí</strong>
-                <span>Ước tính khối lượng và báo giá trọn gói trước khi chuyển.</span>
-              </div>
-              <div class="promo-popup-chip">
-                <strong>Cam kết an toàn</strong>
-                <span>Hợp đồng rõ ràng, đền bù nếu có hư hại do vận chuyển.</span>
-              </div>
-            </div>
-            <div class="promo-popup-actions">
-              <a href="${linkMap.pricing}" class="promo-popup-btn promo-popup-btn--primary" data-promo-link="pricing">
-                <i class="fas fa-tags"></i>
-                Nhận báo giá
-              </a>
-              <a href="${linkMap.survey}" class="promo-popup-btn promo-popup-btn--secondary" data-promo-link="survey">
-                <i class="fas fa-calendar-check"></i>
-                Đặt lịch khảo sát
-              </a>
-            </div>
-            <div class="promo-popup-note">
-              Thông báo chỉ hiển thị một lần trong ngày để tránh làm phiền bạn.
-            </div>
-          </div>
-          <div class="promo-popup-visual" aria-hidden="true">
-            <span class="promo-popup-live">Moving Care</span>
-            <div class="promo-popup-map">
-              <span class="promo-popup-pin promo-popup-pin--start">
-                <i class="fas fa-house"></i>
-              </span>
-              <span class="promo-popup-pin promo-popup-pin--end">
-                <i class="fas fa-truck-moving"></i>
-              </span>
-            </div>
-            <h3>Chuyển dọn gọn trong ngày</h3>
-            <p>
-              Đội xe và nhân lực sẵn sàng theo lịch của bạn.
-            </p>
-          </div>
-        </div>
-      </div>
-    `;
-
-    const closeBtn = overlay.querySelector(".promo-popup-close");
-    const dismiss = () => {
-      overlay.remove();
-      document.body.classList.remove("promo-popup-open");
-      document.removeEventListener("keydown", handleEscClose);
-    };
-    const handleEscClose = (event) => {
-      if (event.key === "Escape") {
-        dismiss();
-      }
-    };
-
-    closeBtn?.addEventListener("click", dismiss);
-    overlay.addEventListener("click", (event) => {
-      if (event.target === overlay) dismiss();
-    });
-    overlay.querySelectorAll("[data-promo-link]").forEach((link) => {
-      link.addEventListener("click", () => {
-        dismiss();
-      });
-    });
-
-    document.body.appendChild(overlay);
-    document.body.classList.add("promo-popup-open");
-    document.addEventListener("keydown", handleEscClose);
-    return overlay;
-  }
-
-  function maybeShowPromoPopup(linkMap) {
-    if (!shouldShowPromoPopup()) return;
-    markPromoPopupSeen();
-    window.setTimeout(() => {
-      ensurePromoPopup(linkMap);
-    }, 650);
+  function escapeHtml(value) {
+    return String(value ?? "")
+      .replace(/&/g, "&amp;")
+      .replace(/</g, "&lt;")
+      .replace(/>/g, "&gt;")
+      .replace(/"/g, "&quot;")
+      .replace(/'/g, "&#039;");
   }
 
   const headerHost = injectPartial("site-header", "header.html");
@@ -316,11 +325,19 @@
   const linkMap = buildLinkMap();
 
   if (headerHost) applyLinks(headerHost, linkMap);
+  if (headerHost) syncAuthNav(headerHost);
   if (headerHost) applyActiveNav(headerHost);
+  if (headerHost) bindLogoutActions(headerHost);
   if (footerHost) applyLinks(footerHost, linkMap);
-  maybeShowPromoPopup(linkMap);
 
   window.addEventListener("hashchange", function () {
     if (headerHost) applyActiveNav(headerHost);
+  });
+
+  window.addEventListener("storage", function (event) {
+    if (!headerHost) return;
+    if (![storageKeys.role, storageKeys.identity].includes(event.key || "")) return;
+    syncAuthNav(headerHost);
+    applyActiveNav(headerHost);
   });
 })(window, document);

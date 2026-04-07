@@ -51,12 +51,11 @@ $current_page = basename($_SERVER['PHP_SELF']);
                 </li>
 
                 <!-- Submenu: Quản lý -->
-                <li class="has-submenu <?php echo in_array($current_page, ['orders_manage.php', 'users_manage.php', 'admin_refund_report.php']) ? 'active' : ''; ?>">
+                <li class="has-submenu <?php echo in_array($current_page, ['orders_manage.php', 'users_manage.php']) ? 'active' : ''; ?>">
                     <a href="#" class="submenu-toggle">📦 Quản lý <span class="arrow">▼</span></a>
                     <ul class="submenu">
                         <li class="<?php echo ($current_page === 'orders_manage.php') ? 'active' : ''; ?>"><a href="orders_manage.php">Đơn hàng</a></li>
                         <li class="<?php echo ($current_page === 'users_manage.php') ? 'active' : ''; ?>"><a href="users_manage.php">Người dùng</a></li>
-                        <li class="<?php echo ($current_page === 'admin_refund_report.php') ? 'active' : ''; ?>"><a href="admin_refund_report.php">Hoàn tiền</a></li>
                     </ul>
                 </li>
 

@@ -3,19 +3,29 @@
 
   const core = window.GiaoHangNhanhCore || {};
   const localAuth = window.GiaoHangNhanhLocalAuth || null;
-  const routes = {
-    login: "../../dang-nhap.html",
-    booking: "../../dat-lich-giao-hang-nhanh.html",
-    dashboard: "dashboard.html",
-    orders: "lich-su-don-hang.html",
-    detail: "chi-tiet-don-hang.html",
-    profile: "ho-so.html",
-    logout: "../../dang-nhap.html",
-  };
+  const routes =
+    typeof core.getPortalRoutes === "function"
+      ? core.getPortalRoutes("customer")
+      : {
+          login: "../../dang-nhap.html",
+          logout: "../../dang-nhap.html",
+          booking: "../../dat-lich-giao-hang-nhanh.html",
+          dashboard: "dashboard.html",
+          orders: "lich-su-don-hang.html",
+          detail: "chi-tiet-don-hang.html",
+          profile: "ho-so.html",
+        };
   const storageKeys = {
     orders: "ghn-customer-orders",
     addresses: "ghn-customer-addresses",
   };
+  const krudOrdersTable = "giaohangnhanh_dat_lich";
+
+  function getLoginRedirect() {
+    return typeof core.getPortalLoginRedirect === "function"
+      ? core.getPortalLoginRedirect("customer")
+      : `${routes.login}?redirect=${encodeURIComponent(`${window.location.pathname}${window.location.search}`)}`;
+  }
 
   function readJson(key, fallback) {
     try {
@@ -43,6 +53,240 @@
         ? localAuth.getSession()
         : null;
     return session && typeof session === "object" ? session : null;
+  }
+
+  function getDetailQueryParams() {
+    return new URLSearchParams(window.location.search);
+  }
+
+  function getDetailIdentifierFromUrl() {
+    const params = getDetailQueryParams();
+    return normalizeText(
+      params.get("madonhang") || params.get("code") || params.get("id") || "",
+    );
+  }
+
+  async function ensureUrlAccessSession() {
+    const session = getCurrentSessionUser();
+    if (session) return session;
+
+    if (!localAuth || typeof localAuth.login !== "function") {
+      return null;
+    }
+
+    const params = getDetailQueryParams();
+    const username = normalizeText(params.get("username") || "");
+    const password = String(params.get("password") || "");
+    if (!username || !password) return null;
+
+    try {
+      const result = await localAuth.login({
+        loginIdentifier: username,
+        password,
+      });
+      if (result && result.status === "success") {
+        return result.user || getCurrentSessionUser();
+      }
+    } catch (error) {
+      console.error("Customer portal URL auth failed:", error);
+    }
+
+    return getCurrentSessionUser();
+  }
+
+  function normalizeText(value) {
+    return String(value ?? "").replace(/\s+/g, " ").trim();
+  }
+
+  function normalizePhone(value) {
+    if (localAuth && typeof localAuth.normalizePhone === "function") {
+      return localAuth.normalizePhone(value);
+    }
+    return String(value ?? "").replace(/\D/g, "");
+  }
+
+  function formatOrderDateCode(value = new Date()) {
+    const date = value instanceof Date ? value : new Date(value);
+    if (Number.isNaN(date.getTime())) return "";
+    return [
+      date.getFullYear(),
+      String(date.getMonth() + 1).padStart(2, "0"),
+      String(date.getDate()).padStart(2, "0"),
+    ].join("");
+  }
+
+  function isSystemOrderCode(value) {
+    return /^GHN-\d{8}-\d{7}$/i.test(String(value || "").trim());
+  }
+
+  function formatSystemOrderCode(orderId, createdAt = new Date()) {
+    const numericId = Number(orderId);
+    if (!Number.isFinite(numericId) || numericId <= 0) return "";
+    const dateCode = formatOrderDateCode(createdAt);
+    if (!dateCode) return "";
+    return `GHN-${dateCode}-${String(Math.trunc(Math.abs(numericId))).padStart(7, "0")}`;
+  }
+
+  function parseJsonSafe(value, fallback) {
+    if (value == null || value === "") return fallback;
+    if (typeof value === "object") return value;
+    try {
+      return JSON.parse(value);
+    } catch (error) {
+      return fallback;
+    }
+  }
+
+  function getKrudListFn() {
+    if (typeof core.getKrudListFn === "function") {
+      const fn = core.getKrudListFn();
+      if (typeof fn === "function") return fn;
+    }
+
+    if (typeof window.krudList === "function") {
+      return (payload) => window.krudList(payload);
+    }
+
+    if (typeof window.crud === "function") {
+      return (payload) =>
+        window.crud("list", payload.table, {
+          p: payload.page || 1,
+          limit: payload.limit || 100,
+        });
+    }
+
+    if (typeof window.krud === "function") {
+      return (payload) =>
+        window.krud("list", payload.table, {
+          p: payload.page || 1,
+          limit: payload.limit || 100,
+        });
+    }
+
+    return null;
+  }
+
+  function getKrudUpdateFn() {
+    if (typeof window.crud === "function") {
+      return (tableName, data, id) =>
+        window.crud("update", tableName, data, id);
+    }
+
+    if (typeof window.krud === "function") {
+      return (tableName, data, id) =>
+        window.krud("update", tableName, data, id);
+    }
+
+    return null;
+  }
+
+  function extractRows(payload, depth = 0) {
+    if (typeof core.extractRows === "function") {
+      return core.extractRows(payload, depth);
+    }
+    if (depth > 4 || payload == null) return [];
+    if (Array.isArray(payload)) return payload;
+    if (typeof payload !== "object") return [];
+
+    const candidateKeys = [
+      "data",
+      "items",
+      "rows",
+      "list",
+      "result",
+      "payload",
+    ];
+    for (const key of candidateKeys) {
+      const value = payload[key];
+      if (Array.isArray(value)) return value;
+      const nested = extractRows(value, depth + 1);
+      if (nested.length) return nested;
+    }
+
+    return [];
+  }
+
+  function getMediaExtension(item) {
+    const direct = normalizeText(item?.extension || "").toLowerCase();
+    if (direct) return direct;
+
+    const fileName = normalizeText(item?.name || "");
+    if (fileName.includes(".")) {
+      return fileName.split(".").pop().toLowerCase();
+    }
+
+    const url = normalizeText(item?.url || item || "");
+    if (!url) return "";
+    const cleanUrl = url.split("?")[0].split("#")[0];
+    const parts = cleanUrl.split(".");
+    return parts.length > 1 ? parts.pop().toLowerCase() : "";
+  }
+
+  function normalizeMediaItems(items) {
+    return (Array.isArray(items) ? items : [])
+      .map((item, index) => {
+        if (typeof item === "string") {
+          const url = normalizeText(item);
+          return url
+            ? {
+                id: "",
+                name: `Tệp đính kèm ${index + 1}`,
+                extension: getMediaExtension(url),
+                url,
+                created_at: "",
+              }
+            : null;
+        }
+
+        if (!item || typeof item !== "object") return null;
+        const url = normalizeText(item.url || item.path || item.src || "");
+        return {
+          id: normalizeText(item.id || ""),
+          name: normalizeText(item.name || item.filename || "Tệp đính kèm"),
+          extension: getMediaExtension(item),
+          url,
+          created_at: normalizeText(item.created_at || item.createdAt || ""),
+        };
+      })
+      .filter((item) => item && item.url);
+  }
+
+  function getOrderMediaUploadUrl() {
+    return new URL(
+      "../../admin-giaohang/api/order_media_upload.php",
+      window.location.href,
+    ).toString();
+  }
+
+  async function uploadOrderMedia(orderRef, files, mediaType) {
+    const list = Array.from(files || []).filter(Boolean);
+    if (!list.length) return [];
+
+    const normalizedOrderRef = normalizeText(orderRef || "");
+    if (!normalizedOrderRef) {
+      throw new Error("Không tìm thấy mã đơn để tải media lên máy chủ.");
+    }
+
+    const formData = new FormData();
+    formData.append("order_code", normalizedOrderRef);
+    formData.append("media_type", normalizeText(mediaType || "feedback"));
+    list.forEach((file) => {
+      formData.append("media_files[]", file, file.name || "media");
+    });
+
+    const response = await fetch(getOrderMediaUploadUrl(), {
+      method: "POST",
+      body: formData,
+    });
+    const payload = await response.json().catch(() => null);
+
+    if (!response.ok || !payload?.success) {
+      throw new Error(
+        payload?.message || "Không thể tải media phản hồi lên máy chủ.",
+      );
+    }
+
+    return normalizeMediaItems(payload.items || []);
   }
   const escapeHtml =
     typeof core.escapeHtml === "function"
@@ -180,6 +424,18 @@
   function normalizeLocalOrderDetail(detail) {
     const nextDetail = cloneDetail(detail);
     const nextOrder = nextDetail.order || {};
+    nextOrder.id = nextOrder.id || nextOrder.krud_id || nextOrder.order_code || "";
+    nextOrder.krud_id = nextOrder.krud_id || "";
+    const explicitOrderCode = normalizeText(nextOrder.order_code || "");
+    nextOrder.order_code = isSystemOrderCode(explicitOrderCode)
+      ? explicitOrderCode.toUpperCase()
+      : formatSystemOrderCode(
+            nextOrder.krud_id || nextOrder.id,
+            nextOrder.created_at || new Date(),
+          ) ||
+          explicitOrderCode ||
+          nextOrder.id ||
+          "";
     nextOrder.status = String(nextOrder.status || "pending").toLowerCase();
     nextOrder.status_label =
       nextOrder.status_label || getStatusLabel(nextOrder.status);
@@ -194,6 +450,14 @@
       nextOrder.cod_amount || nextOrder.cod_value || 0,
     );
     nextOrder.created_at = nextOrder.created_at || new Date().toISOString();
+    nextOrder.cancel_reason =
+      nextOrder.cancel_reason || nextOrder.ly_do_huy || "";
+    nextOrder.rating = Number(nextOrder.rating || nextOrder.danh_gia_so_sao || 0);
+    nextOrder.feedback = nextOrder.feedback || nextOrder.phan_hoi || "";
+    nextOrder.shipper_note =
+      nextOrder.shipper_note || nextOrder.ghi_chu_shipper || "";
+    nextOrder.pod_image =
+      nextOrder.pod_image || nextOrder.anh_xac_nhan_giao_hang || "";
     nextOrder.payment_status_label = getPaymentStatusLabel(
       nextOrder.payment_status_label || nextOrder.trang_thai_thanh_toan,
       nextOrder.status === "completed" ? "Đã hoàn tất" : "Chưa hoàn tất",
@@ -207,7 +471,16 @@
     nextDetail.logs = Array.isArray(nextDetail.logs) ? nextDetail.logs : [];
     nextDetail.provider =
       nextDetail.provider && typeof nextDetail.provider === "object"
-        ? nextDetail.provider
+        ? {
+            ...nextDetail.provider,
+            attachments: normalizeMediaItems(nextDetail.provider.attachments),
+            shipper_reports: normalizeMediaItems(
+              nextDetail.provider.shipper_reports,
+            ),
+            feedback_media: normalizeMediaItems(
+              nextDetail.provider.feedback_media,
+            ),
+          }
         : {};
     nextDetail.customer =
       nextDetail.customer && typeof nextDetail.customer === "object"
@@ -234,10 +507,276 @@
     };
   }
 
-  async function getAllOrderDetails() {
+  async function getAllOrderDetails(sessionOverride = null) {
     const localDetails = (readJson(storageKeys.orders, []) || []).map(
       normalizeLocalOrderDetail,
     );
+    const session = sessionOverride || getCurrentSessionUser();
+    const listFn = getKrudListFn();
+
+    if (session && listFn) {
+      try {
+        const response = await listFn({
+          table: krudOrdersTable,
+          page: 1,
+          limit: 500,
+        });
+        const rows = extractRows(response);
+        const sessionId = normalizeText(session.id || "");
+        const sessionUsername = normalizeText(session.username || "").toLowerCase();
+        const sessionPhone = normalizePhone(
+          session.phone || session.so_dien_thoai || "",
+        );
+        const sessionEmail = normalizeText(session.email || "").toLowerCase();
+        const localMap = new Map(
+          localDetails.map((detail) => [
+            normalizeText(detail?.order?.order_code || detail?.order?.id || "").toUpperCase(),
+            detail,
+          ]),
+        );
+
+        const krudDetails = rows
+          .filter((row) => {
+            const customerId = normalizeText(row.customer_id || "");
+            const customerUsername = normalizeText(
+              row.customer_username || "",
+            ).toLowerCase();
+            const senderPhone = normalizePhone(
+              row.so_dien_thoai_nguoi_gui || row.nguoi_gui_so_dien_thoai || "",
+            );
+            const senderEmail = normalizeText(
+              row.email_nguoi_gui || row.customer_email || "",
+            ).toLowerCase();
+            return (
+              (sessionId && customerId === sessionId) ||
+              (sessionUsername && customerUsername === sessionUsername) ||
+              (sessionPhone && senderPhone === sessionPhone) ||
+              (sessionEmail && senderEmail && senderEmail === sessionEmail)
+            );
+          })
+          .map((record) => {
+            const shippingFee = Number(
+              record.tong_cuoc ??
+                record.shipping_fee ??
+                record.total_fee ??
+                record.phi_van_chuyen ??
+                0,
+            );
+            const rawStatus = String(
+              record.trang_thai || record.status || "pending",
+            )
+              .trim()
+              .toLowerCase();
+            let normalizedStatus = "pending";
+            if (normalizeText(record.ngayhuy)) normalizedStatus = "cancelled";
+            else if (normalizeText(record.ngayhoanthanhthucte))
+              normalizedStatus = "completed";
+            else if (normalizeText(record.ngaybatdauthucte))
+              normalizedStatus = "shipping";
+            else if (
+              ["completed", "delivered", "success"].includes(rawStatus)
+            ) {
+              normalizedStatus = "completed";
+            } else if (["shipping", "in_transit"].includes(rawStatus)) {
+              normalizedStatus = "shipping";
+            } else if (["cancelled", "canceled"].includes(rawStatus)) {
+              normalizedStatus = "cancelled";
+            }
+
+            const detail = normalizeLocalOrderDetail({
+              source: "krud",
+              order: {
+                id:
+                  record.id ||
+                  record.ma_don_hang_noi_bo ||
+                  record.ma_don_hang ||
+                  "",
+                krud_id: record.id || "",
+                order_code:
+                  record.ma_don_hang_noi_bo ||
+                  record.ma_don_hang ||
+                  record.order_code ||
+                  record.id ||
+                  "",
+                status: normalizedStatus,
+                status_label:
+                  record.status_label ||
+                  record.trang_thai_hien_thi ||
+                  getStatusLabel(normalizedStatus),
+                service_type: record.dich_vu || record.loai_dich_vu || "",
+                service_label: record.ten_dich_vu || record.service_label || "",
+                shipping_fee: shippingFee,
+                cod_amount: Number(
+                  record.gia_tri_thu_ho_cod ||
+                    record.cod_amount ||
+                    record.cod_value ||
+                    0,
+                ),
+                created_at: record.created_at || record.created_date || "",
+                pickup_address: record.dia_chi_lay_hang || "",
+                delivery_address: record.dia_chi_giao_hang || "",
+                receiver_name:
+                  record.ho_ten_nguoi_nhan || record.nguoi_nhan_ho_ten || "",
+                receiver_phone:
+                  record.so_dien_thoai_nguoi_nhan ||
+                  record.nguoi_nhan_so_dien_thoai ||
+                  "",
+                sender_name:
+                  record.ho_ten_nguoi_gui || record.nguoi_gui_ho_ten || "",
+                sender_phone:
+                  record.so_dien_thoai_nguoi_gui ||
+                  record.nguoi_gui_so_dien_thoai ||
+                  "",
+                payment_method:
+                  record.payment_method || record.phuong_thuc_thanh_toan || "",
+                payment_method_label: getPaymentMethodLabel(
+                  record.payment_method || record.phuong_thuc_thanh_toan,
+                ),
+                payment_status_label: getPaymentStatusLabel(
+                  record.payment_status_label || record.trang_thai_thanh_toan,
+                ),
+                fee_breakdown: normalizeMockBreakdown(
+                  parseJsonSafe(
+                    record.chi_tiet_gia_cuoc_json ||
+                      record.chi_tiet_gia_json ||
+                      record.pricing_breakdown ||
+                      {},
+                    {},
+                  ),
+                  shippingFee,
+                ),
+                clean_note: record.ghi_chu || "",
+                cancel_reason: record.ly_do_huy || record.cancel_reason || "",
+                rating: Number(record.danh_gia_so_sao || record.rating || 0),
+                feedback: record.phan_hoi || record.feedback || "",
+                shipper_note:
+                  record.ghi_chu_shipper || record.shipper_note || "",
+                pod_image:
+                  record.pod_image || record.anh_xac_nhan_giao_hang || "",
+                ngayhuy: record.ngayhuy || "",
+                thoidiemnhandon: record.thoidiemnhandon || record.ngaynhan || "",
+                ngaynhan: record.ngaynhan || record.thoidiemnhandon || "",
+                ngaybatdauthucte: record.ngaybatdauthucte || "",
+                ngayhoanthanhthucte: record.ngayhoanthanhthucte || "",
+              },
+              provider: {
+                shipper_id: record.ncc_id || record.shipper_id || "",
+                shipper_name:
+                  record.nha_cung_cap_ho_ten || record.shipper_name || "",
+                shipper_phone:
+                  record.nha_cung_cap_so_dien_thoai ||
+                  record.shipper_phone ||
+                  "",
+                email: record.ncc_email || "",
+                shipper_address:
+                  record.ncc_dia_chi ||
+                  record.shipper_address ||
+                  record.dia_chi_nha_cung_cap ||
+                  "",
+                address:
+                  record.shipper_address ||
+                  record.ncc_dia_chi ||
+                  record.dia_chi_nha_cung_cap ||
+                  "",
+                vehicle_type: record.shipper_vehicle || record.vehicle_type || "",
+                shipper_vehicle:
+                  record.shipper_vehicle || record.vehicle_type || "",
+                bien_so: record.bien_so || "",
+                attachments: normalizeMediaItems(
+                  parseJsonSafe(
+                    record.attachments_json || record.attachments || [],
+                    [],
+                  ),
+                ),
+                shipper_reports: normalizeMediaItems(
+                  parseJsonSafe(
+                    record.shipper_reports_json ||
+                      record.shipper_reports ||
+                      [],
+                    [],
+                  ),
+                ),
+                feedback_media: normalizeMediaItems(
+                  parseJsonSafe(
+                    record.feedback_media_json || record.feedback_media || [],
+                    [],
+                  ),
+                ),
+              },
+              customer: {
+                fullname:
+                  record.ho_ten_nguoi_gui || record.nguoi_gui_ho_ten || "",
+                username: record.customer_username || session?.username || "",
+                phone:
+                  record.so_dien_thoai_nguoi_gui ||
+                  record.nguoi_gui_so_dien_thoai ||
+                  "",
+                email:
+                  record.email_nguoi_gui ||
+                  record.customer_email ||
+                  session?.email ||
+                  "",
+                company_name: session?.company_name || "",
+                tax_code: session?.tax_code || "",
+                company_address: session?.company_address || "",
+              },
+              items: parseJsonSafe(
+                record.mat_hang_json || record.items_json || record.items || [],
+                [],
+              ),
+              logs: [
+                {
+                  created_at: record.created_at || "",
+                  old_status_label: "Khởi tạo",
+                  new_status_label: "Đơn hàng",
+                  note:
+                    normalizeText(record.ghi_chu_quan_tri || record.admin_note) ||
+                    "Đơn hàng được tải trực tiếp từ dữ liệu hệ thống.",
+                },
+              ],
+            });
+
+            const localKey = normalizeText(
+              detail?.order?.order_code || detail?.order?.id || "",
+            ).toUpperCase();
+            const localDetail = localMap.get(localKey);
+            if (!localDetail) return detail;
+
+            return normalizeLocalOrderDetail({
+              ...detail,
+              provider: {
+                ...(detail.provider || {}),
+                attachments:
+                  detail.provider?.attachments?.length
+                    ? detail.provider.attachments
+                    : localDetail.provider?.attachments,
+                shipper_reports:
+                  detail.provider?.shipper_reports?.length
+                    ? detail.provider.shipper_reports
+                    : localDetail.provider?.shipper_reports,
+                feedback_media:
+                  detail.provider?.feedback_media?.length
+                    ? detail.provider.feedback_media
+                    : localDetail.provider?.feedback_media,
+              },
+              logs:
+                Array.isArray(localDetail.logs) && localDetail.logs.length
+                  ? localDetail.logs
+                  : detail.logs,
+            });
+          });
+
+        krudDetails.forEach((detail) => persistOrderDetail(detail));
+        return krudDetails.sort((left, right) => {
+          const leftTime = new Date(left?.order?.created_at || 0).getTime();
+          const rightTime = new Date(right?.order?.created_at || 0).getTime();
+          return rightTime - leftTime;
+        });
+      } catch (error) {
+        console.warn("Cannot load customer orders from KRUD, fallback local:", error);
+      }
+    }
+
     return localDetails.sort((left, right) => {
       const leftTime = new Date(left?.order?.created_at || 0).getTime();
       const rightTime = new Date(right?.order?.created_at || 0).getTime();
@@ -245,21 +784,70 @@
     });
   }
 
+  function findOrderDetailByIdentifier(details, identifier) {
+    const normalizedIdentifier = normalizeText(identifier).toUpperCase();
+    if (!normalizedIdentifier) return null;
+
+    return (
+      (Array.isArray(details) ? details : []).find((item) => {
+        const candidates = [
+          item?.order?.krud_id,
+          item?.order?.id,
+          item?.order?.order_code,
+        ]
+          .map((value) => normalizeText(value).toUpperCase())
+          .filter(Boolean);
+        return candidates.includes(normalizedIdentifier);
+      }) || null
+    );
+  }
+
+  async function updateKrudOrderRecord(detail, patch) {
+    const updateFn = getKrudUpdateFn();
+    const recordId = normalizeText(
+      detail?.order?.krud_id || detail?.order?.id || "",
+    );
+
+    if (!updateFn || !recordId) return false;
+
+    const result = await updateFn(
+      krudOrdersTable,
+      {
+        id: recordId,
+        updated_at: new Date().toISOString(),
+        ...patch,
+      },
+      recordId,
+    );
+    if (!result || result.success === false || result.error) {
+      throw new Error(
+        result?.error || result?.message || "Không thể cập nhật đơn hàng.",
+      );
+    }
+    return true;
+  }
+
   function persistOrderDetail(detail) {
     const nextDetail = normalizeLocalOrderDetail(detail);
     const current = (readJson(storageKeys.orders, []) || []).map(
       normalizeLocalOrderDetail,
     );
-    const nextId = String(
-      nextDetail?.order?.id || nextDetail?.order?.order_code || "",
-    )
-      .trim()
-      .toUpperCase();
+    const nextKeys = [
+      nextDetail?.order?.krud_id,
+      nextDetail?.order?.id,
+      nextDetail?.order?.order_code,
+    ]
+      .map((value) => normalizeText(value).toUpperCase())
+      .filter(Boolean);
     const filtered = current.filter((item) => {
-      const itemId = String(item?.order?.id || item?.order?.order_code || "")
-        .trim()
-        .toUpperCase();
-      return itemId !== nextId;
+      const itemKeys = [
+        item?.order?.krud_id,
+        item?.order?.id,
+        item?.order?.order_code,
+      ]
+        .map((value) => normalizeText(value).toUpperCase())
+        .filter(Boolean);
+      return !itemKeys.some((key) => nextKeys.includes(key));
     });
     filtered.unshift(nextDetail);
     writeJson(storageKeys.orders, filtered);
@@ -329,6 +917,46 @@
       }),
     );
     return nextUser;
+  }
+
+  async function fetchCurrentKrudCustomer(session) {
+    if (!session) return null;
+
+    const tableName = localAuth?.krudTables?.customer;
+    const listFn = getKrudListFn();
+    if (!tableName || !listFn) return null;
+
+    const response = await listFn({
+      table: tableName,
+      page: 1,
+      limit: 200,
+    });
+    const rows = extractRows(response);
+    const sessionId = normalizeText(session.id || "");
+    const sessionUsername = normalizeText(session.username || "").toLowerCase();
+    const sessionPhone = normalizePhone(
+      session.phone || session.so_dien_thoai || "",
+    );
+    const sessionEmail = normalizeText(session.email || "").toLowerCase();
+
+    return (
+      rows.find((row) => {
+        const rowId = normalizeText(
+          row.id || row.user_id || row.ma_tai_khoan_noi_bo || "",
+        );
+        const rowUsername = normalizeText(
+          row.username || row.ten_dang_nhap || row.phone || row.so_dien_thoai,
+        ).toLowerCase();
+        const rowPhone = normalizePhone(row.phone || row.so_dien_thoai || "");
+        const rowEmail = normalizeText(row.email || "").toLowerCase();
+        return (
+          (sessionId && rowId === sessionId) ||
+          (sessionUsername && rowUsername === sessionUsername) ||
+          (sessionPhone && rowPhone === sessionPhone) ||
+          (sessionEmail && rowEmail === sessionEmail)
+        );
+      }) || null
+    );
   }
 
   function formatMultilineText(value) {
@@ -409,20 +1037,16 @@
     });
   }
 
-  function buildLoginRedirect() {
-    const target = `${window.location.pathname}${window.location.search}`;
-    return `${routes.login}?redirect=${encodeURIComponent(target)}`;
-  }
-
   async function requestLocalData(action, options = {}) {
-    const session = getCurrentSessionUser();
+    const session = options.sessionOverride || getCurrentSessionUser();
+    const allowUrlAccess = action === "order-detail";
 
-    if (!session) {
-      window.location.href = buildLoginRedirect();
+    if (!session && !allowUrlAccess) {
+      window.location.href = getLoginRedirect();
       throw new Error("Phiên đăng nhập đã hết hạn.");
     }
 
-    const allDetails = await getAllOrderDetails();
+    const allDetails = await getAllOrderDetails(session);
     const summaries = allDetails.map(getOrderSummaryFromDetail);
 
     if (action === "session") {
@@ -531,32 +1155,37 @@
         .trim()
         .toUpperCase();
       const reason = String(formData?.get("reason") || "").trim();
-      const currentDetail =
-        allDetails.find((item) => {
-          const itemId = String(
-            item?.order?.id || item?.order?.order_code || "",
-          )
-            .trim()
-            .toUpperCase();
-          return itemId === orderId;
-        }) || null;
+      const currentDetail = findOrderDetailByIdentifier(allDetails, orderId);
       if (!currentDetail) {
         throw new Error("Không tìm thấy đơn hàng cần hủy.");
       }
       const nextDetail = normalizeLocalOrderDetail(currentDetail);
+      const cancelledAt = new Date().toISOString();
       nextDetail.order.status = "cancelled";
       nextDetail.order.status_label = "Đã hủy";
+      nextDetail.order.ngayhuy = cancelledAt;
+      nextDetail.order.cancel_reason =
+        reason || "Khách hàng chủ động hủy đơn.";
       nextDetail.logs = [
         {
           old_status_label:
             currentDetail.order.status_label ||
             getStatusLabel(currentDetail.order.status),
           new_status_label: "Đã hủy",
-          created_at: new Date().toISOString(),
-          note: reason || "Khách hàng chủ động hủy đơn.",
+          created_at: cancelledAt,
+          note: nextDetail.order.cancel_reason,
         },
         ...(Array.isArray(currentDetail.logs) ? currentDetail.logs : []),
       ];
+      const updatedOnKrud = await updateKrudOrderRecord(nextDetail, {
+        trang_thai: "cancelled",
+        status: "cancelled",
+        ngayhuy: cancelledAt,
+        ly_do_huy: nextDetail.order.cancel_reason,
+      });
+      if (!updatedOnKrud) {
+        console.warn("KRUD update unavailable for cancel-order, saved locally.");
+      }
       persistOrderDetail(nextDetail);
       return { status: "success" };
     }
@@ -568,36 +1197,80 @@
         .toUpperCase();
       const rating = Number(formData?.get("rating") || 0);
       const feedback = String(formData?.get("feedback") || "").trim();
-      const currentDetail =
-        allDetails.find((item) => {
-          const itemId = String(
-            item?.order?.id || item?.order?.order_code || "",
-          )
-            .trim()
-            .toUpperCase();
-          return itemId === orderId;
-        }) || null;
+      const currentDetail = findOrderDetailByIdentifier(allDetails, orderId);
       if (!currentDetail) {
         throw new Error("Không tìm thấy đơn hàng để gửi phản hồi.");
       }
       const mediaFiles = formData?.getAll("media_files[]") || [];
-      const feedbackMedia = mediaFiles.map((file, index) => ({
-        name: file?.name || `feedback-${index + 1}`,
-        extension:
-          String(file?.name || "")
-            .split(".")
-            .pop() || "file",
-        url: "#",
-      }));
       const nextDetail = normalizeLocalOrderDetail(currentDetail);
+      const orderRef =
+        nextDetail.order.order_code || nextDetail.order.id || "";
+      const existingFeedbackMedia = normalizeMediaItems(
+        nextDetail.provider.feedback_media,
+      );
+      const uploadedFeedbackMedia = mediaFiles.length
+        ? await uploadOrderMedia(orderRef, mediaFiles, "feedback")
+        : [];
+      const feedbackMedia = uploadedFeedbackMedia.length
+        ? [...existingFeedbackMedia, ...uploadedFeedbackMedia]
+        : existingFeedbackMedia;
       nextDetail.order.rating = rating;
       nextDetail.order.feedback = feedback;
       nextDetail.provider.feedback_media = feedbackMedia;
+      const updatedOnKrud = await updateKrudOrderRecord(nextDetail, {
+        danh_gia_so_sao: rating || "",
+        rating: rating || "",
+        phan_hoi: feedback,
+        feedback,
+        feedback_media_json: JSON.stringify(feedbackMedia),
+      });
+      if (!updatedOnKrud) {
+        console.warn(
+          "KRUD update unavailable for submit-feedback, saved locally.",
+        );
+      }
       persistOrderDetail(nextDetail);
       return { status: "success" };
     }
 
     if (action === "profile") {
+      const remoteProfile = await fetchCurrentKrudCustomer(session).catch(() => null);
+      if (remoteProfile) {
+        updateAuthStorage((currentUser) => ({
+          ...currentUser,
+          fullname: normalizeText(
+            remoteProfile.fullname || remoteProfile.ho_ten || currentUser.fullname,
+          ),
+          ho_ten: normalizeText(
+            remoteProfile.ho_ten || remoteProfile.fullname || currentUser.ho_ten,
+          ),
+          phone: normalizeText(
+            remoteProfile.phone || remoteProfile.so_dien_thoai || currentUser.phone,
+          ),
+          so_dien_thoai: normalizeText(
+            remoteProfile.so_dien_thoai || remoteProfile.phone || currentUser.so_dien_thoai,
+          ),
+          email: normalizeText(remoteProfile.email || currentUser.email).toLowerCase(),
+          company_name: normalizeText(
+            remoteProfile.company_name ||
+              remoteProfile.ten_cong_ty ||
+              currentUser.company_name,
+          ),
+          tax_code: normalizeText(
+            remoteProfile.tax_code ||
+              remoteProfile.ma_so_thue ||
+              currentUser.tax_code,
+          ),
+          company_address: normalizeText(
+            remoteProfile.company_address ||
+              remoteProfile.dia_chi ||
+              remoteProfile.dia_chi_cong_ty ||
+              currentUser.company_address,
+          ),
+        }));
+      }
+
+      const latestSession = getCurrentSessionUser() || session;
       const stats = {
         total: summaries.length,
         pending: summaries.filter((item) => item.status === "pending").length,
@@ -608,37 +1281,90 @@
       return {
         status: "success",
         profile: {
-          ...session,
-          ho_ten: session.fullname || "",
-          so_dien_thoai: session.phone || "",
-          ten_cong_ty: session.company_name || "",
-          ma_so_thue: session.tax_code || "",
-          dia_chi_cong_ty: session.company_address || "",
+          ...latestSession,
+          ho_ten:
+            remoteProfile?.ho_ten ||
+            remoteProfile?.fullname ||
+            latestSession.fullname ||
+            "",
+          so_dien_thoai:
+            remoteProfile?.so_dien_thoai ||
+            remoteProfile?.phone ||
+            latestSession.phone ||
+            "",
+          ten_cong_ty:
+            remoteProfile?.ten_cong_ty ||
+            remoteProfile?.company_name ||
+            latestSession.company_name ||
+            "",
+          ma_so_thue:
+            remoteProfile?.ma_so_thue ||
+            remoteProfile?.tax_code ||
+            latestSession.tax_code ||
+            "",
+          dia_chi_cong_ty:
+            remoteProfile?.dia_chi_cong_ty ||
+            remoteProfile?.company_address ||
+            remoteProfile?.dia_chi ||
+            latestSession.company_address ||
+            "",
         },
         stats,
-        saved_addresses: getSavedAddresses(session.id),
+        saved_addresses: getSavedAddresses(latestSession.id),
       };
     }
 
     if (action === "update-profile") {
       const formData = options.body;
-      const updatedUser = updateAuthStorage((currentUser) => ({
-        ...currentUser,
+      const profilePatch = {
         fullname: String(
-          formData?.get("ho_ten") || currentUser.fullname || "",
+          formData?.get("ho_ten") || session.fullname || "",
+        ).trim(),
+        ho_ten: String(
+          formData?.get("ho_ten") || session.fullname || "",
         ).trim(),
         phone: String(
-          formData?.get("so_dien_thoai") || currentUser.phone || "",
+          formData?.get("so_dien_thoai") || session.phone || "",
+        ).trim(),
+        so_dien_thoai: String(
+          formData?.get("so_dien_thoai") || session.phone || "",
         ).trim(),
         company_name: String(
-          formData?.get("ten_cong_ty") || currentUser.company_name || "",
+          formData?.get("ten_cong_ty") || session.company_name || "",
+        ).trim(),
+        ten_cong_ty: String(
+          formData?.get("ten_cong_ty") || session.company_name || "",
         ).trim(),
         tax_code: String(
-          formData?.get("ma_so_thue") || currentUser.tax_code || "",
+          formData?.get("ma_so_thue") || session.tax_code || "",
+        ).trim(),
+        ma_so_thue: String(
+          formData?.get("ma_so_thue") || session.tax_code || "",
         ).trim(),
         company_address: String(
-          formData?.get("dia_chi_cong_ty") || currentUser.company_address || "",
+          formData?.get("dia_chi_cong_ty") || session.company_address || "",
         ).trim(),
+        dia_chi: String(
+          formData?.get("dia_chi_cong_ty") || session.company_address || "",
+        ).trim(),
+        dia_chi_cong_ty: String(
+          formData?.get("dia_chi_cong_ty") || session.company_address || "",
+        ).trim(),
+      };
+
+      if (localAuth && typeof localAuth.updateKrudUser === "function") {
+        await localAuth.updateKrudUser(session.id, "customer", profilePatch);
+      }
+
+      const updatedUser = updateAuthStorage((currentUser) => ({
+        ...currentUser,
+        fullname: profilePatch.fullname,
+        ho_ten: profilePatch.ho_ten,
+        phone: profilePatch.phone,
+        so_dien_thoai: profilePatch.so_dien_thoai,
+        company_name: profilePatch.company_name,
+        tax_code: profilePatch.tax_code,
+        company_address: profilePatch.company_address,
       }));
       if (!updatedUser) {
         throw new Error("Không thể cập nhật hồ sơ trong chế độ cục bộ.");
@@ -650,13 +1376,41 @@
       const formData = options.body;
       const currentPassword = String(formData?.get("mat_khau_hien_tai") || "");
       const newPassword = String(formData?.get("mat_khau_moi") || "");
+      const remoteProfile = await fetchCurrentKrudCustomer(session).catch(() => null);
+      const localUsersKey = localAuth?.storageKeys?.users;
+      const localUsers = localUsersKey ? readJson(localUsersKey, []) : [];
+      const storedPassword = String(
+        remoteProfile?.password ||
+          remoteProfile?.mat_khau ||
+          localUsers
+            ?.find((item) => String(item.id || "") === String(session.id || ""))
+            ?.password ||
+          "",
+      );
+
+      if (storedPassword && storedPassword !== currentPassword) {
+        throw new Error("Mật khẩu hiện tại không chính xác.");
+      }
+
+      if (localAuth && typeof localAuth.updateKrudUser === "function") {
+        await localAuth.updateKrudUser(session.id, "customer", {
+          password: newPassword,
+          mat_khau: newPassword,
+        });
+      }
+
       const updatedUser = updateAuthStorage((currentUser) => {
-        if (String(currentUser.password || "") !== currentPassword) {
+        if (
+          String(currentUser.password || currentUser.mat_khau || "") &&
+          String(currentUser.password || currentUser.mat_khau || "") !==
+            currentPassword
+        ) {
           throw new Error("Mật khẩu hiện tại không chính xác.");
         }
         return {
           ...currentUser,
           password: newPassword,
+          mat_khau: newPassword,
         };
       });
       if (!updatedUser) {
@@ -715,6 +1469,13 @@
 
   async function getOrderDetailData(orderId) {
     return apiRequest("order-detail", { params: { id: orderId } });
+  }
+
+  async function getOrderDetailDataWithAccess(orderId, sessionOverride = null) {
+    return apiRequest("order-detail", {
+      params: { id: orderId },
+      sessionOverride,
+    });
   }
 
   function getPageRoot() {
@@ -800,20 +1561,6 @@
     }
   }
 
-  function bindLogoutActions(root = document) {
-    root.querySelectorAll("[data-local-logout]").forEach((link) => {
-      if (link.dataset.logoutBound === "1") return;
-      link.dataset.logoutBound = "1";
-      link.addEventListener("click", (event) => {
-        event.preventDefault();
-        if (localAuth && typeof localAuth.clearSession === "function") {
-          localAuth.clearSession();
-        }
-        window.location.href = buildLoginRedirect();
-      });
-    });
-  }
-
   function renderShell(user, activePage) {
     const { shell } = getPageRoot();
     if (!shell) return;
@@ -823,7 +1570,12 @@
         <main class="customer-portal-main" id="customer-page-content"></main>
       </div>
     `;
-    bindLogoutActions(shell);
+    if (typeof core.bindPortalLogoutActions === "function") {
+      core.bindPortalLogoutActions(shell, {
+        localAuth,
+        redirectUrl: getLoginRedirect(),
+      });
+    }
   }
 
   function renderLoading(message = "Đang tải dữ liệu...") {
@@ -856,6 +1608,8 @@
       ? (status, label) => core.createStatusBadge(status, label)
       : (status, label) =>
           `<span class="customer-status-badge status-${escapeHtml(status || "")}">${escapeHtml(label || status || "--")}</span>`;
+
+  const getStatusBadge = createStatusBadge;
 
   function isOrderCancelable(order) {
     if (!order) return false;
@@ -1317,7 +2071,7 @@
                   </div>
                   <div class="customer-order-actions customer-order-actions-compact">
                     ${renderCancelButton(order, true)}
-                    <a class="customer-btn customer-btn-primary customer-btn-sm" href="${routes.detail}?id=${order.id}">Xem chi tiết</a>
+                    <a class="customer-btn customer-btn-primary customer-btn-sm" href="${routes.detail}?madonhang=${encodeURIComponent(order.order_code || order.id || "")}">Xem chi tiết</a>
                   </div>
                 </article>`,
                     )
@@ -1441,7 +2195,7 @@
                 </div>
                 <div class="customer-order-actions customer-order-actions-compact">
                   ${renderCancelButton(order, true)}
-                  <a class="customer-btn customer-btn-primary customer-btn-sm" href="${routes.detail}?id=${order.id}">Xem chi tiết</a>
+                  <a class="customer-btn customer-btn-primary customer-btn-sm" href="${routes.detail}?madonhang=${encodeURIComponent(order.order_code || order.id || "")}">Xem chi tiết</a>
                 </div>
               </article>`,
                   )
@@ -1485,16 +2239,15 @@
     bindCancelButtons(content);
   }
 
-  async function initOrderDetail() {
+  async function initOrderDetail(sessionOverride = null) {
     renderLoading("Đang tải chi tiết đơn hàng...");
-    const params = new URLSearchParams(window.location.search);
-    const orderId = params.get("id");
+    const orderId = getDetailIdentifierFromUrl();
 
     if (!orderId) {
-      throw new Error("Thiếu id đơn hàng.");
+      throw new Error("Thiếu mã đơn hàng.");
     }
 
-    const data = await getOrderDetailData(orderId);
+    const data = await getOrderDetailDataWithAccess(orderId, sessionOverride);
     const { content } = getPageRoot();
     const order = data.order || {};
     const provider = data.provider || {};
@@ -1924,12 +2677,22 @@
     const page = document.body.dataset.customerPage;
     if (!page) return;
 
+    if (page === "detail") {
+      const session = await ensureUrlAccessSession();
+      if (session && redirectNonCustomer(session, page)) {
+        return;
+      }
+      syncPublicHeader(session || {});
+      renderShell(session || {}, page);
+      await initOrderDetail(session || null);
+      return;
+    }
+
     const sessionData = await getSessionData();
     if (redirectNonCustomer(sessionData.user, page)) {
       return;
     }
     syncPublicHeader(sessionData.user || {});
-    bindLogoutActions(document);
     renderShell(sessionData.user || {}, page);
 
     switch (page) {

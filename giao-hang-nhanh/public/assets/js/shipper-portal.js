@@ -3,18 +3,27 @@
 
   const core = window.GiaoHangNhanhCore || {};
   const localAuth = window.GiaoHangNhanhLocalAuth || null;
-  const routes = {
-    home: "../../index.html",
-    login: "../../dang-nhap.html",
-    dashboard: "dashboard.html",
-    orders: "don-hang.html",
-    detail: "../../chi-tiet-don-hang.html",
-    profile: "ho-so.html",
-    logout: "../../dang-nhap.html",
-  };
+  const routes =
+    typeof core.getPortalRoutes === "function"
+      ? core.getPortalRoutes("shipper")
+      : {
+          home: "../../index.html",
+          login: "../../dang-nhap.html",
+          logout: "../../dang-nhap.html",
+          dashboard: "dashboard.html",
+          orders: "don-hang.html",
+          detail: "../../chi-tiet-don-hang.html",
+          profile: "ho-so.html",
+        };
   const storageKeys = {
     orders: "ghn-customer-orders",
   };
+
+  function getLoginRedirect() {
+    return typeof core.getPortalLoginRedirect === "function"
+      ? core.getPortalLoginRedirect("shipper")
+      : `${routes.login}?redirect=${encodeURIComponent(`${window.location.pathname}${window.location.search}`)}`;
+  }
 
   function readJson(key, fallback) {
     try {
@@ -46,6 +55,28 @@
 
   function normalizeText(value) {
     return String(value || "").replace(/\s+/g, " ").trim();
+  }
+
+  function formatOrderDateCode(value = new Date()) {
+    const date = value instanceof Date ? value : new Date(value);
+    if (Number.isNaN(date.getTime())) return "";
+    return [
+      date.getFullYear(),
+      String(date.getMonth() + 1).padStart(2, "0"),
+      String(date.getDate()).padStart(2, "0"),
+    ].join("");
+  }
+
+  function isSystemOrderCode(value) {
+    return /^GHN-\d{8}-\d{7}$/i.test(String(value || "").trim());
+  }
+
+  function formatSystemOrderCode(orderId, createdAt = new Date()) {
+    const numericId = Number(orderId);
+    if (!Number.isFinite(numericId) || numericId <= 0) return "";
+    const dateCode = formatOrderDateCode(createdAt);
+    if (!dateCode) return "";
+    return `GHN-${dateCode}-${String(Math.trunc(Math.abs(numericId))).padStart(7, "0")}`;
   }
 
   function getKrudListFn() {
@@ -398,7 +429,13 @@
     const sessionProvider = buildProviderFromSession(session);
     const nextOrder = nextDetail.order || {};
     nextOrder.id = nextOrder.id || nextOrder.order_code || "";
-    nextOrder.order_code = nextOrder.order_code || nextOrder.id || "";
+    const explicitOrderCode = normalizeText(nextOrder.order_code || "");
+    nextOrder.order_code = isSystemOrderCode(explicitOrderCode)
+      ? explicitOrderCode.toUpperCase()
+      : formatSystemOrderCode(nextOrder.id, nextOrder.created_at || new Date()) ||
+          explicitOrderCode ||
+          nextOrder.id ||
+          "";
     nextOrder.status = String(nextOrder.status || "pending").toLowerCase();
     nextOrder.status_label =
       nextOrder.status_label || getStatusLabel(nextOrder.status);
@@ -469,6 +506,44 @@
     };
   }
 
+  function isProviderAssignedToOrder(row, session) {
+    const sessionId = normalizeText(session?.id || "");
+    const sessionUsername = normalizeText(session?.username || "").toLowerCase();
+    const shipperId = normalizeText(row?.ncc_id || row?.shipper_id || "");
+    const shipperName = normalizeText(
+      row?.nha_cung_cap_ho_ten || row?.shipper_name || "",
+    ).toLowerCase();
+
+    return (
+      (sessionId && shipperId === sessionId) ||
+      (sessionUsername && shipperName.includes(sessionUsername))
+    );
+  }
+
+  function isOrderUnassigned(row) {
+    const shipperId = normalizeText(row?.ncc_id || row?.shipper_id || "");
+    const shipperName = normalizeText(
+      row?.nha_cung_cap_ho_ten || row?.shipper_name || "",
+    );
+    return !shipperId && !shipperName;
+  }
+
+  function isOrderCancelled(row) {
+    if (normalizeText(row?.ngayhuy || "")) return true;
+    const rawStatus = normalizeText(row?.trang_thai || row?.status || "").toLowerCase();
+    return ["cancelled", "canceled", "da_huy"].includes(rawStatus);
+  }
+
+  function shouldProviderSeeOrder(row, session) {
+    const assignedToCurrentProvider = isProviderAssignedToOrder(row, session);
+    if (assignedToCurrentProvider) return true;
+
+    const unassigned = isOrderUnassigned(row);
+    if (!unassigned) return false;
+
+    return !isOrderCancelled(row);
+  }
+
   async function getAllOrderDetails(session) {
     const listFn = getKrudListFn();
     if (session && listFn) {
@@ -479,19 +554,8 @@
           limit: 500,
         });
         const rows = extractRows(response);
-        const sessionId = normalizeText(session.id || "");
-        const sessionUsername = normalizeText(session.username || "").toLowerCase();
         const krudDetails = rows
-          .filter((row) => {
-            const shipperId = normalizeText(row.ncc_id || row.shipper_id || "");
-            const shipperName = normalizeText(
-              row.nha_cung_cap_ho_ten || row.shipper_name || "",
-            ).toLowerCase();
-            return (
-              (sessionId && shipperId === sessionId) ||
-              (sessionUsername && shipperName.includes(sessionUsername))
-            );
-          })
+          .filter((row) => shouldProviderSeeOrder(row, session))
           .map((detail) => normalizeKrudOrderDetail(detail, session));
 
         if (krudDetails.length) {
@@ -616,16 +680,11 @@
     return nextUser;
   }
 
-  function buildLoginRedirect() {
-    const target = `${window.location.pathname}${window.location.search}`;
-    return `${routes.login}?redirect=${encodeURIComponent(target)}`;
-  }
-
   async function requestLocalData(action, options = {}) {
     const session = getCurrentSessionUser();
 
     if (!session || session.role !== "shipper") {
-      window.location.href = buildLoginRedirect();
+      window.location.href = getLoginRedirect();
       throw new Error("Phiên đăng nhập đã hết hạn.");
     }
 
@@ -874,22 +933,6 @@
     }
   }
 
-  function bindLogoutActions(root = document) {
-    root.querySelectorAll("[data-local-logout]").forEach((button) => {
-      if (button.dataset.logoutBound === "1") return;
-      button.dataset.logoutBound = "1";
-      button.addEventListener("click", (event) => {
-        event.preventDefault();
-        if (localAuth && typeof localAuth.clearSession === "function") {
-          localAuth.clearSession();
-        } else {
-          window.localStorage.removeItem("ghn-auth-session");
-        }
-        window.location.href = routes.login;
-      });
-    });
-  }
-
   function renderShell(user, activePage) {
     const { shell } = getPageRoot();
     if (!shell) return;
@@ -899,7 +942,12 @@
         <main class="customer-portal-main" id="shipper-page-content"></main>
       </div>
     `;
-    bindLogoutActions(shell);
+    if (typeof core.bindPortalLogoutActions === "function") {
+      core.bindPortalLogoutActions(shell, {
+        localAuth,
+        redirectUrl: getLoginRedirect(),
+      });
+    }
   }
 
   function redirectNonShipper(session, page) {
