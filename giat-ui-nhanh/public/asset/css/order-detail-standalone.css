@@ -10,8 +10,8 @@ body.order-standalone-page {
   position: sticky;
   top: 0;
   z-index: 30;
-  background: linear-gradient(135deg, #d93d97 0%, #e4709f 50%, #f2bc8f 100%);
-  box-shadow: 0 10px 22px rgba(157, 62, 112, 0.28);
+  background: linear-gradient(135deg, #3b82f6, #8b5cf6);
+  box-shadow: 0 10px 22px rgba(59, 130, 246, 0.5);
 }
 
 .standalone-header-inner {
@@ -111,6 +111,29 @@ body.order-standalone-page {
   margin-bottom: 0;
 }
 
+.hero-progress .standalone-action {
+  margin-top: 0;
+  padding: 8px 10px;
+  min-width: 230px;
+  flex-direction: column;
+  align-items: stretch;
+  gap: 8px;
+}
+
+.hero-progress .standalone-action-meta {
+  text-align: center;
+}
+
+.hero-progress .standalone-action .btn {
+  min-width: 0;
+  width: 100%;
+}
+
+.hero-progress .standalone-alert {
+  margin-top: 6px;
+  width: 100%;
+}
+
 @media (max-width: 768px) {
   .standalone-header-inner {
     min-height: 72px;
@@ -134,5 +157,9 @@ body.order-standalone-page {
 
   .standalone-content {
     padding: 10px 8px 22px;
+  }
+
+  .hero-progress .standalone-action {
+    min-width: 200px;
   }
 }

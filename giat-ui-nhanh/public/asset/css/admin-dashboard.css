@@ -9,6 +9,7 @@
   --admin-text: #1f2f46;
   --admin-muted: #6e7d92;
   --status-pending: #f59e0b;
+  --status-accepted: #0ea5e9;
   --status-confirmed: #0ea5e9;
   --status-processing: #8b5cf6;
   --status-completed: #10b981;
@@ -328,6 +329,11 @@ body {
   background: #d8f2fe;
 }
 
+.status-accepted {
+  color: #03658b;
+  background: #d8f2fe;
+}
+
 .status-processing {
   color: #5b21b6;
   background: #ede9fe;
@@ -390,6 +396,10 @@ body {
 
 .c-confirmed {
   background: var(--status-confirmed);
+}
+
+.c-accepted {
+  background: var(--status-accepted);
 }
 
 .c-processing {

@@ -67,6 +67,9 @@
 
   function statusMeta(status) {
     var value = String(status || "").toLowerCase();
+    if (value === "accepted") {
+      return { label: "Đã nhận đơn", className: "status-accepted" };
+    }
     if (value === "processing") {
       return { label: "Đang thực hiện", className: "status-processing" };
     }
@@ -82,6 +85,7 @@
   function statusProgress(status) {
     var value = String(status || "").toLowerCase();
     if (value === "completed") return 100;
+    if (value === "accepted") return 45;
     if (value === "processing") return 62;
     if (value === "canceled") return 0;
     return 20;
@@ -139,6 +143,17 @@
   function safeText(value) {
     var text = String(value || "").trim();
     return text || "---";
+  }
+
+  function getPaymentStatusLabel(value) {
+    if (shared && typeof shared.getPaymentStatusLabel === "function") {
+      return shared.getPaymentStatusLabel(value);
+    }
+    return String(value || "")
+      .trim()
+      .toLowerCase() === "paid"
+      ? "Đã thanh toán"
+      : "Chưa thanh toán";
   }
 
   function escapeHtml(value) {
@@ -204,6 +219,61 @@
       if (text) return text;
     }
     return "";
+  }
+
+  function hasAssignedProviderRow(row) {
+    var providerId = String(
+      (row &&
+        (row.idnhacungcap ||
+          row.id_ncc ||
+          row.manhacungcap ||
+          row.provider_id ||
+          (row.nhacungcap &&
+            (row.nhacungcap.id ||
+              row.nhacungcap.idnhacungcap ||
+              row.nhacungcap.provider_id ||
+              row.nhacungcap.manhacungcap)))) ||
+        "",
+    ).trim();
+
+    if (!providerId || providerId === "0") return false;
+
+    var providerName = pickFirstValue([
+      row && row.tennhacungcap,
+      row && row.nhacungcap && row.nhacungcap.hovaten,
+      row && row.nhacungcap && row.nhacungcap.user_name,
+    ]);
+
+    var providerPhone = String(
+      (row &&
+        (row.sdt_ncc ||
+          row.sodienthoai_ncc ||
+          row.phone_ncc ||
+          (row.nhacungcap &&
+            (row.nhacungcap.sodienthoai ||
+              row.nhacungcap.user_tel ||
+              row.nhacungcap.sdt)))) ||
+        "",
+    )
+      .replace(/\s+/g, "")
+      .trim();
+    if (providerPhone.indexOf("+84") === 0)
+      providerPhone = "0" + providerPhone.slice(3);
+    if (providerPhone.indexOf("84") === 0 && providerPhone.length >= 11) {
+      providerPhone = "0" + providerPhone.slice(2);
+    }
+
+    var providerEmail = String(
+      (row &&
+        (row.email_ncc ||
+          (row.nhacungcap &&
+            (row.nhacungcap.email || row.nhacungcap.user_email)))) ||
+        "",
+    )
+      .trim()
+      .toLowerCase();
+
+    return Boolean(providerName || providerPhone || providerEmail);
   }
 
   function normalizeAvatarCandidates(rawValue, kind) {
@@ -328,6 +398,7 @@
     var value = String(status || "").toLowerCase();
     if (value === "cancel") return "canceled";
     if (value === "completed") return "completed";
+    if (value === "accepted" || value === "received") return "accepted";
     if (value === "processing") return "processing";
     return "pending";
   }
@@ -341,11 +412,19 @@
       },
     ];
 
-    if (row && row.ngaynhan) {
+    if (row && (row.ngaynhan || row.ngay_nhan || row.received_at)) {
       timeline.push({
-        at: row.ngaynhan,
+        at: row.ngaynhan || row.ngay_nhan || row.received_at,
         title: "Nhà cung cấp xác nhận",
-        detail: "Đơn hàng đã được tiếp nhận và đang xử lý.",
+        detail: "Đơn hàng đã được nhà cung cấp tiếp nhận.",
+      });
+    }
+
+    if (row && (row.ngaybatdau || row.ngay_bat_dau || row.started_at)) {
+      timeline.push({
+        at: row.ngaybatdau || row.ngay_bat_dau || row.started_at,
+        title: "Bắt đầu xử lý",
+        detail: "Nhà cung cấp đã bắt đầu thực hiện đơn hàng.",
       });
     }
 
@@ -374,19 +453,30 @@
       new Date().toISOString();
     var updatedAt =
       (row &&
-        (row.ngayhoanthanh || row.ngayhuy || row.ngaynhan || row.updated_at)) ||
+        (row.ngayhoanthanh ||
+          row.ngayhuy ||
+          row.ngaybatdau ||
+          row.ngay_bat_dau ||
+          row.started_at ||
+          row.ngaynhan ||
+          row.ngay_nhan ||
+          row.received_at ||
+          row.updated_at)) ||
       createdAt;
 
     var rawStatus =
       typeof shared.getOrderStatus === "function"
         ? shared.getOrderStatus(row)
-        : row && row.ngayhuy
+        : row && (row.ngayhuy || row.ngay_huy || row.canceled_at)
           ? "cancel"
-          : row && row.ngayhoanthanh
+          : row &&
+              (row.ngayhoanthanh || row.ngay_hoan_thanh || row.completed_at)
             ? "completed"
-            : row && row.ngaynhan
+            : row && (row.ngaybatdau || row.ngay_bat_dau || row.started_at)
               ? "processing"
-              : "pending";
+              : row && (row.ngaynhan || row.ngay_nhan || row.received_at)
+                ? "accepted"
+                : "pending";
     var status = mapDbStatusToPanel(rawStatus);
 
     var qty = toNumber(row && row.soluong);
@@ -396,6 +486,7 @@
     var transportFee = toNumber(row && row.tiendichuyen);
     var surchargeFee = toNumber(row && row.phuphigiaonhan);
     var totalAmount = toNumber(row && row.tongtien);
+    var hasAssignedProvider = hasAssignedProviderRow(row);
 
     return {
       id: toNumber(row && row.id),
@@ -445,46 +536,61 @@
         ]),
       },
       provider: {
-        id: toNumber(
-          row &&
-            (row.idnhacungcap ||
-              row.id_ncc ||
-              row.manhacungcap ||
-              row.provider_id ||
-              (row.nhacungcap &&
-                (row.nhacungcap.id ||
-                  row.nhacungcap.idnhacungcap ||
-                  row.nhacungcap.provider_id ||
-                  row.nhacungcap.manhacungcap))),
-        ),
-        name:
-          (row && row.tennhacungcap) ||
-          (row && row.nhacungcap && row.nhacungcap.hovaten) ||
-          (row && row.nhacungcap && row.nhacungcap.user_name) ||
-          "Chưa phân công",
-        phone:
-          (row && row.sdt_ncc) ||
-          (row && row.nhacungcap && row.nhacungcap.sodienthoai) ||
-          (row && row.nhacungcap && row.nhacungcap.user_tel) ||
-          "",
-        email:
-          (row && row.email_ncc) ||
-          (row && row.nhacungcap && row.nhacungcap.email) ||
-          (row && row.nhacungcap && row.nhacungcap.user_email) ||
-          "",
-        address:
-          (row && row.diachi_ncc) ||
-          (row && row.nhacungcap && row.nhacungcap.diachi) ||
-          "",
-        avatar: pickFirstValue([
-          row && row.avatar_ncc,
-          row && row.avatar_nhacungcap,
-          row && row.provider_avatar,
-          row && row.avatar,
-          row && row.nhacungcap && row.nhacungcap.avatar,
-          row && row.nhacungcap && row.nhacungcap.avatar_ncc,
-          row && row.nhacungcap && row.nhacungcap.avatartenfile,
-        ]),
+        id: hasAssignedProvider
+          ? toNumber(
+              row &&
+                (row.idnhacungcap ||
+                  row.id_ncc ||
+                  row.manhacungcap ||
+                  row.provider_id ||
+                  (row.nhacungcap &&
+                    (row.nhacungcap.id ||
+                      row.nhacungcap.idnhacungcap ||
+                      row.nhacungcap.provider_id ||
+                      row.nhacungcap.manhacungcap))),
+            )
+          : 0,
+        name: hasAssignedProvider
+          ? (row && row.tennhacungcap) ||
+            (row &&
+              row.nhacungcap &&
+              (row.nhacungcap.hovaten || row.nhacungcap.user_name)) ||
+            "Chưa phân công"
+          : "Chưa phân công",
+        phone: hasAssignedProvider
+          ? (row && row.sdt_ncc) ||
+            (row && row.sodienthoai_ncc) ||
+            (row && row.phone_ncc) ||
+            (row &&
+              row.nhacungcap &&
+              (row.nhacungcap.sodienthoai ||
+                row.nhacungcap.user_tel ||
+                row.nhacungcap.sdt)) ||
+            ""
+          : "",
+        email: hasAssignedProvider
+          ? (row && row.email_ncc) ||
+            (row &&
+              row.nhacungcap &&
+              (row.nhacungcap.email || row.nhacungcap.user_email)) ||
+            ""
+          : "",
+        address: hasAssignedProvider
+          ? (row && row.diachi_ncc) ||
+            (row && row.address_ncc) ||
+            (row && row.nhacungcap && row.nhacungcap.diachi) ||
+            ""
+          : "",
+        avatar: hasAssignedProvider
+          ? pickFirstValue([
+              row && row.avatar_ncc,
+              row && row.avatar_nhacungcap,
+              row && row.provider_avatar,
+              row && row.nhacungcap && row.nhacungcap.avatar,
+              row && row.nhacungcap && row.nhacungcap.avatar_ncc,
+              row && row.nhacungcap && row.nhacungcap.avatartenfile,
+            ])
+          : "",
       },
       raw: row || null,
       items: [
@@ -502,6 +608,13 @@
       serviceFee: servicePrice,
       transportFee: transportFee,
       surchargeFee: surchargeFee,
+      paymentStatus:
+        (row &&
+          (row.trangthaithanhtoan ||
+            row.trang_thai_thanh_toan ||
+            row.payment_status ||
+            row.paymentStatus)) ||
+        "Unpaid",
       deliveryMethod:
         (row &&
           (row.hinhthucnhangiao ||
@@ -519,6 +632,8 @@
         "",
       receivedAt:
         (row && (row.ngaynhan || row.ngay_nhan || row.received_at)) || "",
+      startedAt:
+        (row && (row.ngaybatdau || row.ngay_bat_dau || row.started_at)) || "",
       completedAt:
         (row &&
           (row.ngayhoanthanh || row.ngay_hoan_thanh || row.completed_at)) ||
@@ -689,7 +804,11 @@
 
           if (providerId <= 0) return;
           if (resolveOrderProviderId(row) !== providerId) return;
-          if (status === "processing" || status === "completed") {
+          if (
+            status === "accepted" ||
+            status === "processing" ||
+            status === "completed"
+          ) {
             assignedOrders.push(mappedOrder);
           }
         });
@@ -815,13 +934,16 @@
     var counts = {
       total: orders.length,
       pending: 0,
+      accepted: 0,
       processing: 0,
       completed: 0,
       canceled: 0,
     };
 
     orders.forEach(function (order) {
-      var key = statusMeta(order.status).className.replace("status-", "");
+      var key = String(
+        order && order.status ? order.status : "pending",
+      ).toLowerCase();
       if (Object.prototype.hasOwnProperty.call(counts, key)) {
         counts[key] += 1;
       }
@@ -836,9 +958,14 @@
               icon: "fas fa-bullhorn",
             },
             {
-              key: "processing",
+              key: "accepted",
               label: "Đã nhận đơn",
               icon: "fas fa-clipboard-check",
+            },
+            {
+              key: "processing",
+              label: "Đang thực hiện",
+              icon: "fas fa-spinner",
             },
             {
               key: "completed",
@@ -852,6 +979,11 @@
               key: "pending",
               label: "Chờ xử lý",
               icon: "fas fa-hourglass-half",
+            },
+            {
+              key: "accepted",
+              label: "Đã nhận đơn",
+              icon: "fas fa-clipboard-check",
             },
             {
               key: "processing",
@@ -1010,6 +1142,18 @@
       );
     }
 
+    function handleStartOrder(orderId) {
+      if (typeof shared.startProviderOrder === "function") {
+        return shared.startProviderOrder(orderId, BOOKING_TABLE);
+      }
+      if (typeof shared.updateOrder === "function") {
+        return shared.updateOrder(BOOKING_TABLE, orderId, {
+          ngaybatdau: new Date().toISOString(),
+        });
+      }
+      return Promise.reject(new Error("Chưa sẵn sàng chức năng bắt đầu đơn."));
+    }
+
     function handleCancelOrder(orderId) {
       if (typeof shared.updateOrder !== "function") {
         return Promise.reject(new Error("Chưa sẵn sàng chức năng hủy đơn."));
@@ -1124,7 +1268,20 @@
             order.id +
             '">Xem chi tiết</a>';
 
-          if (String(order.status || "") === "processing") {
+          var statusValue = String(order.status || "");
+          if (statusValue === "accepted") {
+            actionHtml =
+              '<div class="d-flex gap-2 flex-wrap">' +
+              '<button type="button" class="btn btn-sm btn-primary btn-start-order" data-order-id="' +
+              order.id +
+              '">Bắt đầu</button>' +
+              '<a class="btn btn-sm btn-outline-secondary btn-view-detail" href="chi-tiet-hoa-don.html?id=' +
+              order.id +
+              '">Xem chi tiết</a>' +
+              "</div>";
+          }
+
+          if (statusValue === "processing") {
             actionHtml =
               '<div class="d-flex gap-2 flex-wrap">' +
               '<button type="button" class="btn btn-sm btn-success btn-complete-order" data-order-id="' +
@@ -1150,7 +1307,12 @@
             order.service +
             "</p></td>" +
             "<td>" +
-            formatDate(order.receivedAt || order.updatedAt || order.createdAt) +
+            formatDate(
+              order.startedAt ||
+                order.receivedAt ||
+                order.updatedAt ||
+                order.createdAt,
+            ) +
             "</td>" +
             '<td><span class="status-pill ' +
             meta.className +
@@ -1408,7 +1570,10 @@
         var statusMatched = status === "all" || order.status === status;
 
         var orderDateRaw =
-          order.receivedAt || order.updatedAt || order.createdAt;
+          order.startedAt ||
+          order.receivedAt ||
+          order.updatedAt ||
+          order.createdAt;
         var orderTime = new Date(orderDateRaw).getTime();
         var fromMatched = fromTime == null || orderTime >= fromTime;
         var toMatched = toTime == null || orderTime <= toTime;
@@ -1554,6 +1719,42 @@
 
     if (assignedTbody && role === "provider") {
       assignedTbody.addEventListener("click", function (event) {
+        var startButton = event.target.closest(".btn-start-order");
+        if (startButton) {
+          var startOrderId = Number(startButton.getAttribute("data-order-id"));
+          if (!Number.isFinite(startOrderId) || startOrderId <= 0) {
+            window.alert("Không xác định được mã đơn hàng.");
+            return;
+          }
+
+          setActionButtonLoading(
+            startButton,
+            true,
+            "Bắt đầu",
+            "Đang cập nhật...",
+          );
+          handleStartOrder(startOrderId)
+            .then(function () {
+              return refreshProviderOrders();
+            })
+            .catch(function (error) {
+              window.alert(
+                (error && error.message) ||
+                  "Không thể bắt đầu xử lý đơn. Vui lòng thử lại.",
+              );
+            })
+            .finally(function () {
+              setActionButtonLoading(
+                startButton,
+                false,
+                "Bắt đầu",
+                "Đang cập nhật...",
+              );
+            });
+
+          return;
+        }
+
         var button = event.target.closest(".btn-complete-order");
         if (!button) return;
 
@@ -1761,7 +1962,24 @@
       ]);
     }
 
-    if (role === "provider" && !(order.provider && order.provider.avatar)) {
+    var hasProviderIdentityInOrder =
+      Number(order && order.provider && order.provider.id) > 0 &&
+      String((order && order.provider && order.provider.name) || "")
+        .trim()
+        .toLowerCase() !== "chưa phân công" &&
+      Boolean(
+        String((order && order.provider && order.provider.name) || "").trim() ||
+        String(
+          (order && order.provider && order.provider.phone) || "",
+        ).trim() ||
+        String((order && order.provider && order.provider.email) || "").trim(),
+      );
+
+    if (
+      role === "provider" &&
+      hasProviderIdentityInOrder &&
+      !(order.provider && order.provider.avatar)
+    ) {
       order.provider.avatar = pickFirstValue([
         currentUser && currentUser.avatar,
         currentUser && currentUser.user_avatar,
@@ -1797,10 +2015,11 @@
       String(order.deliveryMethod || "").trim() || "Chưa cập nhật";
 
     var statusLower = String(order.status || "").toLowerCase();
-    var executionStartValue = order.receivedAt || null;
+    var executionStartValue = order.startedAt || order.receivedAt || null;
     var executionEndValue = order.completedAt || null;
 
     var providerStateText = "Chưa nhận";
+    if (statusLower === "accepted") providerStateText = "Đã nhận đơn";
     if (statusLower === "processing") providerStateText = "Đang xử lý";
     if (statusLower === "completed") providerStateText = "Đã hoàn tất";
     if (statusLower === "canceled") providerStateText = "Đã hủy";
@@ -1836,20 +2055,21 @@
     setText("heroTransportFee", formatCurrencyVnd(transportFeeAmount));
     setText("heroSurchargeFee", formatCurrencyVnd(surchargeFeeAmount));
     setText("heroBookingDate", formatDateTime(order.createdAt));
+    setText(
+      "heroReceivedDate",
+      executionStartValue ? formatDateTime(executionStartValue) : "---",
+    );
+    setText(
+      "heroCompletedDate",
+      executionEndValue ? formatDateTime(executionEndValue) : "---",
+    );
+    setText("heroPaymentStatus", getPaymentStatusLabel(order.paymentStatus));
     setText("heroTotalAmount", formatCurrencyVnd(total));
     setText("heroTimeRange", deliveryMethodText);
     var heroDateRangeNode = document.getElementById("heroDateRange");
     if (heroDateRangeNode) {
-      if (executionStartValue || executionEndValue) {
-        heroDateRangeNode.textContent =
-          formatDateTime(executionStartValue) +
-          " - " +
-          formatDateTime(executionEndValue);
-        heroDateRangeNode.classList.remove("d-none");
-      } else {
-        heroDateRangeNode.textContent = "";
-        heroDateRangeNode.classList.add("d-none");
-      }
+      heroDateRangeNode.textContent = "";
+      heroDateRangeNode.classList.add("d-none");
     }
     setText("heroAddress", safeText(order.customer && order.customer.address));
 
@@ -1865,14 +2085,14 @@
     setText("detailExpectedEnd", formatDateTime(schedule.expectedEnd));
     setText(
       "detailActualStart",
-      formatDateTime(order.receivedAt || schedule.actualStart),
+      formatDateTime(
+        order.startedAt || order.receivedAt || schedule.actualStart,
+      ),
     );
     setText(
       "detailActualEnd",
       formatDateTime(order.completedAt || schedule.actualEnd),
     );
-    setText("detailExecutionStart", formatDateTime(executionStartValue));
-    setText("detailExecutionEnd", formatDateTime(executionEndValue));
 
     renderAvatarBadge(
       "customerAvatarBadge",
@@ -1882,7 +2102,7 @@
     );
     renderAvatarBadge(
       "providerAvatarBadge",
-      order.provider && order.provider.avatar,
+      hasProviderIdentityInOrder ? order.provider && order.provider.avatar : "",
       initialsOf(order.provider && order.provider.name, "NCC"),
       "provider",
     );
@@ -1917,6 +2137,7 @@
     if (heroBadge) {
       heroBadge.className = "invoice-status-chip";
       if (statusLower === "pending") heroBadge.classList.add("is-pending");
+      if (statusLower === "accepted") heroBadge.classList.add("is-accepted");
       if (statusLower === "processing")
         heroBadge.classList.add("is-processing");
       if (statusLower === "completed") heroBadge.classList.add("is-completed");
