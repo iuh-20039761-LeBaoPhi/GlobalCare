@@ -41,6 +41,10 @@
   background: linear-gradient(135deg, #f59e0b, #d97706);
 }
 
+.metric-card[data-tone="accepted"] .metric-icon {
+  background: linear-gradient(135deg, #0ea5e9, #0369a1);
+}
+
 .metric-card[data-tone="processing"] .metric-icon {
   background: linear-gradient(135deg, #0ea5e9, #0369a1);
 }
@@ -353,6 +357,10 @@
 
 .invoice-status-chip.is-processing {
   background: rgba(3, 105, 161, 0.4);
+}
+
+.invoice-status-chip.is-accepted {
+  background: rgba(2, 132, 199, 0.42);
 }
 
 .invoice-status-chip.is-completed {

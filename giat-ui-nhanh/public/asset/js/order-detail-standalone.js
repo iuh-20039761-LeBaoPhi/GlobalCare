@@ -178,6 +178,7 @@
     var value = String(status || "").toLowerCase();
     if (value === "cancel") return "canceled";
     if (value === "completed") return "completed";
+    if (value === "accepted" || value === "received") return "accepted";
     if (value === "processing") return "processing";
     return "pending";
   }
@@ -187,14 +188,26 @@
       return mapDbStatus(shared.getOrderStatus(row));
     }
 
-    if (row && row.ngayhuy) return "canceled";
-    if (row && row.ngayhoanthanh) return "completed";
-    if (row && row.ngaynhan) return "processing";
+    if (row && (row.ngayhuy || row.ngay_huy || row.canceled_at)) {
+      return "canceled";
+    }
+    if (row && (row.ngayhoanthanh || row.ngay_hoan_thanh || row.completed_at)) {
+      return "completed";
+    }
+    if (row && (row.ngaybatdau || row.ngay_bat_dau || row.started_at)) {
+      return "processing";
+    }
+    if (row && (row.ngaynhan || row.ngay_nhan || row.received_at)) {
+      return "accepted";
+    }
     return "pending";
   }
 
   function statusMeta(status) {
     var value = String(status || "").toLowerCase();
+    if (value === "accepted") {
+      return { label: "Đã nhận đơn", className: "status-accepted" };
+    }
     if (value === "processing") {
       return { label: "Đang thực hiện", className: "status-processing" };
     }
@@ -210,6 +223,7 @@
   function statusProgress(status) {
     var value = String(status || "").toLowerCase();
     if (value === "completed") return 100;
+    if (value === "accepted") return 45;
     if (value === "processing") return 62;
     if (value === "canceled") return 0;
     return 20;
@@ -569,6 +583,7 @@
     var updatedAt =
       row.ngayhoanthanh ||
       row.ngayhuy ||
+      row.ngaybatdau ||
       row.ngaynhan ||
       row.updated_at ||
       createdAt;
@@ -600,6 +615,7 @@
         row.transport_option ||
         "",
       receivedAt: row.ngaynhan || row.ngay_nhan || row.received_at || "",
+      startedAt: row.ngaybatdau || row.ngay_bat_dau || row.started_at || "",
       completedAt:
         row.ngayhoanthanh || row.ngay_hoan_thanh || row.completed_at || "",
       totalAmount: totalAmount,
@@ -892,6 +908,7 @@
         : subtotal + toNumber(order.extraFee);
 
     var providerStateText = "Chưa nhận";
+    if (order.status === "accepted") providerStateText = "Đã nhận đơn";
     if (order.status === "processing") providerStateText = "Đang xử lý";
     if (order.status === "completed") providerStateText = "Đã hoàn tất";
     if (order.status === "canceled") providerStateText = "Đã hủy";
@@ -963,6 +980,7 @@
     if (heroBadge) {
       heroBadge.className = "invoice-status-chip";
       if (order.status === "pending") heroBadge.classList.add("is-pending");
+      if (order.status === "accepted") heroBadge.classList.add("is-accepted");
       if (order.status === "processing")
         heroBadge.classList.add("is-processing");
       if (order.status === "completed") heroBadge.classList.add("is-completed");
@@ -1079,10 +1097,22 @@
     }
 
     if (authRole === "provider") {
+      if (orderStatus === "accepted") {
+        return {
+          text: "Bắt đầu",
+          className: "btn btn-primary",
+          hint: "Nhà cung cấp bấm Bắt đầu để cập nhật ngày bắt đầu xử lý.",
+          canSubmit: true,
+        };
+      }
+
       return {
         text: "Hoàn thành",
         className: "btn btn-success",
-        hint: "Nhà cung cấp xác nhận hoàn thành để kết thúc đơn.",
+        hint:
+          orderStatus === "processing"
+            ? "Nhà cung cấp xác nhận hoàn thành để kết thúc đơn."
+            : "Đơn chưa ở trạng thái đang thực hiện.",
         canSubmit: orderStatus === "processing",
       };
     }
@@ -1142,9 +1172,21 @@
             ngayhuy: new Date().toISOString(),
           });
         } else {
-          await updateOrderRow(state.orderRaw.id, {
-            ngayhoanthanh: new Date().toISOString(),
-          });
+          var providerStatus = String(
+            (state.orderView && state.orderView.status) || "",
+          ).toLowerCase();
+
+          if (providerStatus === "accepted") {
+            await updateOrderRow(state.orderRaw.id, {
+              ngaybatdau: new Date().toISOString(),
+            });
+          } else if (providerStatus === "processing") {
+            await updateOrderRow(state.orderRaw.id, {
+              ngayhoanthanh: new Date().toISOString(),
+            });
+          } else {
+            throw new Error("Đơn chưa sẵn sàng để cập nhật từ nhà cung cấp.");
+          }
         }
 
         await loadAndRenderOrder();

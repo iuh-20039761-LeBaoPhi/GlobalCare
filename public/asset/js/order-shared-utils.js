@@ -11,23 +11,48 @@
     return [];
   }
 
+  function hasDateValue(value) {
+    if (value == null) return false;
+    var text = String(value).trim().toLowerCase();
+    return (
+      text !== "" &&
+      text !== "null" &&
+      text !== "undefined" &&
+      text !== "0000-00-00" &&
+      text !== "0000-00-00 00:00:00"
+    );
+  }
+
   function getOrderStatus(order) {
     var row = order || {};
-    if (row.ngayhuy) return "cancel";
-    if (row.ngayhoanthanh) return "completed";
-    if (row.ngaynhan) return "processing";
+    if (hasDateValue(row.ngayhuy || row.ngay_huy || row.canceled_at)) {
+      return "cancel";
+    }
+    if (
+      hasDateValue(row.ngayhoanthanh || row.ngay_hoan_thanh || row.completed_at)
+    ) {
+      return "completed";
+    }
+    if (hasDateValue(row.ngaybatdau || row.ngay_bat_dau || row.started_at)) {
+      return "processing";
+    }
+    if (hasDateValue(row.ngaynhan || row.ngay_nhan || row.received_at)) {
+      return "accepted";
+    }
     if (row.ngaydat) return "pending";
     return "pending";
   }
 
   function getOrderStatusLabel(status) {
-    if (status === "processing") return "Đã nhận đơn";
+    if (status === "accepted") return "Đã nhận đơn";
+    if (status === "processing") return "Đang thực hiện";
     if (status === "completed") return "Đã hoàn thành";
     if (status === "cancel") return "Đã hủy";
     return "Chờ nhận đơn";
   }
 
   function getOrderStatusClass(status) {
+    if (status === "accepted") return "status-accepted";
     if (status === "processing") return "status-processing";
     if (status === "completed") return "status-completed";
     if (status === "cancel") return "status-cancel";
@@ -477,6 +502,14 @@
     );
   }
 
+  function startProviderOrder(orderId, table, extraData) {
+    return updateOrder(
+      table,
+      orderId,
+      Object.assign({ ngaybatdau: new Date().toISOString() }, extraData || {}),
+    );
+  }
+
   function completeProviderOrder(orderId, table, extraData) {
     return updateOrder(
       table,
@@ -503,6 +536,7 @@
     fetchAllOrders: fetchAllOrders,
     fetchOrdersByPhone: fetchOrdersByPhone,
     acceptProviderOrder: acceptProviderOrder,
+    startProviderOrder: startProviderOrder,
     completeProviderOrder: completeProviderOrder,
   };
 })();

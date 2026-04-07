@@ -67,6 +67,9 @@
 
   function statusMeta(status) {
     var value = String(status || "").toLowerCase();
+    if (value === "accepted") {
+      return { label: "Đã nhận đơn", className: "status-accepted" };
+    }
     if (value === "processing") {
       return { label: "Đang thực hiện", className: "status-processing" };
     }
@@ -82,6 +85,7 @@
   function statusProgress(status) {
     var value = String(status || "").toLowerCase();
     if (value === "completed") return 100;
+    if (value === "accepted") return 45;
     if (value === "processing") return 62;
     if (value === "canceled") return 0;
     return 20;
@@ -394,6 +398,7 @@
     var value = String(status || "").toLowerCase();
     if (value === "cancel") return "canceled";
     if (value === "completed") return "completed";
+    if (value === "accepted" || value === "received") return "accepted";
     if (value === "processing") return "processing";
     return "pending";
   }
@@ -407,11 +412,19 @@
       },
     ];
 
-    if (row && row.ngaynhan) {
+    if (row && (row.ngaynhan || row.ngay_nhan || row.received_at)) {
       timeline.push({
-        at: row.ngaynhan,
+        at: row.ngaynhan || row.ngay_nhan || row.received_at,
         title: "Nhà cung cấp xác nhận",
-        detail: "Đơn hàng đã được tiếp nhận và đang xử lý.",
+        detail: "Đơn hàng đã được nhà cung cấp tiếp nhận.",
+      });
+    }
+
+    if (row && (row.ngaybatdau || row.ngay_bat_dau || row.started_at)) {
+      timeline.push({
+        at: row.ngaybatdau || row.ngay_bat_dau || row.started_at,
+        title: "Bắt đầu xử lý",
+        detail: "Nhà cung cấp đã bắt đầu thực hiện đơn hàng.",
       });
     }
 
@@ -440,19 +453,30 @@
       new Date().toISOString();
     var updatedAt =
       (row &&
-        (row.ngayhoanthanh || row.ngayhuy || row.ngaynhan || row.updated_at)) ||
+        (row.ngayhoanthanh ||
+          row.ngayhuy ||
+          row.ngaybatdau ||
+          row.ngay_bat_dau ||
+          row.started_at ||
+          row.ngaynhan ||
+          row.ngay_nhan ||
+          row.received_at ||
+          row.updated_at)) ||
       createdAt;
 
     var rawStatus =
       typeof shared.getOrderStatus === "function"
         ? shared.getOrderStatus(row)
-        : row && row.ngayhuy
+        : row && (row.ngayhuy || row.ngay_huy || row.canceled_at)
           ? "cancel"
-          : row && row.ngayhoanthanh
+          : row &&
+              (row.ngayhoanthanh || row.ngay_hoan_thanh || row.completed_at)
             ? "completed"
-            : row && row.ngaynhan
+            : row && (row.ngaybatdau || row.ngay_bat_dau || row.started_at)
               ? "processing"
-              : "pending";
+              : row && (row.ngaynhan || row.ngay_nhan || row.received_at)
+                ? "accepted"
+                : "pending";
     var status = mapDbStatusToPanel(rawStatus);
 
     var qty = toNumber(row && row.soluong);
@@ -608,6 +632,8 @@
         "",
       receivedAt:
         (row && (row.ngaynhan || row.ngay_nhan || row.received_at)) || "",
+      startedAt:
+        (row && (row.ngaybatdau || row.ngay_bat_dau || row.started_at)) || "",
       completedAt:
         (row &&
           (row.ngayhoanthanh || row.ngay_hoan_thanh || row.completed_at)) ||
@@ -778,7 +804,11 @@
 
           if (providerId <= 0) return;
           if (resolveOrderProviderId(row) !== providerId) return;
-          if (status === "processing" || status === "completed") {
+          if (
+            status === "accepted" ||
+            status === "processing" ||
+            status === "completed"
+          ) {
             assignedOrders.push(mappedOrder);
           }
         });
@@ -904,13 +934,16 @@
     var counts = {
       total: orders.length,
       pending: 0,
+      accepted: 0,
       processing: 0,
       completed: 0,
       canceled: 0,
     };
 
     orders.forEach(function (order) {
-      var key = statusMeta(order.status).className.replace("status-", "");
+      var key = String(
+        order && order.status ? order.status : "pending",
+      ).toLowerCase();
       if (Object.prototype.hasOwnProperty.call(counts, key)) {
         counts[key] += 1;
       }
@@ -925,9 +958,14 @@
               icon: "fas fa-bullhorn",
             },
             {
-              key: "processing",
+              key: "accepted",
               label: "Đã nhận đơn",
               icon: "fas fa-clipboard-check",
+            },
+            {
+              key: "processing",
+              label: "Đang thực hiện",
+              icon: "fas fa-spinner",
             },
             {
               key: "completed",
@@ -941,6 +979,11 @@
               key: "pending",
               label: "Chờ xử lý",
               icon: "fas fa-hourglass-half",
+            },
+            {
+              key: "accepted",
+              label: "Đã nhận đơn",
+              icon: "fas fa-clipboard-check",
             },
             {
               key: "processing",
@@ -1099,6 +1142,18 @@
       );
     }
 
+    function handleStartOrder(orderId) {
+      if (typeof shared.startProviderOrder === "function") {
+        return shared.startProviderOrder(orderId, BOOKING_TABLE);
+      }
+      if (typeof shared.updateOrder === "function") {
+        return shared.updateOrder(BOOKING_TABLE, orderId, {
+          ngaybatdau: new Date().toISOString(),
+        });
+      }
+      return Promise.reject(new Error("Chưa sẵn sàng chức năng bắt đầu đơn."));
+    }
+
     function handleCancelOrder(orderId) {
       if (typeof shared.updateOrder !== "function") {
         return Promise.reject(new Error("Chưa sẵn sàng chức năng hủy đơn."));
@@ -1213,7 +1268,20 @@
             order.id +
             '">Xem chi tiết</a>';
 
-          if (String(order.status || "") === "processing") {
+          var statusValue = String(order.status || "");
+          if (statusValue === "accepted") {
+            actionHtml =
+              '<div class="d-flex gap-2 flex-wrap">' +
+              '<button type="button" class="btn btn-sm btn-primary btn-start-order" data-order-id="' +
+              order.id +
+              '">Bắt đầu</button>' +
+              '<a class="btn btn-sm btn-outline-secondary btn-view-detail" href="chi-tiet-hoa-don.html?id=' +
+              order.id +
+              '">Xem chi tiết</a>' +
+              "</div>";
+          }
+
+          if (statusValue === "processing") {
             actionHtml =
               '<div class="d-flex gap-2 flex-wrap">' +
               '<button type="button" class="btn btn-sm btn-success btn-complete-order" data-order-id="' +
@@ -1239,7 +1307,12 @@
             order.service +
             "</p></td>" +
             "<td>" +
-            formatDate(order.receivedAt || order.updatedAt || order.createdAt) +
+            formatDate(
+              order.startedAt ||
+                order.receivedAt ||
+                order.updatedAt ||
+                order.createdAt,
+            ) +
             "</td>" +
             '<td><span class="status-pill ' +
             meta.className +
@@ -1497,7 +1570,10 @@
         var statusMatched = status === "all" || order.status === status;
 
         var orderDateRaw =
-          order.receivedAt || order.updatedAt || order.createdAt;
+          order.startedAt ||
+          order.receivedAt ||
+          order.updatedAt ||
+          order.createdAt;
         var orderTime = new Date(orderDateRaw).getTime();
         var fromMatched = fromTime == null || orderTime >= fromTime;
         var toMatched = toTime == null || orderTime <= toTime;
@@ -1643,6 +1719,42 @@
 
     if (assignedTbody && role === "provider") {
       assignedTbody.addEventListener("click", function (event) {
+        var startButton = event.target.closest(".btn-start-order");
+        if (startButton) {
+          var startOrderId = Number(startButton.getAttribute("data-order-id"));
+          if (!Number.isFinite(startOrderId) || startOrderId <= 0) {
+            window.alert("Không xác định được mã đơn hàng.");
+            return;
+          }
+
+          setActionButtonLoading(
+            startButton,
+            true,
+            "Bắt đầu",
+            "Đang cập nhật...",
+          );
+          handleStartOrder(startOrderId)
+            .then(function () {
+              return refreshProviderOrders();
+            })
+            .catch(function (error) {
+              window.alert(
+                (error && error.message) ||
+                  "Không thể bắt đầu xử lý đơn. Vui lòng thử lại.",
+              );
+            })
+            .finally(function () {
+              setActionButtonLoading(
+                startButton,
+                false,
+                "Bắt đầu",
+                "Đang cập nhật...",
+              );
+            });
+
+          return;
+        }
+
         var button = event.target.closest(".btn-complete-order");
         if (!button) return;
 
@@ -1903,10 +2015,11 @@
       String(order.deliveryMethod || "").trim() || "Chưa cập nhật";
 
     var statusLower = String(order.status || "").toLowerCase();
-    var executionStartValue = order.receivedAt || null;
+    var executionStartValue = order.startedAt || order.receivedAt || null;
     var executionEndValue = order.completedAt || null;
 
     var providerStateText = "Chưa nhận";
+    if (statusLower === "accepted") providerStateText = "Đã nhận đơn";
     if (statusLower === "processing") providerStateText = "Đang xử lý";
     if (statusLower === "completed") providerStateText = "Đã hoàn tất";
     if (statusLower === "canceled") providerStateText = "Đã hủy";
@@ -1972,7 +2085,9 @@
     setText("detailExpectedEnd", formatDateTime(schedule.expectedEnd));
     setText(
       "detailActualStart",
-      formatDateTime(order.receivedAt || schedule.actualStart),
+      formatDateTime(
+        order.startedAt || order.receivedAt || schedule.actualStart,
+      ),
     );
     setText(
       "detailActualEnd",
@@ -2022,6 +2137,7 @@
     if (heroBadge) {
       heroBadge.className = "invoice-status-chip";
       if (statusLower === "pending") heroBadge.classList.add("is-pending");
+      if (statusLower === "accepted") heroBadge.classList.add("is-accepted");
       if (statusLower === "processing")
         heroBadge.classList.add("is-processing");
       if (statusLower === "completed") heroBadge.classList.add("is-completed");
