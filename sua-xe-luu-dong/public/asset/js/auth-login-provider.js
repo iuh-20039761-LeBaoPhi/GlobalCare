@@ -10,7 +10,7 @@
   var btnSubmit = document.getElementById("providerSubmitBtn");
   var loginStatus = document.getElementById("providerLoginStatus");
 
-  var LOGIN_TABLE = "nhacungcap_giatuinhanh";
+  var LOGIN_TABLE = "nhacungcap_suaxe";
   var SESSION_ENDPOINT = "public/session-user.php";
 
   function isPhoneVN(value) {
