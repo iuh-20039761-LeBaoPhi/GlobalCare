@@ -524,6 +524,48 @@
     );
   }
 
+  function getCookie(name) {
+    var cookieName = String(name || "").trim();
+    if (!cookieName) return "";
+    var cookiePrefix = cookieName + "=";
+    var entries = (document.cookie || "").split(";");
+    for (var i = 0; i < entries.length; i += 1) {
+      var entry = entries[i].trim();
+      if (entry.indexOf(cookiePrefix) !== 0) continue;
+      var rawValue = entry.slice(cookiePrefix.length);
+      try {
+        return decodeURIComponent(rawValue);
+      } catch (_error) {
+        return rawValue;
+      }
+    }
+    return "";
+  }
+
+  async function getSessionUser() {
+    var u = getCookie("dvqt_u");
+    var p = getCookie("dvqt_p");
+    if (!u || !p) return null;
+
+    if (typeof window.krudList !== "function") return null;
+
+    try {
+      var result = await window.krudList({
+        table: "nguoidung",
+        where: [
+          { field: "sodienthoai", operator: "=", value: u },
+          { field: "matkhau", operator: "=", value: p },
+        ],
+        limit: 1,
+      });
+      var rows = (result && result.data) || (Array.isArray(result) ? result : []);
+      return rows.length ? rows[0] : null;
+    } catch (err) {
+      console.error("SharedOrderUtils.getSessionUser error:", err);
+      return null;
+    }
+  }
+
   window.SharedOrderUtils = {
     extractRows: extractRows,
     getOrderStatus: getOrderStatus,
@@ -538,5 +580,7 @@
     acceptProviderOrder: acceptProviderOrder,
     startProviderOrder: startProviderOrder,
     completeProviderOrder: completeProviderOrder,
+    getCookie: getCookie,
+    getSessionUser: getSessionUser,
   };
 })();

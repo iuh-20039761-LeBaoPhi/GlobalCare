@@ -482,16 +482,16 @@
   }
 
   function getCookie(name) {
+    if (shared && typeof shared.getCookie === "function") {
+      return shared.getCookie(name);
+    }
     var cookieName = String(name || "").trim();
     if (!cookieName) return "";
-
     var cookiePrefix = cookieName + "=";
     var entries = (document.cookie || "").split(";");
-
     for (var i = 0; i < entries.length; i += 1) {
       var entry = entries[i].trim();
       if (entry.indexOf(cookiePrefix) !== 0) continue;
-
       var rawValue = entry.slice(cookiePrefix.length);
       try {
         return decodeURIComponent(rawValue);
@@ -499,7 +499,6 @@
         return rawValue;
       }
     }
-
     return "";
   }
 
@@ -716,6 +715,8 @@
           row && row.khachhang && row.khachhang.avatar_kh,
           row && row.khachhang && row.khachhang.avatartenfile,
         ]),
+        maplat: row && (row.lat_kh || row.lat),
+        maplng: row && (row.lng_kh || row.lng),
       },
       provider: {
         id: hasAssignedProvider
@@ -773,6 +774,12 @@
               row && row.nhacungcap && row.nhacungcap.avatartenfile,
             ])
           : "",
+        maplat: hasAssignedProvider
+          ? (row && row.maplat_ncc) || (row.nhacungcap && row.nhacungcap.maplat)
+          : null,
+        maplng: hasAssignedProvider
+          ? (row && row.maplng_ncc) || (row.nhacungcap && row.nhacungcap.maplng)
+          : null,
       },
       raw: row || null,
       items: [
@@ -825,6 +832,13 @@
   }
 
   function getSessionUser() {
+    if (shared && typeof shared.getSessionUser === "function") {
+      return shared.getSessionUser().then(function (row) {
+        if (!row) return null;
+        return mapAuthenticatedUser(row, row.sodienthoai);
+      });
+    }
+
     var phone = normalizePhone(getCookie("dvqt_u"));
     var password = String(getCookie("dvqt_p") || "").trim();
 

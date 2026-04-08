@@ -191,6 +191,13 @@
     return document.body.classList.contains("booking-standalone");
   }
 
+  function getBookingCookie(name) {
+    var value = "; " + document.cookie;
+    var parts = value.split("; " + name + "=");
+    if (parts.length === 2) return parts.pop().split(";").shift();
+    return "";
+  }
+
   function ensureStandaloneBookingAccess() {
     if (!isStandaloneBookingPage()) {
       return Promise.resolve();
@@ -201,9 +208,17 @@
     setBookingInteractionDisabled(true);
 
     var creds = parseUrlCredentials();
-    var hasUrlCreds = Boolean(creds.phone && creds.password);
+    var source = "url-credentials";
 
-    if (!hasUrlCreds) {
+    if (!creds.phone || !creds.password) {
+      creds.phone = getBookingCookie("dvqt_u");
+      creds.password = getBookingCookie("dvqt_p");
+      source = "cookie-credentials";
+    }
+
+    var hasCreds = Boolean(creds.phone && creds.password);
+
+    if (!hasCreds) {
       window.location.href = LOGIN_PAGE;
       return Promise.resolve();
     }
@@ -213,7 +228,7 @@
         if (!row) {
           showStandaloneAccessError("Thông tin không đúng");
           bookingAccessState.isAuthenticated = false;
-          bookingAccessState.source = "invalid-url-credentials";
+          bookingAccessState.source = "invalid-" + source;
           setBookingInteractionDisabled(true);
           return;
         }
@@ -230,7 +245,7 @@
 
         fillBookingFormUser(row);
         bookingAccessState.isAuthenticated = true;
-        bookingAccessState.source = "url-credentials-customer";
+        bookingAccessState.source = source + "-customer";
         setBookingInteractionDisabled(false);
       },
     );

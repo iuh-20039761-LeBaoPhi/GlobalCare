@@ -71,7 +71,12 @@
 
     var res = await fetch(url);
     if (!res.ok) {
-      throw new Error("Khong the tinh khoang cach");
+      var errorDetail = "";
+      try {
+        var errBody = await res.json();
+        errorDetail = errBody.message || errBody.code || "";
+      } catch (e) {}
+      throw new Error("Không thể tính khoảng cách (Status: " + res.status + " " + errorDetail + "). Tọa độ: NS[" + lat1 + "," + lon1 + "] -> KH[" + lat2 + "," + lon2 + "]");
     }
 
     var data = await res.json();
@@ -83,37 +88,21 @@
   }
 
   async function getSessionUser() {
-    var config = window.ProviderOrderAcceptConfig || {};
-    var endpointCandidates = [
-      config.sessionEndpoint,
-      "public/asset/login-page.php",
-      "../public/asset/login-page.php",
-    ].filter(Boolean);
-
-    for (var i = 0; i < endpointCandidates.length; i += 1) {
-      try {
-        var response = await fetch(endpointCandidates[i], {
-          method: "GET",
-          credentials: "same-origin",
-          headers: {
-            "Content-Type": "application/json",
-            Accept: "application/json",
-          },
-        });
-
-        var result = await response.json().catch(function () {
-          return null;
-        });
-
-        if (response.ok && result && result.loggedIn === true) {
-          return result.user || {};
-        }
-      } catch (_error) {
-        // try next endpoint
-      }
+    if (typeof shared.getSessionUser !== "function") {
+       throw new Error("Hệ thống chưa sẵn sàng (SharedOrderUtils).");
+    }
+    var user = await shared.getSessionUser();
+    if (!user) {
+      throw new Error("Vui lòng đăng nhập để nhận đơn.");
     }
 
-    throw new Error("Phien dang nhap khong hop le");
+    var idDichvu = String(user.id_dichvu || "").trim();
+    var serviceIds = idDichvu.split(",").map((s) => s.trim());
+    if (serviceIds.indexOf("11") === -1) {
+      throw new Error("Tài khoản của bạn không có quyền nhận đơn.");
+    }
+
+    return user;
   }
 
   async function getCurrentSupplier() {
@@ -129,8 +118,8 @@
       sodienthoai: user.user_tel || user.sodienthoai || user.phone || "",
       email: user.user_email || user.email || "",
       diachi: user.diachi || user.diachi_ncc || "",
-      lat_ncc: user.lat || user.lat_ncc,
-      lng_ncc: user.lng || user.lng_ncc,
+      maplat: user.maplat,
+      maplng: user.maplng,
     };
   }
 
@@ -235,18 +224,16 @@
     var supplier = await getCurrentSupplier();
     var order = await getOrderById(orderId);
 
-    var supplierLat = Number(supplier.lat_ncc);
-    var supplierLng = Number(supplier.lng_ncc);
-    var customerLat = Number(order.lat_kh || order.lat);
-    var customerLng = Number(order.lng_kh || order.lng);
+    var supplierLat = Number(supplier.maplat);
+    var supplierLng = Number(supplier.maplng);
+    var customerLat = Number(order.lat_kh);
+    var customerLng = Number(order.lng_kh);
 
-    if (
-      !Number.isFinite(supplierLat) ||
-      !Number.isFinite(supplierLng) ||
-      !Number.isFinite(customerLat) ||
-      !Number.isFinite(customerLng)
-    ) {
-      throw new Error("Thieu lat/lng de tinh khoang cach");
+    if (!supplierLat || !supplierLng || supplierLat <= 0 || supplierLng <= 0) {
+      throw new Error("Thiếu tọa độ nhà cung cấp hợp lệ (maplat/maplng). Hiện tại: " + supplierLat + "," + supplierLng);
+    }
+    if (!customerLat || !customerLng || customerLat <= 0 || customerLng <= 0) {
+      throw new Error("Hệ thống chưa có tọa độ vị trí của khách hàng này (lat_kh/lng_kh). Vui lòng yêu cầu khách hàng cập nhật địa chỉ hoặc nhập tay.");
     }
 
     var distanceKm = await getDistance(
