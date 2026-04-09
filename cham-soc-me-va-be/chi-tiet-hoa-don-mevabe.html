@@ -1488,9 +1488,7 @@
 								<p id="customerCardAddress" class="profile-row fa fa-map-marker">---</p>
 							</div>
 						</div>
-						<div class="profile-foot">
-							<span id="customerExtraPill" class="profile-pill">Năm sinh: ---</span>
-						</div>
+
 					</article>
 
 					<article class="panel" id="panelStaff">
@@ -1588,8 +1586,7 @@
 
 	<script>
 		(() => {
-			const TABLE_CUSTOMER = 'khachhang';
-			const TABLE_STAFF = 'nhacungcap_mevabe';
+			const TABLE_USER = 'nguoidung'; // Bảng duy nhất chứa cả khách hàng lẫn nhà cung cấp
 			const TABLE_ORDER = 'datlich_mevabe';
 			const TABLE_HISTORY = 'lich_su_lam_viec_mvb';
 			const REVIEW_UPLOAD_API = 'upload-review-media.php';
@@ -1598,8 +1595,7 @@
 				params: {},
 				role: '',
 				$user: null,
-				$khachhang: [],
-				$nhacungcap_mevabe: [],
+				$nguoidung: [], // Danh sách tất cả người dùng từ bảng nguoidung
 				$datlich_mevabe: null,
 				stateTimer: null,
 				// id của record lich_su_lam_viec_mvb đang mở trong ngày (sau khi nhấn btnStart)
@@ -1780,29 +1776,25 @@
 			}
 
 			async function loadAuthTables() {
-				const [$khachhang, $nhacungcap_mevabe] = await Promise.all([
-					listTableRows(TABLE_CUSTOMER),
-					listTableRows(TABLE_STAFF)
-				]);
-				app.$khachhang = $khachhang;
-				app.$nhacungcap_mevabe = $nhacungcap_mevabe;
+				// Chỉ cần load 1 bảng nguoidung duy nhất
+				app.$nguoidung = await listTableRows(TABLE_USER);
 			}
 
 			function findAuthUser() {
 				const { sodienthoai, password } = app.params;
-				const $khachhang = app.$khachhang.find((row) => (
+
+				// Tìm user trong bảng nguoidung theo SĐT và mật khẩu
+				const matched = app.$nguoidung.find((row) => (
 					String(row.sodienthoai || '') === sodienthoai
 					&& String(row.matkhau || row.mat_khau || row.password || '') === password
 				));
-				if ($khachhang) return { role: 'customer', $user: $khachhang };
+				if (!matched) return null;
 
-				const $nhacungcap_mevabe = app.$nhacungcap_mevabe.find((row) => (
-					String(row.sodienthoai || '') === sodienthoai
-					&& String(row.matkhau || row.mat_khau || row.password || '') === password
-				));
-				if ($nhacungcap_mevabe) return { role: 'staff', $user: $nhacungcap_mevabe };
-
-				return null;
+				// Xác định role dựa vào id_dichvu:
+				// Nếu id_dichvu chứa '1' → nhà cung cấp (staff), ngược lại → khách hàng (customer)
+				const idDichvuList = String(matched.id_dichvu || '').split(',').map(s => s.trim());
+				const isProvider = idDichvuList.includes('1');
+				return { role: isProvider ? 'staff' : 'customer', $user: matched };
 			}
 
 			async function applyAutoOrderStatusRules($datlich_mevabe) {
@@ -1851,7 +1843,8 @@
 				if (!app.$datlich_mevabe) return null;
 				const idStaff = toNum(app.$datlich_mevabe.id_nhacungcap);
 				if (idStaff <= 0) return null;
-				return app.$nhacungcap_mevabe.find((row) => toNum(row.id) === idStaff) || null;
+				// Tìm trong bảng nguoidung (thay thế cho nhacungcap_mevabe cũ)
+				return app.$nguoidung.find((row) => toNum(row.id) === idStaff) || null;
 			}
 
 			function parseDateOnly(dateStr) {
@@ -2112,7 +2105,6 @@
 				setText('customerCardPhone', $datlich_mevabe.sdtkhachhang || '---');
 				setText('customerCardEmail', $datlich_mevabe.emailkhachhang || '---');
 				setText('customerCardAddress', $datlich_mevabe.diachikhachhang || '---');
-				setText('customerExtraPill', `Năm sinh: ${$datlich_mevabe.ngaysinh || '---'}`);
 				setAvatar('customerAvatar', $datlich_mevabe.anh_dai_dien || app.$user?.anh_dai_dien || app.$user?.avatar || '');
 
 				setText('staffCardName', $datlich_mevabe.tenncc || '---');

@@ -1,71 +1,81 @@
 <?php
 declare(strict_types=1);
 
-function nv_list_table_rows(string $table): array
-{
-    $payload = json_encode(['table' => $table], JSON_UNESCAPED_UNICODE);
-    if ($payload === false) {
-        return [];
-    }
-
-    $url = 'https://api.dvqt.vn/list/';
-
-    $raw = false;
-    if (function_exists('curl_init')) {
-        $ch = curl_init($url);
-        curl_setopt_array($ch, [
-            CURLOPT_POST => true,
-            CURLOPT_RETURNTRANSFER => true,
-            CURLOPT_HTTPHEADER => ['Content-Type: application/json'],
-            CURLOPT_POSTFIELDS => $payload,
-            CURLOPT_CONNECTTIMEOUT => 8,
-            CURLOPT_TIMEOUT => 20,
-        ]);
-        $raw = curl_exec($ch);
-        curl_close($ch);
-    } else {
-        $context = stream_context_create([
-            'http' => [
-                'method' => 'POST',
-                'header' => "Content-Type: application/json\r\n",
-                'content' => $payload,
-                'timeout' => 20,
-            ],
-        ]);
-        $raw = @file_get_contents($url, false, $context);
-    }
-
-    if (!is_string($raw) || $raw === '') {
-        return [];
-    }
-
-    $decoded = json_decode($raw, true);
-    if (!is_array($decoded) || !empty($decoded['error']) || (isset($decoded['success']) && $decoded['success'] === false)) {
-        return [];
-    }
-
-    $rows = $decoded['data'] ?? $decoded['rows'] ?? $decoded['items'] ?? $decoded;
-
-    if (!is_array($rows)) {
-        return [];
-    }
-
-    return array_values(array_filter($rows, static fn($row): bool => is_array($row)));
+/**
+ * Danh sách bản đồ dịch vụ theo yêu cầu
+ */
+function nv_get_service_map(): array {
+    return [
+        1  => ['name' => 'Chăm sóc mẹ và bé',   'icon' => 'fas fa-baby',          'color' => '#ec4899'],
+        2  => ['name' => 'Chăm sóc người bệnh',  'icon' => 'fas fa-hospital-user', 'color' => '#ef4444'],
+        3  => ['name' => 'Chăm sóc người già',   'icon' => 'fas fa-person-cane',   'color' => '#f97316'],
+        4  => ['name' => 'Làm vườn',             'icon' => 'fas fa-leaf',          'color' => '#22c55e'],
+        5  => ['name' => 'Dọn vệ sinh',          'icon' => 'fas fa-broom',         'color' => '#14b8a6'],
+        6  => ['name' => 'Lái xe hộ',            'icon' => 'fas fa-car',           'color' => '#3b82f6'],
+        7  => ['name' => 'Giao hàng nhanh',      'icon' => 'fas fa-truck-fast',    'color' => '#6366f1'],
+        8  => ['name' => 'Sửa xe',               'icon' => 'fas fa-motorcycle',    'color' => '#8b5cf6'],
+        9  => ['name' => 'Thợ nhà',              'icon' => 'fas fa-tools',         'color' => '#11998e'],
+        10 => ['name' => 'Thuê xe',              'icon' => 'fas fa-key',           'color' => '#0ea5e9'],
+        11 => ['name' => 'Giặt ủi nhanh',        'icon' => 'fas fa-tshirt',        'color' => '#f43f5e'],
+    ];
 }
 
-function getNhanVienBySessionId($sessionEmployeeId): array
-{
-    $employeeId = (int)$sessionEmployeeId;
-    if ($employeeId <= 0) {
-        return ['success' => false, 'error' => 'Khong tim thay id nhan vien trong session.', 'row' => []];
-    }
+/**
+ * Lấy danh sách hàng từ API theo bảng
+ */
+function nv_list_table_rows(string $table): array {
+    $url = 'https://api.dvqt.vn/list/';
+    $payload = json_encode(['table' => $table]);
+    
+    $opts = [
+        'http' => [
+            'method'  => 'POST',
+            'header'  => "Content-Type: application/json\r\n",
+            'content' => $payload,
+            'timeout' => 10
+        ]
+    ];
+    
+    $raw = @file_get_contents($url, false, stream_context_create($opts));
+    if (!$raw) return [];
+    
+    $decoded = json_decode($raw, true);
+    return $decoded['data'] ?? $decoded['rows'] ?? [];
+}
 
-    $rows = nv_list_table_rows('nhacungcap_mevabe');
-    foreach ($rows as $row) {
-        if ((int)($row['id'] ?? 0) === $employeeId) {
-            return ['success' => true, 'error' => '', 'row' => $row];
+/**
+ * Lấy thông tin nhân viên từ session và giải mã danh sách dịch vụ
+ */
+function nv_get_employee_info(): array {
+    // 1. Lấy user từ session (được session_user.php thiết lập)
+    $user = $_SESSION['user'] ?? null;
+    if (!$user) return ['row' => [], 'services' => [], 'error' => 'Chưa đăng nhập'];
+
+    // 2. Tìm thông tin chi tiết trong bảng nguoidung (dùng chung cho NCC và KH)
+    $phone = preg_replace('/\D/', '', (string)($user['sodienthoai'] ?? ''));
+    $allUsers = nv_list_table_rows('nguoidung');
+    
+    $found = null;
+    foreach ($allUsers as $u) {
+        $uPhone = preg_replace('/\D/', '', (string)($u['sodienthoai'] ?? ''));
+        if ($uPhone === $phone) {
+            $found = $u;
+            break;
         }
     }
 
-    return ['success' => false, 'error' => 'Khong tim thay du lieu nhan vien trong bang nhacungcap_mevabe.', 'row' => []];
+    if (!$found) return ['row' => [], 'services' => [], 'error' => 'Không tìm thấy dữ liệu'];
+
+    // 3. Xử lý danh sách dịch vụ từ id_dichvu (ví dụ: "1,2,5")
+    $map = nv_get_service_map();
+    $serviceIds = explode(',', (string)($found['id_dichvu'] ?? ''));
+    $services = [];
+    foreach ($serviceIds as $id) {
+        $id = (int)trim($id);
+        if (isset($map[$id])) {
+            $services[] = $map[$id];
+        }
+    }
+
+    return ['row' => $found, 'services' => $services, 'error' => ''];
 }
