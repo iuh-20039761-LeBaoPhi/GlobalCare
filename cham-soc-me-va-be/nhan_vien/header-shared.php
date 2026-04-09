@@ -306,15 +306,16 @@ if (strpos($userAvatar, 'assets/') === false && $userAvatar !== 'logomvb.png') {
             </div>
 
             <nav id="nvSidebarMenu" class="list-group list-group-flush mt-3">
+                <a href="../index.html" class="list-group-item">
+                    <i class="bi bi-house"></i> <span>Trang chủ</span>
+                </a>
                 <a href="#" class="list-group-item active" data-page="thong-tin-nhan-vien.php">
                     <i class="bi bi-person-badge"></i> <span>Thông tin cá nhân</span>
                 </a>
                 <a href="#" class="list-group-item" data-page="danh-sach-hoa-don.php">
                     <i class="bi bi-receipt"></i> <span>Danh sách hóa đơn</span>
                 </a>
-                <a href="../index.html" class="list-group-item">
-                    <i class="bi bi-house"></i> <span>Trang chủ</span>
-                </a>
+                
                 <a href="../logout.php" class="list-group-item text-warning">
                     <i class="bi bi-box-arrow-right"></i> <span>Đăng xuất</span>
                 </a>
@@ -416,6 +417,36 @@ if (strpos($userAvatar, 'assets/') === false && $userAvatar !== 'logomvb.png') {
             document.querySelector('.nv-admin-sidebar').classList.toggle('menu-open');
         });
 
+        // TỰ ĐỘNG HÓA SPA: Xử lý tất cả các link và form trong vùng nội dung chính
+        // 1. Xử lý nộp form lọc (mặc định GET sẽ làm reload trang mất layout)
+        document.addEventListener('submit', function (e) {
+            const form = e.target;
+            if (form.closest('#main-content') && form.method.toLowerCase() === 'get') {
+                e.preventDefault();
+                const formData = new FormData(form);
+                const params = new URLSearchParams(formData).toString();
+                const action = form.getAttribute('action') || '';
+                // Lấy tên tệp hiện tại nếu action trống
+                const baseUrl = action || 'danh-sach-hoa-don.php'; 
+                navigateTo(baseUrl + (params ? '?' + params : ''));
+            }
+        });
+
+        // 2. Xử lý các link nội bộ (Phân trang, Xem chi tiết...)
+        document.addEventListener('click', function (e) {
+            const link = e.target.closest('a');
+            if (!link || e.defaultPrevented) return;
+
+            const href = link.getAttribute('href');
+            if (!href || href.startsWith('#') || href.startsWith('http') || href.startsWith('javascript:')) return;
+
+            // Nếu link nằm trong vùng nội dung chính, nạp qua navigateTo
+            if (link.closest('#main-content')) {
+                e.preventDefault();
+                navigateTo(href);
+            }
+        });
+
         // Xử lý nút Back/Forward
         window.onpopstate = function (event) {
             if (event.state && event.state.url) {
@@ -438,9 +469,9 @@ if (strpos($userAvatar, 'assets/') === false && $userAvatar !== 'logomvb.png') {
                 navigateTo(displayParam, targetItem, false, true);
             } else if (currentPath === 'header-shared.php' || currentPath === '') {
                 // Mặc định nạp Thông tin nhân viên và giữ URL Shell
-                const defaultItem = document.querySelector('[data-page="thong-tin-nhan-vien.php"]');
+                const defaultItem = document.querySelector('[data-page="danh-sach-hoa-don.php"]');
                 if (defaultItem) {
-                    navigateTo('thong-tin-nhan-vien.php', defaultItem, false, true);
+                    navigateTo('danh-sach-hoa-don.php', defaultItem, false, true);
                 }
             } else {
                 // Nếu load trực tiếp một trang (như chi tiết hóa đơn), giữ nguyên URL đó trong layout
