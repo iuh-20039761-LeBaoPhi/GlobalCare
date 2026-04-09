@@ -53,6 +53,7 @@ if (!$found) {
 
 // 5. Lưu vào session các trường cần thiết
 $_SESSION['user'] = [
+    'id'             => $found['id'] ?? '',
     'hovaten'        => $found['hovaten'] ?? '',
     'sodienthoai'    => $found['sodienthoai'] ?? '',
     'email'          => $found['email'] ?? '',
@@ -64,5 +65,3 @@ $_SESSION['user'] = [
 ];
 $_SESSION['logged_in'] = true;
 $_SESSION['last_activity'] = time();
-
-echo json_encode(['success' => true, 'user' => $_SESSION['user']]);
