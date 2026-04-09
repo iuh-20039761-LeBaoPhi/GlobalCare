@@ -208,9 +208,51 @@ $statusClass = strtolower($statusText) === 'pending' ? ' pending' : '';
         }
 
         @media (max-width: 991.98px) {
+            .page-wrap {
+                padding: 1px;
+            }
+
+            .profile-shell {
+                margin: 1px;
+                border-radius: 12px;
+            }
+
+            .profile-head {
+                padding: 12px 10px;
+                gap: 8px;
+            }
+
+            .profile-body {
+                padding: 4px 1px;
+            }
+
+            .card-soft .card-body {
+                padding: 4px;
+            }
+
             .info-grid {
                 grid-template-columns: 1fr;
+                gap: 5px;
             }
+
+            .info-item {
+                padding: 8px 6px;
+                min-height: auto;
+            }
+
+            .media-item {
+                padding: 2px;
+            }
+
+            /* Boostrap Overrides for 1px feel */
+            .row {
+                --bs-gutter-x: 0.25rem;
+                --bs-gutter-y: 0.25rem;
+            }
+            .mt-3 { margin-top: 0.25rem !important; }
+            .mb-3 { margin-bottom: 0.25rem !important; }
+            .g-3 { --bs-gutter-x: 0.25rem; --bs-gutter-y: 0.25rem; }
+            .g-2 { --bs-gutter-x: 0.25rem; --bs-gutter-y: 0.25rem; }
         }
     </style>
     <style>
@@ -351,7 +393,8 @@ $statusClass = strtolower($statusText) === 'pending' ? ' pending' : '';
                 <div>
                     <h1><i class="bi bi-person-badge me-2"></i>Thong Tin Nhan Vien</h1>
                 </div>
-                <a class="btn btn-light btn-soft" href="sua-thong-tin-nhan-vien.php" onclick="event.preventDefault(); navigateTo('sua-thong-tin-nhan-vien.php');">
+                <a class="btn btn-light btn-soft" href="sua-thong-tin-nhan-vien.php"
+                    onclick="event.preventDefault(); navigateTo('sua-thong-tin-nhan-vien.php');">
                     <i class="bi bi-pencil-square me-1"></i> Sua thong tin
                 </a>
             </div>

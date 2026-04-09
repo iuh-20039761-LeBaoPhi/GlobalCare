@@ -157,9 +157,43 @@ $isDisabled = $loadError !== '';
         }
 
         @media (max-width: 991.98px) {
+            .page-wrap {
+                padding: 1px;
+            }
+
+            .edit-shell {
+                margin: 1px;
+                border-radius: 12px;
+            }
+
+            .edit-head {
+                padding: 12px 10px;
+            }
+
+            .edit-body {
+                padding: 4px 1px;
+            }
+
+            .form-box {
+                padding: 8px 4px;
+            }
+
             .preview-grid {
                 grid-template-columns: 1fr;
+                gap: 5px;
             }
+
+            .preview-card {
+                padding: 4px;
+            }
+
+            /* Bootstrap Overrides for 1px feel */
+            .row {
+                --bs-gutter-x: 0.25rem;
+                --bs-gutter-y: 0.25rem;
+            }
+            .mt-4 { margin-top: 0.5rem !important; }
+            .g-3 { --bs-gutter-x: 0.25rem; --bs-gutter-y: 0.25rem; }
         }
     </style>
     <style>
