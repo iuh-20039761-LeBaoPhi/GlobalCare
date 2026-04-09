@@ -306,15 +306,16 @@ if (strpos($userAvatar, 'assets/') === false && $userAvatar !== 'logomvb.png') {
             </div>
 
             <nav id="nvSidebarMenu" class="list-group list-group-flush mt-3">
+                <a href="../index.html" class="list-group-item">
+                    <i class="bi bi-house"></i> <span>Trang chủ</span>
+                </a>
                 <a href="#" class="list-group-item active" data-page="thong-tin-nhan-vien.php">
                     <i class="bi bi-person-badge"></i> <span>Thông tin cá nhân</span>
                 </a>
                 <a href="#" class="list-group-item" data-page="danh-sach-hoa-don.php">
                     <i class="bi bi-receipt"></i> <span>Danh sách hóa đơn</span>
                 </a>
-                <a href="../index.html" class="list-group-item">
-                    <i class="bi bi-house"></i> <span>Trang chủ</span>
-                </a>
+                
                 <a href="../logout.php" class="list-group-item text-warning">
                     <i class="bi bi-box-arrow-right"></i> <span>Đăng xuất</span>
                 </a>
@@ -468,9 +469,9 @@ if (strpos($userAvatar, 'assets/') === false && $userAvatar !== 'logomvb.png') {
                 navigateTo(displayParam, targetItem, false, true);
             } else if (currentPath === 'header-shared.php' || currentPath === '') {
                 // Mặc định nạp Thông tin nhân viên và giữ URL Shell
-                const defaultItem = document.querySelector('[data-page="thong-tin-nhan-vien.php"]');
+                const defaultItem = document.querySelector('[data-page="danh-sach-hoa-don.php"]');
                 if (defaultItem) {
-                    navigateTo('thong-tin-nhan-vien.php', defaultItem, false, true);
+                    navigateTo('danh-sach-hoa-don.php', defaultItem, false, true);
                 }
             } else {
                 // Nếu load trực tiếp một trang (như chi tiết hóa đơn), giữ nguyên URL đó trong layout

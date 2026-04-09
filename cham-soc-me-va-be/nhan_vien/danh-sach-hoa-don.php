@@ -548,7 +548,6 @@ $summaryTotal = count($rows);
                     <div class="d-flex flex-column flex-lg-row justify-content-between align-items-lg-center gap-2 mb-3">
                         <div>
                             <h1 class="h4 fw-bold mb-1">Danh sách hóa đơn</h1>
-                            <p class="summary-note mb-0">Theo dõi, lọc va xử lý công viêc.</p>
                         </div>
                         <div class="text-secondary small">Tổng hiển thị: <b><?= (int) $totalFiltered ?></b> /
                             <?= (int) $summaryTotal ?> hoa don
@@ -775,13 +774,9 @@ $summaryTotal = count($rows);
 
                     <?php if ($loadError === '' && $totalFiltered > 0): ?>
                         <div class="d-flex flex-column flex-md-row justify-content-between align-items-md-center gap-2 mt-3">
-                            <div class="summary-note">Hien thi <?= (int) $from ?> - <?= (int) $to ?> /
-                                <?= (int) $totalFiltered ?>
-                                hoa don
-                            </div>
                             <?php if ($totalPages > 1): ?>
-                                <nav aria-label="Phan trang hoa don nhan vien">
-                                    <ul class="pagination pagination-sm mb-0">
+                                <nav aria-label="Phan trang hoa don nhan vien" class="w-100">
+                                    <ul class="pagination pagination-sm mb-0 justify-content-center">
                                         <li class="page-item <?= $page <= 1 ? 'disabled' : '' ?>">
                                             <a class="page-link"
                                                 href="<?= htmlspecialchars($buildPageUrl(max(1, $page - 1)), ENT_QUOTES, 'UTF-8') ?>">Truoc</a>
