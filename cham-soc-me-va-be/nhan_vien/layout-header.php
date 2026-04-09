@@ -304,7 +304,7 @@ $pageTitle = $pageTitle ?? 'MamaCore - Staff Panel';
                     <i class="bi bi-receipt"></i> <span>Danh sách hóa đơn</span>
                 </a>
                 
-                <a href="../logout.php" class="list-group-item text-warning">
+                <a href="../logout.html" class="list-group-item text-warning">
                     <i class="bi bi-box-arrow-right"></i> <span>Đăng xuất</span>
                 </a>
             </nav>
@@ -322,7 +322,7 @@ $pageTitle = $pageTitle ?? 'MamaCore - Staff Panel';
                     <ul class="dropdown-menu dropdown-menu-end shadow-lg border-0" style="border-radius: 15px;">
                         <li><a class="dropdown-item py-2 px-3" href="#"><i class="bi bi-gear me-2"></i>Cài đặt</a></li>
                         <li><hr class="dropdown-divider"></li>
-                        <li><a class="dropdown-item text-danger py-2 px-3" href="../logout.php"><i
+                        <li><a class="dropdown-item text-danger py-2 px-3" href="../logout.html"><i
                                     class="bi bi-box-arrow-right me-2"></i>Đăng xuất</a></li>
                     </ul>
                 </div>

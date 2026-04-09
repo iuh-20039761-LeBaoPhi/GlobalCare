@@ -245,6 +245,7 @@
 			color: #0d4d96;
 			white-space: nowrap;
 		}
+
 		.badge.success {
 			background: #e6fff4;
 			color: #0f7f55;
@@ -956,6 +957,7 @@
 			background: linear-gradient(135deg, #e9f0ff, #d5e6ff);
 			color: #4f65ad;
 		}
+
 		.badge.danger {
 			background: #d7e2ff;
 			color: #2f569e;
@@ -1277,12 +1279,12 @@
 	<main class="page">
 		<section class="modal-card">
 			<header class="topbar">
-				<a class="topbar-logo" href="#" aria-label="Trang chủ">
-					<img src="assets/logo-he-thong.png" alt="Logo dịch vụ" />
+				<a class="topbar-logo" href="../index.html" aria-label="Trang chủ">
+					<img src="../assets/logo-he-thong.png" alt="Logo dịch vụ" />
 				</a>
 				<h1 class="topbar-title">ĐH Dọn Vệ Sinh</h1>
-				<a class="topbar-logo" href="#" aria-label="Trang dịch vụ dọn vệ sinh">
-					<img src="assets/logo_main.png" alt="Logo dọn vệ sinh" />
+				<a class="topbar-logo" href="danh-sach-hoa-don.php" aria-label="Trang dịch vụ dọn vệ sinh">
+					<img src="../assets/logo_main.png" alt="Logo dọn vệ sinh" />
 				</a>
 			</header>
 
@@ -1501,7 +1503,8 @@
 							<span class="profile-status badge success">Khách hàng</span>
 						</div>
 						<div class="profile-body">
-							<img id="customerAvatar" class="profile-avatar" src="assets/logo_main.png" alt="Khách hàng">
+							<img id="customerAvatar" class="profile-avatar" src="../assets/logo_main.png"
+								alt="Khách hàng">
 							<div class="profile-main">
 								<h3 id="customerCardName" class="profile-name">---</h3>
 								<p class="profile-contact fa fa-envelope"><span id="customerCardEmail">---</span></p>
@@ -1518,7 +1521,8 @@
 							<span id="badgeStaff" class="profile-status badge warning">Chưa nhận</span>
 						</div>
 						<div class="profile-body">
-							<img id="staffAvatar" class="profile-avatar" src="assets/logo_main.png" alt="Nhà Cung Cấp">
+							<img id="staffAvatar" class="profile-avatar" src="../assets/logo_main.png"
+								alt="Nhà Cung Cấp">
 							<div class="profile-main">
 								<h3 id="staffCardName" class="profile-name">---</h3>
 								<!-- <p class="profile-rate"><span class="star">★</span><span id="staffRatingText">Chưa có đánh giá</span></p> -->
@@ -1640,7 +1644,7 @@
 				const el = $(id);
 				if (el) el.textContent = value || '---';
 			};
-			const setAvatar = (id, src, fallback = 'assets/logo_main.png') => {
+			const setAvatar = (id, src, fallback = '../assets/logo_main.png') => {
 				const el = $(id);
 				if (!el) return;
 				el.onerror = () => {
