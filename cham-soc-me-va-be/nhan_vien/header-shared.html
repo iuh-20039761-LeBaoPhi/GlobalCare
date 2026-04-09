@@ -406,11 +406,18 @@
 
         // Tải trang mặc định hoặc trang hiện tại dựa trên URL
         window.onload = () => {
+            const urlParams = new URLSearchParams(window.location.search);
+            const displayParam = urlParams.get('display');
+
             const currentPath = window.location.pathname.split('/').pop();
             const currentSearch = window.location.search;
             const currentFull = currentPath + currentSearch;
 
-            if (currentPath === 'header-shared.html' || currentPath === '') {
+            if (displayParam) {
+                // Nếu có tham số display, nạp trang đó vào layout
+                const targetItem = document.querySelector(`[data-page="${displayParam.split('?')[0]}"]`);
+                navigateTo(displayParam, targetItem, false, true);
+            } else if (currentPath === 'header-shared.html' || currentPath === '') {
                 // Mặc định nạp Thông tin nhân viên và giữ URL Shell
                 const defaultItem = document.querySelector('[data-page="thong-tin-nhan-vien.php"]');
                 if (defaultItem) {

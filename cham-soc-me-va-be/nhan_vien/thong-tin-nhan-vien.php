@@ -415,7 +415,8 @@ $statusClass = strtolower($statusText) === 'pending' ? ' pending' : '';
                                     <a class="btn btn-primary btn-soft" href="sua-thong-tin-nhan-vien.php">
                                         <i class="bi bi-sliders2 me-1"></i> Cập nhật ngay
                                     </a>
-                                    <a class="btn btn-outline-secondary btn-soft" href="danh-sach-hoa-don.php">
+                                    <a class="btn btn-outline-secondary btn-soft" href="danh-sach-hoa-don.php"
+                                        onclick="event.preventDefault(); navigateTo('danh-sach-hoa-don.php');">
                                         <i class="bi bi-receipt me-1"></i> Danh sách hóa đơn
                                     </a>
                                 </div>
