@@ -1488,9 +1488,7 @@
 								<p id="customerCardAddress" class="profile-row fa fa-map-marker">---</p>
 							</div>
 						</div>
-						<div class="profile-foot">
-							<span id="customerExtraPill" class="profile-pill">Năm sinh: ---</span>
-						</div>
+
 					</article>
 
 					<article class="panel" id="panelStaff">
@@ -2107,7 +2105,6 @@
 				setText('customerCardPhone', $datlich_mevabe.sdtkhachhang || '---');
 				setText('customerCardEmail', $datlich_mevabe.emailkhachhang || '---');
 				setText('customerCardAddress', $datlich_mevabe.diachikhachhang || '---');
-				setText('customerExtraPill', `Năm sinh: ${$datlich_mevabe.ngaysinh || '---'}`);
 				setAvatar('customerAvatar', $datlich_mevabe.anh_dai_dien || app.$user?.anh_dai_dien || app.$user?.avatar || '');
 
 				setText('staffCardName', $datlich_mevabe.tenncc || '---');

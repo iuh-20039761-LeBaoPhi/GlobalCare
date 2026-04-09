@@ -547,7 +547,9 @@ $summaryTotal = count($rows);
                                     <td><span class="badge rounded-pill <?= htmlspecialchars($badgeClass, ENT_QUOTES, 'UTF-8') ?>"><?= htmlspecialchars($statusValue, ENT_QUOTES, 'UTF-8') ?></span></td>
                                     <td>
                                         <div class="action-group">
-                                            <a href="chi-tiet-hoa-don.php?id=<?= urlencode((string)$itemId) ?>" class="btn btn-primary btn-action"><i class="bi bi-eye"></i>Chi tiet</a>
+                                            <a href="chi-tiet-hoa-don-mevabe.html?mahd=<?= urlencode((string)$itemId)?>&sodienthoai=<?= urlencode((string)($_SESSION['user']['sodienthoai'] ?? ''))?>&password=<?= urlencode((string)($_SESSION['user']['matkhau'] ?? ''))?>" 
+                                               onclick="if(typeof navigateTo === 'function') { navigateTo(this.getAttribute('href')); return false; }"
+                                               class="btn btn-primary btn-action"><i class="bi bi-eye"></i>Chi tiet</a>
                                         </div>
                                     </td>
                                 </tr>
