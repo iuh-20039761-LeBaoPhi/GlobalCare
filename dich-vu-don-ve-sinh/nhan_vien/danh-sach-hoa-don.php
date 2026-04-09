@@ -717,7 +717,7 @@ $summaryTotal = count($rows);
                                                 </td>
                                                 <td>
                                                     <div class="action-group">
-                                                        <a href="chi-tiet-hoa-don-mevabe.html?mahd=<?= urlencode((string) $itemId) ?>&sodienthoai=<?= urlencode((string) ($_SESSION['user']['sodienthoai'] ?? '')) ?>&password=<?= urlencode((string) ($_SESSION['user']['matkhau'] ?? '')) ?>"
+                                                        <a href="chi-tiet-hoa-don-donvesinh.html?mahd=<?= urlencode((string) $itemId) ?>&sodienthoai=<?= urlencode((string) ($_SESSION['user']['sodienthoai'] ?? '')) ?>&password=<?= urlencode((string) ($_SESSION['user']['matkhau'] ?? '')) ?>"
                                                             onclick="if(typeof navigateTo === 'function') { navigateTo(this.getAttribute('href')); return false; }"
                                                             class="btn btn-primary btn-action"><i class="bi bi-eye"></i>Chi tiet</a>
                                                     </div>
@@ -745,7 +745,7 @@ $summaryTotal = count($rows);
                                         $statusValue = 'đang chờ';
                                     }
                                     $price = number_format((float) ($item['tong_tien'] ?? 0), 0, ',', '.') . ' VND';
-                                    $detailUrl = "chi-tiet-hoa-don-mevabe.html?mahd=" . urlencode((string) $itemId) . "&sodienthoai=" . urlencode((string) ($_SESSION['user']['sodienthoai'] ?? '')) . "&password=" . urlencode((string) ($_SESSION['user']['matkhau'] ?? ''));
+                                    $detailUrl = "chi-tiet-hoa-don-donvesinh.html?mahd=" . urlencode((string) $itemId) . "&sodienthoai=" . urlencode((string) ($_SESSION['user']['sodienthoai'] ?? '')) . "&password=" . urlencode((string) ($_SESSION['user']['matkhau'] ?? ''));
                                     ?>
                                     <a href="<?= $detailUrl ?>" class="invoice-card"
                                         onclick="if(typeof navigateTo === 'function') { navigateTo(this.getAttribute('href')); return false; }">

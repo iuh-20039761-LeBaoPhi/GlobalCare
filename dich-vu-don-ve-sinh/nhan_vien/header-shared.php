@@ -9,11 +9,11 @@ if (!isset($_SESSION['user'])) {
 }
 
 $userName = $_SESSION['user']['hovaten'] ?? 'Nhân viên';
-$userAvatar = $_SESSION['user']['avatartenfile'] ?? 'logomvb.png';
-if (strpos($userAvatar, 'assets/') === false && $userAvatar !== 'logomvb.png') {
+$userAvatar = $_SESSION['user']['avatartenfile'] ?? 'logo_main.png';
+if (strpos($userAvatar, 'assets/') === false && $userAvatar !== 'logo_main.png') {
     $userAvatar = '../assets/' . $userAvatar;
-} else if ($userAvatar === 'logomvb.png') {
-    $userAvatar = '../assets/logomvb.png';
+} else if ($userAvatar === 'logo_main.png') {
+    $userAvatar = '../assets/logo_main.png';
 }
 ?>
 <!DOCTYPE html>
@@ -295,12 +295,12 @@ if (strpos($userAvatar, 'assets/') === false && $userAvatar !== 'logomvb.png') {
         <aside class="nv-admin-sidebar">
             <div class="nv-admin-brand-wrapper">
                 <div class="d-flex align-items-center gap-2">
-                    <div class="nv-admin-brand"><img src="../assets/logomvb.png" width="22" alt="logo"></div>
+                    <div class="nv-admin-brand"><img src="../assets/logo_main.png" width="22" alt="logo"></div>
                     <div class="fw-bold lh-1 profile-name-text">Chăm Sóc Mẹ và Bé</div>
                 </div>
                 <!-- Avatar làm nút mở Menu trên Mobile -->
                 <button class="btn p-0 d-lg-none" id="mobileMenuToggle" type="button">
-                    <img class="nv-admin-avatar m-0" src="../assets/logomvb.png" alt="toggle menu"
+                    <img class="nv-admin-avatar m-0" src="../assets/logo_main.png" alt="toggle menu"
                         style="width: 40px; height: 40px; border: 2px solid #fff;">
                 </button>
             </div>
