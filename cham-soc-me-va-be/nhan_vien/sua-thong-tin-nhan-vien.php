@@ -44,7 +44,7 @@ $isDisabled = $loadError !== '';
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Sua Thong Tin Nhan Vien</title>
+    <title>Sửa Thông Tin Nhân Viên</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
     <link href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@400;500;600;700;800&display=swap"
@@ -335,7 +335,7 @@ $isDisabled = $loadError !== '';
 
         <section class="edit-shell">
             <div class="edit-head">
-                <h1><i class="bi bi-pencil-square me-2"></i>Cap Nhat Thong Tin Nhan Vien</h1>
+                <h1><i class="bi bi-pencil-square me-2"></i>Cập Nhật Thông Tin Nhân Viên</h1>
             </div>
             <div class="edit-body">
                 <form class="form-box" method="post" action="xu-ly-sua-thong-tin-nhan-vien.php"
@@ -349,12 +349,12 @@ $isDisabled = $loadError !== '';
 
                     <div class="row g-3">
                         <div class="col-12 col-md-6">
-                            <label for="hovaten" class="form-label">Ho va ten *</label>
+                            <label for="hovaten" class="form-label">Họ và tên *</label>
                             <input type="text" class="form-control" id="hovaten" name="hovaten" maxlength="120" required
                                 value="<?= esc_edit((string) ($row['hovaten'] ?? '')) ?>" <?= $isDisabled ? 'disabled' : '' ?>>
                         </div>
                         <div class="col-12 col-md-6">
-                            <label for="sodienthoai" class="form-label">So dien thoai *</label>
+                            <label for="sodienthoai" class="form-label">Số điện thoại *</label>
                             <input type="text" class="form-control" id="sodienthoai" name="sodienthoai" maxlength="20"
                                 required value="<?= esc_edit((string) ($row['sodienthoai'] ?? '')) ?>" <?= $isDisabled ? 'disabled' : '' ?>>
                         </div>
@@ -364,12 +364,12 @@ $isDisabled = $loadError !== '';
                                 value="<?= esc_edit((string) ($row['email'] ?? '')) ?>" <?= $isDisabled ? 'disabled' : '' ?>>
                         </div>
                         <div class="col-12">
-                            <label for="diachi" class="form-label">Dia chi *</label>
+                            <label for="diachi" class="form-label">Địa chỉ *</label>
                             <input type="text" class="form-control" id="diachi" name="diachi" maxlength="255" required
                                 value="<?= esc_edit((string) ($row['diachi'] ?? '')) ?>" <?= $isDisabled ? 'disabled' : '' ?>>
                         </div>
                         <div class="col-12 col-md-6">
-                            <label for="matkhau" class="form-label">Mat khau *</label>
+                            <label for="matkhau" class="form-label">Mật khẩu *</label>
                             <input type="text" class="form-control" id="matkhau" name="matkhau" minlength="6"
                                 maxlength="255" required value="<?= esc_edit((string) ($row['matkhau'] ?? '')) ?>"
                                 <?= $isDisabled ? 'disabled' : '' ?>>
@@ -414,17 +414,17 @@ $isDisabled = $loadError !== '';
                         </div>
 
                         <div class="col-12 col-md-4">
-                            <label for="anh_dai_dien" class="form-label">Anh dai dien moi</label>
+                            <label for="anh_dai_dien" class="form-label">Ảnh đại diện mới</label>
                             <input type="file" class="form-control" id="anh_dai_dien" name="anh_dai_dien"
                                 accept="image/*" <?= $isDisabled ? 'disabled' : '' ?>>
                         </div>
                         <div class="col-12 col-md-4">
-                            <label for="cccd_mat_truoc" class="form-label">CCCD mat truoc moi</label>
+                            <label for="cccd_mat_truoc" class="form-label">CCCD mặt trước mới</label>
                             <input type="file" class="form-control" id="cccd_mat_truoc" name="cccd_mat_truoc"
                                 accept="image/*" <?= $isDisabled ? 'disabled' : '' ?>>
                         </div>
                         <div class="col-12 col-md-4">
-                            <label for="cccd_mat_sau" class="form-label">CCCD mat sau moi</label>
+                            <label for="cccd_mat_sau" class="form-label">CCCD mặt sau mới</label>
                             <input type="file" class="form-control" id="cccd_mat_sau" name="cccd_mat_sau"
                                 accept="image/*" <?= $isDisabled ? 'disabled' : '' ?>>
                         </div>
@@ -432,26 +432,26 @@ $isDisabled = $loadError !== '';
 
                     <div class="preview-grid">
                         <div class="preview-card">
-                            <div class="small fw-semibold">Anh dai dien hien tai</div>
-                            <img src="../<?= esc_edit($avatar) ?>" alt="anh dai dien">
+                            <div class="small fw-semibold">Ảnh đại diện hiện tại</div>
+                            <img src="../assets/<?= esc_edit($avatar) ?>" alt="anh dai dien">
                         </div>
                         <div class="preview-card">
-                            <div class="small fw-semibold">CCCD mat truoc hien tai</div>
-                            <img src="../<?= esc_edit($cccdFront) ?>" alt="cccd mat truoc">
+                            <div class="small fw-semibold">CCCD mặt trước hiện tại</div>
+                            <img src="../assets/<?= esc_edit($cccdFront) ?>" alt="cccd mat truoc">
                         </div>
                         <div class="preview-card">
-                            <div class="small fw-semibold">CCCD mat sau hien tai</div>
-                            <img src="../<?= esc_edit($cccdBack) ?>" alt="cccd mat sau">
+                            <div class="small fw-semibold">CCCD mặt sau hiện tại</div>
+                            <img src="../assets/<?= esc_edit($cccdBack) ?>" alt="cccd mat sau">
                         </div>
                     </div>
 
                     <div class="d-flex flex-wrap gap-2 mt-4">
                         <button type="submit" class="btn btn-primary btn-soft" <?= $isDisabled ? 'disabled' : '' ?>>
-                            <i class="bi bi-check2-circle me-1"></i> Luu thay doi
+                            <i class="bi bi-check2-circle me-1"></i> Lưu thay đổi
                         </button>
                         <a class="btn btn-outline-secondary btn-soft" href="thong-tin-nhan-vien.php"
                             onclick="event.preventDefault(); navigateTo('thong-tin-nhan-vien.php');">
-                            <i class="bi bi-arrow-left me-1"></i> Quay lai thong tin
+                            <i class="bi bi-arrow-left me-1"></i> Quay lại thông tin
                         </a>
                     </div>
                 </form>
