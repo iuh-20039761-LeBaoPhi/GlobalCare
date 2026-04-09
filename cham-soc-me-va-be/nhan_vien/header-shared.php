@@ -1,3 +1,21 @@
+<?php
+session_start();
+// Đảm bảo session đã được nạp (hoặc gọi API nếu cần)
+if (!isset($_SESSION['user'])) {
+    // Nếu chưa có session, thử chạy session_user.php để đồng bộ từ cookie
+    ob_start();
+    include_once __DIR__ . '/../session_user.php';
+    ob_end_clean();
+}
+
+$userName = $_SESSION['user']['hovaten'] ?? 'Nhân viên';
+$userAvatar = $_SESSION['user']['avatartenfile'] ?? 'logomvb.png';
+if (strpos($userAvatar, 'assets/') === false && $userAvatar !== 'logomvb.png') {
+    $userAvatar = '../assets/' . $userAvatar;
+} else if ($userAvatar === 'logomvb.png') {
+    $userAvatar = '../assets/logomvb.png';
+}
+?>
 <!DOCTYPE html>
 <html lang="vi">
 
@@ -7,7 +25,8 @@
     <title>MamaCore - Staff Panel</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css" rel="stylesheet">
-
+    <script src="https://api.dvqt.vn/js/krud.js"></script>
+    
     <style>
         :root {
             --nv-border: #ee68b2;
@@ -308,8 +327,8 @@
 
                 <div class="dropdown">
                     <button class="btn border-0 d-flex align-items-center gap-2" data-bs-toggle="dropdown">
-                        <span class="fw-semibold d-none d-sm-inline">Nhân viên</span>
-                        <img class="nv-admin-avatar" src="../assets/logomvb.png" alt="avatar">
+                        <span class="fw-semibold d-none d-sm-inline"><?php echo htmlspecialchars($userName); ?></span>
+                        <img class="nv-admin-avatar" src="<?php echo htmlspecialchars($userAvatar); ?>" alt="avatar">
                     </button>
                     <ul class="dropdown-menu dropdown-menu-end shadow-lg border-0" style="border-radius: 15px;">
                         <li><a class="dropdown-item py-2 px-3" href="#"><i class="bi bi-gear me-2"></i>Cài đặt</a></li>
@@ -346,7 +365,7 @@
             try {
                 // 2. Cập nhật URL trình duyệt
                 if (updateHistory) {
-                    const newURL = keepShellURL ? 'header-shared.html' : url;
+                    const newURL = keepShellURL ? 'header-shared.php' : url;
                     window.history.pushState({ url: url, keepShellURL: keepShellURL }, '', newURL);
                 }
 
@@ -417,7 +436,7 @@
                 // Nếu có tham số display, nạp trang đó vào layout
                 const targetItem = document.querySelector(`[data-page="${displayParam.split('?')[0]}"]`);
                 navigateTo(displayParam, targetItem, false, true);
-            } else if (currentPath === 'header-shared.html' || currentPath === '') {
+            } else if (currentPath === 'header-shared.php' || currentPath === '') {
                 // Mặc định nạp Thông tin nhân viên và giữ URL Shell
                 const defaultItem = document.querySelector('[data-page="thong-tin-nhan-vien.php"]');
                 if (defaultItem) {

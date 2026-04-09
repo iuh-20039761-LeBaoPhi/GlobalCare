@@ -106,7 +106,7 @@
 
     if (invoiceLink) {
       var invoicePath = role === 'nhan_vien'
-        ? 'nhan_vien/header-shared.html?display=danh-sach-hoa-don.php'
+        ? 'nhan_vien/header-shared.php?display=danh-sach-hoa-don.php'
         : 'nhan_vien/danh-sach-hoa-don.php';
       invoiceLink.setAttribute('href', invoicePath);
     }
