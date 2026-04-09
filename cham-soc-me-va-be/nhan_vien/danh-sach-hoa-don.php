@@ -139,7 +139,7 @@ $buildPageUrl = static fn(int $targetPage): string => pagination_build_url($targ
 ], 'page', 'danh-sach-hoa-don.php');
 
 $summaryPending = count(array_filter($rows, static fn(array $i): bool => trim((string) ($i['trangthai'] ?? '')) === '' || trim((string) ($i['trangthai'] ?? '')) === 'chờ duyệt'));
-$summaryReceived = count(array_filter($rows, static fn(array $i): bool => trim((string) ($i['trangthai'] ?? '')) === 'đã nhận'));
+$summaryReceived = count(array_filter($rows, static fn(array $i): bool => trim((string) ($i['trangthai'] ?? '')) === 'hoàn thành' || trim((string) ($i['trangthai'] ?? '')) === 'đã nhận' || trim((string) ($i['trangthai'] ?? '')) === 'đang thực hiện'));
 $summaryTotal = count($rows);
 ?>
 <!DOCTYPE html>
@@ -769,7 +769,8 @@ $summaryTotal = count($rows);
                         <div class="d-flex flex-column flex-md-row justify-content-between align-items-md-center gap-2 mt-3">
                             <div class="summary-note">Hien thi <?= (int) $from ?> - <?= (int) $to ?> /
                                 <?= (int) $totalFiltered ?>
-                                hoa don</div>
+                                hoa don
+                            </div>
                             <?php if ($totalPages > 1): ?>
                                 <nav aria-label="Phan trang hoa don nhan vien">
                                     <ul class="pagination pagination-sm mb-0">
