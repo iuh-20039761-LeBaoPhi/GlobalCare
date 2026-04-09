@@ -40,12 +40,12 @@ $pageTitle = $pageTitle ?? 'MamaCore - Staff Panel';
     
     <style>
         :root {
-            --nv-border: #ee68b2;
-            --nv-title: #e474a5;
-            --nv-text: #e572a6;
-            --nv-sidebar-a: #ea5f99;
-            --nv-sidebar-b: #e984af;
-            --nv-accent: #f391c2;
+            --nv-border: #3498db;
+            --nv-title: #2980b9;
+            --nv-text: #34495e;
+            --nv-sidebar-a: #0056b3;
+            --nv-sidebar-b: #007bff;
+            --nv-accent: #3498db;
             --nv-sidebar-width: 260px;
             --nv-header-mobile-height: 50px;
         }
@@ -66,7 +66,7 @@ $pageTitle = $pageTitle ?? 'MamaCore - Staff Panel';
         body {
             font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif, "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol";
             color: var(--nv-text);
-            background: #fffafa;
+            background: #f8fbff;
         }
 
         /* Shell Container */
@@ -145,7 +145,7 @@ $pageTitle = $pageTitle ?? 'MamaCore - Staff Panel';
             display: flex;
             flex-direction: column;
             min-width: 0;
-            background: #fdf8fb;
+            background: #f0f7ff;
         }
 
         /* Topbar */
@@ -153,7 +153,7 @@ $pageTitle = $pageTitle ?? 'MamaCore - Staff Panel';
             height: 70px;
             background: rgba(255, 255, 255, 0.8);
             backdrop-filter: blur(10px);
-            border-bottom: 1px solid rgba(241, 195, 220, 0.3);
+            border-bottom: 1px solid rgba(52, 152, 219, 0.3);
             display: flex;
             align-items: center;
             justify-content: space-between;
@@ -272,7 +272,7 @@ $pageTitle = $pageTitle ?? 'MamaCore - Staff Panel';
             }
         }
 
-        .spinner-border.text-pink {
+        .spinner-border.text-blue {
             color: var(--nv-accent);
         }
     </style>
