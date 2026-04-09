@@ -18,9 +18,9 @@ $loadError = (string) ($employeeResult['error'] ?? '');
 $row = $employeeResult['row'] ?? [];
 $services = $employeeResult['services'] ?? [];
 
-$avatar = trim((string) ($row['anh_dai_dien'] ?? ''));
-$cccdFront = trim((string) ($row['cccd_mat_truoc'] ?? ''));
-$cccdBack = trim((string) ($row['cccd_mat_sau'] ?? ''));
+$avatar = trim((string) ($row['avatartenfile'] ?? ''));
+$cccdFront = trim((string) ($row['cccdmattruoctenfile'] ?? ''));
+$cccdBack = trim((string) ($row['cccdmatsautenfile'] ?? ''));
 $statusText = trim((string) ($row['trangthai'] ?? ''));
 
 if ($avatar === '') {
@@ -44,7 +44,7 @@ $statusClass = strtolower($statusText) === 'pending' ? ' pending' : '';
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Thong Tin Nhan Vien</title>
+    <title>Thông Tin Nhân Viên</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
     <link href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@400;500;600;700;800&display=swap"
@@ -208,9 +208,51 @@ $statusClass = strtolower($statusText) === 'pending' ? ' pending' : '';
         }
 
         @media (max-width: 991.98px) {
+            .page-wrap {
+                padding: 1px;
+            }
+
+            .profile-shell {
+                margin: 1px;
+                border-radius: 12px;
+            }
+
+            .profile-head {
+                padding: 12px 10px;
+                gap: 8px;
+            }
+
+            .profile-body {
+                padding: 4px 1px;
+            }
+
+            .card-soft .card-body {
+                padding: 4px;
+            }
+
             .info-grid {
                 grid-template-columns: 1fr;
+                gap: 5px;
             }
+
+            .info-item {
+                padding: 8px 6px;
+                min-height: auto;
+            }
+
+            .media-item {
+                padding: 2px;
+            }
+
+            /* Boostrap Overrides for 1px feel */
+            .row {
+                --bs-gutter-x: 0.25rem;
+                --bs-gutter-y: 0.25rem;
+            }
+            .mt-3 { margin-top: 0.25rem !important; }
+            .mb-3 { margin-bottom: 0.25rem !important; }
+            .g-3 { --bs-gutter-x: 0.25rem; --bs-gutter-y: 0.25rem; }
+            .g-2 { --bs-gutter-x: 0.25rem; --bs-gutter-y: 0.25rem; }
         }
     </style>
     <style>
@@ -349,10 +391,11 @@ $statusClass = strtolower($statusText) === 'pending' ? ' pending' : '';
         <section class="profile-shell">
             <div class="profile-head">
                 <div>
-                    <h1><i class="bi bi-person-badge me-2"></i>Thong Tin Nhan Vien</h1>
+                    <h1><i class="bi bi-person-badge me-2"></i>Thông Tin Nhân Viên</h1>
                 </div>
-                <a class="btn btn-light btn-soft" href="sua-thong-tin-nhan-vien.php" onclick="event.preventDefault(); navigateTo('sua-thong-tin-nhan-vien.php');">
-                    <i class="bi bi-pencil-square me-1"></i> Sua thong tin
+                <a class="btn btn-light btn-soft" href="sua-thong-tin-nhan-vien.php"
+                    onclick="event.preventDefault(); navigateTo('sua-thong-tin-nhan-vien.php');">
+                    <i class="bi bi-pencil-square me-1"></i> Sửa thông tin
                 </a>
             </div>
 
@@ -361,7 +404,7 @@ $statusClass = strtolower($statusText) === 'pending' ? ' pending' : '';
                     <div class="col-12 col-lg-4">
                         <div class="card-soft">
                             <div class="card-body text-center">
-                                <img class="avatar" src="../<?= esc_nv($avatar) ?>" alt="avatar nhan vien">
+                                <img class="avatar" src="../assets/<?= esc_nv($avatar) ?>" alt="avatar nhan vien">
                                 <div class="name"><?= esc_nv((string) ($row['hovaten'] ?? 'Nhan vien')) ?></div>
                                 <div class="muted"><?= esc_nv((string) ($row['sodienthoai'] ?? '-')) ?></div>
                                 <div class="mt-2">
@@ -370,10 +413,11 @@ $statusClass = strtolower($statusText) === 'pending' ? ' pending' : '';
                                 </div>
                                 <div class="mt-3 d-grid gap-2">
                                     <a class="btn btn-primary btn-soft" href="sua-thong-tin-nhan-vien.php">
-                                        <i class="bi bi-sliders2 me-1"></i> Cap nhat ngay
+                                        <i class="bi bi-sliders2 me-1"></i> Cập nhật ngay
                                     </a>
-                                    <a class="btn btn-outline-secondary btn-soft" href="danh-sach-hoa-don.php">
-                                        <i class="bi bi-receipt me-1"></i> Danh sach hoa don
+                                    <a class="btn btn-outline-secondary btn-soft" href="danh-sach-hoa-don.php"
+                                        onclick="event.preventDefault(); navigateTo('danh-sach-hoa-don.php');">
+                                        <i class="bi bi-receipt me-1"></i> Danh sách hóa đơn
                                     </a>
                                 </div>
                             </div>
@@ -384,18 +428,18 @@ $statusClass = strtolower($statusText) === 'pending' ? ' pending' : '';
                         <div class="card-soft">
                             <div class="card-body">
                                 <div class="d-flex align-items-center justify-content-between mb-3">
-                                    <h2 class="h5 mb-0 fw-bold">Chi tiet tai khoan nhan vien</h2>
+                                    <h2 class="h5 mb-0 fw-bold">Chi tiết tài khoản nhân viên</h2>
 
                                 </div>
 
                                 <div class="info-grid">
                                     <div class="info-item">
-                                        <div class="info-label">Ho va ten</div>
+                                        <div class="info-label">Họ và tên</div>
                                         <div class="info-value"><?= esc_nv((string) ($row['hovaten'] ?? 'Nhan vien')) ?>
                                         </div>
                                     </div>
                                     <div class="info-item">
-                                        <div class="info-label">So dien thoai</div>
+                                        <div class="info-label">Số điện thoại</div>
                                         <div class="info-value"><?= esc_nv((string) ($row['sodienthoai'] ?? '-')) ?>
                                         </div>
                                     </div>
@@ -404,7 +448,7 @@ $statusClass = strtolower($statusText) === 'pending' ? ' pending' : '';
                                         <div class="info-value"><?= esc_nv((string) ($row['email'] ?? '-')) ?></div>
                                     </div>
                                     <div class="info-item">
-                                        <div class="info-label">Dia chi</div>
+                                        <div class="info-label">Địa chỉ</div>
                                         <div class="info-value"><?= esc_nv((string) ($row['diachi'] ?? '-')) ?></div>
                                     </div>
                                     <div class="info-item col-12" style="grid-column: 1 / -1;">
@@ -428,27 +472,27 @@ $statusClass = strtolower($statusText) === 'pending' ? ' pending' : '';
                                 <div class="row g-2 mt-3">
                                     <div class="col-12 col-md-4">
                                         <div class="media-item">
-                                            <div class="small fw-semibold mb-2">Anh dai dien</div>
+                                            <div class="small fw-semibold mb-2">Ảnh đại diện</div>
                                             <a href="<?= esc_nv($avatar) ?>" target="_blank" rel="noopener noreferrer">
-                                                <img src="../<?= esc_nv($avatar) ?>" alt="anh dai dien">
+                                                <img src="../assets/<?= esc_nv($avatar) ?>" alt="anh dai dien">
                                             </a>
                                         </div>
                                     </div>
                                     <div class="col-12 col-md-4">
                                         <div class="media-item">
-                                            <div class="small fw-semibold mb-2">CCCD mat truoc</div>
+                                            <div class="small fw-semibold mb-2">CCCD mặt trước</div>
                                             <a href="<?= esc_nv($cccdFront) ?>" target="_blank"
                                                 rel="noopener noreferrer">
-                                                <img src="../<?= esc_nv($cccdFront) ?>" alt="cccd mat truoc">
+                                                <img src="../assets/<?= esc_nv($cccdFront) ?>" alt="cccd mat truoc">
                                             </a>
                                         </div>
                                     </div>
                                     <div class="col-12 col-md-4">
                                         <div class="media-item">
-                                            <div class="small fw-semibold mb-2">CCCD mat sau</div>
+                                            <div class="small fw-semibold mb-2">CCCD mặt sau</div>
                                             <a href="<?= esc_nv($cccdBack) ?>" target="_blank"
                                                 rel="noopener noreferrer">
-                                                <img src="../<?= esc_nv($cccdBack) ?>" alt="cccd mat sau">
+                                                <img src="../assets/<?= esc_nv($cccdBack) ?>" alt="cccd mat sau">
                                             </a>
                                         </div>
                                     </div>
