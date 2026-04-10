@@ -1491,18 +1491,18 @@
 
           return (
             "<tr>" +
-            '<td class="order-code">' +
+            '<td class="order-code" data-label="Mã đơn">' +
             orderCode(order.id) +
             "</td>" +
-            '<td><div class="customer-block"><strong>' +
+            '<td data-label="Khách hàng"><div class="customer-block"><strong>' +
             order.customer.name +
             "</strong><span>" +
             order.customer.phone +
             "</span></div></td>" +
-            '<td><p class="service-text mb-0">' +
+            '<td data-label="Dịch vụ"><p class="service-text mb-0">' +
             order.service +
             "</p></td>" +
-            "<td>" +
+            '<td data-label="Ngày đặt">' +
             formatDate(
               order.startedAt ||
                 order.receivedAt ||
@@ -1510,15 +1510,15 @@
                 order.createdAt,
             ) +
             "</td>" +
-            '<td><span class="status-pill ' +
+            '<td data-label="Trạng thái"><span class="status-pill ' +
             meta.className +
             '">' +
             meta.label +
             "</span></td>" +
-            "<td>" +
+            '<td data-label="Tổng tiền">' +
             formatCurrency(calculateTotal(order)) +
             "</td>" +
-            "<td>" +
+            '<td data-label="Thao tác">' +
             actionHtml +
             "</td>" +
             "</tr>"
@@ -1580,29 +1580,29 @@
 
           return (
             "<tr>" +
-            '<td class="order-code">' +
+            '<td class="order-code" data-label="Mã đơn">' +
             orderCode(order.id) +
             "</td>" +
-            '<td><div class="customer-block"><strong>' +
+            '<td data-label="Khách hàng"><div class="customer-block"><strong>' +
             order.customer.name +
             "</strong><span>" +
             order.customer.phone +
             "</span></div></td>" +
-            '<td><p class="service-text mb-0">' +
+            '<td data-label="Dịch vụ"><p class="service-text mb-0">' +
             order.service +
             "</p></td>" +
-            "<td>" +
+            '<td data-label="Ngày đặt">' +
             formatDate(order.createdAt) +
             "</td>" +
-            '<td><span class="status-pill ' +
+            '<td data-label="Trạng thái"><span class="status-pill ' +
             meta.className +
             '">' +
             meta.label +
             "</span></td>" +
-            "<td>" +
+            '<td data-label="Tổng tiền">' +
             formatCurrency(calculateTotal(order)) +
             "</td>" +
-            "<td>" +
+            '<td data-label="Thao tác">' +
             actionHtml +
             "</td>" +
             "</tr>"
