@@ -1035,7 +1035,8 @@ select:focus-visible {
     white-space: nowrap;
   }
   .hero-kpi-value {
-    font-size: 1rem;
+    font-size: 1.15rem;
+    font-weight: 800;
     margin: 0;
     max-width: 65%;
     text-align: right;
