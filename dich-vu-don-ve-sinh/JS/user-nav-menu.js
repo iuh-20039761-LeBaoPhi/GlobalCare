@@ -23,7 +23,7 @@
   };
 
   const assetUrl = (path) => {
-    if (!path) return new URL('assets/logo_main.png', projectBase).href;
+    if (!path) return new URL('assets/logomvb.png', projectBase).href;
     if (/^https?:\/\//i.test(path)) return path;
     return new URL(String(path).replace(/^\/+/, ''), projectBase).href;
   };
@@ -36,9 +36,6 @@
   function clearClientAuthStorage() {
     try {
       localStorage.removeItem('currentUser');
-      localStorage.removeItem('customer_logged_in');
-      localStorage.removeItem('customer_name');
-      localStorage.removeItem('profile');
     } catch (e) { }
   }
 
@@ -46,44 +43,23 @@
     if (!user) return;
     try {
       localStorage.setItem('currentUser', JSON.stringify(user));
-      localStorage.setItem('customer_logged_in', 'true');
-      localStorage.setItem('customer_name', user.ten || '');
-      localStorage.setItem('profile', JSON.stringify({
-        name: user.ten || '',
-        phone: user.sodienthoai || '',
-        address: user.dia_chi || ''
-      }));
     } catch (e) { }
   }
 
-  function normalizeStoredUser(rawUser) {
-    if (!rawUser || typeof rawUser !== 'object') return null;
+  function normalizeStoredUser(u) {
+    if (!u || typeof u !== 'object') return null;
     return {
-      ten: rawUser.ten || rawUser.hovaten || rawUser.ho_ten || rawUser.name || rawUser.customer_name || 'Tài khoản',
-      vai_tro: rawUser.vai_tro || rawUser.role || 'nhan_vien',
-      anh_dai_dien: rawUser.anh_dai_dien || rawUser.avatar || rawUser.image || '',
-      sodienthoai: rawUser.sodienthoai || rawUser.so_dien_thoai || rawUser.phone || '',
-      dia_chi: rawUser.dia_chi || rawUser.address || ''
+      hovaten: u.hovaten || u.ten || u.ho_ten || u.name || 'Tài khoản',
+      avatartenfile: u.avatartenfile || u.anh_dai_dien || u.avatar || '',
+      sodienthoai: u.sodienthoai || u.phone || '',
+      diachi: u.diachi || u.dia_chi || u.address || ''
     };
   }
 
   function getUserFromStorage() {
     try {
-      const currentUser = JSON.parse(localStorage.getItem('currentUser') || 'null');
-      if (currentUser) return normalizeStoredUser(currentUser);
-
-      const profile = JSON.parse(localStorage.getItem('profile') || 'null');
-      const customerName = localStorage.getItem('customer_name') || '';
-      const customerLoggedIn = localStorage.getItem('customer_logged_in') === 'true';
-
-      if (profile || customerLoggedIn || customerName) {
-        return normalizeStoredUser({
-          ten: (profile && (profile.name || profile.ten)) || customerName,
-          sodienthoai: profile && profile.phone ? profile.phone : '',
-          dia_chi: profile && profile.address ? profile.address : '',
-          vai_tro: 'nhan_vien'
-        });
-      }
+      const stored = localStorage.getItem('currentUser');
+      return stored ? normalizeStoredUser(JSON.parse(stored)) : null;
     } catch (e) { }
     return null;
   }
@@ -148,9 +124,9 @@
     if (loginNavItem) loginNavItem.classList.add('d-none');
     userMenuContainer.classList.remove('d-none');
 
-    if (navUserName) navUserName.textContent = user && user.ten ? user.ten : 'Tài khoản';
+    if (navUserName) navUserName.textContent = user && user.hovaten ? user.hovaten : 'Tài khoản';
     if (navAvatar) {
-      const avatar = user && user.anh_dai_dien ? user.anh_dai_dien : 'assets/logo_main.png';
+      const avatar = user && user.avatartenfile ? user.avatartenfile : 'assets/logomvb.png';
       navAvatar.src = assetUrl(avatar);
     }
     resetIdleLogoutTimer();
@@ -224,7 +200,7 @@
     document.addEventListener(name, () => {
       let hasUser = false;
       try {
-        hasUser = !!(localStorage.getItem('currentUser') || localStorage.getItem('customer_logged_in'));
+        hasUser = !!localStorage.getItem('currentUser');
       } catch (e) { }
       if (hasUser) resetIdleLogoutTimer();
     }, { passive: true });

@@ -1359,25 +1359,25 @@
             // 2. LƯU DATABASE (KRUD)
             // =========================
             var res = await krud('insert', 'datlich_nguoigia', {
-              hovaten: formData.name || '',
-              sodienthoai: formData.phone || '',
-              email: formData.email || '',
-              diachi: formData.address || '',
+              tenkhachhang: formData.name || '',
+              sdtkhachhang: formData.phone || '',
+              emailkhachhang: formData.email || '',
+              diachikhachhang: formData.address || '',
               dich_vu: formData.service || '',
               goi_dich_vu: formData.selectedPackage || '',
               cong_viec: (formData.jobs || []).join(', '),
 
-              ngay_bat_dau: formData.startDate || '',
-              ngay_ket_thuc: formData.endDate || '',
-              gio_bat_dau: formData.startTime || '',
-              gio_ket_thuc: formData.endTime || '',
+              ngay_bat_dau_kehoach: formData.startDate || '',
+              ngay_ket_thuc_kehoach: formData.endDate || '',
+              gio_bat_dau_kehoach: formData.startTime || '',
+              gio_ket_thuc_kehoach: formData.endTime || '',
 
               tong_tien: normalizeMoneyToNumber(formData.price),
 
               yeu_cau_khac: formData.extraRequest || '',
               ghi_chu: formData.note || '',
 
-              created_date: nowSql()
+              ngaydat: nowNgayDat()
             });
 
             console.log('DB:', res);
