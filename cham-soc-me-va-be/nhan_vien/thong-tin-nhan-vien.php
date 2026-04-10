@@ -208,6 +208,35 @@ include 'layout-header.php';
         .g-3 { --bs-gutter-x: 0.25rem; --bs-gutter-y: 0.25rem; }
         .g-2 { --bs-gutter-x: 0.25rem; --bs-gutter-y: 0.25rem; }
     }
+
+    /* Phục hồi giao diện desktop cho iPad (768px - 991px) */
+    @media (min-width: 768px) and (max-width: 991.98px) {
+        .page-wrap { padding: 14px; }
+        .profile-shell { margin: 0; border-radius: 20px; }
+        .profile-head { padding: 24px; gap: 14px; }
+        .profile-body { padding: 22px; }
+        .card-soft .card-body { padding: 18px; }
+        .info-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; }
+        .info-item { padding: 12px; min-height: 84px; }
+        .media-item { padding: 10px; }
+        
+        /* Cấu trúc cột side-by-side cho iPad */
+        .profile-body .row > .col-12.col-lg-4 {
+            flex: 0 0 auto;
+            width: 33.33333333%;
+        }
+        .profile-body .row > .col-12.col-lg-8 {
+            flex: 0 0 auto;
+            width: 66.66666667%;
+        }
+        
+        /* Khôi phục khoảng cách (gutters) */
+        .profile-body .row { --bs-gutter-x: 1.5rem !important; --bs-gutter-y: 0 !important; }
+        .profile-body .g-3 { --bs-gutter-x: 1rem !important; --bs-gutter-y: 1rem !important; }
+        .profile-body .g-2 { --bs-gutter-x: 0.5rem !important; --bs-gutter-y: 0.5rem !important; }
+        .mt-3 { margin-top: 1rem !important; }
+        .mb-3 { margin-bottom: 1rem !important; }
+    }
 </style>
 <style>
     /* Theme color overrides */

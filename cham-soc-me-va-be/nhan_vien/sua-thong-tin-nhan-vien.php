@@ -154,6 +154,22 @@ include 'layout-header.php';
         .mt-4 { margin-top: 0.5rem !important; }
         .g-3 { --bs-gutter-x: 0.25rem; --bs-gutter-y: 0.25rem; }
     }
+
+    /* Phục hồi giao diện desktop cho iPad (768px - 991px) */
+    @media (min-width: 768px) and (max-width: 991.98px) {
+        .page-wrap { padding: 14px; }
+        .edit-shell { margin: 0; border-radius: 18px; }
+        .edit-head { padding: 18px 20px; }
+        .edit-body { padding: 18px; }
+        .form-box { padding: 16px; }
+        .preview-grid { grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 12px; }
+        .preview-card { padding: 10px; }
+        
+        /* Khôi phục khoảng cách (gutters) */
+        .edit-body .row { --bs-gutter-x: 1.5rem !important; }
+        .edit-body .g-3 { --bs-gutter-x: 1rem !important; --bs-gutter-y: 1rem !important; }
+        .mt-4 { margin-top: 1.5rem !important; }
+    }
 </style>
 <style>
     /* Theme color overrides */
