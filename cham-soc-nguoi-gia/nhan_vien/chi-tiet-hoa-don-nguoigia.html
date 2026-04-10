@@ -1271,6 +1271,48 @@
 				height: 140px !important;
 			}
 		}
+
+		@media (min-width: 768px) and (max-width: 1024px) {
+			.invoice-main {
+				display: grid !important;
+				grid-template-columns: 1fr auto 1fr !important;
+				align-items: center !important;
+				text-align: left !important;
+				gap: 20px !important;
+			}
+
+			.invoice-headline {
+				width: auto !important;
+			}
+
+			.invoice-title-line {
+				justify-content: flex-start !important;
+			}
+
+			.invoice-main .actions {
+				margin: 0 !important;
+				justify-content: center !important;
+				width: auto !important;
+			}
+
+			#invoiceProgressRing {
+				justify-self: end;
+				margin: 0 !important;
+				width: 120px !important;
+				height: 120px !important;
+				border-radius: 50% !important;
+				aspect-ratio: 1 / 1 !important;
+			}
+
+			.invoice-summary {
+				grid-template-columns: repeat(2, 1fr) !important;
+				gap: 15px !important;
+			}
+
+			.invoice-item.address {
+				grid-column: span 2 !important;
+			}
+		}
 	</style>
 </head>
 
