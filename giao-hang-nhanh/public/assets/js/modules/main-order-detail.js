@@ -7,6 +7,14 @@
   const storageKey = "ghn-customer-orders";
   const trackingHistoryKey = "trackingHistory";
   const krudOrdersTable = "giaohangnhanh_dat_lich";
+  const AUTO_CANCEL_REASON =
+    "Đơn đã quá khung giờ lấy hàng mà chưa có shipper nhận.";
+  const SERVICE_AUTO_CANCEL_FALLBACK_MINUTES = {
+    instant: 15,
+    express: 30,
+    fast: 60,
+    standard: 120,
+  };
   const currentPath = String(window.location.pathname || "").replace(/\\/g, "/");
   const currentPathLower = currentPath.toLowerCase();
   const projectMarker = "/giao-hang-nhanh/";
@@ -93,6 +101,14 @@
     typeof core.getPaymentStatusLabel === "function"
       ? (value, fallback = "") => core.getPaymentStatusLabel(value, fallback)
       : (value, fallback = "") => fallback || value || "Chưa hoàn tất";
+
+  const getFeePayerLabel =
+    typeof core.getFeePayerLabel === "function"
+      ? (value) => core.getFeePayerLabel(value)
+      : (value) =>
+          normalizeText(value).toLowerCase() === "nhan"
+            ? "Người nhận"
+            : "Người gửi";
 
   function formatOrderDateCode(value = new Date()) {
     const date = value instanceof Date ? value : new Date(value);
@@ -251,11 +267,12 @@
           `<span class="customer-status-badge status-${escapeHtml(status)}">${escapeHtml(label)}</span>`;
 
   function normalizeBreakdown(rawBreakdown, shippingFee) {
-    const breakdown = rawBreakdown || {};
+    const breakdown = parseJsonSafe(rawBreakdown, {}) || {};
     return {
       base_price: Number(
         breakdown.base_price ??
           breakdown.tong_gia_van_chuyen ??
+          breakdown.phi_van_chuyen ??
           breakdown.basePrice ??
           0,
       ),
@@ -284,11 +301,38 @@
           0,
       ),
       insurance_fee: Number(
-        breakdown.insurance_fee ?? breakdown.insuranceFee ?? 0,
+        breakdown.insurance_fee ??
+          breakdown.phi_bao_hiem ??
+          breakdown.insuranceFee ??
+          0,
       ),
-      cod_fee: Number(breakdown.cod_fee ?? breakdown.codFee ?? 0),
+      cod_fee: Number(
+        breakdown.cod_fee ?? breakdown.phi_cod ?? breakdown.codFee ?? 0,
+      ),
       total_fee: Number(
-        breakdown.total_fee ?? breakdown.totalFee ?? shippingFee ?? 0,
+        breakdown.total_fee ??
+          breakdown.tong_cuoc ??
+          breakdown.totalFee ??
+          shippingFee ??
+          0,
+      ),
+      don_gia_km: Number(breakdown.don_gia_km ?? 0),
+      he_so_xe: Number(breakdown.he_so_xe ?? 1),
+      phi_toi_thieu: Number(breakdown.phi_toi_thieu ?? 0),
+      ten_loai_xe_tinh_gia: String(
+        breakdown.ten_loai_xe_tinh_gia ?? breakdown.vehiclePricingLabel ?? "",
+      ),
+      time_surcharge_label: String(
+        breakdown.time_surcharge_label ??
+          breakdown.ten_khung_gio ??
+          breakdown.timeSurchargeLabel ??
+          "",
+      ),
+      condition_surcharge_label: String(
+        breakdown.condition_surcharge_label ??
+          breakdown.ten_dieu_kien_thoi_tiet ??
+          breakdown.conditionSurchargeLabel ??
+          "",
       ),
     };
   }
@@ -443,8 +487,28 @@
     order.cancel_reason = normalizeText(
       order.cancel_reason || order.ly_do_huy || "",
     );
-    order.shipping_fee = Number(order.shipping_fee || order.total_fee || 0);
-    order.cod_amount = Number(order.cod_amount || order.cod_value || 0);
+    const rawBreakdown = parseJsonSafe(
+      order.chi_tiet_gia_cuoc_json,
+      order.chi_tiet_gia_cuoc || order.fee_breakdown || order.pricing_breakdown || {},
+    );
+    order.shipping_fee = Number(
+      order.shipping_fee ||
+        order.tong_cuoc ||
+        order.total_fee ||
+        order.phi_van_chuyen ||
+        0,
+    );
+    order.khoang_cach_km = Number(
+      order.khoang_cach_km ||
+        order.distance_km ||
+        order.distanceKm ||
+        order.service_meta?.distance_km ||
+        rawBreakdown.khoang_cach_km ||
+        0,
+    );
+    order.cod_amount = Number(
+      order.cod_amount || order.gia_tri_thu_ho_cod || order.cod_value || 0,
+    );
 
     // Chuẩn hóa nhãn thanh toán
     order.payment_method_label = getPaymentMethodLabel(
@@ -453,6 +517,29 @@
         order.payment_method_label,
       order.payment_method_label,
     );
+    order.fee_payer = order.nguoi_tra_cuoc || order.fee_payer || "gui";
+    order.payer_label = order.payer_label || getFeePayerLabel(order.fee_payer);
+    order.estimated_delivery =
+      order.estimated_delivery ||
+      order.du_kien_giao_hang ||
+      order.estimated_eta ||
+      order.thoi_gian_giao_hang_du_kien ||
+      order.service_meta?.estimated_eta ||
+      "";
+    order.pickup_slot_label =
+      order.pickup_slot_label ||
+      order.ten_khung_gio_lay_hang ||
+      order.khung_gio_lay_hang ||
+      order.pickup_slot ||
+      order.service_meta?.pickup_slot_label ||
+      "";
+    order.vehicle_label =
+      order.vehicle_label ||
+      order.ten_phuong_tien ||
+      order.vehicle_type ||
+      order.phuong_tien ||
+      order.service_meta?.vehicle_label ||
+      "";
 
     order.rating = Number(order.rating || order.danh_gia_so_sao || 0);
     order.feedback = normalizeMultilineText(
@@ -461,8 +548,11 @@
     order.shipper_note = normalizeMultilineText(
       order.shipper_note || order.ghi_chu_shipper || "",
     );
+    order.clean_note = normalizeMultilineText(
+      order.clean_note || order.ghi_chu || order.ghi_chu_tai_xe || "",
+    );
     order.fee_breakdown = normalizeBreakdown(
-      order.fee_breakdown || order.pricing_breakdown || {},
+      rawBreakdown,
       order.shipping_fee,
     );
     order.pricing_breakdown = order.fee_breakdown;
@@ -602,6 +692,134 @@
           return [];
         };
 
+  function parseDateMs(value) {
+    const normalized = normalizeText(value);
+    if (!normalized) return 0;
+    const timestamp = new Date(normalized).getTime();
+    return Number.isFinite(timestamp) ? timestamp : 0;
+  }
+
+  function normalizeServiceType(value) {
+    const normalized = normalizeText(value).toLowerCase();
+    if (normalized === "giao_ngay_lap_tuc") return "instant";
+    if (normalized === "giao_hoa_toc") return "express";
+    if (normalized === "giao_nhanh") return "fast";
+    if (normalized === "giao_tieu_chuan") return "standard";
+    return normalized;
+  }
+
+  function extractTimeTokens(value) {
+    return Array.from(
+      String(value || "").matchAll(/(\d{1,2}):(\d{2})(?::(\d{2}))?/g),
+    ).map((match) => {
+      const hour = Number(match[1] || 0);
+      const minute = Number(match[2] || 0);
+      const second = Number(match[3] || 0);
+      return `${String(hour).padStart(2, "0")}:${String(minute).padStart(2, "0")}:${String(second).padStart(2, "0")}`;
+    });
+  }
+
+  function buildLocalDateTimeMs(dateValue, timeValue) {
+    const dateText = normalizeText(dateValue).slice(0, 10);
+    const timeText = normalizeText(timeValue);
+    if (!dateText || !timeText) return 0;
+    const timestamp = new Date(`${dateText}T${timeText}`).getTime();
+    return Number.isFinite(timestamp) ? timestamp : 0;
+  }
+
+  function resolvePickupDeadlineMs(source) {
+    const order = source && typeof source === "object" ? source : {};
+    const pickupDate = normalizeText(order.ngay_lay_hang || "");
+    const explicitDeadline = buildLocalDateTimeMs(
+      pickupDate,
+      normalizeText(order.gio_ket_thuc_lay_hang || ""),
+    );
+    if (explicitDeadline) return explicitDeadline;
+
+    const slotTokens = extractTimeTokens(
+      order.ten_khung_gio_lay_hang || order.khung_gio_lay_hang || "",
+    );
+    const slotDeadline = buildLocalDateTimeMs(
+      pickupDate,
+      slotTokens[slotTokens.length - 1] || "",
+    );
+    if (slotDeadline) return slotDeadline;
+
+    const createdMs = parseDateMs(order.created_at || order.created_date || "");
+    if (!createdMs) return 0;
+    const serviceType = normalizeServiceType(
+      order.service_type || order.loai_dich_vu || order.dich_vu || "",
+    );
+    const fallbackMinutes =
+      SERVICE_AUTO_CANCEL_FALLBACK_MINUTES[serviceType] ||
+      SERVICE_AUTO_CANCEL_FALLBACK_MINUTES.fast;
+    return createdMs + fallbackMinutes * 60 * 1000;
+  }
+
+  function hasAcceptedOrAssignedOrder(order) {
+    return Boolean(
+      normalizeText(order?.thoidiemnhandon || order?.ngaynhan || "") ||
+        normalizeText(
+          order?.shipper_id ||
+            order?.ncc_id ||
+            order?.shipper_name ||
+            order?.nha_cung_cap_ho_ten ||
+            "",
+        ),
+    );
+  }
+
+  function shouldAutoCancelPendingOrder(order, nowMs = Date.now()) {
+    if (!order || typeof order !== "object") return false;
+    if (normalizeText(order.ngayhuy || "")) return false;
+    if (normalizeText(order.ngaybatdauthucte || "")) return false;
+    if (normalizeText(order.ngayhoanthanhthucte || "")) return false;
+    if (hasAcceptedOrAssignedOrder(order)) return false;
+
+    const normalizedStatus = String(order.status || order.trang_thai || "")
+      .trim()
+      .toLowerCase();
+    if (["cancelled", "canceled", "completed", "delivered", "success"].includes(normalizedStatus)) {
+      return false;
+    }
+
+    const deadlineMs = resolvePickupDeadlineMs(order);
+    return deadlineMs > 0 && nowMs >= deadlineMs;
+  }
+
+  async function autoCancelKrudRecordIfNeeded(record) {
+    const rawRecord = record && typeof record === "object" ? { ...record } : null;
+    const updateFn = getKrudUpdateFn();
+    if (!rawRecord || !updateFn || !normalizeText(rawRecord.id || "")) return rawRecord;
+    if (!shouldAutoCancelPendingOrder(rawRecord, Date.now())) return rawRecord;
+
+    const cancelledAt = new Date().toISOString();
+    try {
+      await updateFn(
+        krudOrdersTable,
+        {
+          id: rawRecord.id,
+          trang_thai: "cancelled",
+          status: "cancelled",
+          ngayhuy: cancelledAt,
+          ly_do_huy: normalizeText(rawRecord.ly_do_huy || rawRecord.cancel_reason || "") || AUTO_CANCEL_REASON,
+          updated_at: cancelledAt,
+        },
+        rawRecord.id,
+      );
+      rawRecord.trang_thai = "cancelled";
+      rawRecord.status = "cancelled";
+      rawRecord.ngayhuy = cancelledAt;
+      rawRecord.ly_do_huy =
+        normalizeText(rawRecord.ly_do_huy || rawRecord.cancel_reason || "") ||
+        AUTO_CANCEL_REASON;
+    } catch (error) {
+      console.error("Cannot auto cancel overdue GHN detail record:", error);
+    }
+
+    return rawRecord;
+  }
+
   function matchKrudRecordByIdentifier(rows, identifier) {
     const normalizedIdentifier = normalizeText(identifier).toUpperCase();
     const list = Array.isArray(rows) ? rows : [];
@@ -701,7 +919,11 @@
     );
     const items = normalizeItems(
       parseJsonSafe(
-        record.mat_hang_json || record.items_json || record.items || [],
+        record.mat_hang_json ||
+          record.mat_hang ||
+          record.items_json ||
+          record.items ||
+          [],
         [],
       ),
     );
@@ -741,12 +963,36 @@
           "",
         pickup_address: record.dia_chi_lay_hang || "",
         delivery_address: record.dia_chi_giao_hang || "",
+        ngay_lay_hang: record.ngay_lay_hang || "",
+        khung_gio_lay_hang: record.khung_gio_lay_hang || "",
+        ten_khung_gio_lay_hang: record.ten_khung_gio_lay_hang || "",
+        gio_bat_dau_lay_hang: record.gio_bat_dau_lay_hang || "",
+        gio_ket_thuc_lay_hang: record.gio_ket_thuc_lay_hang || "",
+        estimated_delivery:
+          record.du_kien_giao_hang ||
+          record.estimated_delivery ||
+          record.estimated_eta ||
+          record.thoi_gian_giao_hang_du_kien ||
+          "",
+        du_kien_giao_hang:
+          record.du_kien_giao_hang ||
+          record.estimated_delivery ||
+          record.estimated_eta ||
+          record.thoi_gian_giao_hang_du_kien ||
+          "",
         service_name: record.ten_dich_vu || record.service_label || "",
         service_label: record.ten_dich_vu || record.service_label || "",
+        ten_phuong_tien:
+          record.ten_phuong_tien ||
+          record.vehicle_label ||
+          record.phuong_tien ||
+          record.vehicle_type ||
+          "",
         vehicle_type:
           record.ten_phuong_tien ||
-          record.vehicle_type ||
+          record.vehicle_label ||
           record.phuong_tien ||
+          record.vehicle_type ||
           "",
         khoang_cach_km: Number(
           record.khoang_cach_km || record.distance_km || 0,
@@ -764,11 +1010,14 @@
           "Tiền mặt",
         payment_method:
           record.payment_method || record.phuong_thuc_thanh_toan || "",
+        nguoi_tra_cuoc: record.nguoi_tra_cuoc || record.fee_payer || "gui",
+        fee_payer: record.fee_payer || record.nguoi_tra_cuoc || "gui",
         payment_status_label: getPaymentStatusLabel(
           record.payment_status_label || record.trang_thai_thanh_toan,
           "Chưa hoàn tất",
         ),
-        clean_note: record.ghi_chu || record.clean_note || "",
+        clean_note:
+          record.ghi_chu || record.ghi_chu_tai_xe || record.clean_note || "",
         cancel_reason: record.ly_do_huy || record.cancel_reason || "",
         rating: Number(record.danh_gia_so_sao || record.rating || 0),
         feedback: record.phan_hoi || record.feedback || "",
@@ -841,7 +1090,8 @@
 
   async function findKrudDetail(identifier) {
     const record = await findKrudRecord(identifier);
-    return record ? buildDetailFromKrudRecord(record) : null;
+    const refreshedRecord = await autoCancelKrudRecordIfNeeded(record);
+    return refreshedRecord ? buildDetailFromKrudRecord(refreshedRecord) : null;
   }
 
   function getCurrentIdentifier() {
@@ -910,7 +1160,8 @@
       viewer === "customer" &&
       !milestones.cancelledAt &&
       !milestones.acceptedAt &&
-      !milestones.completedAt
+      !milestones.completedAt &&
+      !shouldAutoCancelPendingOrder(order)
     );
   }
 
@@ -950,20 +1201,6 @@
     if (shipperAction === "complete") {
       buttons.push(
         '<button type="button" class="customer-btn customer-btn-primary" data-order-action="complete">Hoàn thành</button>',
-      );
-    }
-
-    if (viewer === "customer") {
-      buttons.push(
-        '<a href="public/khach-hang/lich-su-don-hang.html" class="customer-btn customer-btn-ghost">Về lịch sử đơn</a>',
-      );
-    } else if (viewer === "shipper") {
-      buttons.push(
-        '<a href="public/nha-cung-cap/don-hang.html" class="customer-btn customer-btn-ghost">Về danh sách đơn</a>',
-      );
-    } else {
-      buttons.push(
-        '<a href="tra-don-hang.html" class="customer-btn customer-btn-ghost">Tra đơn khác</a>',
       );
     }
 
@@ -1172,6 +1409,7 @@
     getMilestones,
     deriveStatusKey,
     getStatusBadge,
+    getFeePayerLabel,
     buildActionButtons,
     pickFirstText,
     isImageExtension,
@@ -1245,6 +1483,18 @@
       ma_don_hang_noi_bo: order.order_code || order.id || "",
       ma_don_hang: order.order_code || order.id || "",
       order_code: order.order_code || order.id || "",
+      tong_cuoc: Number(order.shipping_fee || order.fee_breakdown?.total_fee || 0),
+      shipping_fee: Number(order.shipping_fee || order.fee_breakdown?.total_fee || 0),
+      total_fee: Number(order.shipping_fee || order.fee_breakdown?.total_fee || 0),
+      phi_van_chuyen: Number(order.fee_breakdown?.base_price || 0),
+      khoang_cach_km: Number(order.khoang_cach_km || 0),
+      distance_km: Number(order.khoang_cach_km || 0),
+      chi_tiet_gia_cuoc_json: JSON.stringify(
+        order.fee_breakdown || order.pricing_breakdown || {},
+      ),
+      pricing_breakdown: JSON.stringify(
+        order.fee_breakdown || order.pricing_breakdown || {},
+      ),
       trang_thai: status,
       status,
       updated_at: new Date().toISOString(),
@@ -1272,6 +1522,12 @@
         provider.shipper_phone || provider.phone || "",
       shipper_phone: provider.shipper_phone || provider.phone || "",
       ncc_email: provider.email || "",
+      nguoi_tra_cuoc: order.fee_payer || order.nguoi_tra_cuoc || "",
+      fee_payer: order.fee_payer || order.nguoi_tra_cuoc || "",
+      du_kien_giao_hang: order.estimated_delivery || "",
+      estimated_delivery: order.estimated_delivery || "",
+      ten_khung_gio_lay_hang: order.pickup_slot_label || "",
+      ten_phuong_tien: order.vehicle_label || order.vehicle_type || "",
       shipper_vehicle: provider.shipper_vehicle || provider.vehicle_type || "",
       vehicle_type: provider.vehicle_type || provider.shipper_vehicle || "",
       bien_so: provider.bien_so || provider.license_plate || "",
@@ -1467,9 +1723,132 @@
   }
 
   async function loadDetail(identifier) {
-    const krudDetail = await findKrudDetail(identifier);
-    if (krudDetail) return krudDetail;
     const localDetail = findLocalDetail(identifier);
+    const krudDetail = await findKrudDetail(identifier).catch(() => null);
+
+    if (krudDetail && localDetail) {
+      const normalizedKrud = normalizeDetail(krudDetail);
+      const normalizedLocal = normalizeDetail(localDetail);
+      const krudBreakdown = normalizedKrud.order?.fee_breakdown || {};
+      const localBreakdown = normalizedLocal.order?.fee_breakdown || {};
+      const mergedBreakdown =
+        Number(krudBreakdown.base_price || 0) > 0 ||
+        Number(krudBreakdown.goods_fee || 0) > 0 ||
+        Number(krudBreakdown.time_fee || 0) > 0 ||
+        Number(krudBreakdown.condition_fee || 0) > 0 ||
+        Number(krudBreakdown.vehicle_fee || 0) > 0 ||
+        Number(krudBreakdown.cod_fee || 0) > 0 ||
+        Number(krudBreakdown.insurance_fee || 0) > 0
+          ? krudBreakdown
+          : localBreakdown;
+
+      return normalizeDetail({
+        ...normalizedLocal,
+        ...normalizedKrud,
+        order: {
+          ...(normalizedLocal.order || {}),
+          ...(normalizedKrud.order || {}),
+          shipping_fee: Number(
+            normalizedKrud.order?.shipping_fee ||
+              normalizedLocal.order?.shipping_fee ||
+              0,
+          ),
+          khoang_cach_km: Number(
+            normalizedKrud.order?.khoang_cach_km ||
+              normalizedLocal.order?.khoang_cach_km ||
+              0,
+          ),
+          fee_payer:
+            normalizedKrud.order?.fee_payer ||
+            normalizedKrud.order?.nguoi_tra_cuoc ||
+            normalizedLocal.order?.fee_payer ||
+            normalizedLocal.order?.nguoi_tra_cuoc ||
+            "gui",
+          nguoi_tra_cuoc:
+            normalizedKrud.order?.nguoi_tra_cuoc ||
+            normalizedKrud.order?.fee_payer ||
+            normalizedLocal.order?.nguoi_tra_cuoc ||
+            normalizedLocal.order?.fee_payer ||
+            "gui",
+          estimated_delivery:
+            normalizedKrud.order?.estimated_delivery ||
+            normalizedKrud.order?.du_kien_giao_hang ||
+            normalizedKrud.order?.estimated_eta ||
+            normalizedKrud.order?.thoi_gian_giao_hang_du_kien ||
+            normalizedLocal.order?.estimated_delivery ||
+            normalizedLocal.order?.du_kien_giao_hang ||
+            normalizedLocal.order?.estimated_eta ||
+            normalizedLocal.order?.thoi_gian_giao_hang_du_kien ||
+            "",
+          du_kien_giao_hang:
+            normalizedKrud.order?.du_kien_giao_hang ||
+            normalizedKrud.order?.estimated_delivery ||
+            normalizedKrud.order?.estimated_eta ||
+            normalizedKrud.order?.thoi_gian_giao_hang_du_kien ||
+            normalizedLocal.order?.du_kien_giao_hang ||
+            normalizedLocal.order?.estimated_delivery ||
+            normalizedLocal.order?.estimated_eta ||
+            normalizedLocal.order?.thoi_gian_giao_hang_du_kien ||
+            "",
+          pickup_slot_label:
+            normalizedKrud.order?.pickup_slot_label ||
+            normalizedKrud.order?.ten_khung_gio_lay_hang ||
+            normalizedKrud.order?.khung_gio_lay_hang ||
+            normalizedLocal.order?.pickup_slot_label ||
+            normalizedLocal.order?.ten_khung_gio_lay_hang ||
+            normalizedLocal.order?.khung_gio_lay_hang ||
+            "",
+          ten_khung_gio_lay_hang:
+            normalizedKrud.order?.ten_khung_gio_lay_hang ||
+            normalizedKrud.order?.pickup_slot_label ||
+            normalizedKrud.order?.khung_gio_lay_hang ||
+            normalizedLocal.order?.ten_khung_gio_lay_hang ||
+            normalizedLocal.order?.pickup_slot_label ||
+            normalizedLocal.order?.khung_gio_lay_hang ||
+            "",
+          vehicle_label:
+            normalizedKrud.order?.vehicle_label ||
+            normalizedKrud.order?.ten_phuong_tien ||
+            normalizedKrud.order?.vehicle_type ||
+            normalizedKrud.order?.phuong_tien ||
+            normalizedLocal.order?.vehicle_label ||
+            normalizedLocal.order?.ten_phuong_tien ||
+            normalizedLocal.order?.vehicle_type ||
+            normalizedLocal.order?.phuong_tien ||
+            "",
+          ten_phuong_tien:
+            normalizedKrud.order?.ten_phuong_tien ||
+            normalizedKrud.order?.vehicle_label ||
+            normalizedKrud.order?.vehicle_type ||
+            normalizedKrud.order?.phuong_tien ||
+            normalizedLocal.order?.ten_phuong_tien ||
+            normalizedLocal.order?.vehicle_label ||
+            normalizedLocal.order?.vehicle_type ||
+            normalizedLocal.order?.phuong_tien ||
+            "",
+          fee_breakdown: mergedBreakdown,
+          pricing_breakdown: mergedBreakdown,
+        },
+        provider: {
+          ...(normalizedLocal.provider || {}),
+          ...(normalizedKrud.provider || {}),
+        },
+        customer: {
+          ...(normalizedLocal.customer || {}),
+          ...(normalizedKrud.customer || {}),
+        },
+        items:
+          Array.isArray(normalizedKrud.items) && normalizedKrud.items.length
+            ? normalizedKrud.items
+            : normalizedLocal.items,
+        logs:
+          Array.isArray(normalizedKrud.logs) && normalizedKrud.logs.length
+            ? normalizedKrud.logs
+            : normalizedLocal.logs,
+      });
+    }
+
+    if (krudDetail) return krudDetail;
     if (localDetail) return localDetail;
     throw new Error("Không tìm thấy đơn hàng phù hợp.");
   }

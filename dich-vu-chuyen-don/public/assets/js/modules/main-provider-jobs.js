@@ -1,5 +1,11 @@
 import core from "./core/app-core.js";
 import store from "./main-customer-portal-store.js";
+import {
+  formatBookingScheduleLabel,
+  getBookingScheduleTimeLabel,
+  getBookingServiceLabel,
+} from "./main-booking-shared.js";
+import { createProviderAutoRefreshController } from "./main-provider-refresh.js";
 import { extractRows, getKrudListFn } from "./api/krud-client.js";
 
 const providerJobsModule = (function (window, document) {
@@ -16,6 +22,7 @@ const providerJobsModule = (function (window, document) {
 
   const root = document.getElementById("provider-jobs-root");
   if (!root || !store) return;
+  let refreshController = null;
 
   function escapeHtml(value) {
     if (typeof core.escapeHtml === "function") {
@@ -79,23 +86,43 @@ const providerJobsModule = (function (window, document) {
   }
 
   function formatDateLabel(dateValue, timeValue) {
-    const rawDate = normalizeText(dateValue);
-    if (!rawDate) return "--";
+    return formatBookingScheduleLabel(dateValue, timeValue) || "--";
+  }
 
-    const date = new Date(rawDate);
-    const dateText = Number.isNaN(date.getTime())
-      ? rawDate
-      : date.toLocaleDateString("vi-VN", {
-          day: "2-digit",
-          month: "2-digit",
-          year: "numeric",
-        });
-    const timeText = normalizeText(timeValue);
-    return timeText ? `${dateText} • ${timeText}` : dateText;
+  function persistCurrentFiltersToUrl() {
+    const keywordInput = root.querySelector("#provider-job-keyword");
+    const surveySelect = root.querySelector("#provider-job-survey-filter");
+    const statusSelect = root.querySelector("#provider-job-status-filter");
+    if (!keywordInput && !surveySelect && !statusSelect) return;
+
+    const url = new URL(window.location.href);
+    const nextKeyword = String(keywordInput?.value || "").trim();
+    const nextSurvey = String(surveySelect?.value || "all").trim();
+    const nextStatus = String(statusSelect?.value || "all").trim();
+
+    if (nextKeyword) {
+      url.searchParams.set("search", nextKeyword);
+    } else {
+      url.searchParams.delete("search");
+    }
+
+    if (nextSurvey !== "all") {
+      url.searchParams.set("survey", nextSurvey);
+    } else {
+      url.searchParams.delete("survey");
+    }
+
+    if (nextStatus !== "all") {
+      url.searchParams.set("status", nextStatus);
+    } else {
+      url.searchParams.delete("status");
+    }
+
+    window.history.replaceState({}, "", url.toString());
   }
 
   function getStatusMeta(row) {
-    const rawStatus = normalizeLowerText(row?.status || row?.trang_thai || "");
+    const rawStatus = normalizeLowerText(row?.trang_thai || row?.status || "");
 
     if (["da_xac_nhan", "xac_nhan", "confirmed", "accepted", "da_chot_lich"].includes(rawStatus)) {
       return {
@@ -148,10 +175,10 @@ const providerJobsModule = (function (window, document) {
     const toAddress = normalizeText(row?.dia_chi_den || "");
 
     return {
-      code: normalizeText(
-        row?.ma_yeu_cau_noi_bo || row?.ma_don_hang_noi_bo || row?.order_code || row?.id || "",
+      code: store.resolveBookingRowCode?.(row) || normalizeText(row?.id || row?.remote_id || ""),
+      serviceLabel: getBookingServiceLabel(
+        row?.ten_dich_vu || row?.loai_dich_vu || "Chuyển dọn",
       ),
-      serviceLabel: normalizeText(row?.ten_dich_vu || row?.loai_dich_vu || "Chuyển dọn"),
       statusClass: status.className,
       statusValue: status.value,
       statusText: status.label,
@@ -223,11 +250,11 @@ const providerJobsModule = (function (window, document) {
         <section class="customer-panel customer-orders-panel provider-jobs-panel">
           <div class="customer-panel-head">
             <div>
-              <p class="customer-section-kicker">Danh sách việc</p>
+              <p class="customer-section-kicker">Danh sách đơn hàng</p>
               <h2>Tìm và lọc yêu cầu chuyển dọn</h2>
               <p class="customer-panel-subtext">${escapeHtml(
                 String(items.length),
-              )} yêu cầu trong bảng việc hiện tại</p>
+              )} đơn hàng trong danh sách hiện tại</p>
             </div>
           </div>
 
@@ -269,7 +296,7 @@ const providerJobsModule = (function (window, document) {
           <div class="customer-panel-head">
             <div>
               <p class="customer-section-kicker">Danh sách</p>
-              <h2>Việc đang hiển thị</h2>
+              <h2>Đơn hàng đang hiển thị</h2>
               <p class="customer-panel-subtext" id="provider-job-result-text">Đang tải dữ liệu yêu cầu...</p>
             </div>
           </div>
@@ -478,6 +505,15 @@ const providerJobsModule = (function (window, document) {
     renderList();
   }
 
+  function isEditingProviderFilters() {
+    const activeElement = document.activeElement;
+    return (
+      !!activeElement &&
+      root.contains(activeElement) &&
+      ["INPUT", "SELECT", "TEXTAREA"].includes(activeElement.tagName)
+    );
+  }
+
   (async function bootstrapJobs() {
     const auth = core.getUrlAuthCredentials?.() || {
       username: "",
@@ -509,9 +545,9 @@ const providerJobsModule = (function (window, document) {
 
     root.innerHTML = `
       <div class="customer-portal-shell customer-portal-shell--simple">
-        <div class="customer-empty-state">
-          <i class="fas fa-spinner fa-spin"></i>
-          <p>Đang tải danh sách việc nhà cung cấp...</p>
+          <div class="customer-empty-state">
+            <i class="fas fa-spinner fa-spin"></i>
+          <p>Đang tải danh sách đơn hàng nhà cung cấp...</p>
         </div>
       </div>
     `;
@@ -519,18 +555,31 @@ const providerJobsModule = (function (window, document) {
     try {
       const items = await fetchBookings();
       renderJobs({ items, profile });
+      refreshController = createProviderAutoRefreshController(window, {
+        intervalMs: 60 * 1000,
+        shouldPause: isEditingProviderFilters,
+        onTick: async () => {
+          persistCurrentFiltersToUrl();
+          const nextItems = await fetchBookings();
+          renderJobs({ items: nextItems, profile });
+        },
+      });
+      refreshController.start();
     } catch (error) {
       console.error("Cannot render provider jobs:", error);
       root.innerHTML = `
         <div class="customer-portal-shell customer-portal-shell--simple">
           <div class="customer-empty-state">
             <i class="fas fa-circle-exclamation"></i>
-            <p>Không thể tải danh sách việc ở thời điểm hiện tại.</p>
+            <p>Không thể tải danh sách đơn hàng ở thời điểm hiện tại.</p>
           </div>
         </div>
       `;
     }
   })();
+  window.addEventListener("beforeunload", function () {
+    refreshController?.stop?.();
+  });
 
   const moduleApi = {};
   window.__fastGoProviderJobsModule = moduleApi;

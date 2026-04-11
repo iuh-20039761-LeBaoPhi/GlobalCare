@@ -53,12 +53,38 @@ class FastGoBookingApiClient {
       throw new Error("Payload đặt lịch không hợp lệ.");
     }
 
+    const { status: legacyStatus, ...restPayload } = payload;
     const createdAt = String(
-      payload.created_at || new Date().toISOString(),
+      restPayload.created_at || new Date().toISOString(),
     ).trim();
     const nextPayload = {
-      ...payload,
+      ...restPayload,
       created_at: createdAt,
+      updated_at: String(restPayload.updated_at || createdAt).trim() || createdAt,
+      trang_thai:
+        String(restPayload.trang_thai || legacyStatus || "moi").trim() || "moi",
+      cancelled_at: String(restPayload.cancelled_at || "").trim(),
+      accepted_at: String(restPayload.accepted_at || "").trim(),
+      started_at: String(restPayload.started_at || "").trim(),
+      completed_at: String(restPayload.completed_at || "").trim(),
+      provider_id: String(
+        restPayload.provider_id || restPayload.accepted_by_id || "",
+      ).trim(),
+      accepted_by_id: String(
+        restPayload.accepted_by_id || restPayload.provider_id || "",
+      ).trim(),
+      provider_phone: String(
+        restPayload.provider_phone || restPayload.accepted_by_phone || "",
+      ).trim(),
+      accepted_by_phone: String(
+        restPayload.accepted_by_phone || restPayload.provider_phone || "",
+      ).trim(),
+      provider_name: String(
+        restPayload.provider_name || restPayload.accepted_by_name || "",
+      ).trim(),
+      accepted_by_name: String(
+        restPayload.accepted_by_name || restPayload.provider_name || "",
+      ).trim(),
     };
 
     const result = await Promise.resolve(

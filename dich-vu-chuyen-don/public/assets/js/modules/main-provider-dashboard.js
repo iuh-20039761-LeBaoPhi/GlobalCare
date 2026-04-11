@@ -1,5 +1,11 @@
 import core from "./core/app-core.js";
 import store from "./main-customer-portal-store.js";
+import {
+  formatBookingScheduleLabel,
+  getBookingScheduleTimeLabel,
+  getBookingServiceLabel,
+} from "./main-booking-shared.js";
+import { createProviderAutoRefreshController } from "./main-provider-refresh.js";
 import { extractRows, getKrudListFn } from "./api/krud-client.js";
 
 const providerDashboardModule = (function (window, document) {
@@ -16,6 +22,7 @@ const providerDashboardModule = (function (window, document) {
 
   const root = document.getElementById("provider-dashboard-root");
   if (!root || !store) return;
+  let refreshController = null;
 
   function escapeHtml(value) {
     if (typeof core.escapeHtml === "function") {
@@ -67,23 +74,11 @@ const providerDashboardModule = (function (window, document) {
   }
 
   function formatDateLabel(dateValue, timeValue) {
-    const rawDate = normalizeText(dateValue);
-    if (!rawDate) return "--";
-
-    const date = new Date(rawDate);
-    const dateText = Number.isNaN(date.getTime())
-      ? rawDate
-      : date.toLocaleDateString("vi-VN", {
-          day: "2-digit",
-          month: "2-digit",
-          year: "numeric",
-        });
-    const timeText = normalizeText(timeValue);
-    return timeText ? `${dateText} • ${timeText}` : dateText;
+    return formatBookingScheduleLabel(dateValue, timeValue) || "--";
   }
 
   function getStatusMeta(row) {
-    const rawStatus = normalizeLowerText(row?.status || row?.trang_thai || "");
+    const rawStatus = normalizeLowerText(row?.trang_thai || row?.status || "");
 
     if (["da_xac_nhan", "xac_nhan", "confirmed", "accepted", "da_chot_lich"].includes(rawStatus)) {
       return {
@@ -132,10 +127,10 @@ const providerDashboardModule = (function (window, document) {
     const toAddress = normalizeText(row?.dia_chi_den || "");
 
     return {
-      code: normalizeText(
-        row?.ma_yeu_cau_noi_bo || row?.ma_don_hang_noi_bo || row?.order_code || row?.id || "",
+      code: store.resolveBookingRowCode?.(row) || normalizeText(row?.id || row?.remote_id || ""),
+      serviceLabel: getBookingServiceLabel(
+        row?.ten_dich_vu || row?.loai_dich_vu || "Chuyển dọn",
       ),
-      serviceLabel: normalizeText(row?.ten_dich_vu || row?.loai_dich_vu || "Chuyển dọn"),
       statusClass: status.className,
       statusText: status.label,
       route:
@@ -234,8 +229,8 @@ const providerDashboardModule = (function (window, document) {
       : processingCount
         ? "Các đơn mới đã được nhận. Tiếp tục bám tiến độ triển khai và ghi chú điều phối cho khách hàng."
         : recentRequests.length
-          ? "Nhịp xử lý hiện khá ổn định. Có thể mở danh sách việc để kiểm tra lại các đơn đã xác nhận hoặc đã hủy."
-          : "Chưa có yêu cầu nào trong bảng việc gần đây của nhà cung cấp.";
+          ? "Nhịp xử lý hiện khá ổn định. Có thể mở danh sách đơn hàng để kiểm tra lại các đơn đã xác nhận hoặc đã hủy."
+          : "Chưa có yêu cầu nào trong danh sách đơn hàng gần đây của nhà cung cấp.";
 
     root.innerHTML = `
       <div class="customer-portal-shell customer-portal-shell--simple">
@@ -249,9 +244,9 @@ const providerDashboardModule = (function (window, document) {
             <div class="customer-inline-actions">
               <span class="customer-panel-note">Nhà cung cấp</span>
               <a class="customer-btn customer-btn-primary" href="${escapeHtml(
-                getProjectUrl("nha-cung-cap/danh-sach-viec.html"),
+                getProjectUrl("nha-cung-cap/danh-sach-don-hang.html"),
               )}">
-                <i class="fas fa-briefcase"></i> Mở danh sách việc
+                <i class="fas fa-box"></i> Mở danh sách đơn hàng
               </a>
             </div>
           </div>
@@ -283,13 +278,13 @@ const providerDashboardModule = (function (window, document) {
         <section class="customer-panel customer-panel-orders customer-panel-orders-main">
           <div class="customer-panel-head customer-panel-head-dashboard">
             <div>
-              <p class="customer-section-kicker">Việc gần đây</p>
+              <p class="customer-section-kicker">Đơn hàng gần đây</p>
               <h2>3 yêu cầu cần nhìn trước</h2>
               <p class="customer-panel-subtext">Giữ một danh sách ngắn để đội vận hành vào việc nhanh hơn, đúng nhịp của khu khách hàng.</p>
             </div>
             <div class="customer-inline-actions customer-inline-actions-dashboard">
               <form action="${escapeHtml(
-                getProjectUrl("nha-cung-cap/danh-sach-viec.html"),
+                getProjectUrl("nha-cung-cap/danh-sach-don-hang.html"),
               )}" method="GET" class="customer-quick-search">
                 <input type="text" name="search" placeholder="Mã đơn, dịch vụ, khách..." required />
                 <button type="submit" class="customer-btn customer-btn-primary customer-btn-sm">
@@ -297,7 +292,7 @@ const providerDashboardModule = (function (window, document) {
                 </button>
               </form>
               <a class="customer-btn customer-btn-ghost customer-btn-sm" href="${escapeHtml(
-                getProjectUrl("nha-cung-cap/danh-sach-viec.html"),
+                getProjectUrl("nha-cung-cap/danh-sach-don-hang.html"),
               )}">
                 Xem tất cả
               </a>
@@ -364,6 +359,16 @@ const providerDashboardModule = (function (window, document) {
         </div>
       </div>
     `;
+  });
+  refreshController = createProviderAutoRefreshController(window, {
+    intervalMs: 60 * 1000,
+    onTick: async () => {
+      await renderProviderDashboard();
+    },
+  });
+  refreshController.start();
+  window.addEventListener("beforeunload", function () {
+    refreshController?.stop?.();
   });
 
   const moduleApi = {};

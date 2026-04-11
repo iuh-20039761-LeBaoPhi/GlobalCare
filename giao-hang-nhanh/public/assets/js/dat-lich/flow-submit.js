@@ -126,12 +126,13 @@ function xac_thuc_buoc_2() {
 
 function xac_thuc_buoc_3() {
   xoa_loi(3);
-  if (getDeliveryMode() === "instant") {
+  const isInstantMode = getDeliveryMode() === "instant";
+
+  if (isInstantMode) {
     if (!selectedService || selectedService.serviceType !== "instant") {
       hien_thi_loi(3, "Vui lòng chọn gói Giao Ngay Lập Tức để tiếp tục.");
       return false;
     }
-    return true;
   }
 
   const pDateVal = document.getElementById("ngay_lay_hang").value;

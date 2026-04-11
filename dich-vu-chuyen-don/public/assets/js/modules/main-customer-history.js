@@ -277,7 +277,7 @@ const customerHistoryModule = (function (window, document) {
                         getOrderDetailUrl(item.code || ""),
                       )}">Xem chi tiết</a>`
                     : `<a class="customer-btn customer-btn-primary" href="${escapeHtml(
-                        getProjectUrl("khach-hang/lich-su-yeu-cau.html"),
+                        getProjectUrl("khach-hang/danh-sach-don-hang.html"),
                       )}">Mở đơn hàng</a>`
                 }
               </div>

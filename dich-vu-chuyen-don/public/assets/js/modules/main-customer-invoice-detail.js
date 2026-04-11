@@ -1,5 +1,11 @@
 import core from "./core/app-core.js";
 import store from "./main-customer-portal-store.js";
+import { validateCustomerCancelBooking } from "./main-booking-actions.js";
+import {
+  formatBookingDateOnly,
+  getRenderableBookingPricingRows,
+  getBookingScheduleTimeLabel,
+} from "./main-booking-shared.js";
 
 const customerInvoiceDetailModule = (function (window, document) {
   if (window.__fastGoCustomerInvoiceDetailLoaded) return window.__fastGoCustomerInvoiceDetailModule || null;
@@ -96,49 +102,157 @@ const customerInvoiceDetailModule = (function (window, document) {
     return "pending";
   }
 
-  function getProgressMeta(invoice) {
+  function extractTimeTokens(value) {
+    return Array.from(
+      String(value || "").matchAll(/(\d{1,2}):(\d{2})(?::(\d{2}))?/g),
+    ).map((match) => {
+      const hour = Number(match[1] || 0);
+      const minute = Number(match[2] || 0);
+      const second = Number(match[3] || 0);
+      return `${String(hour).padStart(2, "0")}:${String(minute).padStart(2, "0")}:${String(second).padStart(2, "0")}`;
+    });
+  }
+
+  function buildLocalDateTimeMs(dateValue, timeValue) {
+    const dateText = normalizeText(dateValue).slice(0, 10);
+    const timeText = normalizeText(timeValue);
+    if (!dateText || !timeText) return 0;
+    const timestamp = new Date(`${dateText}T${timeText}`).getTime();
+    return Number.isFinite(timestamp) ? timestamp : 0;
+  }
+
+  function resolveInvoiceScheduleStartMs(invoice) {
+    const rawRow =
+      invoice?.raw_row && typeof invoice.raw_row === "object" ? invoice.raw_row : {};
+    const scheduleDate = normalizeText(
+      rawRow?.ngay_thuc_hien || invoice?.schedule_date || "",
+    );
+    if (!scheduleDate) return 0;
+
+    const slotTokens = extractTimeTokens(
+      rawRow?.ten_khung_gio_thuc_hien ||
+        rawRow?.khung_gio_thuc_hien ||
+        invoice?.schedule_time ||
+        "",
+    );
+    if (slotTokens.length) {
+      return buildLocalDateTimeMs(scheduleDate, slotTokens[0]);
+    }
+
+    return buildLocalDateTimeMs(scheduleDate, "00:00:00");
+  }
+
+  function isExpiredPendingInvoice(invoice) {
+    const tone = getStatusTone(invoice?.status_class);
+    if (tone !== "pending") return false;
+
+    if (
+      normalizeText(
+        invoice?.accepted_at ||
+          invoice?.started_at ||
+          invoice?.completed_at ||
+          invoice?.cancelled_at ||
+          "",
+      )
+    ) {
+      return false;
+    }
+
+    const scheduleStartMs = resolveInvoiceScheduleStartMs(invoice);
+    return !!(scheduleStartMs && Date.now() >= scheduleStartMs);
+  }
+
+  function getInvoiceDisplayStatus(invoice) {
+    if (isExpiredPendingInvoice(invoice)) {
+      return {
+        tone: "cancelled",
+        label: "Đã hủy",
+        note: "Đơn đã quá thời gian thực hiện và được hệ thống tự hủy.",
+      };
+    }
+
     const tone = getStatusTone(invoice?.status_class);
     if (tone === "completed") {
       return {
-        percent: 100,
+        tone,
         label: "Đã xác nhận",
         note: "Đơn đã được xác nhận.",
-        tone,
       };
     }
     if (tone === "shipping") {
       return {
-        percent: 72,
+        tone,
         label: "Đang xử lý",
         note: "Đơn đang được xử lý.",
-        tone,
       };
     }
     if (tone === "cancelled") {
       return {
-        percent: 100,
+        tone,
         label: "Đã hủy",
         note: "Đơn đã bị hủy.",
-        tone,
       };
     }
     return {
-      percent: 24,
+      tone,
       label: "Mới tiếp nhận",
       note: "Đơn đang chờ điều phối.",
-      tone,
     };
   }
 
-  function renderStatusBadge(statusClass, label) {
+  function getProgressMeta(invoice) {
+    const status = getInvoiceDisplayStatus(invoice);
+    if (status.tone === "completed") {
+      return { percent: 100, ...status };
+    }
+    if (status.tone === "shipping") {
+      return { percent: 72, ...status };
+    }
+    if (status.tone === "cancelled") {
+      return { percent: 100, ...status };
+    }
+    return { percent: 24, ...status };
+  }
+
+  function renderStatusBadge(invoice) {
+    const status = getInvoiceDisplayStatus(invoice);
     return `<span class="customer-status-badge status-${escapeHtml(
-      getStatusTone(statusClass),
-    )}">${escapeHtml(label || "Mới tiếp nhận")}</span>`;
+      status.tone,
+    )}">${escapeHtml(status.label)}</span>`;
   }
 
   function canCancelInvoice(invoice) {
-    const tone = getStatusTone(invoice?.status_class);
-    return tone !== "completed" && tone !== "cancelled";
+    const rawRow =
+      invoice?.raw_row && typeof invoice.raw_row === "object"
+        ? invoice.raw_row
+        : null;
+    if (!rawRow) {
+      return false;
+    }
+
+    try {
+      validateCustomerCancelBooking(rawRow, {
+        scheduleStartMs: resolveInvoiceScheduleStartMs(invoice),
+        nowMs: Date.now(),
+      });
+      return true;
+    } catch (error) {
+      return false;
+    }
+  }
+
+  function getInvoiceReference(invoice, trigger) {
+    const source =
+      trigger && typeof trigger.getAttribute === "function" ? trigger : null;
+
+    return {
+      id:
+        source?.getAttribute("data-order-id") ||
+        normalizeText(invoice?.remote_id || ""),
+      code:
+        source?.getAttribute("data-order-code") ||
+        normalizeText(invoice?.code || ""),
+    };
   }
 
   function renderInfoRow(label, value, options = {}) {
@@ -387,46 +501,16 @@ const customerInvoiceDetailModule = (function (window, document) {
   }
 
   function renderPricingRows(invoice) {
-    const breakdown = Array.isArray(invoice?.pricing_breakdown)
-      ? invoice.pricing_breakdown.filter(Boolean)
-      : [];
-
-    const getSortRank = (item) => {
-      if (item?.is_total) return 999;
-
-      const label = normalizeText(item?.label || "").toLowerCase();
-      if (!label) return 80;
-      if (/dich vu|goi|co ban|van chuyen/.test(label)) return 10;
-      if (/khoang cach|so km|quang duong/.test(label)) return 20;
-      if (/loai xe|xe tai|xe/.test(label)) return 30;
-      if (/mua|thoi tiet/.test(label)) return 40;
-      if (/cuoi tuan|thu bay|chu nhat/.test(label)) return 50;
-      return 60;
-    };
+    const fallbackRows = [renderInfoRow("Chi tiết phí", "Chưa có bảng tạm tính chi tiết")];
+    const breakdown = getRenderableBookingPricingRows(invoice?.pricing_breakdown, {
+      excludeLabelPatterns: [/loai xe|xe tai|thoi tiet|troi mua|binh thuong/i],
+    });
 
     if (!breakdown.length) {
-      return [
-        renderInfoRow(
-          "Dịch vụ chuyển dọn",
-          formatCurrency(invoice?.estimated_amount),
-        ),
-        renderInfoRow(
-          "Khoảng cách tham chiếu",
-          formatDistance(invoice?.distance_km),
-        ),
-        renderInfoRow("Loại xe", invoice?.vehicle_label || "--"),
-        renderInfoRow("Thời tiết", getWeatherLabel(invoice?.weather_label)),
-      ].join("");
+      return fallbackRows.join("");
     }
 
-    const rows = breakdown
-      .map((item, index) => ({ ...item, index }))
-      .sort((left, right) => {
-        const rankDiff = getSortRank(left) - getSortRank(right);
-        return rankDiff !== 0 ? rankDiff : left.index - right.index;
-      })
-      .filter((item) => !item.is_total)
-      .map((item, index) =>
+    const rows = breakdown.map((item, index) =>
         renderInfoRow(
           item.label || `Hạng mục ${index + 1}`,
           item.amount || formatCurrency(item.amount_value || 0),
@@ -434,24 +518,14 @@ const customerInvoiceDetailModule = (function (window, document) {
       );
 
     if (!rows.length) {
-      return [
-        renderInfoRow(
-          "Dịch vụ chuyển dọn",
-          formatCurrency(invoice?.estimated_amount),
-        ),
-        renderInfoRow(
-          "Khoảng cách tham chiếu",
-          formatDistance(invoice?.distance_km),
-        ),
-        renderInfoRow("Loại xe", invoice?.vehicle_label || "--"),
-        renderInfoRow("Thời tiết", getWeatherLabel(invoice?.weather_label)),
-      ].join("");
+      return fallbackRows.join("");
     }
 
     return rows.join("");
   }
 
   function buildTimeline(invoice) {
+    const isExpiredPending = isExpiredPendingInvoice(invoice);
     const entries = [
       {
         time: invoice?.created_at,
@@ -468,7 +542,13 @@ const customerInvoiceDetailModule = (function (window, document) {
       });
     }
 
-    if (invoice?.status_class === "xac-nhan") {
+    if (isExpiredPending) {
+      entries.push({
+        time: invoice.schedule_label || invoice.schedule_date || "Quá thời gian thực hiện",
+        title: "Yêu cầu tự hủy",
+        note: "Đơn đã quá thời gian thực hiện nhưng chưa được xử lý nên hệ thống tự động hủy.",
+      });
+    } else if (invoice?.status_class === "xac-nhan") {
       entries.push({
         time: "Đã xác nhận",
         title: "Phương án đã xác nhận",
@@ -535,6 +615,43 @@ const customerInvoiceDetailModule = (function (window, document) {
     `;
   }
 
+  function renderRatingInput(rating) {
+    const safeRating = Number.isFinite(Number(rating))
+      ? Math.min(5, Math.max(0, Math.round(Number(rating))))
+      : 0;
+
+    return `
+      <div class="standalone-order-rating-input" data-rating-input>
+        <input type="hidden" name="customer_rating" value="${escapeHtml(
+          String(safeRating),
+        )}" />
+        <div class="standalone-order-rating-input-buttons" role="radiogroup" aria-label="Mức đánh giá">
+          ${Array.from({ length: 5 }, (_, index) => {
+            const value = index + 1;
+            const isActive = value <= safeRating;
+            return `
+              <button
+                type="button"
+                class="standalone-order-rating-button${isActive ? " is-active" : ""}"
+                data-rating-value="${escapeHtml(String(value))}"
+                role="radio"
+                aria-checked="${isActive ? "true" : "false"}"
+                aria-label="${escapeHtml(`${value} sao`)}"
+              >
+                <i class="${escapeHtml(
+                  isActive ? "fa-solid fa-star" : "fa-regular fa-star",
+                )}"></i>
+              </button>
+            `;
+          }).join("")}
+        </div>
+        <small class="standalone-order-rating-caption" data-rating-caption>${escapeHtml(
+          safeRating ? `${safeRating}/5 sao` : "Chưa chấm sao",
+        )}</small>
+      </div>
+    `;
+  }
+
   function renderProviderReportBlock(invoice) {
     const providerNote = normalizeText(invoice?.provider_note || "");
 
@@ -545,40 +662,23 @@ const customerInvoiceDetailModule = (function (window, document) {
           <small>${escapeHtml(providerNote ? "Đã cập nhật" : "Chưa có cập nhật mới")}</small>
         </summary>
         <section class="standalone-order-block standalone-order-block-fold">
-          <div class="standalone-order-side-stack standalone-order-review-layout">
-            <article class="standalone-order-subcard">
-              <div class="standalone-order-subcard-head">
-                <strong>Nội dung báo cáo</strong>
-                <span class="standalone-order-chip">${escapeHtml(
-                  providerNote ? "Đã cập nhật" : "Chờ cập nhật",
-                )}</span>
-              </div>
-              <p class="standalone-order-note-text">${escapeHtml(
-                providerNote ||
-                  "Đơn vị thực hiện chưa gửi báo cáo mới cho đơn hàng này.",
-              )}</p>
-            </article>
-            <article class="standalone-order-subcard">
-              <div class="standalone-order-subcard-head">
-                <strong>Tài liệu đi kèm</strong>
-                <span class="standalone-order-chip">${escapeHtml(
-                  `${getAttachmentCount(invoice)} tệp`,
-                )}</span>
-              </div>
-              <div class="standalone-order-note-panel">
-                <p>
-                  Ảnh và video đang có trên đơn sẽ được hiển thị tại mục
-                  "Tài liệu hiện trường" để bạn tiện đối chiếu khi theo dõi báo
-                  cáo.
-                </p>
-              </div>
-              ${
-                getAttachmentCount(invoice)
-                  ? '<div class="standalone-order-inline-actions"><a class="customer-btn customer-btn-ghost customer-btn-sm" href="#customer-invoice-attachments">Xem tài liệu hiện trường</a></div>'
-                  : ""
-              }
-            </article>
-          </div>
+          <article class="standalone-order-subcard">
+            <div class="standalone-order-subcard-head">
+              <strong>Nội dung báo cáo</strong>
+              <span class="standalone-order-chip">${escapeHtml(
+                providerNote ? "Đã cập nhật" : "Chờ cập nhật",
+              )}</span>
+            </div>
+            <p class="standalone-order-note-text">${escapeHtml(
+              providerNote ||
+                "Đơn vị thực hiện chưa gửi báo cáo mới cho đơn hàng này.",
+            )}</p>
+            ${
+              getAttachmentCount(invoice)
+                ? '<div class="standalone-order-inline-actions"><a class="customer-btn customer-btn-ghost customer-btn-sm" href="#customer-invoice-attachments">Xem tài liệu hiện trường</a></div>'
+                : ""
+            }
+          </article>
         </section>
       </details>
     `;
@@ -630,14 +730,7 @@ const customerInvoiceDetailModule = (function (window, document) {
                     <form class="standalone-order-form" data-customer-feedback-form>
                       <label class="standalone-order-field">
                         <span>Mức đánh giá</span>
-                        <select name="customer_rating">
-                          <option value="0"${safeRating === 0 ? " selected" : ""}>Chưa chấm sao</option>
-                          <option value="5"${safeRating === 5 ? " selected" : ""}>5 sao</option>
-                          <option value="4"${safeRating === 4 ? " selected" : ""}>4 sao</option>
-                          <option value="3"${safeRating === 3 ? " selected" : ""}>3 sao</option>
-                          <option value="2"${safeRating === 2 ? " selected" : ""}>2 sao</option>
-                          <option value="1"${safeRating === 1 ? " selected" : ""}>1 sao</option>
-                        </select>
+                        ${renderRatingInput(safeRating)}
                       </label>
                       <label class="standalone-order-field">
                         <span>Đánh giá hoặc báo cáo thêm</span>
@@ -676,11 +769,8 @@ const customerInvoiceDetailModule = (function (window, document) {
           )}</p>
           <div class="standalone-order-inline-actions" style="justify-content:center; margin-top:18px;">
             <a class="customer-btn customer-btn-primary" href="${escapeHtml(
-              getProjectUrl("khach-hang/lich-su-yeu-cau.html"),
+              getProjectUrl("khach-hang/danh-sach-don-hang.html"),
             )}">Quay lại danh sách đơn hàng</a>
-            <a class="customer-btn customer-btn-ghost" href="${escapeHtml(
-              getProjectUrl("dat-lich.html"),
-            )}">Tạo yêu cầu mới</a>
           </div>
         </div>
       </div>
@@ -730,12 +820,14 @@ const customerInvoiceDetailModule = (function (window, document) {
                   <div class="standalone-order-actions-group standalone-order-hero-actions-group">
                     ${
                       canCancelInvoice(invoice)
-                        ? '<button type="button" class="customer-btn customer-btn-danger" data-invoice-cancel>Hủy đơn</button>'
+                        ? `<button type="button" class="customer-btn customer-btn-danger" data-invoice-cancel data-order-id="${escapeHtml(
+                            invoice.remote_id || "",
+                          )}" data-order-code="${escapeHtml(invoice.code || "")}">Hủy đơn</button>`
                         : ""
                     }
                     <a class="customer-btn customer-btn-ghost" href="${escapeHtml(
-                      getProjectUrl("khach-hang/lich-su-yeu-cau.html"),
-                    )}">Về danh sách đơn hàng</a>
+                      getProjectUrl("khach-hang/danh-sach-don-hang.html"),
+                    )}">Về lịch sử đơn</a>
                   </div>
                   <div class="standalone-order-hero-side-progress">
                     <div class="standalone-order-progress-ring status-${escapeHtml(
@@ -765,13 +857,16 @@ const customerInvoiceDetailModule = (function (window, document) {
                 ${renderHeroMetric(
                   "fa-solid fa-calendar-check",
                   "Ngày thực hiện",
-                  invoice.schedule_date || invoice.schedule_label || "Chờ xác nhận",
-                  invoice.schedule_time || "Khung giờ triển khai",
+                  formatBookingDateOnly(invoice.schedule_date) ||
+                    invoice.schedule_label ||
+                    "Chờ xác nhận",
+                  getBookingScheduleTimeLabel(invoice.schedule_time) ||
+                    "Khung giờ triển khai",
                 )}
                 ${renderHeroMetric(
                   "fa-solid fa-signal",
                   "Trạng thái đơn",
-                  renderStatusBadge(invoice.status_class, invoice.status_text),
+                  renderStatusBadge(invoice),
                   progressMeta.note,
                   {
                     className: "standalone-order-hero-metric-status",
@@ -801,10 +896,7 @@ const customerInvoiceDetailModule = (function (window, document) {
                     <span class="standalone-order-chip">Đơn hàng</span>
                   </div>
                   <div class="standalone-order-info-list">
-                    ${renderInfoRow("Mã yêu cầu", invoice.code || "--")}
-                    ${renderInfoRow("Ngày tạo", formatDateTime(invoice.created_at))}
                     ${renderInfoRow("Khoảng cách", formatDistance(invoice.distance_km))}
-                    ${renderInfoRow("Khảo sát", getSurveyRequirementLabel(invoice))}
                     ${renderInfoRow("Tệp gửi kèm", String(getAttachmentCount(invoice)))}
                   </div>
                 </div>
@@ -847,28 +939,6 @@ const customerInvoiceDetailModule = (function (window, document) {
                     ${renderInfoRow("Số điện thoại", invoice.contact_phone || profile.sodienthoai || "--")}
                     ${renderInfoRow("Email", invoice.customer_email || profile.email || "--")}
                     ${renderInfoRow("Đơn vị", invoice.company_name || "--")}
-                  </div>
-                </article>
-
-                <article class="standalone-order-contact-card">
-                  <div class="standalone-order-contact-card-head">
-                    <div class="standalone-order-contact-card-title">
-                      <span class="standalone-order-contact-card-icon">
-                        <i class="fa-solid fa-truck-ramp-box"></i>
-                      </span>
-                      <div>
-                        <strong>Chi tiết thực hiện</strong>
-                        <p>Thông tin đang dùng để chuẩn bị phương án phục vụ.</p>
-                      </div>
-                    </div>
-                    <span class="standalone-order-chip">${escapeHtml(invoice.service_label || "Chuyển dọn")}</span>
-                  </div>
-                  <div class="standalone-order-info-list">
-                    ${renderInfoRow("Khung giờ", invoice.schedule_time || "--")}
-                    ${renderInfoRow("Thời tiết", getWeatherLabel(invoice.weather_label))}
-                    ${renderInfoRow("Loại xe", invoice.vehicle_label || "--")}
-                    ${renderInfoRow("Điều kiện tiếp cận", String((invoice.access_conditions || []).length))}
-                    ${renderInfoRow("Dịch vụ đi kèm", String((invoice.service_details || []).length))}
                   </div>
                 </article>
 
@@ -946,32 +1016,22 @@ const customerInvoiceDetailModule = (function (window, document) {
             ${renderProviderReportBlock(invoice)}
             ${renderCustomerFeedbackBlock(invoice)}
           </div>
-
-          <div class="standalone-order-mobile-bar" aria-label="Thao tác nhanh">
-            <a class="customer-btn customer-btn-ghost" href="${escapeHtml(
-              getProjectUrl("khach-hang/lich-su-yeu-cau.html"),
-            )}">Danh sách đơn hàng</a>
-            ${
-              canCancelInvoice(invoice)
-                ? '<button type="button" class="customer-btn customer-btn-primary" data-invoice-cancel-mobile>Hủy đơn</button>'
-                : `<a class="customer-btn customer-btn-primary" href="${escapeHtml(
-                    getProjectUrl("dat-lich.html"),
-                  )}">Tạo yêu cầu mới</a>`
-            }
-          </div>
         </section>
       </div>
     `;
 
     root
       .querySelector("[data-invoice-cancel]")
-      ?.addEventListener("click", async function () {
+      ?.addEventListener("click", async function (event) {
         if (!window.confirm("Bạn có chắc muốn hủy yêu cầu này không?")) {
           return;
         }
 
         try {
-          const result = await store.cancelBooking?.(invoice.code || "");
+          const invoiceReference = getInvoiceReference(invoice, event.currentTarget);
+          const result = await store.cancelBooking?.(
+            invoiceReference,
+          );
           renderInvoice(result || null);
         } catch (error) {
           window.alert(
@@ -981,19 +1041,16 @@ const customerInvoiceDetailModule = (function (window, document) {
       });
 
     root
-      .querySelector("[data-invoice-cancel-mobile]")
-      ?.addEventListener("click", async function () {
-        root.querySelector("[data-invoice-cancel]")?.click();
-      });
-
-    root
       .querySelector("[data-customer-feedback-form]")
       ?.addEventListener("submit", async function (event) {
         event.preventDefault();
 
         try {
           const formData = new FormData(event.currentTarget);
-          const result = await store.saveBookingFeedback?.(invoice.code || "", {
+          const result = await store.saveBookingFeedback?.({
+            id: invoice.remote_id || "",
+            code: invoice.code || "",
+          }, {
             customer_rating: formData.get("customer_rating") || 0,
             customer_feedback: formData.get("customer_feedback") || "",
           });
@@ -1004,6 +1061,48 @@ const customerInvoiceDetailModule = (function (window, document) {
           );
         }
       });
+
+    root.querySelectorAll("[data-rating-input]").forEach((ratingRoot) => {
+      const hiddenInput = ratingRoot.querySelector('input[name="customer_rating"]');
+      const captionNode = ratingRoot.querySelector("[data-rating-caption]");
+      const buttons = Array.from(
+        ratingRoot.querySelectorAll("[data-rating-value]"),
+      );
+
+      function applyRating(nextValue) {
+        const numericValue = Number(nextValue || 0);
+        const safeValue = Number.isFinite(numericValue)
+          ? Math.min(5, Math.max(0, Math.round(numericValue)))
+          : 0;
+
+        if (hiddenInput) {
+          hiddenInput.value = String(safeValue);
+        }
+        if (captionNode) {
+          captionNode.textContent = safeValue
+            ? `${safeValue}/5 sao`
+            : "Chưa chấm sao";
+        }
+
+        buttons.forEach((button, index) => {
+          const isActive = index < safeValue;
+          button.classList.toggle("is-active", isActive);
+          button.setAttribute("aria-checked", isActive ? "true" : "false");
+          const icon = button.querySelector("i");
+          if (icon) {
+            icon.className = isActive
+              ? "fa-solid fa-star"
+              : "fa-regular fa-star";
+          }
+        });
+      }
+
+      buttons.forEach((button) => {
+        button.addEventListener("click", function () {
+          applyRating(button.getAttribute("data-rating-value") || "0");
+        });
+      });
+    });
 
     root.querySelectorAll("[data-copy-attachment]").forEach((button) => {
       button.addEventListener("click", async function () {

@@ -84,6 +84,7 @@
       "svc-cham-soc-nguoi-gia": `${parentBase}cham-soc-nguoi-gia/dich-vu-cham-soc-nguoi-gia.html`,
       "svc-cham-soc-nguoi-benh": `${parentBase}cham-soc-nguoi-benh/dich-vu-cham-soc-nguoi-benh.html`,
       "svc-thue-xe": `${parentBase}thue-xe/views/pages/public/dich-vu.html`,
+      "svc-lai-xe-ho": `${parentBase}dich-vu-lai-xe-ho/index.html`,
       "svc-sua-xe": `${parentBase}sua-xe-luu-dong/dich-vu.html`,
     };
   }
@@ -107,6 +108,39 @@
     } catch (error) {
       return null;
     }
+  }
+
+  function readCookie(name) {
+    const escapedName = String(name || "").replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+    const match = String(document.cookie || "").match(
+      new RegExp(`(?:^|;\\s*)${escapedName}=([^;]*)`),
+    );
+    return match ? decodeURIComponent(match[1] || "") : "";
+  }
+
+  function mapDvqtSessionToGhnUser(session) {
+    if (!session || typeof session !== "object") return null;
+
+    return {
+      id: String(session.id || session.user_id || "").trim(),
+      hovaten: String(
+        session.hovaten ||
+          session.ho_ten ||
+          session.fullname ||
+          session.name ||
+          "",
+      ).trim(),
+      sodienthoai: String(
+        session.sodienthoai ||
+          session.so_dien_thoai ||
+          session.phone ||
+          "",
+      ).trim(),
+      email: String(session.email || "").trim(),
+      diachi: String(session.diachi || session.dia_chi || session.address || "").trim(),
+      id_dichvu: String(session.id_dichvu || "0").trim() || "0",
+      trangthai: String(session.trangthai || session.trang_thai || "active").trim() || "active",
+    };
   }
 
   function ensureLocalAuthLoaded() {
@@ -135,9 +169,41 @@
 
     authBootstrapPromise = ensureLocalAuthLoaded()
       .then((auth) => {
-        if (typeof auth?.bootstrapSession === "function") {
-          return auth.bootstrapSession();
+        if (!auth) return null;
+
+        if (typeof auth.bootstrapSession === "function") {
+          return Promise.resolve(auth.bootstrapSession()).then((session) => {
+            if (session) return session;
+
+            const cookieUser = readCookie("dvqt_u");
+            const cookiePassword = readCookie("dvqt_p");
+            if (!cookieUser || !cookiePassword || typeof auth.login !== "function") {
+              return null;
+            }
+
+            return Promise.resolve(
+              auth.login({
+                loginIdentifier: cookieUser,
+                password: cookiePassword,
+              }),
+            ).then((result) => (result?.status === "success" ? result.user || null : null));
+          });
         }
+
+        if (
+          window.DVQTApp &&
+          typeof window.DVQTApp.checkSession === "function" &&
+          typeof auth.saveSession === "function"
+        ) {
+          return Promise.resolve(window.DVQTApp.checkSession())
+            .then((session) => {
+              if (!session || !session.logged_in) return null;
+              const mappedUser = mapDvqtSessionToGhnUser(session.profile || session);
+              return mappedUser ? auth.saveSession(mappedUser) : null;
+            })
+            .catch(() => null);
+        }
+
         return null;
       })
       .catch((error) => {
@@ -153,13 +219,21 @@
     if (role === "shipper") {
       return {
         dashboard: `${projectBase}public/nha-cung-cap/dashboard.html`,
+        orders: `${projectBase}public/nha-cung-cap/don-hang.html`,
         profile: `${projectBase}public/nha-cung-cap/ho-so.html`,
+        ordersLabel: "Đơn của tôi",
+        profileLabel: "Hồ sơ cá nhân",
+        summaryLabel: "Khu vực nhà cung cấp",
       };
     }
 
     return {
       dashboard: `${projectBase}public/khach-hang/dashboard.html`,
+      orders: `${projectBase}public/khach-hang/lich-su-don-hang.html`,
       profile: `${projectBase}public/khach-hang/ho-so.html`,
+      ordersLabel: "Danh sách đơn hàng",
+      profileLabel: "Hồ sơ cá nhân",
+      summaryLabel: "Khu vực khách hàng",
     };
   }
 
@@ -191,7 +265,7 @@
     const accountSummary = escapeHtml(
       String(session.phone || session.so_dien_thoai || "").trim() ||
         String(session.email || "").trim() ||
-        "Khu vực cá nhân",
+        accountLinks.summaryLabel,
     );
 
     loginItem.className = "dropdown has-submenu customer-nav-dropdown";
@@ -206,8 +280,8 @@
           </div>
         </li>
         <li><a href="${accountLinks.dashboard}"><i class="fas fa-chart-line"></i> Tổng quan</a></li>
-        <li><a href="${projectBase}public/khach-hang/lich-su-don-hang.html"><i class="fas fa-box"></i> Danh sách đơn hàng</a></li>
-        <li><a href="${accountLinks.profile}"><i class="fas fa-user"></i> Hồ sơ cá nhân</a></li>
+        <li><a href="${accountLinks.orders}"><i class="fas fa-box"></i> ${accountLinks.ordersLabel}</a></li>
+        <li><a href="${accountLinks.profile}"><i class="fas fa-user"></i> ${accountLinks.profileLabel}</a></li>
         <li class="customer-nav-logout-wrapper"><a href="${buildSharedAuthUrl("dang-nhap.html")}" class="customer-nav-logout" data-local-logout="1"><i class="fas fa-arrow-right-from-bracket"></i> Đăng xuất</a></li>
       </ul>
     `;

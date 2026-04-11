@@ -182,13 +182,14 @@ function tao_du_lieu_tinh_cuoc() {
   const isInstantMode = getDeliveryMode() === "instant";
   const currentDate = getCurrentDateTime();
   const instantWindow = isInstantMode ? getInstantPricingWindow(currentDate) : null;
-  const pickupSlot = isInstantMode ? instantWindow : getSelectedPickupSlot();
+  const selectedPickupSlot = getSelectedPickupSlot();
+  const pickupSlot = selectedPickupSlot || instantWindow;
   const urgentCondition = getSelectedUrgentCondition();
   const pickupPoint = markerPickup?.getLatLng?.() || null;
   const deliveryPoint = markerDelivery?.getLatLng?.() || null;
-  const pickupDateValue = isInstantMode
-    ? formatDateValue(currentDate)
-    : document.getElementById("ngay_lay_hang").value || "";
+  const pickupDateInput = document.getElementById("ngay_lay_hang");
+  const pickupDateValue =
+    pickupDateInput?.value || (isInstantMode ? formatDateValue(currentDate) : "");
   return {
     khoang_cach_km: khoang_cach_km,
     loai_hang: primaryItem.loai_hang,
@@ -344,9 +345,12 @@ function cap_nhat_hien_thi_tam_tinh_buoc_1(dichVu = null) {
   if (!amountNode || !wrapNode) return;
 
   const activeService = dichVu || lay_dich_vu_tam_tinh_buoc_1() || selectedService;
-  const total = Number(activeService?.total || 0);
-  if (total > 0) {
-    amountNode.textContent = formatMoneyVnd(total);
+  const distanceFee = lay_tong_gia_van_chuyen(activeService?.breakdown || activeService);
+  const displayAmount =
+    distanceFee > 0 ? distanceFee : Number(activeService?.total || 0);
+
+  if (displayAmount > 0) {
+    amountNode.textContent = formatMoneyVnd(displayAmount);
     wrapNode.style.display = "inline";
     return;
   }
@@ -361,10 +365,6 @@ function renderServiceCards(options = {}) {
   const btn5 = document.getElementById("btn_buoc_4_sang_5");
   const etaPanel = document.getElementById("bang_thoi_gian_giao_du_kien");
   const isInstantMode = getDeliveryMode() === "instant";
-  if (isInstantMode) {
-    applyImmediateScheduleDefaults();
-    syncScheduleModeUI();
-  }
   etaPanel.classList.add("is-hidden");
   document.getElementById("hien_thi_thoi_gian_giao_du_kien").textContent = "—";
 

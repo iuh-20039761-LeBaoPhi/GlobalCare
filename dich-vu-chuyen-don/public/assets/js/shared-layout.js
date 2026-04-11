@@ -32,8 +32,7 @@
     "khao-sat.html": "booking",
     "dat-lich.html": "booking",
     "dashboard.html": "account",
-    "lich-su-yeu-cau.html": "account",
-    "danh-sach-viec.html": "account",
+    "danh-sach-don-hang.html": "account",
     "ho-so.html": "account",
   };
 
@@ -169,6 +168,7 @@
       "svc-cham-soc-nguoi-gia": `${parentBase}cham-soc-nguoi-gia/dich-vu-cham-soc-nguoi-gia.html`,
       "svc-cham-soc-nguoi-benh": `${parentBase}cham-soc-nguoi-benh/dich-vu-cham-soc-nguoi-benh.html`,
       "svc-thue-xe": `${parentBase}thue-xe/views/pages/public/dich-vu.html`,
+      "svc-lai-xe-ho": `${parentBase}dich-vu-lai-xe-ho/index.html`,
       "svc-sua-xe": `${parentBase}sua-xe-luu-dong/dich-vu.html`,
     };
   }
@@ -190,14 +190,14 @@
     if (role === "nha-cung-cap") {
       return {
         dashboard: `${projectBase}nha-cung-cap/dashboard.html`,
-        orders: `${projectBase}nha-cung-cap/danh-sach-viec.html`,
+        orders: `${projectBase}nha-cung-cap/danh-sach-don-hang.html`,
         profile: `${projectBase}nha-cung-cap/ho-so.html`,
       };
     }
 
     return {
       dashboard: `${projectBase}khach-hang/dashboard.html`,
-      orders: `${projectBase}khach-hang/lich-su-yeu-cau.html`,
+      orders: `${projectBase}khach-hang/danh-sach-don-hang.html`,
       profile: `${projectBase}khach-hang/ho-so.html`,
     };
   }
@@ -274,7 +274,7 @@
               </div>
             </li>
             <li><a href="${links.dashboard}"><i class="fas fa-chart-line"></i> Dashboard nhà cung cấp</a></li>
-            <li><a href="${links.orders}"><i class="fas fa-briefcase"></i> Danh sách việc</a></li>
+            <li><a href="${links.orders}"><i class="fas fa-box"></i> Danh sách đơn hàng</a></li>
             <li><a href="${links.profile}"><i class="fas fa-user"></i> Hồ sơ nhà cung cấp</a></li>
             <li class="customer-nav-logout-wrapper"><a href="${buildSharedAuthUrl("dang-nhap.html")}" class="customer-nav-logout" data-local-logout="1"><i class="fas fa-arrow-right-from-bracket"></i> Đăng xuất</a></li>
           </ul>

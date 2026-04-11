@@ -908,7 +908,6 @@ function setDeliveryMode(mode, options = {}) {
     applyImmediateScheduleDefaults();
   }
   syncScheduleModeUI();
-  requestWeatherQuote();
 
   const currentType = selectedService && selectedService.serviceType;
   if (
@@ -928,14 +927,6 @@ function setDeliveryMode(mode, options = {}) {
 
 function getPickupSlotOptions() {
   return PICKUP_SLOT_OPTIONS;
-}
-
-function isInstantService(serviceType) {
-  return (
-    String(serviceType || "")
-      .trim()
-      .toLowerCase() === "instant"
-  );
 }
 
 function timeTextToMinutes(timeText) {
@@ -994,24 +985,16 @@ function applyImmediateScheduleDefaults() {
 
 function syncScheduleModeUI() {
   const isInstantMode = getDeliveryMode() === "instant";
-  const autoNote = document.getElementById("thong_bao_lich_tu_dong");
-  const autoNoteContent = document.getElementById("noi_dung_lich_tu_dong");
   const packageHint = document.getElementById("goi_y_goi_cuoc");
 
-  if (autoNote) {
-    autoNote.classList.toggle("is-hidden", !isInstantMode);
-  }
-
-  if (autoNoteContent && isInstantMode) {
-    const instantWindow = getInstantPricingWindow(getCurrentDateTime());
-    autoNoteContent.textContent = instantWindow
-      ? `Hệ thống đã tự nhảy sang ${instantWindow.label} theo thời điểm hiện tại. Bạn vẫn có thể đổi lại nếu muốn.`
-      : "Hệ thống tự nhảy theo ngày và khung giờ hiện tại. Bạn vẫn có thể đổi lại nếu muốn.";
-  }
-
   if (packageHint) {
+    const instantWindow = isInstantMode
+      ? getInstantPricingWindow(getCurrentDateTime())
+      : null;
     packageHint.textContent = isInstantMode
-      ? "Với giao ngay lập tức, hệ thống sẽ tự nhảy sẵn ngày và khung giờ hiện tại để bạn khỏi phải chỉnh tay."
+      ? instantWindow
+        ? `Mặc định hệ thống chọn ${instantWindow.label} theo thời điểm hiện tại. Bạn vẫn có thể đổi ngày và khung giờ nếu cần.`
+        : "Hệ thống sẽ tự điền ngày và khung giờ hiện tại. Bạn vẫn có thể đổi lại nếu cần."
       : "Thời gian nhận hàng sẽ do hệ thống phân bổ theo lộ trình (khoảng vài ngày).";
   }
 }
@@ -1141,27 +1124,6 @@ function updateWeatherSurchargePanel(serviceType) {
         ? `${sourceLabel} đã xác nhận ${conditionLabel.toLowerCase()}. ${serviceLabel} đang cộng ${formatMoneyVnd(conditionFee)} phụ phí thời tiết.${updatedAt}${pickupAtText}`
         : `${sourceLabel} hiện chưa ghi nhận phụ phí thời tiết cho ${serviceLabel}. Mức đang áp dụng là ${formatMoneyVnd(0)}.${updatedAt}${pickupAtText}`
       : `Phụ phí thời tiết sẽ tự cập nhật theo gói bạn chọn sau khi hệ thống kiểm tra dữ liệu thời tiết.${updatedAt}${pickupAtText}`);
-}
-
-function normalizeWeatherQuoteResponse(payload) {
-  const response = payload && typeof payload === "object" ? payload : {};
-  return {
-    status: "ready",
-    requestKey: weatherQuoteState?.requestKey || "",
-    isLoading: false,
-    conditionKey: response.condition_key || "macdinh",
-    conditionLabel:
-      response.condition_label || "Chưa phát sinh phụ phí thời tiết",
-    summary:
-      response.summary || "Hệ thống đang tạm tính theo thời tiết bình thường",
-    note:
-      sanitizeWeatherUserNote(response.note) ||
-      "Khách hàng không cần chọn tay. Điều phối sẽ xác nhận khi điều kiện thực tế thay đổi.",
-    source: response.source || "fallback",
-    checkedAt: response.checked_at || "",
-    effectiveAt: response.effective_at || "",
-    isFallback: response.is_fallback !== false,
-  };
 }
 
 function buildWeatherRequestKey() {
@@ -1398,13 +1360,6 @@ function xoa_loi(step) {
 function isValidPhone(phone) {
   const re = /^(0[3|5|7|8|9])+([0-9]{8})\b/g;
   return re.test(phone.trim());
-}
-
-function isDateInPast(dateStr) {
-  const today = new Date();
-  today.setHours(0, 0, 0, 0);
-  const selected = new Date(dateStr);
-  return selected < today;
 }
 
 function escapeHtml(value) {

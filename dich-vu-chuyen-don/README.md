@@ -34,7 +34,7 @@ dich-vu-chuyen-don/
 ├── chinh-sach-va-dieu-khoan.html
 ├── khach-hang/
 │   ├── dashboard.html
-│   ├── lich-su-yeu-cau.html
+│   ├── danh-sach-don-hang.html
 │   ├── chi-tiet-hoa-don.html
 │   └── ho-so.html
 ├── nha-cung-cap/
@@ -98,7 +98,7 @@ dich-vu-chuyen-don/
 | `dat-lich.html`                                | Trang đặt lịch riêng                                            |
 | `khao-sat.html`                                | URL cũ, chuyển hướng về `dat-lich.html`                         |
 | `khach-hang/dashboard.html`                    | Dashboard khách hàng sau đăng nhập                              |
-| `khach-hang/lich-su-yeu-cau.html`              | Danh sách đơn hàng của khách hàng                               |
+| `khach-hang/danh-sach-don-hang.html`           | Danh sách đơn hàng của khách hàng                               |
 | `khach-hang/chi-tiet-hoa-don.html`             | Chi tiết một đơn đặt lịch của khách hàng                        |
 | `khach-hang/ho-so.html`                        | Hồ sơ và đổi mật khẩu của khách hàng                            |
 | `nha-cung-cap/dashboard.html`                  | Dashboard nhà cung cấp                                          |

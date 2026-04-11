@@ -1,10 +1,23 @@
 import core from "./core/app-core.js";
 import store from "./main-customer-portal-store.js";
 import {
+  buildBookingLifecyclePatch,
+  formatBookingDateOnly,
+  formatBookingScheduleLabel,
+  getRenderableBookingPricingRows,
+  getBookingScheduleTimeLabel,
+  getBookingServiceLabel,
+  getBookingVehicleLabel,
+  getBookingWeatherLabel,
+  normalizeBookingPricingBreakdown,
+  updateBookingRow,
+} from "./main-booking-shared.js";
+import { validateProviderBookingAction } from "./main-booking-actions.js";
+import {
   extractRows,
   getKrudListFn,
-  getKrudUpdateFn,
 } from "./api/krud-client.js";
+import { createProviderAutoRefreshController } from "./main-provider-refresh.js";
 
 const providerOrderDetailModule = (function (window, document) {
   if (window.__fastGoProviderOrderDetailLoaded) return window.__fastGoProviderOrderDetailModule || null;
@@ -18,6 +31,9 @@ const providerOrderDetailModule = (function (window, document) {
 
   const root = document.getElementById("provider-order-detail-root");
   if (!root || !store) return;
+  let refreshController = null;
+  let currentProfile = null;
+  let currentDetailSignature = "";
 
   function escapeHtml(value) {
     if (typeof core.escapeHtml === "function") {
@@ -38,6 +54,10 @@ const providerOrderDetailModule = (function (window, document) {
 
   function normalizeLowerText(value) {
     return normalizeText(value).toLowerCase();
+  }
+
+  function normalizePhone(value) {
+    return String(value || "").replace(/[^\d+]/g, "");
   }
 
   function splitPipeValues(value) {
@@ -91,44 +111,74 @@ const providerOrderDetailModule = (function (window, document) {
       : path;
   }
 
-  function formatRequestDateCode(value) {
-    const date = value instanceof Date ? value : new Date(value);
-    if (Number.isNaN(date.getTime())) return "";
-    const year = date.getFullYear();
-    const month = String(date.getMonth() + 1).padStart(2, "0");
-    const day = String(date.getDate()).padStart(2, "0");
-    return `${year}${month}${day}`;
-  }
-
-  function formatSystemRequestCode(recordId, createdAt) {
-    const numericId = Number(recordId);
-    if (!Number.isFinite(numericId) || numericId <= 0) return "";
-    const dateCode = formatRequestDateCode(createdAt || new Date());
-    if (!dateCode) return "";
-    return `CDL-${dateCode}-${String(Math.trunc(Math.abs(numericId))).padStart(7, "0")}`;
-  }
-
   function resolveBookingRowCode(row) {
-    const explicitCode = normalizeText(
-      row?.ma_yeu_cau_noi_bo || row?.ma_don_hang_noi_bo || row?.order_code || "",
-    );
-    if (explicitCode) return explicitCode;
+    return store.resolveBookingRowCode?.(row) || normalizeText(row?.id || row?.remote_id || "");
+  }
 
-    const fallbackSystemCode = formatSystemRequestCode(
-      row?.id || row?.remote_id || "",
-      row?.created_at || row?.created_date || "",
-    );
-    if (fallbackSystemCode) return fallbackSystemCode;
+  function getCurrentProviderActor() {
+    const identity =
+      currentProfile ||
+      store.readIdentity?.() ||
+      {};
 
-    return normalizeText(row?.id || row?.remote_id || "");
+    return {
+      id: normalizeText(identity?.id || ""),
+      phone: normalizePhone(identity?.sodienthoai || ""),
+      name: normalizeText(
+        identity?.hovaten || store.getDisplayName?.(identity) || "",
+      ),
+    };
+  }
+
+  function resolveProviderOwnership(row) {
+    return {
+      id: normalizeText(
+        row?.provider_id ||
+          row?.accepted_by_id ||
+          row?.provider_owner_id ||
+          "",
+      ),
+      phone: normalizePhone(
+        row?.provider_phone ||
+          row?.accepted_by_phone ||
+          row?.provider_owner_phone ||
+          "",
+      ),
+      name: normalizeText(
+        row?.provider_name ||
+          row?.accepted_by_name ||
+          row?.provider_owner_name ||
+          "",
+      ),
+    };
+  }
+
+  function getProviderOwnershipMeta(row) {
+    const owner = resolveProviderOwnership(row);
+    const actor = getCurrentProviderActor();
+    const hasOwner = !!(owner.id || owner.phone);
+    const isOwnedByCurrentProvider =
+      (owner.id && actor.id && owner.id === actor.id) ||
+      (owner.phone && actor.phone && owner.phone === actor.phone);
+
+    return {
+      owner,
+      hasOwner,
+      isOwnedByCurrentProvider,
+      isLockedByOtherProvider: hasOwner && !isOwnedByCurrentProvider,
+    };
+  }
+
+  function getDetailRenderSignature(detail) {
+    try {
+      return JSON.stringify(detail?.order || {});
+    } catch (error) {
+      return `${detail?.order?.id || ""}:${detail?.order?.updated_at || ""}`;
+    }
   }
 
   function getWeatherLabel(value) {
-    const weather = normalizeText(value).toLowerCase();
-    if (!weather) return "Chờ đồng bộ";
-    if (weather === "binh_thuong") return "Bình thường";
-    if (weather === "troi_mua") return "Trời mưa";
-    return value;
+    return getBookingWeatherLabel(value) || "Chờ đồng bộ";
   }
 
   function getMilestones(detail) {
@@ -141,13 +191,18 @@ const providerOrderDetailModule = (function (window, document) {
     };
   }
 
+  function isExpiredPendingDetail(detail) {
+    return !!store.isExpiredPendingBookingRow?.(detail?.rawRow || {}, Date.now());
+  }
+
   function deriveStatusKey(detail) {
     const order = detail?.order || {};
     const milestones = getMilestones(detail);
-    const normalizedStatus = normalizeLowerText(order.status || order.trang_thai || "");
+    const normalizedStatus = normalizeLowerText(order.trang_thai || order.status || "");
 
     if (
       milestones.cancelledAt ||
+      isExpiredPendingDetail(detail) ||
       ["cancelled", "canceled", "huy", "da_huy", "huy_bo"].includes(normalizedStatus)
     ) {
       return "cancelled";
@@ -183,12 +238,15 @@ const providerOrderDetailModule = (function (window, document) {
 
   function getProgressMeta(detail) {
     const statusKey = deriveStatusKey(detail);
+    const expiredPending = isExpiredPendingDetail(detail);
     if (statusKey === "cancelled") {
       return {
         percent: 100,
         tone: "cancelled",
         label: "Đã hủy",
-        note: "Đơn đã bị hủy.",
+        note: expiredPending
+          ? "Đơn đã quá thời gian chờ nhận và được hệ thống tự hủy."
+          : "Đơn đã bị hủy.",
       };
     }
     if (statusKey === "completed") {
@@ -307,6 +365,22 @@ const providerOrderDetailModule = (function (window, document) {
     `;
   }
 
+  function renderPricingRows(order) {
+    const rows = getRenderableBookingPricingRows(order?.pricing_breakdown)
+      .map((item, index) =>
+        renderInfoRow(
+          item.label || `Hạng mục ${index + 1}`,
+          item.amount || formatCurrency(item.amount_value || 0),
+        ),
+      );
+
+    if (!rows.length) {
+      return renderInfoRow("Chi tiết phí", "Chưa có bảng tạm tính chi tiết");
+    }
+
+    return rows.join("");
+  }
+
   function renderAttachmentGallery(detail) {
     const order = detail?.order || {};
     const mediaItems = [
@@ -357,9 +431,14 @@ const providerOrderDetailModule = (function (window, document) {
 
   function buildActionButtons(detail) {
     const action = getShipperAction(detail);
+    const isLockedByOtherProvider = detail?.order?.is_locked_by_other_provider === true;
     const buttons = [];
 
-    if (action === "accept") {
+    if (action && isLockedByOtherProvider) {
+      buttons.push(
+        '<button type="button" class="customer-btn customer-btn-ghost" disabled aria-disabled="true">Đơn đã có NCC khác nhận</button>',
+      );
+    } else if (action === "accept") {
       buttons.push(
         '<button type="button" class="customer-btn customer-btn-primary" data-order-action="accept">Nhận đơn</button>',
       );
@@ -376,7 +455,7 @@ const providerOrderDetailModule = (function (window, document) {
     }
 
     buttons.push(
-      `<a href="${escapeHtml(getProjectUrl("nha-cung-cap/danh-sach-viec.html"))}" class="customer-btn customer-btn-ghost">Về danh sách đơn</a>`,
+      `<a href="${escapeHtml(getProjectUrl("nha-cung-cap/danh-sach-don-hang.html"))}" class="customer-btn customer-btn-ghost">Về danh sách đơn hàng</a>`,
     );
 
     return buttons.join("");
@@ -393,39 +472,60 @@ const providerOrderDetailModule = (function (window, document) {
     `;
   }
 
+  function isEditingProviderDetail() {
+    const activeElement = document.activeElement;
+    if (!activeElement || !root.contains(activeElement)) return false;
+    if (activeElement.isContentEditable) return true;
+    return ["INPUT", "TEXTAREA", "SELECT"].includes(activeElement.tagName);
+  }
+
   function normalizeDetail(row) {
     const code = resolveBookingRowCode(row);
     const statusKey = deriveStatusKey({ order: row });
     const statusMeta = getStatusBadge(statusKey);
+    const pricingBreakdown = normalizeBookingPricingBreakdown(
+      row?.pricing_breakdown_json,
+    );
+    const ownership = getProviderOwnershipMeta(row);
     return {
       order: {
         id: normalizeText(row?.id || ""),
         code,
-        status: normalizeText(row?.status || row?.trang_thai || ""),
+        status: normalizeText(row?.trang_thai || row?.status || ""),
+        trang_thai: normalizeText(row?.trang_thai || row?.status || ""),
         status_label: statusMeta.label,
-        service_label: normalizeText(row?.ten_dich_vu || row?.loai_dich_vu || "Chuyển dọn"),
+        service_label: getBookingServiceLabel(
+          row?.ten_dich_vu || row?.loai_dich_vu || "Chuyển dọn",
+        ),
         created_at: normalizeText(row?.created_at || row?.created_date || ""),
         updated_at: normalizeText(row?.updated_at || ""),
         accepted_at: normalizeText(row?.accepted_at || ""),
         started_at: normalizeText(row?.started_at || ""),
         completed_at: normalizeText(row?.completed_at || ""),
+        cancelled_at: normalizeText(row?.cancelled_at || ""),
         customer_name: normalizeText(row?.ho_ten || ""),
         customer_phone: normalizeText(row?.so_dien_thoai || ""),
         customer_email: normalizeText(row?.customer_email || ""),
         company_name: normalizeText(row?.ten_cong_ty || ""),
         from_address: normalizeText(row?.dia_chi_di || ""),
         to_address: normalizeText(row?.dia_chi_den || ""),
-        schedule_date: normalizeText(row?.ngay_thuc_hien || ""),
-        schedule_time: normalizeText(row?.ten_khung_gio_thuc_hien || row?.khung_gio_thuc_hien || ""),
-        schedule_label: normalizeText(
-          [row?.ngay_thuc_hien, row?.ten_khung_gio_thuc_hien || row?.khung_gio_thuc_hien]
-            .filter(Boolean)
-            .join(" • "),
+        schedule_date: formatBookingDateOnly(row?.ngay_thuc_hien || ""),
+        schedule_time: getBookingScheduleTimeLabel(
+          row?.ten_khung_gio_thuc_hien || row?.khung_gio_thuc_hien || "",
         ),
-        weather_label: normalizeText(row?.thoi_tiet_du_kien || ""),
-        vehicle_label: normalizeText(row?.ten_loai_xe || row?.loai_xe || ""),
+        schedule_label: formatBookingScheduleLabel(
+          row?.ngay_thuc_hien || "",
+          row?.ten_khung_gio_thuc_hien || row?.khung_gio_thuc_hien || "",
+        ),
+        weather_label: getBookingWeatherLabel(
+          row?.ten_thoi_tiet_du_kien || row?.thoi_tiet_du_kien || "",
+        ),
+        vehicle_label: getBookingVehicleLabel(
+          row?.ten_loai_xe || row?.loai_xe || "",
+        ),
         distance_km: parseNumber(row?.khoang_cach_km || 0),
         estimated_amount: parseNumber(row?.tong_tam_tinh || 0),
+        pricing_breakdown: pricingBreakdown,
         note: normalizeText(row?.ghi_chu || ""),
         summary: normalizeText(row?.ghi_chu || ""),
         access_conditions: splitPipeValues(row?.dieu_kien_tiep_can),
@@ -435,6 +535,11 @@ const providerOrderDetailModule = (function (window, document) {
         provider_note: normalizeText(row?.provider_note || ""),
         customer_feedback: normalizeText(row?.customer_feedback || ""),
         customer_rating: parseNumber(row?.customer_rating || 0),
+        provider_owner_id: ownership.owner.id,
+        provider_owner_phone: ownership.owner.phone,
+        provider_owner_name: ownership.owner.name,
+        is_owned_by_current_provider: ownership.isOwnedByCurrentProvider,
+        is_locked_by_other_provider: ownership.isLockedByOtherProvider,
       },
       rawRow: row,
     };
@@ -442,7 +547,9 @@ const providerOrderDetailModule = (function (window, document) {
 
   async function fetchBookingRowByCode(code, options = {}) {
     if (!options?.skipAutoSweep) {
-      await store.autoCancelExpiredBookings?.();
+      await store.autoCancelExpiredBookings?.({
+        force: options?.forceAutoSweep === true,
+      });
     }
 
     let listFn = getKrudListFn();
@@ -468,9 +575,7 @@ const providerOrderDetailModule = (function (window, document) {
       const rows = extractRows(response);
       if (!rows.length) break;
 
-      const matched = rows.find(
-        (row) => normalizeLowerText(resolveBookingRowCode(row)) === normalizedCode,
-      );
+      const matched = rows.find((row) => store.matchesBookingCode?.(row, normalizedCode));
 
       if (matched) return matched;
       if (rows.length < limit) break;
@@ -480,11 +585,13 @@ const providerOrderDetailModule = (function (window, document) {
   }
 
   async function updateBookingAction(detail, action, payload = {}) {
-    const updateFn = getKrudUpdateFn();
     const order = detail?.order || {};
-    if (!updateFn || !order.id) {
-      throw new Error("Không tìm thấy API KRUD để cập nhật đơn hàng.");
+    if (!order.id) {
+      throw new Error("Không tìm thấy id đơn hàng để cập nhật.");
     }
+
+    const actor = getCurrentProviderActor();
+    validateProviderBookingAction(order, action, { actor });
 
     if (["accept", "start", "complete"].includes(action)) {
       await store.autoCancelExpiredBookings?.({ force: true });
@@ -493,7 +600,7 @@ const providerOrderDetailModule = (function (window, document) {
         { skipAutoSweep: true },
       );
       const latestStatus = normalizeLowerText(
-        refreshedRow?.status || refreshedRow?.trang_thai || "",
+        refreshedRow?.trang_thai || refreshedRow?.status || "",
       );
 
       if (
@@ -506,40 +613,16 @@ const providerOrderDetailModule = (function (window, document) {
           "Yêu cầu này đã quá thời gian chờ và được hệ thống tự hủy.",
         );
       }
+
+      validateProviderBookingAction(refreshedRow, action, { actor });
     }
 
-    const now = new Date().toISOString();
-    const basePayload = {
-      id: order.id,
-      updated_at: now,
-      ...payload,
-    };
-
-    if (action === "accept") {
-      basePayload.status = "dang_xu_ly";
-      basePayload.trang_thai = "dang_xu_ly";
-      basePayload.accepted_at = now;
-    } else if (action === "start") {
-      basePayload.status = "dang_xu_ly";
-      basePayload.trang_thai = "dang_xu_ly";
-      basePayload.started_at = now;
-      if (!order.accepted_at) {
-        basePayload.accepted_at = now;
-      }
-    } else if (action === "complete") {
-      basePayload.status = "da_xac_nhan";
-      basePayload.trang_thai = "da_xac_nhan";
-      basePayload.completed_at = now;
-      if (!order.accepted_at) {
-        basePayload.accepted_at = now;
-      }
-      if (!order.started_at) {
-        basePayload.started_at = now;
-      }
-    }
-
-    await Promise.resolve(
-      updateFn(store.bookingCrudTableName || "dich_vu_chuyen_don_dat_lich", basePayload),
+    await updateBookingRow(
+      order.id,
+      buildBookingLifecyclePatch(order, action, payload, { actor }),
+      {
+        table: store.bookingCrudTableName || "dich_vu_chuyen_don_dat_lich",
+      },
     );
   }
 
@@ -556,7 +639,7 @@ const providerOrderDetailModule = (function (window, document) {
       {
         time: order.created_at,
         title: "Yêu cầu đã ghi nhận",
-        note: "Hệ thống đã lưu biểu mẫu chuyển dọn và đưa vào danh sách việc của nhà cung cấp.",
+        note: "Hệ thống đã lưu biểu mẫu chuyển dọn và đưa vào danh sách đơn hàng của nhà cung cấp.",
       },
     ];
 
@@ -665,6 +748,16 @@ const providerOrderDetailModule = (function (window, document) {
 
   function renderProviderNoteBlock(detail) {
     const note = normalizeText(detail?.order?.provider_note || "");
+    const milestones = getMilestones(detail);
+    const canEditNote =
+      !!(milestones.acceptedAt || milestones.startedAt) &&
+      !milestones.completedAt &&
+      !milestones.cancelledAt;
+    const helperText = canEditNote
+      ? "Cập nhật tiến độ, hiện trạng, kết quả xử lý hoặc chú thích cần khách hàng theo dõi."
+      : milestones.cancelledAt
+        ? "Đơn đã hủy nên không thể cập nhật thêm báo cáo công việc."
+        : "Nhận đơn trước khi cập nhật báo cáo công việc.";
 
     return `
       <section class="standalone-order-block">
@@ -687,17 +780,29 @@ const providerOrderDetailModule = (function (window, document) {
           <article class="standalone-order-subcard">
             <div class="standalone-order-subcard-head">
               <strong>Cập nhật báo cáo</strong>
-              <span class="standalone-order-chip">Nhà cung cấp</span>
+              <span class="standalone-order-chip">${escapeHtml(
+                canEditNote ? "Nhà cung cấp" : "Chờ nhận đơn",
+              )}</span>
             </div>
-            <form class="standalone-order-form" data-provider-note-form>
-              <label class="standalone-order-field">
-                <span>Nội dung báo cáo</span>
-                <textarea name="provider_note" rows="5" placeholder="Cập nhật tiến độ, hiện trạng, kết quả xử lý hoặc chú thích cần khách hàng theo dõi.">${escapeHtml(note)}</textarea>
-              </label>
-              <div class="standalone-order-inline-actions">
-                <button class="customer-btn customer-btn-primary" type="submit">Lưu báo cáo</button>
-              </div>
-            </form>
+            ${
+              canEditNote
+                ? `
+                  <form class="standalone-order-form" data-provider-note-form>
+                    <label class="standalone-order-field">
+                      <span>Nội dung báo cáo</span>
+                      <textarea name="provider_note" rows="5" placeholder="${escapeHtml(helperText)}">${escapeHtml(note)}</textarea>
+                    </label>
+                    <div class="standalone-order-inline-actions">
+                      <button class="customer-btn customer-btn-primary" type="submit">Lưu báo cáo</button>
+                    </div>
+                  </form>
+                `
+                : `
+                  <div class="standalone-order-note-panel">
+                    <p>${escapeHtml(helperText)}</p>
+                  </div>
+                `
+            }
           </article>
         </div>
       </section>
@@ -707,6 +812,7 @@ const providerOrderDetailModule = (function (window, document) {
   function render(detail) {
     const order = detail?.order || {};
     const progressMeta = getProgressMeta(detail);
+    currentDetailSignature = getDetailRenderSignature(detail);
 
     root.innerHTML = `
       <div class="standalone-order-layout">
@@ -717,11 +823,6 @@ const providerOrderDetailModule = (function (window, document) {
             </div>
             <div class="standalone-order-topbar-center">
               <h2 class="standalone-order-topbar-title">Chi tiết đơn hàng</h2>
-              <div class="standalone-order-topbar-meta">
-                <span><i class="fa-solid fa-file-invoice-dollar"></i> ${escapeHtml(order.code || "--")}</span>
-                <span><i class="fa-solid fa-user-shield"></i> Nhà cung cấp</span>
-                <span><i class="fa-solid fa-clock"></i> ${escapeHtml(formatDateTime(order.created_at))}</span>
-              </div>
             </div>
             <div class="standalone-order-topbar-logo">
               <img src="${escapeHtml(getProjectUrl("public/assets/images/favicon.png"))}" alt="Logo Dịch vụ Chuyển Dọn" />
@@ -802,26 +903,22 @@ const providerOrderDetailModule = (function (window, document) {
                     <span class="standalone-order-chip">Đơn hàng</span>
                   </div>
                   <div class="standalone-order-info-list">
-                    ${renderInfoRow("Mã yêu cầu", order.code || "--")}
                     ${renderInfoRow("Ngày tạo", formatDateTime(order.created_at))}
                     ${renderInfoRow("Khoảng cách", formatDistance(order.distance_km))}
                     ${renderInfoRow("Khảo sát", order.service_details.some((item) => normalizeLowerText(item).includes("khảo sát trước")) ? "Cần khảo sát trước" : "Không cần khảo sát trước")}
-                    ${renderInfoRow("Khách hàng", order.customer_name || "--")}
+                    ${renderInfoRow("Tệp gửi kèm", String(order.image_attachments.length + order.video_attachments.length))}
                   </div>
                 </div>
                 <div class="standalone-order-panel standalone-order-panel-fees" id="order-summary-fees">
                   <div class="standalone-order-panel-head">
                     <div>
                       <strong>Chi tiết tạm tính</strong>
-                      <p>Các khoản đang dùng để tham chiếu mức giá hiện tại.</p>
+                      <p>Các khoản phí đang cấu thành mức tạm tính của đơn hàng.</p>
                     </div>
                     <span class="standalone-order-chip">Tạm tính</span>
                   </div>
                   <div class="standalone-order-info-list">
-                    ${renderInfoRow("Dịch vụ chuyển dọn", formatCurrency(order.estimated_amount))}
-                    ${renderInfoRow("Khoảng cách tham chiếu", formatDistance(order.distance_km))}
-                    ${renderInfoRow("Loại xe", order.vehicle_label || "--")}
-                    ${renderInfoRow("Thời tiết", getWeatherLabel(order.weather_label))}
+                    ${renderPricingRows(order)}
                   </div>
                 </div>
               </div>
@@ -850,27 +947,7 @@ const providerOrderDetailModule = (function (window, document) {
                     ${renderInfoRow("Số điện thoại", order.customer_phone || "--")}
                     ${renderInfoRow("Email", order.customer_email || "--")}
                     ${renderInfoRow("Đơn vị", order.company_name || "--")}
-                  </div>
-                </article>
-                <article class="standalone-order-contact-card">
-                  <div class="standalone-order-contact-card-head">
-                    <div class="standalone-order-contact-card-title">
-                      <span class="standalone-order-contact-card-icon">
-                        <i class="fa-solid fa-truck-ramp-box"></i>
-                      </span>
-                      <div>
-                        <strong>Chi tiết thực hiện</strong>
-                        <p>Thông tin đang dùng để xử lý đơn.</p>
-                      </div>
-                    </div>
-                    <span class="standalone-order-chip">${escapeHtml(order.service_label || "Chuyển dọn")}</span>
-                  </div>
-                  <div class="standalone-order-info-list">
-                    ${renderInfoRow("Khung giờ", order.schedule_time || "--")}
-                    ${renderInfoRow("Thời tiết", getWeatherLabel(order.weather_label))}
-                    ${renderInfoRow("Điều kiện tiếp cận", String((order.access_conditions || []).length))}
-                    ${renderInfoRow("Hạng mục phụ", String((order.service_details || []).length))}
-                    ${renderInfoRow("Tệp gửi kèm", String(order.image_attachments.length + order.video_attachments.length))}
+                    ${renderInfoRow("Nhà cung cấp phụ trách", order.provider_owner_name || "Chưa có đơn vị phụ trách")}
                   </div>
                 </article>
                 <div class="standalone-order-contact-note">
@@ -1001,6 +1078,7 @@ const providerOrderDetailModule = (function (window, document) {
       });
       return;
     }
+    currentProfile = profile;
 
     const role = store.getSavedRole();
     if (role && role !== "nha-cung-cap") {
@@ -1024,18 +1102,39 @@ const providerOrderDetailModule = (function (window, document) {
     });
 
     try {
-      const row = await fetchBookingRowByCode(orderCode);
+      const row = await fetchBookingRowByCode(orderCode, {
+        forceAutoSweep: true,
+      });
       if (!row) {
         renderError("Không tìm thấy yêu cầu phù hợp trong bảng đặt lịch chuyển dọn.");
         return;
       }
 
       render(normalizeDetail(row));
+      refreshController = createProviderAutoRefreshController(window, {
+        intervalMs: 60 * 1000,
+        shouldPause: isEditingProviderDetail,
+        onTick: async () => {
+          const nextRow = await fetchBookingRowByCode(orderCode, {
+            forceAutoSweep: true,
+          });
+          if (nextRow) {
+            const nextDetail = normalizeDetail(nextRow);
+            if (getDetailRenderSignature(nextDetail) !== currentDetailSignature) {
+              render(nextDetail);
+            }
+          }
+        },
+      });
+      refreshController.start();
     } catch (error) {
       console.error("Cannot load provider order detail:", error);
       renderError(error?.message || "Không thể tải chi tiết đơn hàng.");
     }
   })();
+  window.addEventListener("beforeunload", function () {
+    refreshController?.stop?.();
+  });
   const moduleApi = {};
   window.__fastGoProviderOrderDetailModule = moduleApi;
   return moduleApi;

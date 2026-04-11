@@ -20,6 +20,14 @@
     addresses: "ghn-customer-addresses",
   };
   const krudOrdersTable = "giaohangnhanh_dat_lich";
+  const AUTO_CANCEL_REASON =
+    "Đơn đã quá khung giờ lấy hàng mà chưa có shipper nhận.";
+  const SERVICE_AUTO_CANCEL_FALLBACK_MINUTES = {
+    instant: 15,
+    express: 30,
+    fast: 60,
+    standard: 120,
+  };
 
   function getLoginRedirect() {
     return typeof core.getPortalLoginRedirect === "function"
@@ -289,6 +297,190 @@
     return [];
   }
 
+  function parseDateMs(value) {
+    const normalized = normalizeText(value);
+    if (!normalized) return 0;
+    const timestamp = new Date(normalized).getTime();
+    return Number.isFinite(timestamp) ? timestamp : 0;
+  }
+
+  function normalizeServiceType(value) {
+    const normalized = normalizeText(value).toLowerCase();
+    if (normalized === "giao_ngay_lap_tuc") return "instant";
+    if (normalized === "giao_hoa_toc") return "express";
+    if (normalized === "giao_nhanh") return "fast";
+    if (normalized === "giao_tieu_chuan") return "standard";
+    return normalized;
+  }
+
+  function extractTimeTokens(value) {
+    return Array.from(
+      String(value || "").matchAll(/(\d{1,2}):(\d{2})(?::(\d{2}))?/g),
+    ).map((match) => {
+      const hour = Number(match[1] || 0);
+      const minute = Number(match[2] || 0);
+      const second = Number(match[3] || 0);
+      return `${String(hour).padStart(2, "0")}:${String(minute).padStart(2, "0")}:${String(second).padStart(2, "0")}`;
+    });
+  }
+
+  function buildLocalDateTimeMs(dateValue, timeValue) {
+    const dateText = normalizeText(dateValue).slice(0, 10);
+    const timeText = normalizeText(timeValue);
+    if (!dateText || !timeText) return 0;
+    const timestamp = new Date(`${dateText}T${timeText}`).getTime();
+    return Number.isFinite(timestamp) ? timestamp : 0;
+  }
+
+  function resolvePickupDeadlineMs(source) {
+    const order = source && typeof source === "object" ? source : {};
+    const serviceMeta =
+      order.service_meta && typeof order.service_meta === "object"
+        ? order.service_meta
+        : {};
+    const pickupDate = normalizeText(
+      order.ngay_lay_hang ||
+        order.pickup_date ||
+        serviceMeta.pickup_date ||
+        "",
+    );
+    const explicitDeadline = buildLocalDateTimeMs(
+      pickupDate,
+      normalizeText(order.gio_ket_thuc_lay_hang || serviceMeta.pickup_slot_end || ""),
+    );
+    if (explicitDeadline) return explicitDeadline;
+
+    const slotTokens = extractTimeTokens(
+      order.ten_khung_gio_lay_hang ||
+        order.khung_gio_lay_hang ||
+        order.pickup_slot_label ||
+        order.pickup_slot ||
+        serviceMeta.pickup_slot_label ||
+        "",
+    );
+    const slotDeadline = buildLocalDateTimeMs(
+      pickupDate,
+      slotTokens[slotTokens.length - 1] || "",
+    );
+    if (slotDeadline) return slotDeadline;
+
+    const pickupTimeMs = parseDateMs(order.pickup_time || "");
+    if (pickupTimeMs) return pickupTimeMs;
+
+    const createdMs = parseDateMs(order.created_at || order.created_date || "");
+    if (!createdMs) return 0;
+    const serviceType = normalizeServiceType(
+      order.service_type || order.loai_dich_vu || order.dich_vu || "",
+    );
+    const fallbackMinutes =
+      SERVICE_AUTO_CANCEL_FALLBACK_MINUTES[serviceType] ||
+      SERVICE_AUTO_CANCEL_FALLBACK_MINUTES.fast;
+    return createdMs + fallbackMinutes * 60 * 1000;
+  }
+
+  function hasAcceptedOrAssignedOrder(order) {
+    return Boolean(
+      normalizeText(
+        order?.thoidiemnhandon ||
+          order?.ngaynhan ||
+          order?.accepted_at ||
+          order?.acceptedAt ||
+          "",
+      ) ||
+        normalizeText(
+          order?.shipper_id ||
+            order?.ncc_id ||
+            order?.provider_id ||
+            order?.shipper_name ||
+            order?.nha_cung_cap_ho_ten ||
+            "",
+        ),
+    );
+  }
+
+  function canCustomerCancelOrder(order) {
+    if (!order || typeof order !== "object") return false;
+    const normalizedStatus = String(order.status || "").toLowerCase();
+    if (["cancelled", "canceled", "completed"].includes(normalizedStatus)) {
+      return false;
+    }
+    if (normalizeText(order.ngaybatdauthucte || order.started_at || "")) {
+      return false;
+    }
+    if (normalizeText(order.ngayhoanthanhthucte || order.completed_at || "")) {
+      return false;
+    }
+    if (shouldAutoCancelPendingOrder(order)) {
+      return false;
+    }
+    return !hasAcceptedOrAssignedOrder(order);
+  }
+
+  function shouldAutoCancelPendingOrder(order, nowMs = Date.now()) {
+    if (!order || typeof order !== "object") return false;
+    if (normalizeText(order.ngayhuy || order.cancelled_at || "")) return false;
+    if (normalizeText(order.ngaybatdauthucte || order.started_at || "")) return false;
+    if (normalizeText(order.ngayhoanthanhthucte || order.completed_at || "")) return false;
+    if (hasAcceptedOrAssignedOrder(order)) return false;
+
+    const normalizedStatus = String(order.status || order.trang_thai || "")
+      .trim()
+      .toLowerCase();
+    if (["cancelled", "canceled", "completed", "delivered", "success"].includes(normalizedStatus)) {
+      return false;
+    }
+
+    const deadlineMs = resolvePickupDeadlineMs(order);
+    return deadlineMs > 0 && nowMs >= deadlineMs;
+  }
+
+  async function autoCancelPendingKrudRows(rows = []) {
+    const list = Array.isArray(rows) ? rows : [];
+    const updateFn = getKrudUpdateFn();
+    if (!updateFn) return list;
+
+    const nowMs = Date.now();
+    const cancelledAt = new Date(nowMs).toISOString();
+    const nextRows = [];
+
+    for (const row of list) {
+      const rawRow = row && typeof row === "object" ? { ...row } : row;
+      if (
+        rawRow &&
+        typeof rawRow === "object" &&
+        normalizeText(rawRow.id || "") &&
+        shouldAutoCancelPendingOrder(rawRow, nowMs)
+      ) {
+        try {
+          await updateFn(
+            krudOrdersTable,
+            {
+              id: rawRow.id,
+              trang_thai: "cancelled",
+              status: "cancelled",
+              ngayhuy: cancelledAt,
+              ly_do_huy: normalizeText(rawRow.ly_do_huy || rawRow.cancel_reason || "") || AUTO_CANCEL_REASON,
+              updated_at: cancelledAt,
+            },
+            rawRow.id,
+          );
+          rawRow.trang_thai = "cancelled";
+          rawRow.status = "cancelled";
+          rawRow.ngayhuy = cancelledAt;
+          rawRow.ly_do_huy =
+            normalizeText(rawRow.ly_do_huy || rawRow.cancel_reason || "") ||
+            AUTO_CANCEL_REASON;
+        } catch (error) {
+          console.error("Cannot auto cancel overdue GHN booking:", error);
+        }
+      }
+
+      nextRows.push(rawRow);
+    }
+
+    return nextRows;
+  }
+
   function getMediaExtension(item) {
     const direct = normalizeText(item?.extension || "").toLowerCase();
     if (direct) return direct;
@@ -533,6 +725,21 @@
       nextOrder.cod_amount || nextOrder.cod_value || 0,
     );
     nextOrder.created_at = nextOrder.created_at || new Date().toISOString();
+    nextOrder.ngay_lay_hang = normalizeText(
+      nextOrder.ngay_lay_hang || nextOrder.pickup_date || "",
+    );
+    nextOrder.khung_gio_lay_hang = normalizeText(
+      nextOrder.khung_gio_lay_hang || nextOrder.pickup_slot || "",
+    );
+    nextOrder.ten_khung_gio_lay_hang = normalizeText(
+      nextOrder.ten_khung_gio_lay_hang || nextOrder.pickup_slot_label || "",
+    );
+    nextOrder.gio_bat_dau_lay_hang = normalizeText(
+      nextOrder.gio_bat_dau_lay_hang || "",
+    );
+    nextOrder.gio_ket_thuc_lay_hang = normalizeText(
+      nextOrder.gio_ket_thuc_lay_hang || "",
+    );
     nextOrder.cancel_reason =
       nextOrder.cancel_reason || nextOrder.ly_do_huy || "";
     nextOrder.rating = Number(nextOrder.rating || nextOrder.danh_gia_so_sao || 0);
@@ -604,7 +811,7 @@
           page: 1,
           limit: 500,
         });
-        const rows = extractRows(response);
+        const rows = await autoCancelPendingKrudRows(extractRows(response));
         const sessionId = normalizeText(session.id || "");
         const sessionUsername = normalizeText(session.username || "").toLowerCase();
         const sessionPhone = normalizePhone(
@@ -698,6 +905,11 @@
                 created_at: record.created_at || record.created_date || "",
                 pickup_address: record.dia_chi_lay_hang || "",
                 delivery_address: record.dia_chi_giao_hang || "",
+                ngay_lay_hang: record.ngay_lay_hang || "",
+                khung_gio_lay_hang: record.khung_gio_lay_hang || "",
+                ten_khung_gio_lay_hang: record.ten_khung_gio_lay_hang || "",
+                gio_bat_dau_lay_hang: record.gio_bat_dau_lay_hang || "",
+                gio_ket_thuc_lay_hang: record.gio_ket_thuc_lay_hang || "",
                 receiver_name:
                   record.ho_ten_nguoi_nhan || record.nguoi_nhan_ho_ten || "",
                 receiver_phone:
@@ -1244,6 +1456,11 @@
         throw new Error("Không tìm thấy đơn hàng cần hủy.");
       }
       const nextDetail = normalizeLocalOrderDetail(currentDetail);
+      if (!canCustomerCancelOrder(nextDetail.order)) {
+        throw new Error(
+          "Đơn đã có shipper nhận hoặc đã vào xử lý nên không thể hủy từ phía khách hàng.",
+        );
+      }
       const cancelledAt = new Date().toISOString();
       nextDetail.order.status = "cancelled";
       nextDetail.order.status_label = "Đã hủy";
@@ -1705,7 +1922,7 @@
   function isOrderCancelable(order) {
     if (!order) return false;
     if (typeof order.can_cancel === "boolean") return order.can_cancel;
-    return String(order.status || "").toLowerCase() === "pending";
+    return canCustomerCancelOrder(order);
   }
 
   function renderCancelButton(order, compact = false) {

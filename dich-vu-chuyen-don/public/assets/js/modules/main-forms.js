@@ -1,6 +1,12 @@
 import core from "./core/app-core.js";
 import authModule from "./main-auth.js";
 import bookingApi from "./main-booking-api.js";
+import {
+  getBookingScheduleTimeLabel,
+  getBookingServiceLabel,
+  getBookingVehicleLabel as getSharedBookingVehicleLabel,
+  getBookingWeatherLabel,
+} from "./main-booking-shared.js";
 import customerPortalStore from "./main-customer-portal-store.js";
 import {
   bookingFormsModule,
@@ -254,8 +260,28 @@ const partialPaths = {
       }
     }
 
+    const serviceValue = normalizeService(serviceSelect?.value || "");
+    const scheduleTimeValue = String(
+      formData.get("khung_gio_thuc_hien") || "",
+    ).trim();
+    const weatherValue = String(weatherInput?.value || "").trim();
+    const vehicleValue = String(formData.get("loai_xe") || "").trim();
+    const serviceLabel =
+      getSelectedLabel(scope.querySelector("#loai-dich-vu-dat-lich")) ||
+      getBookingServiceLabel(serviceValue);
+    const scheduleTimeLabel =
+      getSelectedLabel(scope.querySelector("#khung-gio-dat-lich")) ||
+      getBookingScheduleTimeLabel(scheduleTimeValue);
+    const vehicleLabel =
+      getSelectedLabel(scope.querySelector("#loai-xe-dat-lich")) ||
+      getSharedBookingVehicleLabel(vehicleValue);
+    const weatherLabel =
+      getSelectedLabel(scope.querySelector("#thoi-tiet-du-kien-dat-lich")) ||
+      getBookingWeatherLabel(weatherValue);
+
     return {
-      loai_dich_vu: normalizeService(serviceSelect?.value || ""),
+      loai_dich_vu: serviceValue,
+      ten_dich_vu: serviceLabel,
       ho_ten: String(formData.get("ho_ten") || identity.hovaten || "").trim(),
       so_dien_thoai: String(
         formData.get("so_dien_thoai") || identity.sodienthoai || "",
@@ -264,11 +290,12 @@ const partialPaths = {
       dia_chi_di: String(formData.get("dia_chi_di") || "").trim(),
       dia_chi_den: String(formData.get("dia_chi_den") || "").trim(),
       ngay_thuc_hien: String(formData.get("ngay_thuc_hien") || "").trim(),
-      khung_gio_thuc_hien: String(
-        formData.get("khung_gio_thuc_hien") || "",
-      ).trim(),
-      thoi_tiet_du_kien: String(weatherInput?.value || "").trim(),
-      loai_xe: String(formData.get("loai_xe") || "").trim(),
+      khung_gio_thuc_hien: scheduleTimeValue,
+      ten_khung_gio_thuc_hien: scheduleTimeLabel,
+      thoi_tiet_du_kien: weatherValue,
+      ten_thoi_tiet_du_kien: weatherLabel,
+      loai_xe: vehicleValue,
+      ten_loai_xe: vehicleLabel,
       ghi_chu: String(formData.get("ghi_chu") || "").trim(),
       dieu_kien_tiep_can: accessConditions.join(" | "),
       chi_tiet_dich_vu: [
@@ -278,6 +305,7 @@ const partialPaths = {
           : []),
       ].join(" | "),
       tong_tam_tinh: totalAmount,
+      pricing_breakdown_json: JSON.stringify(pricingBreakdown),
       khoang_cach_km: String(
         scope.querySelector("[data-gia-tri-khoang-cach-dat-lich]")
           ?.textContent || "",
@@ -330,6 +358,7 @@ const partialPaths = {
     const pricingBreakdown = getBookingPricingBreakdown(scope);
 
     return {
+      sheet_type: "Dịch vụ Chuyển Dọn",
       created_at: payload.created_at || payload.created_date || new Date().toISOString(),
       "Mã yêu cầu": payload.ma_yeu_cau_noi_bo || "",
       "ID KRUD": String(remoteId || "").trim(),
@@ -1057,7 +1086,7 @@ const partialPaths = {
       "CDL-00000000-0000000";
     const statusMessage = String(options.statusMessage || "").trim();
     const isLoggedIn = !!(customerPortalStore?.getSavedRole?.() === "khach-hang");
-    const historyUrl = getProjectUrl("khach-hang/lich-su-yeu-cau.html");
+    const historyUrl = getProjectUrl("khach-hang/danh-sach-don-hang.html");
     const secondaryActionHref = isLoggedIn
       ? (typeof core.buildOrderDetailUrl === "function"
           ? core.buildOrderDetailUrl("khach-hang/chi-tiet-hoa-don.html", requestCode)

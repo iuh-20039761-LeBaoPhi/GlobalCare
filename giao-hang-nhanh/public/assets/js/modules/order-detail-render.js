@@ -13,6 +13,7 @@
       getMilestones,
       deriveStatusKey,
       getStatusBadge,
+      getFeePayerLabel,
       buildActionButtons,
       pickFirstText,
       isImageExtension,
@@ -49,21 +50,35 @@
 
     function renderFeeSummaryRows(order) {
       const breakdown = order?.fee_breakdown || {};
-      const rows = [
-        renderInfoRow("Phí vận chuyển", formatCurrency(breakdown.base_price)),
-      ];
+      const totalFee = Number(breakdown.total_fee || order?.shipping_fee || 0);
+      const withLabel = (baseLabel, extraLabel) =>
+        normalizeText(extraLabel)
+          ? `${baseLabel} (${normalizeText(extraLabel)})`
+          : baseLabel;
+      const rows = [];
+      const pushMoneyRow = (label, amount) => {
+        if (Number(amount || 0) <= 0) return;
+        rows.push(renderInfoRow(label, formatCurrency(amount)));
+      };
 
-      [
-        ["Phụ phí loại hàng", breakdown.goods_fee],
-        ["Phụ phí khung giờ", breakdown.time_fee],
-        ["Phụ phí thời tiết", breakdown.condition_fee],
-        ["Điều chỉnh theo xe", breakdown.vehicle_fee],
-        ["Phí COD", breakdown.cod_fee],
-        ["Phí bảo hiểm", breakdown.insurance_fee],
-      ].forEach(([label, value]) => {
-        if (Number(value || 0) <= 0) return;
-        rows.push(renderInfoRow(label, formatCurrency(value)));
-      });
+      pushMoneyRow("Phí vận chuyển", breakdown.base_price || 0);
+      pushMoneyRow("Phụ phí loại hàng", breakdown.goods_fee || 0);
+      pushMoneyRow(
+        withLabel("Phụ phí khung giờ", breakdown.time_surcharge_label),
+        breakdown.time_fee || 0,
+      );
+      pushMoneyRow(
+        withLabel("Phụ phí thời tiết", breakdown.condition_surcharge_label),
+        breakdown.condition_fee || 0,
+      );
+      pushMoneyRow("Điều chỉnh theo xe", breakdown.vehicle_fee || 0);
+      pushMoneyRow("Phí COD", breakdown.cod_fee || 0);
+      pushMoneyRow("Phí bảo hiểm", breakdown.insurance_fee || 0);
+      pushMoneyRow("Tổng cước", totalFee);
+
+      if (!rows.length) {
+        return renderInfoRow("Chi tiết phí", "Chưa có dữ liệu");
+      }
 
       return rows.join("");
     }
@@ -244,7 +259,7 @@
             </span>
             <div>
               <strong>${escapeHtml(title)}</strong>
-              <p>Đối chiếu thông tin liên hệ và địa chỉ phục vụ cho điều phối giao nhận.</p>
+              <p>Thông tin liên hệ phục vụ giao nhận.</p>
             </div>
           </div>
           <span class="standalone-order-chip">${escapeHtml(chip)}</span>
@@ -779,6 +794,14 @@
       );
       const serviceLabel = order.service_label || order.service_name || "--";
       const latestEvent = getLatestOrderEvent(order);
+      const feePayerLabel =
+        order.payer_label ||
+        (typeof getFeePayerLabel === "function"
+          ? getFeePayerLabel(order.fee_payer || "gui")
+          : "Người gửi");
+      const pickupSlotLabel = order.pickup_slot_label || "--";
+      const estimatedDelivery = order.estimated_delivery || "--";
+      const vehicleLabel = order.vehicle_label || order.vehicle_type || "--";
       const itemsSummary = getItemsSummary(detail.items || []);
       const senderName = order.sender_name || customer.fullname || "--";
       const senderPhone = order.sender_phone || customer.phone || "--";
@@ -849,10 +872,10 @@
                   { className: "standalone-order-hero-metric-primary" },
                 )}
                 ${renderHeroMetric(
-                  "fa-solid fa-clock",
-                  "Tạo lúc",
-                  formatDateTime(order.created_at),
+                  "fa-solid fa-route",
+                  "Khoảng cách",
                   distanceLabel,
+                  "Tuyến giao nhận",
                 )}
                 ${renderHeroMetric(
                   "fa-solid fa-signal",
@@ -879,17 +902,17 @@
                   <div class="standalone-order-panel-head">
                     <div>
                       <strong>Thông tin điều phối</strong>
-                      <p>Giữ lại những dữ liệu lõi để rà nhanh mà không lặp lại địa chỉ ở nhiều khu vực.</p>
+                      <p>Thông tin cần theo dõi khi xử lý đơn.</p>
                     </div>
                     <span class="standalone-order-chip">Điều phối</span>
                   </div>
                   <div class="standalone-order-info-list">
-                  ${renderInfoRow("Mã đơn hàng", order.order_code || "--")}
-                  ${renderInfoRow("Gói dịch vụ", order.service_label || order.service_name || "--")}
-                  ${renderInfoRow("Tạo lúc", formatDateTime(order.created_at))}
-                  ${renderInfoRow("Tổng quãng đường", distanceLabel)}
                   ${renderInfoRow("Thanh toán", order.payment_method_label || "--")}
+                  ${renderInfoRow("Người trả cước", feePayerLabel)}
                   ${renderInfoRow("Trạng thái thanh toán", order.payment_status_label || "Chưa hoàn tất")}
+                  ${renderInfoRow("Khung giờ lấy hàng", pickupSlotLabel)}
+                  ${renderInfoRow("Dự kiến giao", estimatedDelivery)}
+                  ${renderInfoRow("Phương tiện", vehicleLabel)}
                   ${renderInfoRow("Cập nhật gần nhất", `${latestEvent.label} · ${latestEvent.time}`)}
                   </div>
                 </div>
@@ -897,7 +920,7 @@
                   <div class="standalone-order-panel-head">
                     <div>
                       <strong>Chi tiết cước phí</strong>
-                      <p>Chỉ giữ các khoản cấu thành để tránh lặp lại tổng phí đã ưu tiên ở phần đầu trang.</p>
+                      <p>Chi tiết các khoản phí cấu thành đơn hàng.</p>
                     </div>
                     <span class="standalone-order-chip">Tài chính</span>
                   </div>
@@ -920,7 +943,6 @@
                   [
                     renderInfoRow("Họ tên", senderName),
                     renderInfoRow("Số điện thoại", senderPhone),
-                    renderInfoRow("Vai trò", "Đầu mối giao hàng"),
                   ],
                 )}
                 ${renderContactCard(
@@ -930,7 +952,6 @@
                   [
                     renderInfoRow("Họ tên", receiverName),
                     renderInfoRow("Số điện thoại", receiverPhone),
-                    renderInfoRow("Vai trò", "Điểm nhận cuối"),
                   ],
                 )}
                 <div class="standalone-order-contact-note">
@@ -942,7 +963,6 @@
                         </span>
                         <div>
                           <strong>Ghi chú vận chuyển</strong>
-                          <p>Lưu ý thêm từ khách hàng hoặc hệ thống để shipper và điều phối viên theo dõi khi xử lý đơn.</p>
                         </div>
                       </div>
                       <span class="standalone-order-chip">Lưu ý</span>
@@ -992,7 +1012,7 @@
 
             <section class="standalone-order-block">
               <div class="standalone-order-block-header">
-                <h2>Shipper, trạng thái xử lý và POD</h2>
+                <h2>Nhà cung cấp và tiến độ giao hàng</h2>
               </div>
               <div class="standalone-order-provider-shell">
                 <article class="standalone-order-provider-card">
@@ -1020,7 +1040,7 @@
                     <div class="standalone-order-panel-head">
                       <div>
                         <strong>Timeline trạng thái</strong>
-                        <p>Lịch sử trạng thái được suy ra từ các mốc thời gian và nhật ký thao tác hiện có.</p>
+                        <p>Các mốc cập nhật chính của đơn hàng.</p>
                       </div>
                       <span class="standalone-order-chip">Theo dõi</span>
                     </div>
@@ -1031,7 +1051,7 @@
                     <div class="standalone-order-panel-head">
                       <div>
                         <strong>Media bằng chứng giao hàng</strong>
-                        <p>Hiển thị ảnh POD gắn với đơn hàng sau khi giao thành công.</p>
+                        <p>Ảnh xác nhận giao hàng của đơn.</p>
                       </div>
                       <span class="standalone-order-chip">POD</span>
                     </div>

@@ -37,11 +37,23 @@ function getKrudInsertFn() {
 
 function getKrudUpdateFn() {
   if (typeof window.crud === "function") {
-    return (tableName, data) => window.crud("update", tableName, data);
+    return (tableName, data, recordId) =>
+      window.crud(
+        "update",
+        tableName,
+        data,
+        recordId || data?.id || data?.remote_id || "",
+      );
   }
 
   if (typeof window.krud === "function") {
-    return (tableName, data) => window.krud("update", tableName, data);
+    return (tableName, data, recordId) =>
+      window.krud(
+        "update",
+        tableName,
+        data,
+        recordId || data?.id || data?.remote_id || "",
+      );
   }
 
   return null;

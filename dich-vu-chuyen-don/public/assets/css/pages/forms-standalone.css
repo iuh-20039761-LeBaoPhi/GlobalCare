@@ -1437,7 +1437,8 @@
 }
 
 .form-dat-lich .goi-y-thong-tin {
-  display: none;
+  display: inline-flex;
+  align-items: center;
 }
 
 .form-dat-lich {

@@ -177,11 +177,11 @@ const customerDashboardModule = (function (window, document) {
               <p class="customer-panel-subtext">Giữ lại danh sách ngắn để bạn nhìn ra ngay đơn mới hoặc đơn vừa đổi trạng thái.</p>
             </div>
             <div class="customer-inline-actions customer-inline-actions-dashboard">
-              <form action="${escapeHtml(getProjectUrl("khach-hang/lich-su-yeu-cau.html"))}" method="GET" class="customer-quick-search">
+              <form action="${escapeHtml(getProjectUrl("khach-hang/danh-sach-don-hang.html"))}" method="GET" class="customer-quick-search">
                 <input type="text" name="search" placeholder="Nhập mã đơn, dịch vụ..." required />
                 <button type="submit" class="customer-btn customer-btn-primary customer-btn-sm"><i class="fas fa-search"></i></button>
               </form>
-              <a class="customer-btn customer-btn-ghost customer-btn-sm" href="${escapeHtml(getProjectUrl("khach-hang/lich-su-yeu-cau.html"))}">
+              <a class="customer-btn customer-btn-ghost customer-btn-sm" href="${escapeHtml(getProjectUrl("khach-hang/danh-sach-don-hang.html"))}">
                 Xem tất cả
               </a>
             </div>
@@ -215,7 +215,7 @@ const customerDashboardModule = (function (window, document) {
                                     getOrderDetailUrl(request.code || ""),
                                   )}">Xem chi tiết</a>`
                                 : `<a class="customer-btn customer-btn-primary customer-btn-sm" href="${escapeHtml(
-                                    getProjectUrl("khach-hang/lich-su-yeu-cau.html"),
+                                    getProjectUrl("khach-hang/danh-sach-don-hang.html"),
                                   )}">Mở đơn hàng</a>`
                             }
                           </div>
