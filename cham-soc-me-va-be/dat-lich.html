@@ -1585,13 +1585,13 @@
           var clean = function (p) { return String(p || '').replace(/\D/g, ''); };
           var inputPhone = clean(phone);
           var foundUser = users.find(function (u) {
-            return clean(u.sodienthoai || u.phone) === inputPhone;
+            return clean(u.sodienthoai) === inputPhone;
           });
 
           var matkhau = '';
           if (foundUser) {
             // Trường hợp 1: Đã tồn tại -> lấy mật khẩu hiện tại
-            matkhau = foundUser.matkhau || foundUser.password || inputPhone;
+            matkhau = foundUser.matkhau;
           } else {
             // Trường hợp 2: Chưa tồn tại -> insert khách hàng mới với mk là sdt
             matkhau = inputPhone;
