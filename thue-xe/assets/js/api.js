@@ -1,8 +1,22 @@
 async function getLiveCars() {
     try {
-        // Lấy toàn bộ dữ liệu thực từ bảng xethue
+        // Lấy dữ liệu thực từ bảng xethue
         const allCars = await DVQTKrud.listTable('xethue', { limit: 1000 });
-        return allCars || [];
+        console.log("[Antigravity-Debug] Raw cars from DB:", allCars);
+        
+        // Lọc: Mở rộng trạng thái để phù hợp với trạng thái mới của NCC
+        const filtered = (allCars || []).filter(c => {
+            if (!c.trangthai) return true;
+            const st = String(c.trangthai).toLowerCase();
+            // Nếu có trangthai_ncc thì kiểm tra không bị khóa
+            if (c.trangthai_ncc && ['0', 'banned', 'inactive'].includes(String(c.trangthai_ncc).toLowerCase())) {
+                return false;
+            }
+            return ['available', 'active', '1', 'hoat_dong', 'đã duyệt', 'đang cho thuê'].includes(st);
+        });
+        console.log("[Antigravity-Debug] Filtered cars (active/available):", filtered);
+        
+        return filtered;
     } catch (e) {
         console.error("Error fetching live cars:", e);
         return [];
@@ -60,7 +74,7 @@ const API = {
             if (price) {
                 const [min, max] = price.includes('-') ? price.split('-').map(Number) : [Number(price), 999999999];
                 cars = cars.filter(c => {
-                    const p = Number(c.gia_thue_ngay); // Đồng bộ cột giá mới
+                    const p = Number(c.giathue || 0); // Đồng bộ với cột giathue trong DB
                     return p >= min && (max ? p <= max : true);
                 });
             }

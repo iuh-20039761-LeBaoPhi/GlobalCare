@@ -1,432 +1,417 @@
 <!doctype html>
 <html lang="vi">
-  <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <meta name="description" content="Các dịch vụ chăm sóc người cao tuổi tại nhà: hỗ trợ sinh hoạt hằng ngày, chăm người già khó đi lại, suy yếu và chăm sóc 24/7. Hỗ trợ ăn uống, vệ sinh, di chuyển và đồng hành giúp người già sống an toàn, thoải mái.">
-    <meta name="keywords" content="dịch vụ chăm sóc người già tại nhà, chăm sóc người cao tuổi, hỗ trợ sinh hoạt người già, chăm sóc người già suy yếu, chăm người già 24/7, giúp việc chăm người già tại nhà">
-    <title>Dịch Vụ - Chăm Sóc Người Cao Tuổi</title>
-    <link
-      rel="shortcut icon"
-      type="image/x-icon"
-      href="assets/logong.png"
-    />
-    <!-- Bootstrap 5 CSS -->
-    <link
-      href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css"
-      rel="stylesheet"
-    />
-    <!-- Font Awesome -->
-    <link
-      rel="stylesheet"
-      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"
-    />
-    <!-- Google Fonts -->
-    <link
-      href="https://fonts.googleapis.com/css2?family=Pacifico&family=Quicksand:wght@500;700&display=swap"
-      rel="stylesheet"
-    />
-    <link
-      rel="stylesheet"
-      href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
-    />
-<style>
-html,
-body {
-  width: 100%;
-  max-width: 100%;
-  overflow-x: hidden;
-}
-      body {padding-top: 96px;}
-      .navbar {position: fixed;top: 0;left: 0;right: 0;z-index: 1050;}
-/* GIỮ header luôn 1 hàng (áp dụng mọi màn hình) */
-.navbar .container {
-  display: flex;
-  flex-wrap: nowrap !important;
-  align-items: center;
-  min-width: 0;
-}
-/* Khóa mờ các ca còn lại khi đã chọn 1 ca */
-.package-locked {
-  opacity: 0.45;
-  filter: grayscale(0.2);
-  cursor: not-allowed;
-}
 
-/* ================= MOBILE ONLY ================= */
-@media (max-width: 991.98px) {
-  body {
-    padding-top: 86px;
-  }
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="description"
+    content="Các dịch vụ chăm sóc người cao tuổi tại nhà: hỗ trợ sinh hoạt hằng ngày, chăm người già khó đi lại, suy yếu và chăm sóc 24/7. Hỗ trợ ăn uống, vệ sinh, di chuyển và đồng hành giúp người già sống an toàn, thoải mái.">
+  <meta name="keywords"
+    content="dịch vụ chăm sóc người già tại nhà, chăm sóc người cao tuổi, hỗ trợ sinh hoạt người già, chăm sóc người già suy yếu, chăm người già 24/7, giúp việc chăm người già tại nhà">
+  <title>Dịch Vụ - Chăm Sóc Người Cao Tuổi</title>
+  <link rel="shortcut icon" type="image/x-icon" href="assets/logong.png" />
+  <!-- Bootstrap 5 CSS -->
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet" />
+  <!-- Font Awesome -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
+  <!-- Google Fonts -->
+  <link href="https://fonts.googleapis.com/css2?family=Pacifico&family=Quicksand:wght@500;700&display=swap"
+    rel="stylesheet" />
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+  <style>
+    html,
+    body {
+      width: 100%;
+      max-width: 100%;
+      overflow-x: hidden;
+    }
 
-  .navbar {
-    overflow-x: clip;
-  }
+    body {
+      padding-top: 96px;
+    }
 
-  .navbar .container > span {
-    max-width: 34vw;
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
-    font-size: 0.95rem;
-  }
+    .navbar {
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      z-index: 1050;
+    }
 
-  .navbar-brand img {
-    width: 56px !important;
-    height: 42px !important;
-  }
+    /* GIỮ header luôn 1 hàng (áp dụng mọi màn hình) */
+    .navbar .container {
+      display: flex;
+      flex-wrap: nowrap !important;
+      align-items: center;
+      min-width: 0;
+    }
 
-  /* ÉP menu xuống dưới navbar */
-  .navbar-collapse {
-    position: absolute;
-    top: 100%;
-    left: 0;
-    right: 0;
-    width: auto;
-    background: #fff;
-    z-index: 999;
-    border-radius: 0 0 12px 12px;
-    box-shadow: 0 8px 20px rgba(0,0,0,0.08);
-  }
+    /* Khóa mờ các ca còn lại khi đã chọn 1 ca */
+    .package-locked {
+      opacity: 0.45;
+      filter: grayscale(0.2);
+      cursor: not-allowed;
+    }
 
-  /* Khi mở menu */
-  .navbar-collapse.show {
-    display: block;
-  }
+    /* ================= MOBILE ONLY ================= */
+    @media (max-width: 991.98px) {
+      body {
+        padding-top: 86px;
+      }
 
-  /* UL dọc + căn giữa */
-  .navbar-collapse .navbar-nav {
-    flex-direction: column !important;
-    align-items: center !important;
-    gap: 10px;
-    padding: 15px 0;
-  }
+      .navbar {
+        overflow-x: clip;
+      }
 
-  /* Item */
-  .navbar-collapse .nav-item {
-    width: 100%;
-    text-align: center;
-  }
+      .navbar .container>span {
+        max-width: 34vw;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        font-size: 0.95rem;
+      }
 
-  /* Link */
-  .navbar-collapse .nav-link {
-    display: block;
-    width: 100%;
-    padding: 10px;
-    font-size: 16px;
-  }
+      .navbar-brand img {
+        width: 56px !important;
+        height: 42px !important;
+      }
 
-  /* Button */
-  .navbar-collapse .btn {
-    width: 80%;
-    margin-top: 10px;
-  }
+      /* ÉP menu xuống dưới navbar */
+      .navbar-collapse {
+        position: absolute;
+        top: 100%;
+        left: 0;
+        right: 0;
+        width: auto;
+        background: #fff;
+        z-index: 999;
+        border-radius: 0 0 12px 12px;
+        box-shadow: 0 8px 20px rgba(0, 0, 0, 0.08);
+      }
 
-  .hero-section img {
-    width: 100% !important;
-    max-width: 340px;
-    height: auto !important;
-  }
-}
-</style>
-<script src="/ga.js"></script>
-  </head>
-  <body style="font-family: &quot;Quicksand&quot;, sans-serif" data-nav-active="services" data-nav-active-style="large">
-    <!-- Navigation -->
+      /* Khi mở menu */
+      .navbar-collapse.show {
+        display: block;
+      }
 
-    <div id="site-header"></div>
-    <section
-      class="py-5"
-      style="
+      /* UL dọc + căn giữa */
+      .navbar-collapse .navbar-nav {
+        flex-direction: column !important;
+        align-items: center !important;
+        gap: 10px;
+        padding: 15px 0;
+      }
+
+      /* Item */
+      .navbar-collapse .nav-item {
+        width: 100%;
+        text-align: center;
+      }
+
+      /* Link */
+      .navbar-collapse .nav-link {
+        display: block;
+        width: 100%;
+        padding: 10px;
+        font-size: 16px;
+      }
+
+      /* Button */
+      .navbar-collapse .btn {
+        width: 80%;
+        margin-top: 10px;
+      }
+
+      .hero-section img {
+        width: 100% !important;
+        max-width: 340px;
+        height: auto !important;
+      }
+    }
+  </style>
+  <script src="/ga.js"></script>
+</head>
+
+<body style="font-family: &quot;Quicksand&quot;, sans-serif" data-nav-active="services" data-nav-active-style="large">
+  <!-- Navigation -->
+
+  <div id="site-header"></div>
+  <section class="py-5" style="
         background: linear-gradient(
           135deg,
           #f1f8e9 0%,
           #ffffff 50%,
           #e3f2fd 100%
         );
-      "
-    >
-      <div class="container py-lg-5 text-center">
-        <h1 class="display-3 fw-bold mb-3">
-          Các Dịch Vụ Của Chúng Tôi <br>
-          <span
-            style="color: #2e7d32; font-family: &quot;Pacifico&quot;, cursive"
-            >Chăm Sóc Người Cao Tuổi</span
-          >
-        </h1>
-        <p class="lead text-muted mb-4">
-          Dịch vụ chăm sóc sức khỏe Người cao tuổi toàn diện, chuyên nghiệp và
-          tận tâm
-        </p>
-        <div
-          style="
+      ">
+    <div class="container py-lg-5 text-center">
+      <h1 class="display-3 fw-bold mb-3">
+        Các Dịch Vụ Của Chúng Tôi <br>
+        <span style="color: #2e7d32; font-family: &quot;Pacifico&quot;, cursive">Chăm Sóc Người Cao Tuổi</span>
+      </h1>
+      <p class="lead text-muted mb-4">
+        Dịch vụ chăm sóc sức khỏe Người cao tuổi toàn diện, chuyên nghiệp và
+        tận tâm
+      </p>
+      <div style="
             width: 60px;
             height: 3px;
             background-color: #2e7d32;
             margin: 0 auto;
-          "
-        ></div>
-      </div>
-    </section>
-    <!-- Services Detail -->
-    <section class="py-5">
-        <div class="container py-lg-5">
-            <div id="servicesContainer"></div>
-        </div>
-    </section>
+          "></div>
+    </div>
+  </section>
+  <!-- Services Detail -->
+  <section class="py-5">
+    <div class="container py-lg-5">
+      <div id="servicesContainer"></div>
+    </div>
+  </section>
 
-    <!-- Booking Section -->
-    <section class="py-5" style="background-color: #f3faff">
-      <div class="container py-5 text-center">
-        <h2 class="fw-bold display-5 mb-3">Sẵn Sàng Đặt Lịch?</h2>
-        <p class="lead text-muted mb-4">
-          Hãy liên hệ với chúng tôi để đặt lịch khám và tư vấn miễn phí
-        </p>
-        <button
-          class="btn text-white rounded-pill px-5 py-3 shadow-sm"
-          style="
+  <!-- Booking Section -->
+  <section class="py-5" style="background-color: #f3faff">
+    <div class="container py-5 text-center">
+      <h2 class="fw-bold display-5 mb-3">Sẵn Sàng Đặt Lịch?</h2>
+      <p class="lead text-muted mb-4">
+        Hãy liên hệ với chúng tôi để đặt lịch khám và tư vấn miễn phí
+      </p>
+      <button class="btn text-white rounded-pill px-5 py-3 shadow-sm" style="
             background-color: #2e7d32;
             border: none;
             font-weight: 700;
             cursor: pointer;
             transition: 0.3s;
-          "
-          onclick="window.location.href = 'lien-he.html'"
-          onmouseover="
+          " onclick="window.location.href = 'lien-he.html'" onmouseover="
             this.style.backgroundColor = '#0056b3';
             this.style.transform = 'scale(1.05)';
-          "
-          onmouseout="
+          " onmouseout="
             this.style.backgroundColor = '#2e7d32';
             this.style.transform = 'scale(1)';
-          "
-        >
-           📞 Liên Hệ Tư Vấn Ngay
-        </button>
-      </div>
-    </section>
-    <!-- Footer -->
-    <div id="site-footer"></div>
-    <div class="modal fade" id="bookingFlowModal" tabindex="-1" aria-hidden="true">
-      <style>
+          ">
+        📞 Liên Hệ Tư Vấn Ngay
+      </button>
+    </div>
+  </section>
+  <!-- Footer -->
+  <div id="site-footer"></div>
+  <div class="modal fade" id="bookingFlowModal" tabindex="-1" aria-hidden="true">
+    <style>
+      #bookingFlowModal .modal-dialog {
+        max-width: 500px;
+      }
+
+      #bookingFlowModal .modal-body {
+        height: calc(100vh - 170px);
+      }
+
+      #bookingFlowModal #bookingFlowFrame {
+        height: 100%;
+      }
+
+      #bookingFlowModal .booking-modal-title {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 10px;
+        color: #2e7d32;
+        font-size: 1.2rem;
+        line-height: 1.2;
+        margin: 0;
+      }
+
+      #bookingFlowModal .booking-modal-title .brand-logo {
+        display: inline-flex;
+        align-items: center;
+      }
+
+      #bookingFlowModal .booking-modal-title .brand-logo img {
+        width: 56px;
+        height: 42px;
+        object-fit: contain;
+        image-rendering: -webkit-optimize-contrast;
+      }
+
+      #bookingFlowModal .modal-header {
+        padding-top: 0.75rem;
+        padding-bottom: 0.75rem;
+      }
+
+      #bookingFlowModal .modal-header .btn-close {
+        margin-left: 10px;
+      }
+
+      @media (max-width: 575.98px) {
         #bookingFlowModal .modal-dialog {
-          max-width: 500px;
+          margin: 2px !important;
+          max-width: none !important;
+          width: calc(100% - 4px) !important;
+          height: calc(100% - 4px) !important;
+          padding: 0 !important;
+        }
+
+        #bookingFlowModal .modal-content {
+          height: 100% !important;
         }
 
         #bookingFlowModal .modal-body {
-          height: calc(100vh - 170px);
-        }
-
-        #bookingFlowModal #bookingFlowFrame {
-          height: 100%;
+          flex: 1 1 auto;
+          height: auto !important;
         }
 
         #bookingFlowModal .booking-modal-title {
-          display: flex;
-          align-items: center;
-          justify-content: center;
-          gap: 10px;
-          color: #2e7d32;
-          font-size: 1.2rem;
-          line-height: 1.2;
-          margin: 0;
-        }
-
-        #bookingFlowModal .booking-modal-title .brand-logo {
-          display: inline-flex;
-          align-items: center;
+          gap: 8px;
+          font-size: 1rem;
         }
 
         #bookingFlowModal .booking-modal-title .brand-logo img {
-          width: 56px;
-          height: 42px;
-          object-fit: contain;
-          image-rendering: -webkit-optimize-contrast;
+          width: 44px;
+          height: 33px;
         }
-
-        #bookingFlowModal .modal-header {
-          padding-top: 0.75rem;
-          padding-bottom: 0.75rem;
-        }
-
-        #bookingFlowModal .modal-header .btn-close {
-          margin-left: 10px;
-        }
-
-        @media (max-width: 575.98px) {
-          #bookingFlowModal .modal-dialog {
-            margin: 2px !important;
-            max-width: none !important;
-            width: calc(100% - 4px) !important;
-            height: calc(100% - 4px) !important;
-            padding: 0 !important;
-          }
-
-          #bookingFlowModal .modal-content {
-            height: 100% !important;
-          }
-
-          #bookingFlowModal .modal-body {
-            flex: 1 1 auto;
-            height: auto !important;
-          }
-          #bookingFlowModal .booking-modal-title {
-            gap: 8px;
-            font-size: 1rem;
-          }
-
-          #bookingFlowModal .booking-modal-title .brand-logo img {
-            width: 44px;
-            height: 33px;
-          }
-        }
-      </style>
-      <div class="modal-dialog modal-dialog-centered modal-dialog-scrollable">
-        <div class="modal-content border-0 rounded-4 overflow-hidden">
-          <div class="modal-header border-0" style="background: linear-gradient(135deg, #e1ffe1 0%, #ffffff 50%, #e0f7e4 100%);">
-            <h5 class="modal-title fw-bold booking-modal-title">
-              <a class="navbar-brand d-flex align-items-center gap-2 fw-bold fs-3 brand-logo" href="../index.html" style="color: #2e7d32">
-                <img src="assets/logo.png" alt="cham-soc-nguoi-gia" />
-              </a>
-              <span>Đặt Lịch Dịch Vụ</span>
-              <a class="navbar-brand d-flex align-items-center gap-2 fw-bold fs-3 brand-logo" href="index.html" style="color: #2e7d32">
-                <img src="assets/logong.png" alt="cham-soc-nguoi-gia" />
-              </a>
-            </h5>
-            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-          </div>
-          <div class="modal-body p-0" style="background:#fff;">
-            <iframe
-              id="bookingFlowFrame"
-              title="Dat lich dich vu"
-              src="about:blank"
-              loading="lazy"
-              style="display:block;width:100%;border:0;"
-            ></iframe>
-          </div>
+      }
+    </style>
+    <div class="modal-dialog modal-dialog-centered modal-dialog-scrollable">
+      <div class="modal-content border-0 rounded-4 overflow-hidden">
+        <div class="modal-header border-0"
+          style="background: linear-gradient(135deg, #e1ffe1 0%, #ffffff 50%, #e0f7e4 100%);">
+          <h5 class="modal-title fw-bold booking-modal-title">
+            <a class="navbar-brand d-flex align-items-center gap-2 fw-bold fs-3 brand-logo" href="../index.html"
+              style="color: #2e7d32">
+              <img src="assets/logo.png" alt="cham-soc-nguoi-gia" />
+            </a>
+            <span>Đặt Lịch Dịch Vụ</span>
+            <a class="navbar-brand d-flex align-items-center gap-2 fw-bold fs-3 brand-logo" href="index.html"
+              style="color: #2e7d32">
+              <img src="assets/logong.png" alt="cham-soc-nguoi-gia" />
+            </a>
+          </h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+        </div>
+        <div class="modal-body p-0" style="background:#fff;">
+          <iframe id="bookingFlowFrame" title="Dat lich dich vu" src="about:blank" loading="lazy"
+            style="display:block;width:100%;border:0;"></iframe>
         </div>
       </div>
     </div>
+  </div>
 
 
 
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
-    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
-    <script>
-      $(document).ready(async function () {
-        var SERVICES = [];
-        var bookingModalEl = document.getElementById('bookingFlowModal');
-        var bookingFrame = document.getElementById('bookingFlowFrame');
-        var bookingModal = bookingModalEl ? new bootstrap.Modal(bookingModalEl) : null;
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+  <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+  <script>
+    $(document).ready(async function () {
+      var SERVICES = [];
+      var bookingModalEl = document.getElementById('bookingFlowModal');
+      var bookingFrame = document.getElementById('bookingFlowFrame');
+      var bookingModal = bookingModalEl ? new bootstrap.Modal(bookingModalEl) : null;
 
 
-        function buildBookingUrl(serviceId) {
-          var params = new URLSearchParams();
-          params.set('embedded', '1');
-          if (serviceId !== undefined && serviceId !== null && serviceId !== '') {
-            params.set('serviceId', String(serviceId));
-          }
-          return 'dat-lich.html?' + params.toString();
+      function buildBookingUrl(serviceId) {
+        var params = new URLSearchParams();
+        params.set('embedded', '1');
+        if (serviceId !== undefined && serviceId !== null && serviceId !== '') {
+          params.set('serviceId', String(serviceId));
         }
+        return 'dat-lich.html?' + params.toString();
+      }
 
-        function openBookingModal(serviceId) {
-          if (!bookingModal || !bookingFrame) return;
-          bookingFrame.src = buildBookingUrl(serviceId);
-          bookingModal.show();
-        }
+      function openBookingModal(serviceId) {
+        if (!bookingModal || !bookingFrame) return;
+        bookingFrame.src = buildBookingUrl(serviceId);
+        bookingModal.show();
+      }
 
-        function renderServiceCards(list) {
-          $('#servicesContainer').empty();
-          list.forEach(function (service, index) {
-            var reverse = index % 2 ? 'flex-lg-row-reverse' : '';
-            var serviceAlt = (service.alt || service.name || 'Dich vu cham soc me va be').replace(/"/g, '&quot;');
-            var includesHTML = service.includes
-              .map(function (item) {
-                return '<li class="py-2" style="color:#555"><i class="fas fa-check me-2" style="color:#2e7d32"></i>' + item + '</li>';
-              })
-              .join('');
+      function renderServiceCards(list) {
+        $('#servicesContainer').empty();
+        list.forEach(function (service, index) {
+          var reverse = index % 2 ? 'flex-lg-row-reverse' : '';
+          var serviceAlt = (service.alt || service.name || 'Dich vu cham soc me va be').replace(/"/g, '&quot;');
+          var includesHTML = service.includes
+            .map(function (item) {
+              return '<li class="py-2" style="color:#555"><i class="fas fa-check me-2" style="color:#2e7d32"></i>' + item + '</li>';
+            })
+            .join('');
 
-            $('#servicesContainer').append(
-              '<div class="row align-items-center mb-5 g-5 ' +
-                reverse +
-                '">' +
-                '<div class="col-lg-6">' +
-                '<img src="' +
-                service.image +
-                '" alt="' +
-                serviceAlt +
-                '" class="img-fluid rounded-4 shadow-lg">' +
-                '</div>' +
-                '<div class="col-lg-6">' +
-                '<h2 class="fw-bold display-6 mb-3" style="color:#2e7d32">' +
-                service.name +
-                '</h2>' +
-                '<p class="text-secondary lh-lg mb-4">' +
-                service.description +
-                '</p>' +
-                '<h4 class="fw-bold mb-3">Bao gồm</h4>' +
-                '<ul class="list-unstyled mb-4">' +
-                includesHTML +
-                '</ul>' +
-                '<button type="button" class="btn-book btn text-white rounded-pill px-4 py-2 shadow-sm fw-bold" style="background:#2e7d32;border:none" data-id="' +
-                service.id +
-                '">' +
-                '<i class="fas fa-calendar-check me-1"></i>Đặt Lịch Ngay' +
-                '</button>' +
-                '</div>' +
-                '</div>'
-            );
-          });
-        }
-
-        try {
-          var response = await fetch('services.json');
-          SERVICES = await response.json();
-          renderServiceCards(SERVICES);
-        } catch (error) {
-          console.error('Lỗi load services.json:', error);
-          alert('Không thể tải danh sách dịch vụ. Vui lòng thử lại sau.');
-        }
-
-        $(document).on('click', '.btn-book', function () {
-          openBookingModal($(this).data('id'));
+          $('#servicesContainer').append(
+            '<div class="row align-items-center mb-5 g-5 ' +
+            reverse +
+            '">' +
+            '<div class="col-lg-6">' +
+            '<img src="' +
+            service.image +
+            '" alt="' +
+            serviceAlt +
+            '" class="img-fluid rounded-4 shadow-lg">' +
+            '</div>' +
+            '<div class="col-lg-6">' +
+            '<h2 class="fw-bold display-6 mb-3" style="color:#2e7d32">' +
+            service.name +
+            '</h2>' +
+            '<p class="text-secondary lh-lg mb-4">' +
+            service.description +
+            '</p>' +
+            '<h4 class="fw-bold mb-3">Bao gồm</h4>' +
+            '<ul class="list-unstyled mb-4">' +
+            includesHTML +
+            '</ul>' +
+            '<button type="button" class="btn-book btn text-white rounded-pill px-4 py-2 shadow-sm fw-bold" style="background:#2e7d32;border:none" data-id="' +
+            service.id +
+            '">' +
+            '<i class="fas fa-calendar-check me-1"></i>Đặt Lịch Ngay' +
+            '</button>' +
+            '</div>' +
+            '</div>'
+          );
         });
+      }
 
-        $('#openBookingFromCta').on('click', function () {
-          var serviceId = SERVICES.length ? SERVICES[0].id : '';
-          openBookingModal(serviceId);
-        });
+      try {
+        var response = await fetch('services.json');
+        SERVICES = await response.json();
+        renderServiceCards(SERVICES);
+      } catch (error) {
+        console.error('Lỗi load services.json:', error);
+        alert('Không thể tải danh sách dịch vụ. Vui lòng thử lại sau.');
+      }
 
-        if (bookingModalEl) {
-          bookingModalEl.addEventListener('hidden.bs.modal', function () {
-            if (bookingFrame) {
-              bookingFrame.src = 'about:blank';
-            }
-          });
-        }
-
-        window.addEventListener('message', function (event) {
-          if (!event || !event.data || !event.data.type) return;
-
-          if (event.data.type === 'booking:success') {
-            return;
-          }
-
-          if (event.data.type === 'booking:close' && bookingModal) {
-            bookingModal.hide();
-          }
-        });
+      $(document).on('click', '.btn-book', function () {
+        openBookingModal($(this).data('id'));
       });
-    </script>
-    <script src="JS/login-modal-core.js"></script>
-    <script src="JS/shared-layout.js"></script>
-    <script src="JS/user-nav-menu.js"></script>
-    <script src="JS/login-modal-loader.js"></script>
-    <script src="JS/lookup-modal-core.js"></script>
-    <script src="JS/lookup-modal-loader.js"></script>
-    <script src="JS/profile-modal-core.js"></script>
+
+      $('#openBookingFromCta').on('click', function () {
+        var serviceId = SERVICES.length ? SERVICES[0].id : '';
+        openBookingModal(serviceId);
+      });
+
+      if (bookingModalEl) {
+        bookingModalEl.addEventListener('hidden.bs.modal', function () {
+          if (bookingFrame) {
+            bookingFrame.src = 'about:blank';
+          }
+        });
+      }
+
+      window.addEventListener('message', function (event) {
+        if (!event || !event.data || !event.data.type) return;
+
+        if (event.data.type === 'booking:success') {
+          return;
+        }
+
+        if (event.data.type === 'booking:close' && bookingModal) {
+          bookingModal.hide();
+        }
+      });
+    });
+  </script>
+  <script src="JS/login-modal-core.js"></script>
+  <script src="JS/shared-layout.js"></script>
+  <script src="JS/user-nav-menu.js"></script>
+  <script src="JS/login-modal-loader.js"></script>
+  <script src="JS/lookup-modal-core.js"></script>
+  <script src="JS/lookup-modal-loader.js"></script>
+  <script src="JS/profile-modal-core.js"></script>
   <script src="JS/profile-modal-loader.js"></script>
-  </body>
+</body>
+
 </html>
-
-
