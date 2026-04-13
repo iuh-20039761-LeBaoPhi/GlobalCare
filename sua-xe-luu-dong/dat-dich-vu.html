@@ -865,6 +865,57 @@
                   </div>
                   <div class="col-md-12">
                     <label class="form-label"
+                      ><i class="fas fa-map-marker-alt me-2"></i>Địa chỉ
+                      <span class="text-danger">*</span></label
+                    >
+                    <div class="input-group">
+                      <input
+                        id="diachi"
+                        name="diachi"
+                        type="text"
+                        class="form-control"
+                        placeholder="Nhập địa chỉ của bạn"
+                        required
+                      />
+                    </div>
+                    <div class="d-flex gap-2 flex-wrap mt-2">
+                      <button
+                        class="btn btn-outline-secondary"
+                        type="button"
+                        id="nutvitricuatoi"
+                        name="nutvitricuatoi"
+                      >
+                        <i class="fas fa-location-arrow"></i> Vị trí của tôi
+                      </button>
+                      <button
+                        class="btn btn-outline-info"
+                        type="button"
+                        id="nutmobando"
+                        name="nutmobando"
+                      >
+                        <i class="fas fa-map-marked-alt"></i> Mở bản đồ
+                      </button>
+                    </div>
+                  </div>
+
+                  <div
+                    class="col-md-12"
+                    id="osmMapWrapper"
+                    style="display: none"
+                  >
+                    <label class="form-label">Chọn vị trí trên bản đồ</label>
+                    <div
+                      id="osmMap"
+                      style="
+                        height: 320px;
+                        border: 1px solid #dee2e6;
+                        border-radius: 10px;
+                        z-index: 1;
+                      "
+                    ></div>
+                  </div>
+                  <div class="col-md-12">
+                    <label class="form-label"
                       ><i class="fas fa-list-ul me-2"></i>Loại dịch vụ
                       <span class="text-danger">*</span></label
                     >
@@ -921,68 +972,27 @@
                     >
                     <input type="datetime-local" class="form-control" id="thoigianmongmuon" name="thoigianmongmuon" />
                   </div>
-                  <div class="col-md-12">
-                    <label class="form-label"
-                      ><i class="fas fa-map-marker-alt me-2"></i>Địa chỉ
-                      <span class="text-danger">*</span></label
-                    >
-                    <div class="input-group">
-                      <input
-                        id="diachi"
-                        name="diachi"
-                        type="text"
-                        class="form-control"
-                        placeholder="Nhập địa chỉ của bạn"
-                        required
-                      />
-                    </div>
-                    <div class="d-flex gap-2 flex-wrap mt-2">
-                      <button
-                        class="btn btn-outline-secondary"
-                        type="button"
-                        id="nutvitricuatoi"
-                        name="nutvitricuatoi"
-                      >
-                        <i class="fas fa-location-arrow"></i> Vị trí của tôi
-                      </button>
-                      <button
-                        class="btn btn-outline-info"
-                        type="button"
-                        id="nutmobando"
-                        name="nutmobando"
-                      >
-                        <i class="fas fa-map-marked-alt"></i> Mở bản đồ
-                      </button>
-                    </div>
-                  </div>
-
-                  <div
-                    class="col-md-12"
-                    id="osmMapWrapper"
-                    style="display: none"
-                  >
-                    <label class="form-label">Chọn vị trí trên bản đồ</label>
-                    <div
-                      id="osmMap"
-                      style="
-                        height: 320px;
-                        border: 1px solid #dee2e6;
-                        border-radius: 10px;
-                        z-index: 1;
-                      "
-                    ></div>
-                  </div>
-
                   <div class="col-md-12 d-none" id="estimateSummaryBlock">
                     <div class="estimate-card">
                       <div class="estimate-title">
                         <i class="fas fa-receipt me-2"></i>Ước tính chi phí
                         <span class="fw-normal">(nếu đồng ý sửa)</span>
                       </div>
+                      <div class="estimate-note">
+                         <p>
+                          ✅ <strong>Nếu đồng ý sửa:</strong> phí khảo sát được miễn.
+                        </p>
+                        <p>
+                          ❌ <strong>Nếu không đồng ý sửa</strong> sau khi thợ đến khảo sát,
+                          bạn cần thanh toán chi phí bên dưới:
+                        </p>
+                      </div>
+                        
+
 
                       <div class="estimate-line">
-                        <span>Giá dịch vụ (tạm tính):</span>
-                        <span class="estimate-value" id="estimateServicePrice"
+                        <span><i class="fas fa-search me-1"></i>Phí khảo sát:</span>
+                        <span class="estimate-value" id="estimateSurveyFee"
                           >-</span
                         >
                       </div>
@@ -995,51 +1005,20 @@
                       </div>
 
                       <div class="estimate-total estimate-line">
-                        <span>Tổng tạm tính:</span>
+                        <span>Tổng tiền:</span>
                         <span class="estimate-value" id="estimateTempTotal"
                           >-</span
                         >
                       </div>
 
-                      <div class="estimate-note">
-                        <p>
-                          ✅ <strong>Nếu đồng ý sửa:</strong> phí khảo sát được miễn,
-                          chỉ thanh toán tổng tạm tính trên.
-                        </p>
-                        <p>
-                          ❌ <strong>Nếu không đồng ý sửa</strong> sau khi thợ đến khảo sát,
-                          bạn cần thanh toán:
-                        </p>
-
-                        <div class="estimate-no-fix">
-                          <div class="estimate-line">
-                            <span><i class="fas fa-motorcycle me-1"></i>Phí di chuyển:</span>
-                            <span class="estimate-value" id="estimateTransportOnly"
-                              >-</span
-                            >
-                          </div>
-                          <div class="estimate-line">
-                            <span><i class="fas fa-search me-1"></i>Phí khảo sát:</span>
-                            <span class="estimate-value" id="estimateSurveyOnly"
-                              >-</span
-                            >
-                          </div>
-                          <div class="estimate-line">
-                            <span><strong>Tổng cần trả:</strong></span>
-                            <span class="estimate-value" id="estimateNoFixTotal"
-                              >-</span
-                            >
-                          </div>
-                        </div>
-                      </div>
+                      
 
                       <div class="estimate-footnote">
-                        <i class="fas fa-info-circle me-1"></i>Giá chính xác xác nhận sau
+                        <i class="fas fa-info-circle me-1"></i>Giá chính xác sau
                         khi thợ khảo sát thực tế.
                       </div>
 
                       <div class="d-none">
-                        <input type="text" id="giadichvu" name="giadichvu" readonly />
                         <input type="text" id="phikhaosat" name="phikhaosat" readonly />
                         <input type="text" id="phidichuyen" name="phidichuyen" readonly />
                         <input type="text" id="tongchiphi" name="tongchiphi" readonly />
@@ -1067,7 +1046,7 @@
                       multiple
                       hidden
                     />
-                    <div class="d-flex gap-2 flex-wrap">
+                    <div class="d-flex gap-2 flex-wrap" style="justify-content: space-around;">
                       <button
                         type="button"
                         class="btn btn-outline-primary"
@@ -1219,10 +1198,7 @@
             <div class="confirm-group">
               <h6 class="confirm-group-title"><i class="fas fa-receipt me-2"></i>Chi phí dịch vụ</h6>
               <div class="confirm-group-content highlight">
-                <div class="confirm-row">
-                  <span class="confirm-label">Chi phí dịch vụ</span>
-                  <span class="confirm-value" id="confirmPrice">-</span>
-                </div>
+
                 <div class="confirm-row">
                   <span class="confirm-label">Chi phí khảo sát</span>
                   <span class="confirm-value" id="confirmSurvey">-</span>
