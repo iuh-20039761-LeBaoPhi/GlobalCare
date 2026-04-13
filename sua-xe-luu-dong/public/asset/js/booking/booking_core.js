@@ -23,23 +23,17 @@
       '#formdatdichvu input[type="datetime-local"]',
     );
 
-    const priceInput = document.getElementById("giadichvu");
+
     const transportInput = document.getElementById("phidichuyen");
     const surveyInput = document.getElementById("phikhaosat");
     const totalInput = document.getElementById("tongchiphi");
     const addressInput = document.getElementById("diachi");
-    const estimateServicePrice = document.getElementById(
-      "estimateServicePrice",
-    );
+
     const estimateTransportFee = document.getElementById(
       "estimateTransportFee",
     );
     const estimateTempTotal = document.getElementById("estimateTempTotal");
-    const estimateTransportOnly = document.getElementById(
-      "estimateTransportOnly",
-    );
-    const estimateSurveyOnly = document.getElementById("estimateSurveyOnly");
-    const estimateNoFixTotal = document.getElementById("estimateNoFixTotal");
+    const estimateSurveyFee = document.getElementById("estimateSurveyFee");
     const estimateSummaryBlock = document.getElementById(
       "estimateSummaryBlock",
     );
@@ -151,13 +145,7 @@
 
     let vehicleTypesData = [];
 
-    function getSelectedServicePrice() {
-      if (!serviceSelect || !serviceSelect.value) return 0;
-      const service = servicesData.find(
-        (s) => String(s.id) === serviceSelect.value,
-      );
-      return Number(service?.service_price || 0);
-    }
+
 
     function getDistanceThresholdKm() {
       return Number(transportPerKm || 0);
@@ -199,15 +187,12 @@
     }
 
     function updateTotalPrice() {
-      const servicePrice = getSelectedServicePrice();
       const surveyFee = getCurrentSurveyFee();
       const transportFee = Number(transportFeeValue || 0);
-      const total = servicePrice + transportFee;
+      const total = surveyFee + transportFee;
       const noFixTotal = surveyFee + transportFee;
 
-      if (priceInput) {
-        priceInput.value = servicePrice > 0 ? formatCurrency(servicePrice) : "";
-      }
+
 
       if (surveyInput) {
         surveyInput.value = surveyFee > 0 ? formatCurrency(surveyFee) : "";
@@ -217,24 +202,11 @@
         totalInput.value = total > 0 ? formatCurrency(total) : "";
       }
 
-      if (estimateServicePrice) {
-        estimateServicePrice.textContent =
-          servicePrice > 0 ? formatCurrencyVND(servicePrice) : "-";
-      }
 
-      if (estimateTransportOnly) {
-        estimateTransportOnly.textContent =
-          transportFee > 0 ? formatCurrencyVND(transportFee) : "-";
-      }
 
-      if (estimateSurveyOnly) {
-        estimateSurveyOnly.textContent =
+      if (estimateSurveyFee) {
+        estimateSurveyFee.textContent =
           surveyFee > 0 ? formatCurrencyVND(surveyFee) : "-";
-      }
-
-      if (estimateNoFixTotal) {
-        estimateNoFixTotal.textContent =
-          noFixTotal > 0 ? formatCurrencyVND(noFixTotal) : "-";
       }
 
       if (estimateTempTotal) {
@@ -572,7 +544,7 @@
     }
 
     function clearPrice() {
-      if (priceInput) priceInput.value = "";
+
       if (totalInput) totalInput.value = "";
     }
 
