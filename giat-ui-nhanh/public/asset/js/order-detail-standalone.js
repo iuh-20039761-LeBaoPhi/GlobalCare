@@ -467,7 +467,7 @@
     if (value === "accepted") return 45;
     if (value === "processing") return 62;
     if (value === "canceled") return 0;
-    return 20;
+    return 0; // Chỉ tính tiến độ khi nhà cung cấp nhận đơn
   }
 
   /**
@@ -2087,7 +2087,7 @@
       }
 
       if (canReceive) {
-        var receiveBtn = makeButton("Nhận đơn", "btn btn-outline-primary");
+        var receiveBtn = makeButton("Nhận đơn", "btn btn-primary");
         receiveBtn.addEventListener("click", function () {
           runProviderAction(receiveBtn, "Đang nhận...", async function () {
             var order = state.orderRaw || {};

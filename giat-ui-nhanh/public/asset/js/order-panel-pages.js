@@ -144,7 +144,7 @@
     if (value === "accepted") return 45;
     if (value === "processing") return 62;
     if (value === "canceled") return 0;
-    return 20;
+    return 0; // Chỉ tính tiến độ khi nhà cung cấp nhận đơn
   }
 
   function formatCurrency(value) {
@@ -2214,9 +2214,6 @@
       String(order.deliveryMethod || "").trim() || "Chưa cập nhật";
 
     var statusLower = String(order.status || "").toLowerCase();
-    var executionStartValue = order.startedAt || order.receivedAt || null;
-    var executionEndValue = order.completedAt || null;
-
     var providerStateText = "Chưa nhận";
     if (statusLower === "accepted") providerStateText = "Đã nhận đơn";
     if (statusLower === "processing") providerStateText = "Đang xử lý";
@@ -2256,11 +2253,15 @@
     setText("heroBookingDate", formatDateTime(order.createdAt));
     setText(
       "heroReceivedDate",
-      executionStartValue ? formatDateTime(executionStartValue) : "---",
+      order.receivedAt ? formatDateTime(order.receivedAt) : "---",
+    );
+    setText(
+      "heroStartedDate",
+      order.startedAt ? formatDateTime(order.startedAt) : "---",
     );
     setText(
       "heroCompletedDate",
-      executionEndValue ? formatDateTime(executionEndValue) : "---",
+      order.completedAt ? formatDateTime(order.completedAt) : "---",
     );
     setText("heroPaymentStatus", getPaymentStatusLabel(order.paymentStatus));
     setText("heroTotalAmount", formatCurrencyVnd(total));
