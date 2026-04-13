@@ -24,7 +24,7 @@
     const customItemInput = document.getElementById("mauxekhac");
     const addressInput = document.getElementById("diachi");
 
-    const priceInput = document.getElementById("giadichvu");
+
     const surveyInput = document.getElementById("phikhaosat");
     const transportInput = document.getElementById("phidichuyen");
     const totalInput = document.getElementById("tongchiphi");
@@ -163,7 +163,7 @@
         confirmItem: selectedItemText(),
         confirmDatetime: datetimeInput?.value,
         confirmAddress: addressInput?.value,
-        confirmPrice: priceInput?.value,
+
         confirmSurvey: surveyInput?.value,
         confirmTransport: moneyOnlyText(transportInput?.value),
         confirmTotal: totalInput?.value,
@@ -189,7 +189,7 @@
         address: addressInput?.value || "",
         lat_kh: (addressInput?.dataset.lat || "").trim(),
         lng_kh: (addressInput?.dataset.lng || "").trim(),
-        price: priceInput?.value || "",
+
         survey_fee: surveyInput?.value || "",
         transport_fee: transportFee,
         ship: transportFee,
@@ -235,7 +235,6 @@
         loaixe: data.vehicle_type || "",
         hangxe: data.brand || "",
         mauxe: data.item || "",
-        giadichvu: normalizeMoneyToNumber(data.price),
         phikhaosat: normalizeMoneyToNumber(data.survey_fee),
         tiendichuyen: normalizeMoneyToNumber(data.transport_fee),
         tongtien: normalizeMoneyToNumber(data.total),
@@ -273,7 +272,6 @@
         "Hãng xe": formData.brand || "",
         "Mẫu xe": formData.item || "",
         "Ngày đặt": formData.booking_time || "",
-        "Giá dịch vụ": normalizeMoneyToNumber(formData.price),
         "Phí khảo sát": normalizeMoneyToNumber(formData.survey_fee),
         "Tiền di chuyển": normalizeMoneyToNumber(formData.transport_fee),
         "Tổng tiền": normalizeMoneyToNumber(formData.total),
