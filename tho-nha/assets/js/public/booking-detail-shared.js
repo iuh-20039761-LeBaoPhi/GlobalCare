@@ -185,8 +185,51 @@ async function _bdPrefillCustomerProfileToForm() {
     }
 }
 
+// Biến lưu kết quả xác thực URL để tránh gọi API nhiều lần
+let _urlAuthCache = null;
+window._bdTransportFeeRates = [];
+
+// Tự động điều chỉnh các option của thời gian phục vụ theo giờ thực tế (VN)
+function _bdAutoSetTimePreference() {
+    const timeEl = document.getElementById('thoigianphucvu');
+    if (!timeEl) return;
+    
+    const rates = Array.isArray(window._bdTransportFeeRates) ? window._bdTransportFeeRates : [];
+    const getRate = (type) => {
+        const found = rates.find(x => String(x.loaiphi) === type);
+        return found && found.sotien ? (Number(found.sotien).toLocaleString('vi-VN') + 'đ') : '5.000đ';
+    };
+
+    const rSang = getRate('Thường');
+    const rToi  = getRate('Buổi tối');
+    const rGap  = getRate('Gấp');
+
+    const now = new Date();
+    const vnTime = new Date(now.toLocaleString("en-US", {timeZone: "Asia/Ho_Chi_Minh"}));
+    const hours = vnTime.getHours();
+    
+    let baseOption = '';
+    // 6h sáng -> trước 18h tối (tức là 6 -> 17)
+    if (hours >= 6 && hours < 18) {
+        baseOption = `<option value="Thường">Buổi sáng (${rSang}/km)</option>`;
+    } else {
+        baseOption = `<option value="Buổi tối">Buổi tối (${rToi}/km)</option>`;
+    }
+    
+    timeEl.innerHTML = baseOption + `<option value="Gấp">Gấp (tới trong 1h, ${rGap}/km)</option>`;
+}
+
 // Chuẩn bị trạng thái auth ban đầu cho luồng đặt lịch.
 async function _bdPrepareBookingAuthState() {
+    try {
+        if (window.DVQTKrud) {
+            const res = await window.DVQTKrud.listTable('phidichuyen', { limit: 100 });
+            window._bdTransportFeeRates = Array.isArray(res) ? res : [];
+        }
+    } catch(e) {}
+    
+    _bdAutoSetTimePreference();
+
     // Thử xác thực thầm lặng qua URL nếu có đủ tham số (không hiện alert nếu thất bại ở giai đoạn này)
     const params = new URLSearchParams(window.location.search);
     if (params.get('sdt') && params.get('password')) {
@@ -212,9 +255,6 @@ async function _bdPrepareBookingAuthState() {
     await _bdRenderAuthBanner();
     await _bdPrefillCustomerProfileToForm();
 }
-
-// Biến lưu kết quả xác thực URL để tránh gọi API nhiều lần
-let _urlAuthCache = null;
 
 // Kiểm tra quyền đặt lịch (chỉ chặn nếu NCC tự đặt dịch vụ của mình).
 // Không còn yêu cầu đăng nhập — luôn cho phép đặt lịch.
@@ -370,23 +410,25 @@ async function _bdTravelFromCoords(inLat, inLng) {
     _bdRefreshBreakdown();
 }
 
-/**
- * LOGIC TÍNH PHÍ ĐẶC THÙ CỦA THỢ NHÀ
- * @param {number} km - Khoảng cách (km)
- * @param {Object} config - Config phí (per_km)
- */
 function _bdCalculateTravelFee(km, config) {
     const dist = Number(km) || 0;
-    const baseKm = Number(config.pricePerKm?.baseKm || 0);
-    const baseP  = Number(config.pricePerKm?.basePrice || 0);
-    const extraP = Number(config.pricePerKm?.extraPrice || (config.pricePerKm || 0));
+    
+    // Tìm Time Preference Rate
+    const thoigianEl = document.getElementById('thoigianphucvu');
+    const thoigian = thoigianEl ? thoigianEl.value : 'Thường';
+    
+    let rate = 5000;
+    if (Array.isArray(window._bdTransportFeeRates) && window._bdTransportFeeRates.length > 0) {
+        const found = window._bdTransportFeeRates.find(x => String(x.loaiphi) === thoigian);
+        if (found && found.sotien) rate = parseInt(found.sotien) || 5000;
+    }
 
-    let fee = dist <= baseKm ? baseP : baseP + (dist - baseKm) * extraP;
-    if (config.min && fee < config.min) fee = config.min;
-    if (config.max && fee > config.max) fee = config.max;
+    // Miễn phí 3km đầu
+    const billableKm = Math.max(0, dist - 3);
+    const fee = billableKm * rate;
 
     const amtRounded = Math.round(fee / 1000) * 1000;
-    return { amt: amtRounded, km: dist };
+    return { amt: amtRounded, km: dist, rateUsed: rate, billableKm: billableKm };
 }
 
 /** 
@@ -443,9 +485,18 @@ function _bdRefreshBreakdown() {
     _bdUpdateBreakdown(_bdCurPrice, _bdTravelCfg, _bdCurSurvey);
 }
 
-// Listener đã được map-picker.js đảm nhiệm
+// Listener cập nhật khi thay đổi yêu cầu thời gian
 function _bdSetupAddressListener() {
-    // Để trống để tránh lỗi khi các file cũ gọi tới
+    const timeEl = document.getElementById('thoigianphucvu');
+    if (timeEl) {
+        timeEl.addEventListener('change', () => {
+            if (_bdPendingCoords && _bdTravelStatus === 'ok') {
+                _bdTravelFromCoords(_bdPendingCoords.lat, _bdPendingCoords.lng);
+            } else {
+                _bdRefreshBreakdown();
+            }
+        });
+    }
 }
 
 // Dùng chung cho cả modal và standalone (cùng ID trong DOM)
@@ -455,87 +506,61 @@ function _bdUpdateBreakdown(price, travelFee, surveyFee) {
     if (!wrap) return;
 
     const isPerKm = travelFee && travelFee.mode === 'per_km';
-    // Với per_km, dùng _bdTravelAmt nếu đã tính xong
     const tAmt = isPerKm ? (_bdTravelStatus === 'ok' ? _bdTravelAmt : 0) : null;
-    const effectiveTf = isPerKm ? null : travelFee; // fixed mode: dùng min/max gốc
+    const effectiveTf = isPerKm ? null : travelFee; 
 
     // Tính phí fixed
     const tFixed = effectiveTf ? (effectiveTf.min ?? effectiveTf.fixedAmount ?? 0) : 0;
     const survey  = (surveyFee && surveyFee.required) ? (surveyFee.amount || 0) : 0;
 
-    const travelAmt = isPerKm ? tAmt : tFixed;
-    const p = _bdCalcPricing(price, travelAmt, surveyFee);
+    const travelAmtValue = isPerKm ? tAmt : tFixed;
 
-    // Ẩn box nếu fixed và không có phí
-    if (!isPerKm && !p.hasFees) { wrap.style.display = 'none'; return; }
+    // Hiển thị giá dịch vụ
+    const bdService = document.getElementById('bd-service');
+    if (bdService) {
+        bdService.innerHTML = price > 0 ? _bdFmt(price) : 'Miễn phí';
+    }
 
-    const bdService   = document.getElementById('bd-service');
-    const bdTravelRow = document.getElementById('bd-travel-row');
-    const bdTravel    = document.getElementById('bd-travel');
-    const bdTotal     = document.getElementById('bd-total');
+    const thoigianEl = document.getElementById('thoigianphucvu');
+    let thoigian = thoigianEl ? thoigianEl.value : 'Thường';
+    let rate = 5000;
+    if (Array.isArray(window._bdTransportFeeRates)) {
+        let found = window._bdTransportFeeRates.find(x => String(x.loaiphi) === thoigian);
+        if (found && found.sotien) rate = parseInt(found.sotien) || 5000;
+    }
+    
+    // Giao diện khảo sát - phí không sửa
+    const bdSurveyNotice = document.getElementById('bd-survey-notice');
+    if (bdSurveyNotice) bdSurveyNotice.style.display = '';
 
-    if (bdService) bdService.textContent = price > 0 ? _bdFmt(price) : 'Miễn phí';
-
-    // Phí di chuyển (Travel Fee Row)
-    if (bdTravelRow && bdTravel) {
-        bdTravelRow.style.removeProperty('display');
-        
-        // Luôn hiển thị khung giá tạm tính trong lúc đặt lịch (theo yêu cầu User)
-        const tMin = travelFee?.min || 20000;
-        const tMax = travelFee?.max || 150000;
-        
+    const bdSurveyTravel = document.getElementById('bd-survey-travel');
+    if (bdSurveyTravel) {
         if (isPerKm) {
-            if (_bdTravelStatus === 'ok' && _bdTravelAmt > 0) {
-                const distInfo = _bdTravelDistKm > 0 ? `<br><small class="text-muted" style="font-size:0.75rem;">(Khoảng cách: ${_bdTravelDistKm.toFixed(1)} km)</small>` : '';
-                bdTravel.innerHTML = `
-                    <div style="text-align:right;">
-                        <span style="font-weight:700; color:#11998e; font-size:1.05rem;">${_bdFmt(_bdTravelAmt)}</span>
-                        ${distInfo}
-                    </div>`;
+            if (_bdTravelStatus === 'ok') {
+                const distInfo = _bdTravelDistKm > 0 ? `<div style="font-size:0.75rem; text-align:right;">(+${Math.max(0, _bdTravelDistKm - 3).toFixed(1)} km tính phí)</div>` : '';
+                bdSurveyTravel.innerHTML = `<span style="font-weight:700;">${_bdFmt(_bdTravelAmt)}</span><br>${distInfo}`;
             } else if (_bdTravelStatus === 'loading') {
-                bdTravel.innerHTML = `
-                    <div style="text-align:right; color:#11998e;">
-                        <i class="fas fa-circle-notch fa-spin me-1"></i>
-                        <small style="font-weight:600;">Đang tính phí...</small>
-                    </div>`;
+                bdSurveyTravel.innerHTML = '<i class="fas fa-circle-notch fa-spin"></i> Đang tính...';
             } else {
-                bdTravel.innerHTML = `
-                    <div style="text-align:right;">
-                        <span style="font-weight:600;">${_bdFmt(tMin)} – ${_bdFmt(tMax)}</span>
-                        <br><small class="text-muted" style="font-size:0.75rem;">(Tạm tính theo thợ gần nhất)</small>
-                    </div>`;
+                bdSurveyTravel.innerHTML = `Tạm tính theo ${_bdFmt(rate)}/km<br><span style="font-size:0.75rem">(Sau 3km đầu)</span>`;
             }
         } else {
-            // Chế độ cố định (fixed)
-            bdTravel.textContent = tMin === tMax ? _bdFmt(tMin) : `${_bdFmt(tMin)} – ${_bdFmt(tMax)}`;
+            bdSurveyTravel.textContent = _bdFmt(tFixed);
         }
     }
 
-    // Tổng
-    if (bdTotal) {
-        if (isPerKm && _bdTravelStatus !== 'ok') {
-            const priceLabel = price > 0 ? _bdFmt(price) : 'Miễn phí';
-            bdTotal.innerHTML = `${priceLabel} <span style="color:#94a3b8;font-size:0.85rem;font-weight:normal;">+ phí di chuyển</span>`;
-        } else {
-            bdTotal.innerHTML = `<span style="color:#11998e;font-weight:800;font-size:1.2rem;">${_bdFmt(p.total)}</span>`;
-        }
+    const bdSurveyAmount = document.getElementById('bd-survey-amount');
+    if (bdSurveyAmount) {
+        bdSurveyAmount.textContent = survey > 0 ? _bdFmt(survey) : 'Miễn phí';
     }
 
-    // Survey notice
-    const bdSurveyNotice   = document.getElementById('bd-survey-notice');
-    const bdSurveyTravel   = document.getElementById('bd-survey-travel');
-    const bdSurveyAmount   = document.getElementById('bd-survey-amount');
     const bdSurveyNoRepair = document.getElementById('bd-survey-no-repair');
-
-    if (survey > 0 && bdSurveyNotice) {
-        const tDisp = isPerKm && _bdTravelStatus === 'ok' ? _bdFmt(_bdTravelAmt) : (isPerKm ? '—' : _bdFmt(tFixed));
-        const nr    = isPerKm && _bdTravelStatus === 'ok' ? _bdFmt(_bdTravelAmt + survey) : (isPerKm ? '—' : _bdFmt(tFixed + survey));
-        if (bdSurveyTravel)   bdSurveyTravel.textContent   = tDisp;
-        if (bdSurveyAmount)   bdSurveyAmount.textContent   = _bdFmt(survey);
-        if (bdSurveyNoRepair) bdSurveyNoRepair.textContent = nr;
-        bdSurveyNotice.style.display = '';
-    } else if (bdSurveyNotice) {
-        bdSurveyNotice.style.display = 'none';
+    if (bdSurveyNoRepair) {
+        if (isPerKm && _bdTravelStatus !== 'ok') {
+            bdSurveyNoRepair.innerHTML = survey > 0 ? `${_bdFmt(survey)} <span class="fw-normal text-muted" style="font-size: 0.85rem">+ phí di chuyển</span>` : `<span style="font-size: 0.9rem">Theo di chuyển</span>`;
+        } else {
+            bdSurveyNoRepair.textContent = _bdFmt((travelAmtValue || 0) + survey);
+        }
     }
 
     wrap.style.display = '';
@@ -677,67 +702,66 @@ function _bdFillConfirm(name, phone, service, address, noteRaw) {
 
     // Chi phí
     const costSection     = document.getElementById('cf-cost-section');
-    const costBaseRow     = document.getElementById('cf-cost-base-row');
-    const costTravelRow   = document.getElementById('cf-cost-travel-row');
-    const costSurveyRow   = document.getElementById('cf-cost-survey-row');
     const costBase        = document.getElementById('cf-cost-base');
     const costTravel      = document.getElementById('cf-cost-travel');
     const costSurvey      = document.getElementById('cf-cost-survey');
-    const costTotal       = document.getElementById('cf-cost-total');
-    const costNote        = document.getElementById('cf-cost-note');
+    const costNoRepair    = document.getElementById('cf-cost-norepair');
 
     const basePrice = _bdCurPrice || 0;
     const survey    = (_bdCurSurvey && _bdCurSurvey.required) ? (_bdCurSurvey.amount || 0) : 0;
     const isPerKm   = _bdTravelCfg && _bdTravelCfg.mode === 'per_km';
-    const travelOk  = isPerKm && _bdTravelStatus === 'ok';
+
+    // Tìm rate
+    let tAmt = 0;
+    let rateUi = '';
+    const thoigianEl = document.getElementById('thoigianphucvu');
+    const thoigian = thoigianEl ? thoigianEl.value : 'Thường';
+    if (isPerKm) {
+        if (_bdTravelStatus === 'ok') {
+            tAmt = _bdTravelAmt;
+            rateUi = '';
+        } else {
+            let rate = 5000;
+            if (Array.isArray(window._bdTransportFeeRates)) {
+                let found = window._bdTransportFeeRates.find(x => String(x.loaiphi) === thoigian);
+                if (found && found.sotien) rate = parseInt(found.sotien) || 5000;
+            }
+            tAmt = 0;
+            rateUi = `<span class="cfm-cost-sub text-muted">Từ ${_bdFmt(rate)}/km (sau 3km)</span>`;
+        }
+    } else {
+        tAmt = _bdTravelCfg?.min || 0;
+    }
 
     const shouldShowCostSection = !!costSection && (basePrice > 0 || survey > 0 || isPerKm || (_bdTravelAmt > 0));
 
     if (shouldShowCostSection && costSection) {
         costSection.style.display = '';
 
-        // Giá dịch vụ
+        // Giá dịch vụ (Nếu khách sửa)
         if (costBase) costBase.textContent = basePrice > 0 ? _bdFmt(basePrice) : 'Miễn phí';
 
-        // Phí di chuyển (Confirmation Row)
-        const tAmt = (_bdTravelStatus === 'ok') ? _bdTravelAmt : (_bdTravelCfg?.min || 25000);
-        if (costTravelRow && costTravel) {
-            costTravelRow.style.display = '';
-            if (_bdTravelStatus === 'ok') {
-                costTravel.innerHTML = `<span style="font-weight:600;">${_bdFmt(tAmt)}</span><span class="cfm-cost-sub">từ thợ gần nhất</span>`;
+        // Phí di chuyển (Nếu khách không sửa)
+        if (costTravel) {
+            if (isPerKm && _bdTravelStatus !== 'ok') {
+                costTravel.innerHTML = rateUi;
             } else {
-                costTravel.innerHTML = `<span style="font-weight:600;">${_bdFmt(tAmt)}</span><span class="cfm-cost-sub">dự kiến</span>`;
+                costTravel.innerHTML = `<span style="font-weight:600;">${_bdFmt(tAmt)}</span>`;
             }
         }
 
         // Phí khảo sát
-        if (costSurveyRow && costSurvey) {
-            if (survey > 0) {
-                costSurveyRow.style.display = '';
-                costSurvey.innerHTML = `${_bdFmt(survey)}<span class="cfm-cost-sub">nếu không sửa</span>`;
-            } else {
-                costSurveyRow.style.display = 'none';
-            }
+        if (costSurvey) {
+            costSurvey.innerHTML = survey > 0 ? `<span style="font-weight:600;">${_bdFmt(survey)}</span>` : 'Miễn phí';
         }
 
-        // Tổng tạm tính (Cộng dồn Milestone)
-        if (costTotal) {
-            const finalTotal = basePrice + tAmt;
-            costTotal.innerHTML = `${_bdFmt(finalTotal)}`;
-        }
-
-        // Ghi chú nhỏ
-        if (costNote) {
-            let noteLabel = '<i class="fas fa-info-circle me-1"></i>';
-            if (_bdTravelStatus !== 'ok') {
-                noteLabel += 'Phí di chuyển tạm tính theo thợ gần nhất. ';
-            }
-            if (survey > 0) {
-                costNote.innerHTML = noteLabel + 'Phí khảo sát được miễn nếu đồng ý sửa. Giá chính xác xác nhận sau khi thợ khảo sát.';
+        // Tổng không sửa
+        if (costNoRepair) {
+            if (isPerKm && _bdTravelStatus !== 'ok') {
+                costNoRepair.innerHTML = survey > 0 ? `${_bdFmt(survey)} + Phí đi lại` : `Phí đi lại`;
             } else {
-                costNote.innerHTML = noteLabel + 'Giá chính xác xác nhận sau khi thợ khảo sát thực tế.';
+                costNoRepair.textContent = _bdFmt(tAmt + survey);
             }
-            costNote.style.display = '';
         }
     } else if (costSection) {
         costSection.style.display = 'none';
@@ -834,7 +858,7 @@ function _bdBuildKrudBookingRecord(pendingData) {
         id_dichvu: pendingData.id_dichvu || null,
         tendichvu: pendingData.service_id || '',
         thuonghieu: pendingData.selected_brand || '',
-        ghichu: pendingData.note || '',
+        ghichu: `[Khoản: ${document.getElementById('thoigianphucvu')?.value || 'Thường'}] ` + (pendingData.note || ''),
         giadichvu: basePrice,
         phidichuyen: _bdToMoney(_bdTravelAmt),
         quangduongkm: _bdTravelDistKm ? Number(_bdTravelDistKm.toFixed(2)) : null,

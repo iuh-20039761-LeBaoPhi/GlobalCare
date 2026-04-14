@@ -728,28 +728,64 @@
     }
     /* Kéo dài các thẻ nhỏ ra sát mép hơn cho điện thoại */
     .invoice-hero {
-        padding: 20px 8px 15px 8px !important;
+        padding: 20px 5px 15px 5px !important;
         border-radius: 20px !important;
     }
     .hero-kpi {
-        padding: 15px 12px !important;
+        padding: 15px 5px !important;
         border-radius: 15px !important;
         margin-left: 0 !important;
         margin-right: 0 !important;
     }
     .invoice-panel, .identity-card {
-        padding: 18px 12px !important;
+        padding: 10px 5px !important;
         border-radius: 18px !important;
         background: #fff !important; /* Đảm bảo đồng nhất màu trắng */
     }
     .invoice-panel-body, .identity-main {
-        padding: 15px 10px !important;
+        padding: 8px 5px !important;
         border-radius: 15px !important;
     }
+    .invoice-panel-head, .identity-head {
+        margin-bottom: 10px !important;
+        padding-bottom: 8px !important;
+    }
+    .status-block {
+        padding: 12px 10px !important;
+        margin-bottom: 8px !important;
+    }
+    .review-card {
+        padding: 12px 5px !important;
+        border-radius: 15px !important;
+    }
+    .review-card-body p {
+        margin-bottom: 5px !important;
+    }
+    .task-note-split-view {
+        padding: 10px 5px !important;
+        margin-top: 10px !important;
+    }
+    .identity-contacts p {
+        margin-bottom: 4px !important;
+    }
     .invoice-hero-top {
-        margin-bottom: 25px !important;
+        margin-bottom: 15px !important;
     }
     .header-total-amount {
         font-size: 1.6rem !important;
+    }
+
+    /* Thu hẹp khoảng cách khi không có nút bấm */
+    .order-detail-shell.no-actions .header-total-center {
+        margin-bottom: 0 !important;
+    }
+    .order-detail-shell.no-actions .header-actions-group {
+        display: none !important;
+    }
+    .order-detail-shell.no-actions .invoice-hero-top {
+        gap: 5px !important;
+    }
+    .order-detail-shell.no-actions .hero-progress-group {
+        margin-top: 5px !important;
     }
 }

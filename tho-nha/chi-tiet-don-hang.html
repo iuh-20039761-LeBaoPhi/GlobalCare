@@ -1,4 +1,4 @@
-﻿<!doctype html>
+<!doctype html>
 <html lang="vi">
 
 <head>
@@ -14,7 +14,7 @@
     <link href="https://fonts.googleapis.com/css2?family=Public+Sans:wght@300;400;500;600;700;800&display=swap"
         rel="stylesheet">
 
-        <style>
+    <style>
         body.order-standalone-page {
             margin: 0;
             min-height: 100vh;
@@ -78,7 +78,7 @@
         .standalone-content {
             max-width: 1280px;
             margin: 0 auto;
-            padding: 20px 16px 28px;
+            padding: 20px 5px 28px;
         }
 
         .standalone-topline {
@@ -144,22 +144,22 @@
 <body class="order-standalone-page">
     <header class="standalone-header">
         <div class="standalone-header-inner">
-            <img class="standalone-logo" src="../public/asset/image/logo-dich-vu-quanh-ta.png" alt="Logo DVQT" />
+            <a href="../index.html" aria-label="Về cổng thông tin Dịch Vụ Quanh Ta">
+                <img class="standalone-logo" src="../public/asset/image/logo-dich-vu-quanh-ta.png" alt="Logo DVQT" />
+            </a>
             <div class="standalone-title-wrap">
                 <h1 class="standalone-title">Chi tiết hóa đơn Thợ Nhà</h1>
                 <p class="standalone-subtitle">Hệ thống quản lý dịch vụ tại gia chuyên nghiệp</p>
             </div>
             <a href="index.html" aria-label="Về trang chủ Thợ Nhà">
-                <img class="standalone-logo" src="assets/images/tho-nha-logo-thuong-hieu-cropped.jpg" alt="Logo Thợ Nhà" />
+                <img class="standalone-logo" src="assets/images/tho-nha-logo-thuong-hieu-cropped.jpg"
+                    alt="Logo Thợ Nhà" />
             </a>
         </div>
     </header>
 
     <main class="standalone-content">
         <div class="standalone-topline">
-            <a href="javascript:history.back()" class="btn btn-outline-secondary px-3 py-2 fw-bold" style="border-radius:12px; border: 2px solid #e2e8f0; color: #4b5563; background: #fff; text-decoration:none;">
-                <i class="fas fa-arrow-left me-2"></i> Quay lại danh sách
-            </a>
             <div class="text-muted small">
                 Quyền truy cập: <strong id="accessRole">---</strong>
                 <span class="mx-2" style="opacity:0.3">|</span>
@@ -191,6 +191,7 @@
     </main>
 
     <!-- JS Dependencies -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
     <script src="../public/asset/js/dvqt-krud.js"></script>
     <script src="../public/asset/js/dvqt-app.js"></script>
     <script src="assets/js/shared/order-store.js"></script>
@@ -198,6 +199,29 @@
     <script src="assets/js/shared/order-service.js"></script>
     <script src="assets/js/shared/order-detail-renderer.js"></script>
     <script src="assets/js/shared/order-actions.js"></script>
+
+    <!-- Pricing Modal -->
+    <div class="modal fade" id="pricingModal" tabindex="-1" aria-labelledby="pricingModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content" style="border-radius: 24px; border: none; box-shadow: 0 25px 50px -12px rgba(0,0,0,0.25);">
+                <div class="modal-header" style="background: linear-gradient(135deg, #065f46, #059669); color: white; border-top-left-radius: 24px; border-top-right-radius: 24px; padding: 20px 25px;">
+                    <h5 class="modal-title fw-bold" id="pricingModalLabel"><i class="fas fa-gift me-2"></i>NHẬP GIÁ & NHẬN TRỢ GIÁ</h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body" style="padding: 30px 25px;">
+                    <p class="text-muted mb-4">Vui lòng nhập giá trị thực tế bạn đã thanh toán cho thợ để nhận ngay <b>cấp trợ giá 5%</b> cứu cánh túi tiền!</p>
+                    <div class="form-group mb-3">
+                        <label for="inputActualPriceModal" class="form-label fw-bold" style="color: #334155;">Giá thực tế đã trả (VND)</label>
+                        <input type="number" id="inputActualPriceModal" class="form-control" placeholder="Ví dụ: 500000" style="padding: 12px 15px; border-radius: 12px; border: 2px solid #e2e8f0; font-weight: 600;">
+                    </div>
+                </div>
+                <div class="modal-footer" style="padding: 15px 25px 25px; border: none;">
+                    <button type="button" class="btn btn-outline-secondary px-4 fw-bold" data-bs-dismiss="modal" style="border-radius: 12px; height: 48px;">Để sau</button>
+                    <button type="button" class="btn btn-primary px-4 fw-bold" id="btnSubmitPricingModal" style="border-radius: 12px; height: 48px; background: #059669; border: none; box-shadow: 0 10px 15px -3px rgba(5, 150, 105, 0.3);">Gửi & Nhận ưu đãi</button>
+                </div>
+            </div>
+        </div>
+    </div>
 
     <!-- Setup logic for standalone page -->
     <script>
@@ -335,4 +359,3 @@
 </body>
 
 </html>
-
