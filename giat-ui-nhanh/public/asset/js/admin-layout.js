@@ -8,32 +8,11 @@
     logoutNode.dataset.logoutBound = "true";
     logoutNode.addEventListener("click", function (event) {
       event.preventDefault();
-
-      if (!config.logoutApi) {
-        window.location.href = config.logoutHref || "#";
-        return;
+      if (typeof window.adminLogout === "function") {
+        window.adminLogout();
+      } else {
+        window.location.href = config.logoutHref || "../../public/admin-login.html";
       }
-
-      fetch(config.logoutApi, {
-        method: "POST",
-        credentials: "same-origin",
-      })
-        .then(function (res) {
-          return res.json().catch(function () {
-            return { success: false };
-          });
-        })
-        .then(function (data) {
-          if (data && data.success) {
-            window.location.href = config.logoutHref || "#";
-            return;
-          }
-
-          window.location.href = config.logoutHref || "#";
-        })
-        .catch(function () {
-          window.location.href = config.logoutHref || "#";
-        });
     });
   }
 

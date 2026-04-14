@@ -488,56 +488,29 @@
       src="public/asset/js/input-fill.js"
     ></script>
     <script>
-      document.addEventListener("DOMContentLoaded", function () {
-        const servicesGrid = document.getElementById("servicesGrid");
-        if (!servicesGrid) return;
+      document.addEventListener("DOMContentLoaded", async function () {
+        const grid = document.getElementById("servicesGrid");
+        if (!grid) return;
 
-        fetch("public/services.json")
-          .then(function (response) {
-            if (!response.ok) {
-              throw new Error("Không thể tải dữ liệu dịch vụ");
-            }
-            return response.json();
-          })
-          .then(function (data) {
-            const services = Array.isArray(data)
-              ? data
-              : Array.isArray(data && data.services)
-                ? data.services
-                : [];
-
-            let html = "";
-
-            services.forEach(function (service, index) {
-              const unit =
-                service.price_unit === "kg" ? "kg" : service.price_unit;
-              const reverseClass = index % 2 !== 0 ? " is-reverse" : "";
-              const servicePrice = Number(service.price || 0).toLocaleString(
-                "vi-VN",
-              );
-
-              html += `
-                <article class="svc-card${reverseClass}">
-                  <div class="svc-media">
-                    <img src="${service.image}" alt="${service.service_name}">
-                  </div>
-
-                  <div class="svc-body">
-                    <h3 class="svc-title">${service.service_name}</h3>
-                    <p class="svc-desc">${service.summary}</p>
-                    <p class="svc-price">Giá từ: <strong>${servicePrice} VND</strong> / ${unit}</p>
-                    <a class="btn btn-info svc-action" data-service-id="${service.id}" data-bs-toggle="modal"data-bs-target="#bookingModal">Đặt dịch vụ</a>
-                  </div>
-                </article>
-              `;
-            });
-
-            servicesGrid.innerHTML = html;
-          })
-          .catch(function () {
-            servicesGrid.innerHTML =
-              '<p style="text-align:center;color:#dc2626;">Khong the tai du lieu dich vu. Vui long thu lai.</p>';
-          });
+        try {
+          const res = await window.krudList({ table: "dichvu_giatuinhanh", limit: 50 });
+          const services = (res && res.data) || (Array.isArray(res) ? res : []);
+          
+          grid.innerHTML = services.map((s, i) => `
+            <article class="svc-card${i % 2 !== 0 ? " is-reverse" : ""}">
+              <div class="svc-media">
+                <img src="public/asset/image/${s.hinhanh}" alt="${s.tendichvu}">
+              </div>
+              <div class="svc-body">
+                <h3 class="svc-title">${s.tendichvu}</h3>
+                <p class="svc-desc">${s.mota}</p>
+                <p class="svc-price">Giá từ: <strong>${Number(s.giadichvu).toLocaleString("vi-VN")} VND</strong> / ${s.donvi}</p>
+                <a class="btn btn-info svc-action" data-service-id="${s.id}" data-bs-toggle="modal" data-bs-target="#bookingModal">Đặt dịch vụ</a>
+              </div>
+            </article>`).join("");
+        } catch (e) {
+          grid.innerHTML = '<p class="text-center text-danger">Không thể tải dữ liệu dịch vụ. Vui lòng thử lại sau.</p>';
+        }
       });
     </script>
 
