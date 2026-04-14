@@ -9,7 +9,7 @@
   var CUSTOMER_LOGIN_PAGE = "../../public/dang-nhap.html?service=suaxe";
   var PROVIDER_LOGIN_PAGE = "../../public/dang-nhap.html?service=suaxe";
   var ADMIN_LOGIN_PAGE = "dang-nhap-admin.html";
-  var PROVIDER_DASHBOARD_PAGE = "../nha-cung-cap.html";
+
   var getShared = function () {
     return window.SharedOrderUtils || {};
   };
@@ -2494,7 +2494,7 @@
       }
 
       if (isProviderUser(user)) {
-        window.location.href = PROVIDER_DASHBOARD_PAGE;
+        window.location.href = "../nhacungcap/danh-sach-don-hang.html";
         return;
       }
 
