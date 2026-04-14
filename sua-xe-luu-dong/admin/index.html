@@ -94,7 +94,7 @@
     <script src="../public/asset/js/bootstrap.bundle.min.js"></script>
     <script src="../public/asset/js/admin-layout.js"></script>
     <script src="https://api.dvqt.vn/js/krud.js"></script>
-    <script src="../../public/asset/js/order-shared-utils.js"></script>
+    <script src="../public/asset/js/shared-order-utils.js"></script>
     <script src="../public/asset/js/admin-dashboard.js"></script>
     <script src="../public/asset/js/plugin/webfont/webfont.min.js"></script>
     <script>
@@ -116,40 +116,6 @@
         },
       });
     </script>
-    <script>
-      function renderAdminLoginInfo(admin) {
-        const email = String((admin && admin.email) || "").trim();
-        const emailNode = document.querySelector(".admin-chip .admin-email");
-        const avatarNode = document.querySelector(".admin-chip .admin-avatar");
 
-        if (emailNode) {
-          emailNode.textContent = email || "admin@giatuinhanh.vn";
-        }
-
-        if (avatarNode) {
-          avatarNode.textContent = email ? email.charAt(0).toUpperCase() : "A";
-        }
-      }
-
-      async function checkAdminLogin() {
-        try {
-          const res = await fetch("../public/session-admin.php?action=get", {
-            method: "GET",
-            credentials: "same-origin",
-          });
-          const data = await res.json().catch(() => null);
-          if (!res.ok || !data || data.hasAdmin !== true) {
-            window.location.href = "dang-nhap-admin.html";
-            return;
-          }
-
-          renderAdminLoginInfo(data.admin || null);
-        } catch (_) {
-          window.location.href = "dang-nhap-admin.html";
-        }
-      }
-
-      checkAdminLogin();
-    </script>
   </body>
 </html>
