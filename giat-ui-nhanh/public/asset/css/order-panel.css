@@ -1140,7 +1140,7 @@ select:focus-visible {
     padding: 15px;
     background: rgba(255, 255, 255, 0.08);
     border: 1px solid rgba(255, 255, 255, 0.1);
-    text-align: left;
+    /* text-align: left; */
   }
 
   .hero-card-label {
@@ -1149,8 +1149,8 @@ select:focus-visible {
 
   .hero-card-value {
     font-size: 1rem;
-    text-align: right;
-    max-width: 65%;
+    text-align: center;
+    /* max-width: 65%; */
   }
 
   .hero-card-costs {
@@ -1270,5 +1270,51 @@ select:focus-visible {
   .panel-foot {
     display: grid;
     gap: 10px;
+  }
+}
+.hero-header-right {
+  display: flex;
+  justify-content: flex-end;
+  align-items: center;
+  gap: 12px;
+}
+
+#detailActionBar {
+  display: flex;
+  align-items: center;
+}
+
+#detailActionBtn {
+  min-width: 140px;
+  border-radius: 12px;
+  font-weight: 700;
+  transition: all 0.2s ease;
+  border: none;
+}
+
+#detailActionBtn.btn-light {
+  background: rgba(255, 255, 255, 0.9);
+  color: #0369a1;
+}
+
+#detailActionBtn:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 15px rgba(0, 0, 0, 0.2);
+}
+
+@media only screen and (max-width: 739px) {
+  .hero-header-right {
+    flex-direction: column-reverse;
+    gap: 15px;
+  }
+  
+  #detailActionBar {
+    width: 100%;
+    justify-content: center;
+  }
+  
+  #detailActionBtn {
+    width: 100%;
+    padding: 12px;
   }
 }
