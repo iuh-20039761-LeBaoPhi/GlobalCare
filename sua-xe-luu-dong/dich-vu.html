@@ -429,52 +429,34 @@
             document.addEventListener("DOMContentLoaded", function () {
               const container = document.getElementById("serviceContainer");
 
-              fetch("public/services.json")
+              window.krudList({ table: "dichvu_suaxe" })
                 .then((res) => {
-                  if (!res.ok) {
-                    throw new Error("Không thể load file JSON");
-                  }
-                  return res.json();
-                })
-                .then((data) => {
-                  let html = "";
-
-                  data.services.forEach((service) => {
-                    const servicePrice = Number(service?.service_price);
-                    const priceText =
-                      Number.isFinite(servicePrice) && servicePrice > 0
-                        ? `<b>Giá:</b> ${servicePrice.toLocaleString("vi-VN")} VND`
-                        : "";
-
-                    html += `
+                  const services = (res && res.data) || (Array.isArray(res) ? res : []);
+                  container.innerHTML = services.map(s => `
                     <div class="col-lg-4 col-md-6">
                       <div class="service-card">
                         <div class="service-media">
-                          <img class="service-thumb" src="${service.image || "public/asset/image/logo-sua-xe-luu-dong.png"}" alt="${service.name || "Dịch vụ"}" loading="lazy" />
+                          <img class="service-thumb" src="public/asset/image/${s.hinhanh}" alt="${s.tendichvu}" loading="lazy" />
                         </div>
-                        <h5>${service.name}</h5>
-                        <p>${service.summary}</p>
-                        ${priceText ? `<p class="service-price">${priceText}</p>` : ""}
+                        <h5>${s.tendichvu}</h5>
+                        <p>${s.mota}</p>
                         <div class="col-12 text-center">
-                          <button type="button" data-id="${service.id}" data-booking-service-btn="true" class="btn btn-primary-custom px-5 py-3">
+                          <button type="button" data-id="${s.id}" data-booking-service-btn="true" class="btn btn-primary-custom px-5 py-3">
                             Đặt dịch vụ
                           </button>
                         </div>
                       </div>
                     </div>
-                  `;
-                  });
-
-                  container.innerHTML = html;
+                  `).join("");
                 })
-                .catch((err) => console.log(err));
+                .catch((err) => console.error(err));
             });
           </script>
         </div>
       </div>
     </section>
 
-    <div
+    <!-- <div
       class="modal fade"
       id="orderDetailModal"
       tabindex="-1"
@@ -622,7 +604,7 @@
           </div>
         </div>
       </div>
-    </div>
+    </div> -->
 
     <!-- Footer -->
     <footer>

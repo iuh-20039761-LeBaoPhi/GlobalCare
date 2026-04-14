@@ -12,7 +12,7 @@ body.order-standalone-page {
   border-radius: 16px;
   position: relative;
   z-index: 30;
-  background: linear-gradient(135deg, #3b82f6 0%, #8b5cf6 100%);
+  background: linear-gradient(135deg, #06b6d4, #3b82f6, #8b5cf6);
   box-shadow: 0 10px 25px rgba(59, 130, 246, 0.3);
 }
 
@@ -197,34 +197,90 @@ body.order-standalone-page {
 }
 
 /* ============================================================ 
-   RESPONSIVE DESIGN SYSTEM (ULTIMATE FIX)
+   RESPONSIVE DESIGN SYSTEM (STANDARDIZED)
+   Mobile: width < 740px
+   Tablet: 740px <= width < 1024px
+   PC: width >= 1024px 
    ============================================================ */
 
-/* --- Laptop & Small Desktop --- */
-@media (max-width: 1200px) {
-  .standalone-header,
-  .order-page-wrapper,
-  .standalone-content {
-    max-width: 96%;
-    margin-left: auto;
-    margin-right: auto;
+/* --- PC: 1024px and above --- */
+@media only screen and (min-width: 1024px) {
+  .standalone-header:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 15px 35px rgba(0, 0, 0, 0.2);
+  }
+  .invoice-panel:hover,
+  .identity-card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 15px 35px rgba(0, 0, 0, 0.1);
   }
 }
 
-/* --- Tablet --- */
-@media (max-width: 991px) {
-  .invoice-hero-kpis {
-    grid-template-columns: 1fr 1fr;
+/* --- TABLET: 740px to 1023px --- */
+@media only screen and (min-width: 740px) and (max-width: 1023px) {
+  .standalone-header,
+  .order-page-wrapper,
+  .standalone-content {
+    max-width: 94%;
+    margin-left: auto;
+    margin-right: auto;
   }
+
+  .invoice-hero-top {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+    gap: 15px;
+    padding-bottom: 20px;
+  }
+
+  .hero-header-left,
+  .hero-header-center,
+  .hero-header-right {
+    width: 100%;
+    justify-content: center;
+    text-align: center;
+  }
+
+  .hero-header-center {
+    margin: 5px 0;
+  }
+
+  .invoice-hero-mid {
+    justify-content: center;
+    margin-top: 0;
+  }
+
+  .hero-service-title {
+    justify-content: center;
+  }
+
+  .invoice-hero-bottom {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 15px;
+  }
+
+  .hero-card:nth-child(3) {
+    grid-column: 1 / -1;
+  }
+
+  .filter-grid {
+    grid-template-columns: repeat(2, minmax(140px, 1fr));
+  }
+
+  .detail-grid,
+  .detail-fields,
   .invoice-main-grid,
-  .identity-grid {
+  .identity-grid,
+  .review-grid {
     grid-template-columns: 1fr;
     gap: 15px;
   }
 }
 
-/* --- Mobile (The Big Fix) --- */
-@media (max-width: 767px) {
+/* --- MOBILE: Under 740px --- */
+@media only screen and (max-width: 739px) {
   body.order-standalone-page {
     overflow-x: hidden; /* Prevent horizontal scroll */
     background: #f4f7fa;
@@ -266,7 +322,7 @@ body.order-standalone-page {
   .standalone-content {
     width: 100%;
     max-width: 100%;
-    padding: 0; /* Content will have its own padding */
+    padding: 0;
   }
 
   /* Topline Chip Fix */
@@ -295,40 +351,71 @@ body.order-standalone-page {
     text-align: center;
   }
 
-  .invoice-code-line {
-    justify-content: center;
-    margin-bottom: 5px;
+  .invoice-hero-top {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 15px;
+    text-align: center;
   }
+
+  .hero-header-left {
+    flex-direction: column;
+    align-items: center;
+    gap: 8px;
+  }
+
+  .hero-header-center {
+    flex-direction: column;
+    gap: 5px;
+  }
+
+  .hero-header-right {
+    justify-content: center;
+  }
+
   .invoice-code {
     font-size: 1.4rem;
   }
-  .invoice-service {
-    font-size: 1.1rem;
-    margin-bottom: 15px;
+
+  .invoice-hero-mid {
+    margin: 20px 0;
+    justify-content: center;
   }
 
-  .invoice-service-meta {
+  .hero-service-title {
+    justify-content: center;
+  }
+
+  .invoice-hero-bottom {
     grid-template-columns: 1fr;
-    gap: 5px;
-    background: rgba(0, 0, 0, 0.15);
-    padding: 12px;
-    border-radius: 12px;
-    margin-bottom: 20px;
-  }
-  .invoice-service-meta-col-dates {
-    border-left: none;
-    border-top: 1px solid rgba(255, 255, 255, 0.1);
-    padding: 8px 0 0;
-    margin-top: 8px;
+    gap: 10px;
   }
 
-  .invoice-hero-top {
+  .hero-card {
     display: flex;
-    /* justify-content: space-between; */
-    align-items: normal;
-    flex-direction: column;
-    gap: 0px;
-}
+    justify-content: space-between;
+    align-items: center;
+    padding: 15px;
+    background: rgba(255, 255, 255, 0.08);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+  }
+
+  .hero-card-label {
+    margin-bottom: 0;
+  }
+
+  .hero-card-value {
+    font-size: 1rem;
+    text-align: center;
+    /* max-width: 65%; */
+  }
+
+  .hero-card-costs {
+    width: 100%;
+    gap: 8px;
+  }
+
   /* Buttons & Progress Ring Mobile */
   .hero-progress {
     width: 100%;
@@ -358,35 +445,6 @@ body.order-standalone-page {
     font-size: 1rem;
   }
 
-  /* KPI Rows Mobile */
-  .invoice-hero-kpis {
-    grid-template-columns: 1fr;
-    gap: 10px;
-    margin-top: 25px;
-  }
-  .hero-kpi {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    padding: 15px;
-    background: rgba(255, 255, 255, 0.08);
-    border: 1px solid rgba(255, 255, 255, 0.1);
-  }
-  .hero-kpi-label {
-    font-size: 0.7rem;
-    opacity: 0.8;
-  }
-  .hero-kpi-value {
-    font-size: 1rem;
-    margin: 0;
-    text-align: right;
-    max-width: 60%;
-    word-break: break-word;
-  }
-  .hero-kpi-sub {
-    display: none;
-  }
-
   /* Inner Panels Mobile */
   .invoice-panel-body, 
   .identity-body {
@@ -407,25 +465,24 @@ body.order-standalone-page {
     margin-top: 10px;
   }
 
+  .invoice-hero-bottom {
+    grid-template-columns: 1fr;
+    gap: 10px;
+  }
+
+  .invoice-main-grid,
+  .identity-grid,
+  .review-grid,
+  .detail-grid,
+  .detail-fields {
+    grid-template-columns: 1fr;
+    gap: 15px;
+  }
+
   .invoice-panel, .identity-card {
     border-radius: 0;
     border-left: none;
     border-right: none;
     margin: 0 0 15px;
-  }
-}
-
-/* Interactive Enhancements */
-.invoice-panel,
-.identity-card,
-.invoice-hero {
-  transition: transform 0.3s ease, box-shadow 0.3s ease;
-}
-
-@media (min-width: 992px) {
-  .invoice-panel:hover,
-  .identity-card:hover {
-    transform: translateY(-5px);
-    box-shadow: 0 15px 35px rgba(0, 0, 0, 0.1);
   }
 }
