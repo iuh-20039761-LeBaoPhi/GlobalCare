@@ -1140,7 +1140,7 @@ select:focus-visible {
     padding: 15px;
     background: rgba(255, 255, 255, 0.08);
     border: 1px solid rgba(255, 255, 255, 0.1);
-    text-align: left;
+    /* text-align: left; */
   }
 
   .hero-card-label {
@@ -1149,8 +1149,8 @@ select:focus-visible {
 
   .hero-card-value {
     font-size: 1rem;
-    text-align: right;
-    max-width: 65%;
+    text-align: center;
+    /* max-width: 65%; */
   }
 
   .hero-card-costs {
