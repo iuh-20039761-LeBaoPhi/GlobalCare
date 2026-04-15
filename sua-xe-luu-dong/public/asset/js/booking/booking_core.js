@@ -19,6 +19,12 @@
       "customItemInputWrapper",
     );
     const customItemInput = document.getElementById("mauxekhac");
+
+    const customBrandInputWrapper = document.getElementById(
+      "customBrandInputWrapper",
+    );
+    const customBrandInput = document.getElementById("hangxekhac");
+
     const datetimeInput = document.querySelector(
       '#formdatdichvu input[type="datetime-local"]',
     );
@@ -114,6 +120,22 @@
       }
     }
 
+    function toggleCustomBrandInput(force = null) {
+      if (!brandSelect || !customBrandInputWrapper || !customBrandInput) return;
+
+      const useCustom =
+        force == null
+          ? String(brandSelect.value || "") === "__other__"
+          : Boolean(force);
+
+      customBrandInputWrapper.classList.toggle("d-none", !useCustom);
+      customBrandInput.required = useCustom;
+
+      if (!useCustom) {
+        customBrandInput.value = "";
+      }
+    }
+
     function getCurrentDateTimeLocalValue() {
       const now = new Date();
       const year = now.getFullYear();
@@ -142,6 +164,21 @@
       otherOption.value = "__other__";
       otherOption.textContent = "Khác (nhập mẫu xe)";
       itemSelect.appendChild(otherOption);
+    }
+
+    function ensureOtherBrandOption() {
+      if (!brandSelect) return;
+
+      const hasOtherOption = Array.from(brandSelect.options).some(
+        (option) => String(option.value) === "__other__",
+      );
+
+      if (hasOtherOption) return;
+
+      const otherOption = document.createElement("option");
+      otherOption.value = "__other__";
+      otherOption.textContent = "Khác (nhập hãng xe)";
+      brandSelect.appendChild(otherOption);
     }
 
     let vehicleTypesData = [];
@@ -191,9 +228,6 @@
       const surveyFee = getCurrentSurveyFee();
       const transportFee = Number(transportFeeValue || 0);
       const total = surveyFee + transportFee;
-      const noFixTotal = surveyFee + transportFee;
-
-
 
       if (surveyInput) {
         surveyInput.value = surveyFee > 0 ? formatCurrency(surveyFee) : "";
@@ -202,8 +236,6 @@
       if (totalInput) {
         totalInput.value = total > 0 ? formatCurrency(total) : "";
       }
-
-
 
       if (estimateSurveyFee) {
         estimateSurveyFee.textContent =
@@ -343,8 +375,8 @@
                 id: item?.id
                   ? `${item.id}_${index}`
                   : `${vehicleTypeId}_${brandName}_${modelName}`.replace(
-                      /\s+/g,
-                      "_",
+                       /\s+/g,
+                       "_",
                     ),
                 vehicle_name: modelName,
               });
@@ -552,8 +584,8 @@
     }
 
     function getSurveyFeeByVehicleType(type) {
-      const vehicleType = vehicleTypesData.find((v) => v.type === type);
-      return vehicleType?.survey_fees || 0;
+      const vType = vehicleTypesData.find((v) => v.type === type);
+      return vType?.survey_fees || 0;
     }
 
     function getCurrentSurveyFee() {
@@ -601,7 +633,9 @@
         resetSelect(vehicleType, "Chọn loại xe");
         resetSelect(brandSelect, "Chọn hãng");
         resetSelect(itemSelect, "Chọn mẫu xe");
+        ensureOtherBrandOption();
         ensureOtherModelOption();
+        toggleCustomBrandInput(false);
         toggleCustomItemInput(false);
         clearPrice();
         recalculateTransportFee();
@@ -621,7 +655,9 @@
       vehicleType.addEventListener("change", function () {
         resetSelect(brandSelect, "Chọn hãng");
         resetSelect(itemSelect, "Chọn mẫu xe");
+        ensureOtherBrandOption();
         ensureOtherModelOption();
+        toggleCustomBrandInput(false);
         toggleCustomItemInput(false);
         clearPrice();
 
@@ -643,14 +679,22 @@
           option.textContent = brand.name;
           brandSelect.appendChild(option);
         });
+
+        ensureOtherBrandOption();
       });
     }
 
     if (brandSelect) {
       brandSelect.addEventListener("change", function () {
         resetSelect(itemSelect, "Chọn mẫu xe");
+        toggleCustomBrandInput();
         toggleCustomItemInput(false);
         clearPrice();
+
+        if (String(this.value) === "__other__") {
+          ensureOtherModelOption();
+          return;
+        }
 
         const selectedVehicleType = vehicleTypesData.find(
           (v) => v.type === (vehicleType && vehicleType.value),
@@ -676,15 +720,7 @@
 
     if (itemSelect) {
       itemSelect.addEventListener("change", function () {
-        const option = this.options[this.selectedIndex];
-
         toggleCustomItemInput();
-
-        if (!option || !option.value) {
-          clearPrice();
-          return;
-        }
-
         updateTotalPrice();
       });
     }
@@ -692,6 +728,13 @@
     if (customItemInput) {
       customItemInput.addEventListener("input", function () {
         if (String(itemSelect?.value || "") !== "__other__") return;
+        updateTotalPrice();
+      });
+    }
+
+    if (customBrandInput) {
+      customBrandInput.addEventListener("input", function () {
+        if (String(brandSelect?.value || "") !== "__other__") return;
         updateTotalPrice();
       });
     }
@@ -712,7 +755,6 @@
     }
 
     function clearPrice() {
-
       if (totalInput) totalInput.value = "";
     }
 
@@ -731,7 +773,9 @@
     }
 
     bindQuickBookingButtons();
+    ensureOtherBrandOption();
     ensureOtherModelOption();
+    toggleCustomBrandInput(false);
     toggleCustomItemInput(false);
     fillCurrentDateTime();
 
@@ -747,7 +791,9 @@
       bookingForm.dataset.customItemResetBound = "true";
       bookingForm.addEventListener("reset", function () {
         setTimeout(() => {
+          ensureOtherBrandOption();
           ensureOtherModelOption();
+          toggleCustomBrandInput(false);
           toggleCustomItemInput(false);
         }, 0);
       });
