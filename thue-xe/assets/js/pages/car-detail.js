@@ -5,16 +5,37 @@
 
 (async function () {
     // 1. Initial State
-    let selectedCarId = null;
-    let _currentCarType = null;
     let _galleryMode = 'image';
     let _galleryVideoUrl = '';
-    let _session = null;
     
     // Safety constants
-    const ADDON_PRICES = {};
     const fmt = n => new Intl.NumberFormat('vi-VN').format(n);
-    const today = () => new Date().toISOString().split('T')[0];
+    const toNumber = v => {
+        const n = Number(v);
+        if (Number.isFinite(n)) return n;
+        return Number(String(v || '').replace(/[^\d.-]/g, '')) || 0;
+    };
+    const escapeHtml = (value) => String(value || '').replace(/[&<>"']/g, function(ch) {
+        return ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[ch];
+    });
+    const today = () => {
+        const now = new Date();
+        const y = now.getFullYear();
+        const m = String(now.getMonth() + 1).padStart(2, '0');
+        const d = String(now.getDate()).padStart(2, '0');
+        return `${y}-${m}-${d}`;
+    };
+    const addDaysIso = (isoDate, days) => {
+        if (!isoDate) return '';
+        const parts = String(isoDate).split('-').map(Number);
+        if (parts.length !== 3 || parts.some(Number.isNaN)) return '';
+        const dt = new Date(parts[0], parts[1] - 1, parts[2]);
+        dt.setDate(dt.getDate() + days);
+        const y = dt.getFullYear();
+        const m = String(dt.getMonth() + 1).padStart(2, '0');
+        const d = String(dt.getDate()).padStart(2, '0');
+        return `${y}-${m}-${d}`;
+    };
 
     // 2. Core Functions
     window.gallerySwitch = function (type, src, el) {
@@ -101,7 +122,7 @@
         if (idx < thumbs.length - 1) gallerySwitch('img', thumbs[idx+1].querySelector('img').src, thumbs[idx+1]);
     };
 
-    function buildGalleryHtml(car, hasAvail, count) {
+    function buildGalleryHtml(car) {
         const base = 'assets/images/cars/';
         const fallback = `onerror="this.src='${base}thue-xe-xe-anh-mac-dinh-fallback.jpg'"`;
         const thumbs = [
@@ -142,8 +163,14 @@
         if (!container) return;
 
         container.innerHTML = `
-            <div class="col-lg-8">
-                ${buildGalleryHtml(car, hasAvailable, avail.length)}
+            <div class="col-12">
+                ${buildGalleryHtml(car)}
+                <div class="mb-4 d-grid d-sm-flex">
+                    ${hasAvailable
+                        ? '<button class="btn btn-gradient px-4" onclick="txBpOpen()"><i class="fas fa-calendar-check me-2"></i>Đặt ngay</button>'
+                        : '<button class="btn btn-secondary px-4" disabled><i class="fas fa-ban me-2"></i>Hết xe</button>'
+                    }
+                </div>
                 <div class="card border-0 shadow-sm mb-4">
                     <div class="card-body p-4">
                         <h1 class="fw-bold fs-3 mb-2">${car.tenxe}</h1>
@@ -185,7 +212,7 @@
                 <!-- HIỂN THỊ CÁC XE CÙNG LOẠI TRONG HỆ THỐNG -->
                 <div class="card border-0 shadow-sm mb-4">
                     <div class="card-body p-4">
-                        <h5 class="fw-bold mb-1"><i class="fas fa-layer-group me-2 text-primary"></i>Đội xe cùng loại (${allSameType.length})</h5>
+                        <h5 class="fw-bold mb-1"><i class="fas fa-layer-group me-2 text-primary"></i>Xe cùng loại (${allSameType.length})</h5>
                         <p class="text-muted small mb-3">Hệ thống có ${allSameType.length} chiếc ${car.tenxe} đang sẵn sàng phục vụ.</p>
                         
                         <div class="table-responsive">
@@ -196,17 +223,18 @@
                                         <th>Màu sắc</th>
                                         <th>Odo</th>
                                         <th>Trạng thái</th>
-                                        <th class="text-end">Chi tiết</th>
                                     </tr>
                                 </thead>
                                 <tbody>
                                     ${allSameType.map(item => {
                                         const isBusy = item.trangthai === 'rented' || item.trangthai === 'maintenance';
+                                        const isCurrent = item.id == car.id;
+                                        const detailUrl = `views/pages/public/chi-tiet-xe.html?id=${item.id}`;
                                         return `
-                                        <tr class="${item.id == car.id ? 'table-primary bg-opacity-10' : ''}">
+                                        <tr class="${isCurrent ? 'table-primary bg-opacity-10' : ''}" ${isCurrent ? '' : `role="button" tabindex="0" style="cursor:pointer;" onclick="window.location.href='${detailUrl}'" onkeydown="if(event.key==='Enter' || event.key===' '){ event.preventDefault(); window.location.href='${detailUrl}'; }"`}>
                                             <td class="fw-bold fs-6">
                                                 <i class="fas fa-id-card-alt text-muted me-2"></i>${item.bienso || '—'}
-                                                ${item.id == car.id ? '<span class="badge bg-primary ms-1 small" style="font-size:0.6rem">Đang xem</span>' : ''}
+                                                ${isCurrent ? '<span class="badge bg-primary ms-1 small" style="font-size:0.6rem">Đang xem</span>' : ''}
                                             </td>
                                             <td><span class="small">${item.mausac || '—'}</span></td>
                                             <td><span class="small">${fmt(item.odo || 0)} km</span></td>
@@ -214,11 +242,6 @@
                                                 ${!isBusy 
                                                     ? '<span class="badge bg-success bg-opacity-10 text-success fw-medium"><i class="fas fa-check-circle me-1"></i>Còn xe</span>' 
                                                     : '<span class="badge bg-danger bg-opacity-10 text-danger fw-medium"><i class="fas fa-clock me-1"></i>Đang cho thuê</span>'}
-                                            </td>
-                                            <td class="text-end">
-                                                <a href="views/pages/public/chi-tiet-xe.html?id=${item.id}" class="btn btn-sm btn-outline-primary rounded-pill px-3">
-                                                    Chọn <i class="fas fa-chevron-right ms-1"></i>
-                                                </a>
                                             </td>
                                         </tr>`;
                                     }).join('')}
@@ -228,13 +251,11 @@
                     </div>
                 </div>
             </div>
-            <div class="col-lg-4">${renderBookingSidebar(car, hasAvailable)}</div>
         `;
 
         _galleryVideoUrl = car.videourl || '';
         window._currentCarData = car; // Store for booking confirmation
         setGalleryMode('image');
-        setupBookingLogic(car, hasAvailable);
     }
 
     function renderSpecItem(icon, label, val) {
@@ -248,48 +269,6 @@
 
     function renderDetailSpec(label, val) {
         return `<div class="col-6 col-md-4"><div class="spec-item"><small class="text-muted d-block">${label}</small><strong>${val || '—'}</strong></div></div>`;
-    }
-
-    function renderBookingSidebar(car, hasAvail) {
-        return `
-            <div class="card border-0 shadow-sm sticky-top" style="top:90px;">
-                <div class="card-body p-4">
-                    <h5 class="fw-bold mb-3">Đặt Xe Ngay</h5>
-                    <div class="bg-light p-3 rounded mb-3">
-                        <h6 class="fw-bold mb-1">${car.tenxe}</h6>
-                        <p class="text-primary fw-bold mb-0">${fmt(car.giathue)}đ/ngày</p>
-                    </div>
-                    <div class="mb-3">
-                        <label class="form-label">Ngày nhận</label>
-                        <input type="date" class="form-control" id="pickupDate" min="${today()}" ${!hasAvail?'disabled':''}>
-                    </div>
-                    <div class="mb-3">
-                        <label class="form-label">Ngày trả</label>
-                        <input type="date" class="form-control" id="returnDate" min="${today()}" ${!hasAvail?'disabled':''}>
-                    </div>
-                    <div id="priceCalc" class="bg-light p-3 rounded mb-3" style="display:none;">
-                        <div class="d-flex justify-content-between"><span>Số ngày:</span><strong id="totalDays">0</strong></div>
-                        <div class="d-flex justify-content-between"><span>Tổng:</span><strong class="text-primary" id="totalPrice">0đ</strong></div>
-                    </div>
-                    ${hasAvail ? '<button class="btn btn-gradient w-100" onclick="txBpOpen()"><i class="fas fa-calendar-check me-2"></i>Đặt ngay</button>' : '<button class="btn btn-secondary w-100" disabled>Hết xe</button>'}
-                </div>
-            </div>`;
-    }
-
-    function setupBookingLogic(car, hasAvail) {
-        if (!hasAvail) return;
-        const pDate = document.getElementById('pickupDate');
-        const rDate = document.getElementById('returnDate');
-        const calc = () => {
-            if (pDate.value && rDate.value) {
-                const days = Math.max(1, Math.round((new Date(rDate.value)-new Date(pDate.value))/86400000));
-                document.getElementById('totalDays').textContent = days + ' ngày';
-                document.getElementById('totalPrice').textContent = fmt(days * car.giathue) + 'đ';
-                document.getElementById('priceCalc').style.display = 'block';
-                rDate.min = pDate.value;
-            }
-        };
-        pDate.onchange = rDate.onchange = calc;
     }
 
     function updateSEO(car) {
@@ -361,13 +340,32 @@
                 </div>`).join('');
         }
 
-        // C. Sync Dates from Sidebar (if available)
-        const sidebarPickup = document.getElementById('pickupDate');
-        const sidebarReturn = document.getElementById('returnDate');
         const modalPickup = form.querySelector('#pickupDate');
         const modalReturn = form.querySelector('#returnDate');
-        if (sidebarPickup && modalPickup) modalPickup.value = sidebarPickup.value;
-        if (sidebarReturn && modalReturn) modalReturn.value = sidebarReturn.value;
+
+        const syncModalDateConstraints = () => {
+            if (!modalPickup || !modalReturn) return;
+            const todayStr = today();
+            modalPickup.min = todayStr;
+
+            if (modalPickup.value && modalPickup.value < todayStr) {
+                modalPickup.value = todayStr;
+            }
+
+            const effectivePickup = modalPickup.value && modalPickup.value >= todayStr
+                ? modalPickup.value
+                : todayStr;
+            const minReturn = addDaysIso(effectivePickup, 1);
+            modalReturn.min = minReturn;
+
+            if (modalReturn.value && modalReturn.value < minReturn) {
+                modalReturn.value = minReturn;
+            }
+        };
+
+        syncModalDateConstraints();
+        if (modalPickup) modalPickup.addEventListener('change', syncModalDateConstraints);
+        if (modalReturn) modalReturn.addEventListener('change', syncModalDateConstraints);
 
         // D. Handle Form Submission -> Show Confirmation
         form.onsubmit = function(e) {
@@ -375,36 +373,107 @@
             const car = window._currentCarData; // Lấy dữ liệu xe đang xem
             if(!car) return;
 
-            const days = Math.max(1, Math.round((new Date(modalReturn.value) - new Date(modalPickup.value)) / 86400000));
+            const pickupDateVal = (modalPickup?.value || '').trim();
+            const returnDateVal = (modalReturn?.value || '').trim();
+            const todayStr = today();
+
+            if (!pickupDateVal || !returnDateVal) {
+                Swal.fire('Thiếu thông tin', 'Vui lòng chọn đầy đủ ngày nhận và ngày trả xe.', 'warning');
+                return;
+            }
+            if (pickupDateVal < todayStr) {
+                Swal.fire('Ngày nhận không hợp lệ', 'Ngày nhận xe phải bằng hoặc sau ngày hiện tại.', 'warning');
+                modalPickup?.focus();
+                return;
+            }
+            if (returnDateVal <= pickupDateVal) {
+                Swal.fire('Ngày trả không hợp lệ', 'Ngày trả xe phải sau ngày nhận xe.', 'warning');
+                modalReturn?.focus();
+                return;
+            }
+
+            const days = Math.max(1, Math.round((new Date(returnDateVal) - new Date(pickupDateVal)) / 86400000));
+            const pricePerDay = toNumber(car.giathue);
+            const rentalCost = days * pricePerDay;
             const addons = [...form.querySelectorAll('input[name="addon_services"]:checked')];
             let addonTotal = 0;
-            let addonText = [];
+            let addonNames = [];
+            let addonDetails = [];
             addons.forEach(cb => {
-                const p = Number(cb.dataset.price);
-                const u = cb.dataset.unit;
+                const p = toNumber(cb.dataset.price);
+                const u = cb.dataset.unit || 'chuyến';
                 const cost = u === 'ngày' ? p * days : p;
                 addonTotal += cost;
-                addonText.push(cb.value);
+                addonNames.push(cb.value);
+                addonDetails.push({
+                    name: cb.value,
+                    unit_price: p,
+                    unit: u,
+                    quantity: u === 'ngày' ? days : 1,
+                    total_price: cost
+                });
             });
+            const totalCost = rentalCost + addonTotal;
+            const addonPayload = {
+                names: addonNames,
+                items: addonDetails,
+                total: addonTotal
+            };
 
             // Populate Confirmation Table
             const cf = (id, val) => { const el = document.getElementById(id); if(el) el.textContent = val; };
             cf('tx-cf-name', form.customer_name.value);
             cf('tx-cf-phone', form.customer_phone.value);
             cf('tx-cf-email', form.customer_email.value || 'N/A');
-            cf('tx-cf-pickup', modalPickup.value + ' ' + (document.getElementById('pickupTime')?.value || '08:00'));
-            cf('tx-cf-return', modalReturn.value + ' ' + (document.getElementById('returnTime')?.value || '08:00'));
+            const selectedAddress = (form.customer_address?.value || '').trim();
+            const addressRow = document.getElementById('tx-cf-address-row');
+            const addressEl = document.getElementById('tx-cf-address');
+            if (addressRow && addressEl) {
+                if (selectedAddress) {
+                    addressEl.textContent = selectedAddress;
+                    addressRow.style.display = '';
+                } else {
+                    addressRow.style.display = 'none';
+                }
+            }
+            cf('tx-cf-pickup', pickupDateVal + ' ' + (document.getElementById('pickupTime')?.value || '08:00'));
+            cf('tx-cf-return', returnDateVal + ' ' + (document.getElementById('returnTime')?.value || '08:00'));
             cf('tx-cf-days', days + ' ngày');
-            cf('tx-cf-price-day', fmt(car.giathue) + ' đ/ngày');
-            cf('tx-cf-rental-cost', fmt(days * car.giathue) + ' đ');
-            cf('tx-cf-addon-cost', fmt(addonTotal) + ' đ');
-            cf('tx-cf-total', fmt(days * car.giathue + addonTotal) + ' đ');
-            
-            // Diễn giải & Dịch vụ đi kèm
-            const summaryEl = document.getElementById('tx-cf-summary');
-            if(summaryEl) summaryEl.textContent = `Giá thuê ${days} ngày x ${fmt(car.giathue)}đ/ngày`;
+            cf('tx-cf-price-day', fmt(pricePerDay) + ' đ/ngày');
+            cf('tx-cf-rental-cost', fmt(rentalCost) + ' đ');
+            const totalEl = document.getElementById('tx-cf-total');
+            if (totalEl) {
+                totalEl.innerHTML = `${fmt(totalCost)} đ<small class="d-block text-muted" style="font-weight:500;">= ${fmt(rentalCost)}đ + ${fmt(addonTotal)}đ</small>`;
+            }
+
+            const addonRow = document.getElementById('tx-cf-addon-row');
             const addonEl = document.getElementById('tx-cf-addon');
-            if(addonEl) addonEl.textContent = addonText.length ? addonText.join(', ') : 'Không có';
+            if (addonEl) {
+                if (addonDetails.length) {
+                    if (addonRow) addonRow.style.display = 'flex';
+                    addonEl.innerHTML = `<details class="tx-addon-fee-list tx-addon-collapsible" open><summary class="tx-addon-collapsible-summary"><span class="tx-addon-collapsible-title"><i class="fas fa-list-ul"></i>Chi tiết phí dịch vụ</span><span class="tx-addon-collapsible-meta"><span class="tx-addon-collapsible-total">${fmt(addonTotal)}đ</span><i class="fas fa-chevron-down tx-addon-collapsible-icon" aria-hidden="true"></i></span></summary>
+                        ${addonDetails.map(item => {
+                            const unit = item.unit || 'chuyến';
+                            const calcText = unit === 'ngày'
+                                ? `${fmt(item.unit_price)}đ x ${item.quantity} ngày`
+                                : `${fmt(item.unit_price)}đ x ${item.quantity} ${escapeHtml(unit)}`;
+                            return `<div class="tx-addon-fee-item">
+                                <span class="tx-addon-fee-left">
+                                    <span class="tx-addon-fee-name">${escapeHtml(item.name)}</span>
+                                    <span class="tx-addon-fee-calc">(${calcText})</span>
+                                </span>
+                                <span class="tx-addon-fee-right">${fmt(item.total_price)}đ</span>
+                            </div>`;
+                        }).join('')}
+                        <div class="tx-addon-fee-total">
+                            <span class="tx-addon-fee-left">Tổng phí dịch vụ:</span><span class="tx-addon-fee-right">${fmt(addonTotal)}đ</span>
+                        </div>
+                    </details>`;
+                } else {
+                    if (addonRow) addonRow.style.display = 'none';
+                    addonEl.textContent = 'Không có';
+                }
+            }
 
             const imgEl = document.getElementById('tx-cf-car-front-img');
             if(imgEl) { imgEl.src = 'assets/images/cars/' + car.anhdaidien; imgEl.style.display='block'; }
@@ -443,6 +512,7 @@
                     }
 
                     // BƯỚC 2: Gửi đơn đặt xe
+                    const nowStr = new Date().toISOString().slice(0, 19).replace('T', ' ');
                     const payload = {
                         id_nguoidung: accountResult?.userId || s?.id || null,
                         tenkhachhang: custName,
@@ -450,15 +520,19 @@
                         emailkhachhang: form.customer_email.value,
                         id_xe: car.id,
                         ten_xe: car.tenxe,
-                        ngay_nhan_yeu_cau: modalPickup.value,
-                        ngay_tra_yeu_cau: modalReturn.value,
+                        ngay_nhan_yeu_cau: pickupDateVal,
+                        ngay_tra_yeu_cau: returnDateVal,
                         gio_nhan_yeu_cau: document.getElementById('pickupTime')?.value || '08:00',
                         gio_tra_yeu_cau: document.getElementById('returnTime')?.value || '08:00',
                         diachikhachhang: form.customer_address.value,
                         ghi_chu: form.notes.value,
-                        dich_vu_kem: JSON.stringify(addonText),
-                        tong_tien: (days * car.giathue + addonTotal),
-                        ngaydat: new Date().toISOString().slice(0, 19).replace('T', ' ')
+                        dich_vu_kem: JSON.stringify(addonPayload),
+                        so_ngay_thue: days,
+                        gia_thue_nhat: pricePerDay,
+                        tong_tien_dich_vu: addonTotal,
+                        tong_tien: totalCost,
+                        ngaydat: nowStr,
+                        created_at: nowStr
                     };
                     const res = await DVQTKrud.insertRow('datlich_thuexe', payload);
                     const orderCode = res ? String(res.id).padStart(7, '0') : null;

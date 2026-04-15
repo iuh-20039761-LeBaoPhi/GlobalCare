@@ -330,8 +330,8 @@ function highlightActiveNav() {
         home: 'home',
         about: 'about',
         services: 'services',
-        guide: 'guide',
-        contact: 'contact',
+        guide: 'about',
+        contact: 'about',
         blog: 'cam-nang',
         'cam-nang': 'cam-nang',
         terms: 'terms',
@@ -343,8 +343,8 @@ function highlightActiveNav() {
         'chi-tiet-cam-nang': 'cam-nang',
         'gioi-thieu': 'about',
         'dich-vu': 'services',
-        'huong-dan-thue-xe': 'guide',
-        'lien-he': 'contact',
+        'huong-dan-thue-xe': 'about',
+        'lien-he': 'about',
         'bai-viet': 'cam-nang',
         'chi-tiet-bai-viet': 'cam-nang',
         'dieu-khoan': 'terms',
@@ -352,7 +352,7 @@ function highlightActiveNav() {
         'chi-tiet-xe': 'home',
         'dat-lich-thanh-cong': 'home',
         'tra-cuu-don': 'home',
-        'huong-dan-he-thong': 'guide'
+        'huong-dan-he-thong': 'about'
     };
 
     const navPage = NAV_PAGE_MAP[page] || page;

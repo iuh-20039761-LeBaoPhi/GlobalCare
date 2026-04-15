@@ -159,9 +159,7 @@ thue-xe/
 | `tim-kiem.html` | Tìm kiếm / lọc xe | `pages/search.js` |
 | `cam-nang.html` | Danh sách cẩm nang | _(inline)_ |
 | `chi-tiet-cam-nang.html` | Bài viết cẩm nang (?id=) | _(inline)_ |
-| `gioi-thieu.html` | Giới thiệu công ty | _(inline)_ |
-| `lien-he.html` | Form liên hệ | `pages/contact.js` |
-| `huong-dan-thue-xe.html` | Hướng dẫn thuê xe | _(inline)_ |
+| `gioi-thieu.html` | Giới thiệu công ty + hướng dẫn thuê xe + liên hệ | `pages/contact.js` |
 | `huong-dan-he-thong.html` | Hướng dẫn dùng hệ thống | _(inline)_ |
 | `dat-lich-thanh-cong.html` | Xác nhận đặt xe | `pages/booking-success.js` |
 | `tra-cuu-don.html` | Tra cứu đơn hàng | _(inline)_ |
@@ -265,7 +263,7 @@ pending (Chờ xác nhận)
 | WiFi di động | 80.000đ | chuyến |
 
 #### `lienhe` — Tin nhắn liên hệ
-Lưu form liên hệ từ trang `lien-he.html`: ten, sodienthoai, email, chude, noidung, dadoc.
+Lưu form liên hệ từ trang `gioi-thieu.html`: ten, sodienthoai, email, chude, noidung, dadoc.
 
 ---
 
