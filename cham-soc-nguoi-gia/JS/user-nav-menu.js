@@ -23,7 +23,7 @@
   };
 
   const assetUrl = (path) => {
-    if (!path) return new URL('assets/logomvb.png', projectBase).href;
+    if (!path) return new URL('assets/logong.png', projectBase).href;
     if (/^https?:\/\//i.test(path)) return path;
     return new URL(String(path).replace(/^\/+/, ''), projectBase).href;
   };
@@ -126,7 +126,7 @@
 
     if (navUserName) navUserName.textContent = user && user.hovaten ? user.hovaten : 'Tài khoản';
     if (navAvatar) {
-      const avatar = user && user.avatartenfile ? user.avatartenfile : 'assets/logomvb.png';
+      const avatar = user && user.avatartenfile ? user.avatartenfile : 'assets/logong.png';
       navAvatar.src = assetUrl(avatar);
     }
     resetIdleLogoutTimer();
