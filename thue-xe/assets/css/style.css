@@ -1052,6 +1052,37 @@ header.sticky-top {
     z-index: 1010; /* thấp hơn navbar */
 }
 /* ===== Booking confirm panel ===== */
+.tx-cf-layout {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 5px;
+    margin-bottom: 8px;
+}
+.tx-cf-section {
+    background: #fff;
+    border: 1px solid rgba(59, 130, 246, 0.22);
+    border-radius: 10px;
+    padding: 10px 12px;
+}
+.tx-cf-section-title {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 0.83rem;
+    font-weight: 700;
+    color: #1e40af;
+    text-transform: uppercase;
+    letter-spacing: 0.03em;
+    margin-bottom: 8px;
+    padding-bottom: 6px;
+    border-bottom: 1px dashed rgba(59, 130, 246, 0.25);
+}
+.tx-cf-section .tx-cf-row {
+    margin-bottom: 2px;
+}
+.tx-cf-section .tx-cf-row:last-child {
+    margin-bottom: 0;
+}
 .tx-cf-row {
     display: flex;
     justify-content: space-between;
@@ -1061,6 +1092,39 @@ header.sticky-top {
     border-bottom: 1px solid rgba(59, 130, 246, 0.12);
 }
 .tx-cf-row:last-child { border-bottom: none; }
+.tx-cf-collapsible {
+    margin: 0;
+    padding: 0;
+    border: 0;
+}
+.tx-cf-collapsible > summary.tx-cf-section-title {
+    list-style: none;
+    cursor: pointer;
+    user-select: none;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
+}
+.tx-cf-collapsible > summary.tx-cf-section-title::-webkit-details-marker {
+    display: none;
+}
+.tx-cf-section-title-main {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+}
+.tx-cf-toggle-icon {
+    font-size: 0.78rem;
+    color: #64748b;
+    transition: transform 0.2s ease;
+}
+.tx-cf-collapsible[open] .tx-cf-toggle-icon {
+    transform: rotate(180deg);
+}
+.tx-cf-section-body {
+    margin-top: 4px;
+}
 .tx-cf-label {
     flex-shrink: 0;
     min-width: 120px;
@@ -1072,7 +1136,139 @@ header.sticky-top {
     font-weight: 600;
     color: #1a1a2e;
     text-align: right;
+    flex: 1 1 auto;
+    min-width: 0;
     word-break: break-word;
+}
+
+#tx-cf-addon-row .tx-cf-val {
+    display: block;
+    width: 100%;
+}
+
+.tx-addon-fee-list {
+    width: 100%;
+    border: 1px dashed rgba(59, 130, 246, 0.25);
+    border-radius: 8px;
+    background: #f8fbff;
+    overflow: hidden;
+    text-align: left;
+}
+
+.tx-addon-fee-item,
+.tx-addon-fee-total {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    gap: 10px;
+    padding: 6px 8px;
+    font-size: 0.82rem;
+}
+
+.tx-addon-fee-item {
+    border-bottom: 1px solid rgba(59, 130, 246, 0.12);
+}
+
+.tx-addon-fee-total {
+    background: rgba(59, 130, 246, 0.08);
+    font-weight: 700;
+    color: #1e40af;
+}
+
+.tx-addon-fee-left {
+    color: #0f172a;
+    word-break: break-word;
+    display: block;
+    flex: 1 1 auto;
+    min-width: 0;
+    width: auto;
+    text-align: left;
+}
+
+.tx-addon-fee-name {
+    display: block;
+    font-weight: 600;
+    text-align: left;
+}
+
+.tx-addon-fee-calc {
+    display: block;
+    color: #64748b;
+    font-size: 0.78rem;
+    margin-top: 2px;
+    text-align: left;
+}
+
+.tx-addon-fee-right {
+    color: #334155;
+    white-space: nowrap;
+    font-weight: 600;
+    text-align: right;
+    flex-shrink: 0;
+}
+
+.tx-addon-collapsible > summary.tx-addon-collapsible-summary {
+    list-style: none;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 10px;
+    cursor: pointer;
+    user-select: none;
+    padding: 7px 8px;
+    background: rgba(59, 130, 246, 0.08);
+}
+
+.tx-addon-collapsible > summary.tx-addon-collapsible-summary::-webkit-details-marker {
+    display: none;
+}
+
+.tx-addon-collapsible-title {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    color: #1e40af;
+    font-size: 0.82rem;
+    font-weight: 700;
+}
+
+.tx-addon-collapsible-meta {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.tx-addon-collapsible-total {
+    color: #1e40af;
+    font-size: 0.82rem;
+    font-weight: 700;
+    white-space: nowrap;
+}
+
+.tx-addon-collapsible-icon {
+    color: #64748b;
+    font-size: 0.72rem;
+    transition: transform 0.2s ease;
+}
+
+.tx-addon-collapsible[open] .tx-addon-collapsible-icon {
+    transform: rotate(180deg);
+}
+
+.tx-addon-collapsible[open] > summary.tx-addon-collapsible-summary {
+    border-bottom: 1px solid rgba(59, 130, 246, 0.12);
+}
+
+@media (min-width: 768px) {
+    #tx-cf-car-front-row .tx-cf-val {
+        display: flex;
+        justify-content: flex-end;
+        align-items: flex-start;
+    }
+
+    #tx-cf-car-front-img {
+        margin-left: auto;
+    }
 }
 
 @media (max-width: 576px) {
@@ -1090,5 +1286,19 @@ header.sticky-top {
         padding: 10px 8px !important;
         font-size: 0.95rem;
         white-space: nowrap;
+    }
+
+    #tx-cf-addon-row {
+        flex-direction: column;
+        align-items: stretch;
+        gap: 6px;
+    }
+
+    #tx-cf-addon-row .tx-cf-label {
+        min-width: 0;
+    }
+
+    #tx-cf-addon-row .tx-cf-val {
+        text-align: left;
     }
 }

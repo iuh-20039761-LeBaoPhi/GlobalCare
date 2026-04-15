@@ -20,7 +20,7 @@
         '#txBpLoading span{font-size:.88rem;color:#64748b}',
         '#txBpModal .modal-content{border-radius:16px!important;overflow:hidden}',
         '@media(max-width:575.98px){',
-        '#txBpModal .modal-dialog{margin:16px auto!important;max-width:92vw!important;width:92vw!important;max-height:88dvh!important}',
+        '#txBpModal .modal-dialog{margin:10px 5px!important;max-width:calc(100vw - 10px)!important;width:calc(100vw - 10px)!important;max-height:88dvh!important}',
         '#txBpModal .modal-content{max-height:88dvh!important;border-radius:16px!important}',
         '#txBpModal .modal-body{max-height:calc(88dvh - 60px)!important;overflow-y:auto!important}',
         '}',

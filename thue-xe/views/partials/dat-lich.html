@@ -110,6 +110,144 @@
       background: #f0f6ff;
       color: var(--color-primary, #3b82f6);
     }
+    .tx-cf-layout {
+      display: grid;
+      grid-template-columns: 1fr;
+      gap: 5px;
+      margin-bottom: 8px;
+    }
+    .tx-cf-section {
+      background: #fff;
+      border: 1px solid rgba(59,130,246,0.18);
+      border-radius: 10px;
+      padding: 10px 12px;
+    }
+    .tx-cf-section-title {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-size: 0.83rem;
+      font-weight: 700;
+      color: #1e40af;
+      text-transform: uppercase;
+      letter-spacing: 0.03em;
+      margin-bottom: 8px;
+      padding-bottom: 6px;
+      border-bottom: 1px dashed rgba(59,130,246,0.25);
+    }
+    .tx-cf-section .tx-cf-row {
+      margin-bottom: 2px;
+    }
+    .tx-cf-section .tx-cf-row:last-child {
+      margin-bottom: 0;
+    }
+    .tx-addon-fee-list {
+      width: 100%;
+      border: 1px dashed rgba(59,130,246,0.25);
+      border-radius: 8px;
+      background: #f8fbff;
+      overflow: hidden;
+      text-align: left;
+    }
+    .tx-addon-fee-item,
+    .tx-addon-fee-total {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      gap: 10px;
+      padding: 6px 8px;
+      font-size: 0.82rem;
+    }
+    .tx-addon-fee-item {
+      border-bottom: 1px solid rgba(59,130,246,0.12);
+    }
+    .tx-addon-fee-total {
+      background: rgba(59,130,246,0.08);
+      font-weight: 700;
+      color: #1e40af;
+    }
+    .tx-addon-fee-left {
+      color: #0f172a;
+      word-break: break-word;
+      display: block;
+      flex: 1 1 auto;
+      min-width: 0;
+      width: auto;
+      text-align: left;
+    }
+    .tx-addon-fee-name {
+      display: block;
+      font-weight: 600;
+      text-align: left;
+    }
+    .tx-addon-fee-calc {
+      display: block;
+      color: #64748b;
+      font-size: 0.78rem;
+      margin-top: 2px;
+      text-align: left;
+    }
+    .tx-addon-fee-right {
+      color: #334155;
+      white-space: nowrap;
+      font-weight: 600;
+      text-align: right;
+      flex-shrink: 0;
+    }
+    .tx-addon-collapsible > summary.tx-addon-collapsible-summary {
+      list-style: none;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 10px;
+      cursor: pointer;
+      user-select: none;
+      padding: 7px 8px;
+      background: rgba(59,130,246,0.08);
+    }
+    .tx-addon-collapsible > summary.tx-addon-collapsible-summary::-webkit-details-marker {
+      display: none;
+    }
+    .tx-addon-collapsible-title {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      color: #1e40af;
+      font-size: 0.82rem;
+      font-weight: 700;
+    }
+    .tx-addon-collapsible-meta {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .tx-addon-collapsible-total {
+      color: #1e40af;
+      font-size: 0.82rem;
+      font-weight: 700;
+      white-space: nowrap;
+    }
+    .tx-addon-collapsible-icon {
+      color: #64748b;
+      font-size: 0.72rem;
+      transition: transform 0.2s ease;
+    }
+    .tx-addon-collapsible[open] .tx-addon-collapsible-icon {
+      transform: rotate(180deg);
+    }
+    .tx-addon-collapsible[open] > summary.tx-addon-collapsible-summary {
+      border-bottom: 1px solid rgba(59,130,246,0.12);
+    }
+    @media (min-width: 768px) {
+      #tx-cf-car-front-row .tx-cf-val {
+        display: flex;
+        justify-content: flex-end;
+        align-items: flex-start;
+      }
+      #tx-cf-car-front-img {
+        margin-left: auto;
+      }
+    }
   </style>
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <script src="../public/asset/js/dvqt-krud.js?v=1.7"></script>
@@ -341,20 +479,6 @@ document.addEventListener('DOMContentLoaded', loadHeader);
                 </div>
               </div>
 
-              <div id="addonSummary" class="mt-3 p-3 bg-light rounded" style="display:none;">
-                <div class="d-flex justify-content-between mb-1">
-                  <span class="text-muted">Tiền xe:</span>
-                  <span id="summaryCarPrice">0đ</span>
-                </div>
-                <div id="summaryAddonList"></div>
-                <hr class="my-2">
-                <div class="d-flex justify-content-between fw-bold">
-                  <span>Tổng cộng:</span>
-                  <span class="text-primary" id="summaryTotal">0đ</span>
-                </div>
-                <small class="text-muted">* Giá có thể thay đổi tuỳ thực tế</small>
-              </div>
-
               <div class="mt-3 booking-submit-wrap">
                 <button type="submit" class="btn btn-gradient booking-submit-btn booking-touch-btn">
                   <i class="fas fa-check me-2"></i>Đặt xe
@@ -371,30 +495,48 @@ document.addEventListener('DOMContentLoaded', loadHeader);
                 <h6 class="fw-bold mb-1" style="font-size:1.05rem;">Xác nhận thông tin đặt xe</h6>
                 <p class="text-muted small mb-0">Vui lòng kiểm tra lại trước khi gửi</p>
               </div>
-              <div style="background:#eff6ff;border:1px solid rgba(59,130,246,0.25);border-radius:12px;padding:4px 16px;margin-bottom:20px;">
-                <div class="tx-cf-row" id="tx-cf-car-front-row" style="display:none;">
-                  <span class="tx-cf-label">Ảnh phía trước</span>
-                  <span class="tx-cf-val">
-                    <img id="tx-cf-car-front-img" src="" alt="Ảnh phía trước xe"
-                         style="width:180px;height:110px;object-fit:cover;border-radius:10px;display:block;">
-                  </span>
+              <div style="background:#eff6ff;border:1px solid rgba(59,130,246,0.25);border-radius:12px;padding:10px 12px;margin-bottom:20px;">
+                <div class="tx-cf-layout">
+                  <div class="tx-cf-section">
+                    <details class="tx-cf-collapsible" id="tx-cf-customer-collapsible" open>
+                      <summary class="tx-cf-section-title">
+                        <span class="tx-cf-section-title-main"><i class="fas fa-user"></i>Thông tin khách hàng</span>
+                        <i class="fas fa-chevron-down tx-cf-toggle-icon" aria-hidden="true"></i>
+                      </summary>
+                      <div class="tx-cf-section-body">
+                        <div class="tx-cf-row"><span class="tx-cf-label">Họ và tên</span><span id="tx-cf-name" class="tx-cf-val"></span></div>
+                        <div class="tx-cf-row"><span class="tx-cf-label">Số điện thoại</span><span id="tx-cf-phone" class="tx-cf-val"></span></div>
+                        <div class="tx-cf-row"><span class="tx-cf-label">Email</span><span id="tx-cf-email" class="tx-cf-val"></span></div>
+                        <div class="tx-cf-row" id="tx-cf-id-row"><span class="tx-cf-label">CMND/CCCD</span><span id="tx-cf-id" class="tx-cf-val"></span></div>
+                        <div class="tx-cf-row" id="tx-cf-address-row"><span class="tx-cf-label">Địa chỉ</span><span id="tx-cf-address" class="tx-cf-val"></span></div>
+                        <div class="tx-cf-row" id="tx-cf-note-row"><span class="tx-cf-label">Ghi chú</span><span id="tx-cf-note" class="tx-cf-val"></span></div>
+                        <div class="tx-cf-row" id="tx-cf-media-row"><span class="tx-cf-label">Đính kèm</span><span id="tx-cf-media" class="tx-cf-val"></span></div>
+                      </div>
+                    </details>
+                  </div>
+
+                  <div class="tx-cf-section">
+                    <div class="tx-cf-section-title"><i class="fas fa-car-side"></i>Thông tin xe</div>
+                    <div class="tx-cf-row" id="tx-cf-car-front-row" style="display:none;">
+                      <span class="tx-cf-label">Ảnh phía trước</span>
+                      <span class="tx-cf-val">
+                        <img id="tx-cf-car-front-img" src="" alt="Ảnh phía trước xe"
+                             style="width:100%;max-width:180px;height:110px;object-fit:cover;border-radius:10px;display:block;">
+                      </span>
+                    </div>
+                    <div class="tx-cf-row"><span class="tx-cf-label">Ngày nhận xe</span><span id="tx-cf-pickup" class="tx-cf-val"></span></div>
+                    <div class="tx-cf-row"><span class="tx-cf-label">Ngày trả xe</span><span id="tx-cf-return" class="tx-cf-val"></span></div>
+                  </div>
+
+                  <div class="tx-cf-section">
+                    <div class="tx-cf-section-title"><i class="fas fa-file-invoice-dollar"></i>Thông tin chi phí</div>
+                    <div class="tx-cf-row"><span class="tx-cf-label">Số ngày thuê</span><span id="tx-cf-days" class="tx-cf-val" style="color:var(--color-primary);font-weight:700;"></span></div>
+                    <div class="tx-cf-row"><span class="tx-cf-label">Giá thuê/ngày</span><span id="tx-cf-price-day" class="tx-cf-val"></span></div>
+                    <div class="tx-cf-row"><span class="tx-cf-label">Chi phí thuê xe</span><span id="tx-cf-rental-cost" class="tx-cf-val"></span></div>
+                    <div class="tx-cf-row" id="tx-cf-addon-row"><span class="tx-cf-label">Phí dịch vụ</span><span id="tx-cf-addon" class="tx-cf-val"></span></div>
+                    <div class="tx-cf-row" id="tx-cf-total-row"><span class="tx-cf-label">Tổng ước tính</span><span id="tx-cf-total" class="tx-cf-val" style="color:var(--color-primary);font-weight:700;"></span></div>
+                  </div>
                 </div>
-                <div class="tx-cf-row"><span class="tx-cf-label">Họ và tên</span><span id="tx-cf-name" class="tx-cf-val"></span></div>
-                <div class="tx-cf-row"><span class="tx-cf-label">Số điện thoại</span><span id="tx-cf-phone" class="tx-cf-val"></span></div>
-                <div class="tx-cf-row"><span class="tx-cf-label">Email</span><span id="tx-cf-email" class="tx-cf-val"></span></div>
-                <div class="tx-cf-row" id="tx-cf-id-row"><span class="tx-cf-label">CMND/CCCD</span><span id="tx-cf-id" class="tx-cf-val"></span></div>
-                <div class="tx-cf-row" id="tx-cf-address-row"><span class="tx-cf-label">Địa chỉ</span><span id="tx-cf-address" class="tx-cf-val"></span></div>
-                <div class="tx-cf-row"><span class="tx-cf-label">Ngày nhận xe</span><span id="tx-cf-pickup" class="tx-cf-val"></span></div>
-                <div class="tx-cf-row"><span class="tx-cf-label">Ngày trả xe</span><span id="tx-cf-return" class="tx-cf-val"></span></div>
-                <div class="tx-cf-row"><span class="tx-cf-label">Số ngày thuê</span><span id="tx-cf-days" class="tx-cf-val" style="color:var(--color-primary);font-weight:700;"></span></div>
-                <div class="tx-cf-row"><span class="tx-cf-label">Giá thuê/ngày</span><span id="tx-cf-price-day" class="tx-cf-val"></span></div>
-                <div class="tx-cf-row"><span class="tx-cf-label">Chi phí thuê xe</span><span id="tx-cf-rental-cost" class="tx-cf-val"></span></div>
-                <div class="tx-cf-row" id="tx-cf-addon-cost-row"><span class="tx-cf-label">Chi phí dịch vụ</span><span id="tx-cf-addon-cost" class="tx-cf-val"></span></div>
-                <div class="tx-cf-row" id="tx-cf-summary-row"><span class="tx-cf-label">Diễn giải chi phí</span><span id="tx-cf-summary" class="tx-cf-val"></span></div>
-                <div class="tx-cf-row" id="tx-cf-addon-row"><span class="tx-cf-label">Dịch vụ kèm</span><span id="tx-cf-addon" class="tx-cf-val"></span></div>
-                <div class="tx-cf-row" id="tx-cf-total-row"><span class="tx-cf-label">Tổng ước tính</span><span id="tx-cf-total" class="tx-cf-val" style="color:var(--color-primary);font-weight:700;"></span></div>
-                <div class="tx-cf-row" id="tx-cf-note-row"><span class="tx-cf-label">Ghi chú</span><span id="tx-cf-note" class="tx-cf-val"></span></div>
-                <div class="tx-cf-row" id="tx-cf-media-row"><span class="tx-cf-label">Đính kèm</span><span id="tx-cf-media" class="tx-cf-val"></span></div>
               </div>
               <div class="d-flex gap-2 flex-column flex-sm-row tx-confirm-actions">
                 <button type="button" id="txConfirmBackBtn" class="btn btn-outline-secondary w-100 booking-touch-btn flex-fill" style="padding:12px;">
@@ -413,9 +555,6 @@ document.addEventListener('DOMContentLoaded', loadHeader);
   </div>
 </section>
 
-<script>loadFooter();</script>
-<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
-<script src="assets/js/static-data.js"></script>
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 <script src="assets/js/map-picker.js"></script>
 
@@ -427,9 +566,24 @@ document.addEventListener('DOMContentLoaded', loadHeader);
 (function () {
     'use strict';
     const fmt = n => new Intl.NumberFormat('vi-VN').format(n);
-    const today = () => new Date().toISOString().split('T')[0];
-  const TX_GSHEET_URL = window.GSHEET_URL || 'https://script.google.com/macros/s/AKfycbx8J5infIIqf-VOFCNq89L7W1xRfluTU0Dt4R8Vijl81zhid59aql3vURdT01dwaaKgPQ/exec';
-
+  const today = () => {
+    const now = new Date();
+    const y = now.getFullYear();
+    const m = String(now.getMonth() + 1).padStart(2, '0');
+    const d = String(now.getDate()).padStart(2, '0');
+    return `${y}-${m}-${d}`;
+  };
+  const addDaysIso = (isoDate, days) => {
+    if (!isoDate) return '';
+    const parts = String(isoDate).split('-').map(Number);
+    if (parts.length !== 3 || parts.some(Number.isNaN)) return '';
+    const dt = new Date(parts[0], parts[1] - 1, parts[2]);
+    dt.setDate(dt.getDate() + days);
+    const y = dt.getFullYear();
+    const m = String(dt.getMonth() + 1).padStart(2, '0');
+    const d = String(dt.getDate()).padStart(2, '0');
+    return `${y}-${m}-${d}`;
+  };
 
     // Set min dates
     const pickupEl = document.getElementById('pickupDate');
@@ -446,6 +600,27 @@ document.addEventListener('DOMContentLoaded', loadHeader);
     const returnP   = params.get('return')  || '';
     if (pickupP) pickupEl.value = pickupP;
     if (returnP) returnEl.value = returnP;
+
+    function syncStandaloneDateConstraints() {
+      const todayStr = today();
+      pickupEl.min = todayStr;
+
+      if (pickupEl.value && pickupEl.value < todayStr) {
+        pickupEl.value = todayStr;
+      }
+
+      const effectivePickup = pickupEl.value && pickupEl.value >= todayStr
+        ? pickupEl.value
+        : todayStr;
+      const minReturn = addDaysIso(effectivePickup, 1);
+      returnEl.min = minReturn;
+
+      if (returnEl.value && returnEl.value < minReturn) {
+        returnEl.value = minReturn;
+      }
+    }
+
+    syncStandaloneDateConstraints();
 
     let _standaloneCarType = null;
     let _standalonePending = null;
@@ -506,38 +681,17 @@ document.addEventListener('DOMContentLoaded', loadHeader);
             if (tp) tp.textContent = fmt(d * _standaloneCarType.price_per_day) + 'đ';
             const pc = document.getElementById('standalonePriceCalc');
             if (pc) pc.style.display = 'block';
-            returnEl.min = pickupEl.value;
+            returnEl.min = addDaysIso(pickupEl.value, 1);
         }
-        recalcAddonSummary();
     }
-    pickupEl.addEventListener('change', calcStandalonePrice);
-    returnEl.addEventListener('change', calcStandalonePrice);
-
-    // ===== Addon recalc =====
-    function recalcAddonSummary() {
-        const pickup = pickupEl.value;
-        const ret    = returnEl.value;
-        const days   = (pickup && ret && ret > pickup)
-            ? Math.max(1, Math.round((new Date(ret) - new Date(pickup)) / 86400000)) : 0;
-        const checked   = [...document.querySelectorAll('input[name="addon_services"]:checked')];
-        const summaryEl = document.getElementById('addonSummary');
-        if (!summaryEl) return;
-        if (!days && !checked.length) { summaryEl.style.display = 'none'; return; }
-        const pricePerDay = _standaloneCarType ? _standaloneCarType.price_per_day : 0;
-        const carTotal    = days * pricePerDay;
-        let addonTotal = 0, addonLines = '';
-        checked.forEach(cb => {
-            const info = _standaloneAddonPrices[cb.value];
-            if (!info) return;
-            const cost = info.unit === 'ngày' ? info.price * days : info.price;
-            addonTotal += cost;
-            addonLines += `<div class="d-flex justify-content-between mb-1"><span class="text-muted">${cb.value}:</span><span>+${fmt(cost)}đ</span></div>`;
+        pickupEl.addEventListener('change', function () {
+          syncStandaloneDateConstraints();
+          calcStandalonePrice();
         });
-        document.getElementById('summaryCarPrice').textContent = fmt(carTotal) + 'đ';
-        document.getElementById('summaryAddonList').innerHTML  = addonLines;
-        document.getElementById('summaryTotal').textContent    = fmt(carTotal + addonTotal) + 'đ';
-        summaryEl.style.display = 'block';
-    }
+        returnEl.addEventListener('change', function () {
+          syncStandaloneDateConstraints();
+          calcStandalonePrice();
+        });
 
     // ===== Show alert =====
     function showAlert(msg, type) {
@@ -616,9 +770,6 @@ document.addEventListener('DOMContentLoaded', loadHeader);
                     </span>
                 </label>
             </div>`).join('');
-        container.querySelectorAll('input[name="addon_services"]').forEach(cb => {
-            cb.addEventListener('change', recalcAddonSummary);
-        });
     }
 
     // ===== Init with STATIC_DATA =====
@@ -634,13 +785,16 @@ document.addEventListener('DOMContentLoaded', loadHeader);
         // ===== CAR SELECTOR =====
         const carTypes = STATIC_DATA.car_types || [];
         const cars     = STATIC_DATA.cars || [];
+        let _standaloneSelectedCarId = null;
+        let _standaloneFallbackCarId = null;
 
         function getAvailCount(ctId) {
-            return cars.filter(c => c.type_id === ctId && c.status === 'available').length;
+          return cars.filter(c => c.type_id === ctId && (c.trangthai === 'available' || c.status === 'available')).length;
         }
 
         function selectCarType(ct) {
             _standaloneCarType = ct;
+          _standaloneSelectedCarId = null;
             
             // Tìm các xe cụ thể thuộc loại này và đang available
             // Sử dụng regex hoặc so sánh chính xác tên xe để tìm từ database list
@@ -649,6 +803,9 @@ document.addEventListener('DOMContentLoaded', loadHeader);
                 (String(c.tenxe || '').toLowerCase().includes(String(ct.name || '').toLowerCase()) || c.type_id == ct.id) 
                 && (c.trangthai === 'available' || c.status === 'available')
             );
+          _standaloneFallbackCarId = specificCars.length
+            ? specificCars[0].id
+            : (allCars.find(c => c.type_id == ct.id && (c.trangthai === 'available' || c.status === 'available'))?.id || null);
 
             // Cập nhật UI "đã chọn loại xe" - Dùng đúng tên từ car_types.json
             const imgEl   = document.getElementById('standaloneCarImg');
@@ -692,15 +849,14 @@ document.addEventListener('DOMContentLoaded', loadHeader);
                     }).join('');
                 } else {
                     specWrap.style.display = 'none';
-                    _standaloneSelectedCarId = null; 
+                  _standaloneSelectedCarId = null;
+                  _standaloneFallbackCarId = null;
                 }
             }
 
             if (pickupEl.value && returnEl.value) calcStandalonePrice();
-            recalcAddonSummary();
         }
 
-        let _standaloneSelectedCarId = null;
         window.confirmSpecificCar = function(id, plate) {
             _standaloneSelectedCarId = id;
             document.querySelectorAll('.spec-car-row').forEach(r => r.classList.remove('table-primary', 'bg-primary', 'bg-opacity-10'));
@@ -1007,7 +1163,11 @@ document.addEventListener('DOMContentLoaded', loadHeader);
             if (!pickupEl.value || !returnEl.value) {
                 showAlert('Vui lòng chọn ngày nhận và trả xe!', 'danger'); return;
             }
-            if (returnEl.value < pickupEl.value) {
+            const todayStr = today();
+            if (pickupEl.value < todayStr) {
+              showAlert('Ngày nhận xe phải bằng hoặc sau ngày hiện tại!', 'danger'); return;
+            }
+            if (returnEl.value <= pickupEl.value) {
                 showAlert('Thời gian trả xe phải sau thời gian nhận xe!', 'danger'); return;
             }
             const form      = e.target;
@@ -1017,9 +1177,6 @@ document.addEventListener('DOMContentLoaded', loadHeader);
             const idNumber  = idNumberEl ? idNumberEl.value.trim() : '';
             const pickupTime = document.getElementById('pickupTime')?.value || '08:00';
             const returnTime = document.getElementById('returnTime')?.value || '08:00';
-            if (returnEl.value === pickupEl.value && returnTime <= pickupTime) {
-                showAlert('Thời gian trả xe phải sau thời gian nhận xe!', 'danger'); return;
-            }
             if (!/^0[3-9][0-9]{8}$/.test(phone)) {
                 showAlert('Số điện thoại không hợp lệ! Phải gồm 10 chữ số bắt đầu bằng 03x / 05x / 07x / 08x / 09x.', 'danger'); return;
             }
@@ -1032,14 +1189,41 @@ document.addEventListener('DOMContentLoaded', loadHeader);
 
             const days = Math.max(1, Math.round((new Date(returnEl.value) - new Date(pickupEl.value)) / 86400000));
             const addonServices = [...document.querySelectorAll('input[name="addon_services"]:checked')].map(cb => cb.value);
-            const addonTotal = addonServices.reduce((sum, name) => {
+            const addonDetails = addonServices.map(name => {
                 const info = _standaloneAddonPrices[name];
-                if (!info) return sum;
-                return sum + (info.unit === 'ngày' ? info.price * days : info.price);
-            }, 0);
+              const unitPrice = Number(info ? info.price : 0);
+              const unit = info ? (info.unit || 'chuyến') : 'chuyến';
+              const quantity = unit === 'ngày' ? days : 1;
+              const lineTotal = unitPrice * quantity;
+              return {
+                name,
+                unit_price: unitPrice,
+                unit,
+                quantity,
+                total_price: lineTotal
+              };
+            });
+            const addonTotal = addonDetails.reduce((sum, item) => sum + item.total_price, 0);
+            const addonPayload = {
+              names: addonServices,
+              items: addonDetails,
+              total: addonTotal
+            };
             const pricePerDay  = _standaloneCarType ? _standaloneCarType.price_per_day : 0;
             const rentalCost   = days * pricePerDay;
             const totalPrice   = rentalCost + addonTotal;
+            const resolvedCarId = _standaloneSelectedCarId
+              || _standaloneFallbackCarId
+              || (STATIC_DATA.cars || []).find(c =>
+                c.type_id == (_standaloneCarType && _standaloneCarType.id)
+                && (c.trangthai === 'available' || c.status === 'available')
+              )?.id
+              || null;
+            if (!resolvedCarId) {
+              showAlert('Không tìm thấy xe khả dụng cho loại xe đã chọn. Vui lòng chọn lại xe.', 'danger');
+              document.getElementById('standaloneCarSelector')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+              return;
+            }
 
             // Build notes with media count
             let notes = form.querySelector('[name="notes"]')?.value.trim() || '';
@@ -1053,15 +1237,15 @@ document.addEventListener('DOMContentLoaded', loadHeader);
             }
 
             _standalonePending = {
-                car_id:           _standaloneCarType ? (STATIC_DATA.cars || []).find(c => c.type_id === typeId && c.status === 'available')?.id || null : null,
-                type_id:          typeId || null,
+                car_id:           resolvedCarId,
+                type_id:          _standaloneCarType ? _standaloneCarType.id : (typeId || null),
                 car_name:         _standaloneCarType ? _standaloneCarType.name : 'Chưa chọn xe',
                 customer_name:    form.querySelector('[name="customer_name"]').value.trim(),
               customer_phone:   phone, customer_email: email, id_number: idNumber || '',
                 customer_address: form.querySelector('[name="customer_address"]')?.value.trim() || '',
                 pickup_date: pickupEl.value, return_date: returnEl.value,
                 pickup_time: pickupTime,     return_time: returnTime,
-                notes, addon_services: addonServices, addon_total: addonTotal,
+                notes, addon_services: addonServices, addon_details: addonDetails, addon_payload: addonPayload, addon_total: addonTotal,
                 price_per_day: pricePerDay,
                 _days: days, _totalPrice: totalPrice,
             };
@@ -1098,22 +1282,15 @@ document.addEventListener('DOMContentLoaded', loadHeader);
             document.getElementById('tx-cf-days').textContent        = days + ' ngày';
             document.getElementById('tx-cf-price-day').textContent   = pricePerDay ? fmt(pricePerDay) + 'đ/ngày' : '—';
             document.getElementById('tx-cf-rental-cost').textContent = fmt(rentalCost) + 'đ';
-            const addonCostRow = document.getElementById('tx-cf-addon-cost-row');
-            const addonCostEl2 = document.getElementById('tx-cf-addon-cost');
-            if (addonCostRow && addonCostEl2) { addonCostEl2.textContent = '+' + fmt(addonTotal) + 'đ'; addonCostRow.style.display = ''; }
-            const summaryRow2 = document.getElementById('tx-cf-summary-row');
-            const summaryEl2  = document.getElementById('tx-cf-summary');
-            if (summaryRow2 && summaryEl2) {
-                summaryEl2.innerHTML = `<div style="text-align:right;line-height:1.45;"><div>Giá thuê xe ${days} ngày (${pricePerDay ? fmt(pricePerDay) + 'đ/ngày' : '—'})</div><div>Dịch vụ: ${addonServices.length ? addonServices.join(', ') : 'Không có'}</div></div>`;
-                summaryRow2.style.display = '';
-            }
             const addonRow2 = document.getElementById('tx-cf-addon-row');
-            if (addonServices.length) {
-                document.getElementById('tx-cf-addon').innerHTML = addonServices.map(name => {
-                    const info = _standaloneAddonPrices[name]; if (!info) return '';
-                    const itemCost = info.unit === 'ngày' ? info.price * days : info.price;
-                    return `<div style="margin-bottom:4px;"><strong>${name}</strong><br><small class="text-muted">${info.unit === 'ngày' ? fmt(info.price) + 'đ/ngày × ' + days + ' ngày' : fmt(info.price) + 'đ/chuyến'}</small> <span style="font-weight:700;">(+${fmt(itemCost)}đ)</span></div>`;
-                }).join('');
+            if (addonDetails.length) {
+              document.getElementById('tx-cf-addon').innerHTML = `<details class="tx-addon-fee-list tx-addon-collapsible" open><summary class="tx-addon-collapsible-summary"><span class="tx-addon-collapsible-title"><i class="fas fa-list-ul"></i>Chi tiết phí dịch vụ</span><span class="tx-addon-collapsible-meta"><span class="tx-addon-collapsible-total">${fmt(addonTotal)}đ</span><i class="fas fa-chevron-down tx-addon-collapsible-icon" aria-hidden="true"></i></span></summary>${addonDetails.map(item => {
+                const unitLabel = item.unit || 'chuyến';
+                const calcText = unitLabel === 'ngày'
+                  ? `${fmt(item.unit_price)}đ/ngày × ${item.quantity} ngày`
+                  : `${fmt(item.unit_price)}đ/${unitLabel} × ${item.quantity}`;
+                return `<div class="tx-addon-fee-item"><span class="tx-addon-fee-left"><span class="tx-addon-fee-name">${item.name}</span><span class="tx-addon-fee-calc">(${calcText})</span></span><span class="tx-addon-fee-right">${fmt(item.total_price)}đ</span></div>`;
+              }).join('')}<div class="tx-addon-fee-total"><span class="tx-addon-fee-left">Tổng phí dịch vụ:</span><span class="tx-addon-fee-right">${fmt(addonTotal)}đ</span></div></details>`;
                 addonRow2.style.display = '';
             } else addonRow2.style.display = 'none';
             document.getElementById('tx-cf-total').innerHTML = fmt(totalPrice) + `đ<small class="d-block text-muted" style="font-weight:500;">= ${fmt(rentalCost)}đ + ${fmt(addonTotal)}đ</small>`;
@@ -1131,7 +1308,6 @@ document.addEventListener('DOMContentLoaded', loadHeader);
             } else mediaRow.style.display = 'none';
 
             document.getElementById('bookingFormFull').style.display  = 'none';
-            document.getElementById('addonSummary').style.display     = 'none';
             document.getElementById('txBookingConfirm').style.display = '';
             if (carSelectorEl) carSelectorEl.style.display = 'none';
             document.getElementById('txBookingConfirm').scrollIntoView({ behavior: 'smooth', block: 'start' });
@@ -1175,7 +1351,14 @@ document.addEventListener('DOMContentLoaded', loadHeader);
                     gio_tra_yeu_cau:   bookingData.return_time,
                     diachikhachhang:   bookingData.customer_address,
                     ghi_chu:           bookingData.notes,
-                    dich_vu_kem:       JSON.stringify(bookingData.addon_services),
+                    dich_vu_kem:       JSON.stringify(bookingData.addon_payload || {
+                      names: bookingData.addon_services || [],
+                      items: bookingData.addon_details || [],
+                      total: bookingData.addon_total || 0
+                    }),
+                    so_ngay_thue:      days,
+                    gia_thue_nhat:     bookingData.price_per_day,
+                    tong_tien_dich_vu: bookingData.addon_total,
                     tong_tien:         totalPrice,
                     ngaydat:           nowStr,
                     created_at:        nowStr
@@ -1192,7 +1375,7 @@ document.addEventListener('DOMContentLoaded', loadHeader);
 
                 // 2. Gắn ID người dùng và ID XE vào payload
                 payload.id_nguoidung = accountResult?.userId || _standaloneSession?.id || null;
-                payload.id_xe = _standaloneSelectedCarId || _standaloneCarType.id;
+                payload.id_xe = _standaloneSelectedCarId || bookingData.car_id || _standaloneFallbackCarId || null;
 
                 // 3. Gọi API Krud
                 const result = await DVQTKrud.insertRow('datlich_thuexe', payload);

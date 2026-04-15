@@ -411,6 +411,18 @@
                         <div class="tech-label">Ghi chú đơn hàng</div>
                         <div class="small italic text-muted" id="orderNote">Không có ghi chú.</div>
                     </div>
+
+                    <div class="mt-4 pt-3 border-top">
+                        <div class="tech-label mb-2">Chi tiết chi phí</div>
+                        <div class="row g-3">
+                            <div class="col-6"><div class="tech-box"><span class="tech-label">Giá thuê/ngày</span><span class="tech-val" id="pricePerDay">---</span></div></div>
+                            <div class="col-6"><div class="tech-box"><span class="tech-label">Số ngày thuê</span><span class="tech-val" id="rentalDays">---</span></div></div>
+                            <div class="col-6"><div class="tech-box"><span class="tech-label">Tiền thuê xe</span><span class="tech-val" id="rentalAmount">---</span></div></div>
+                            <div class="col-6"><div class="tech-box"><span class="tech-label">Tiền dịch vụ</span><span class="tech-val" id="addonAmount">---</span></div></div>
+                            <div class="col-12"><div class="tech-box"><span class="tech-label">Dịch vụ đi kèm</span><div class="tech-val" id="addonDetailList">Không có</div></div></div>
+                            <div class="col-12"><div class="tech-box" style="background:#eff6ff;border-color:#bfdbfe;"><span class="tech-label">Tổng tiền</span><span class="tech-val text-primary" id="totalAmountBreakdown">---</span></div></div>
+                        </div>
+                    </div>
                 </div>
 
                 <!-- Right: Progress -->
@@ -500,6 +512,81 @@
             let currentOrder = null;
             let vehicleInfo = null;
 
+            const fmtMoney = (value) => Number(value || 0).toLocaleString('vi-VN') + ' đ';
+
+            function escapeHtml(value) {
+                return String(value ?? '')
+                    .replace(/&/g, '&amp;')
+                    .replace(/</g, '&lt;')
+                    .replace(/>/g, '&gt;')
+                    .replace(/\"/g, '&quot;')
+                    .replace(/'/g, '&#39;');
+            }
+
+            function inferRentalDays(order) {
+                const explicitDays = Number(order.so_ngay_thue || order.songaythue || 0);
+                if (explicitDays > 0) return explicitDays;
+                if (!order.ngay_nhan_yeu_cau || !order.ngay_tra_yeu_cau) return 0;
+                const start = new Date(order.ngay_nhan_yeu_cau);
+                const end = new Date(order.ngay_tra_yeu_cau);
+                if (Number.isNaN(start.getTime()) || Number.isNaN(end.getTime())) return 0;
+                return Math.max(1, Math.round((end - start) / 86400000));
+            }
+
+            function normalizeAddonItem(item) {
+                const unitPrice = Number(item?.unit_price ?? item?.don_gia ?? item?.price ?? 0);
+                const unit = item?.unit || item?.don_vi || 'chuyến';
+                const rawQty = Number(item?.quantity ?? item?.so_luong ?? 1);
+                const quantity = Number.isFinite(rawQty) && rawQty > 0 ? rawQty : 1;
+                const rawTotal = Number(item?.total_price ?? item?.thanh_tien ?? 0);
+                const totalPrice = rawTotal > 0 ? rawTotal : unitPrice * quantity;
+                const name = String(item?.name || item?.ten_dich_vu || item?.service_name || '').trim();
+                return { name, unit_price: unitPrice, unit, quantity, total_price: totalPrice };
+            }
+
+            function parseAddonPayload(raw) {
+                if (!raw) return { names: [], items: [], total: 0 };
+
+                let parsed = raw;
+                if (typeof parsed === 'string') {
+                    try {
+                        parsed = JSON.parse(parsed);
+                    } catch (_err) {
+                        const text = parsed.trim();
+                        return text ? { names: [text], items: [], total: 0 } : { names: [], items: [], total: 0 };
+                    }
+                }
+
+                if (Array.isArray(parsed)) {
+                    if (parsed.length && typeof parsed[0] === 'object' && parsed[0] !== null) {
+                        const items = parsed.map(normalizeAddonItem).filter(item => item.name || item.total_price > 0);
+                        return {
+                            names: items.map(item => item.name).filter(Boolean),
+                            items,
+                            total: items.reduce((sum, item) => sum + item.total_price, 0)
+                        };
+                    }
+                    const names = parsed.map(v => String(v).trim()).filter(Boolean);
+                    return { names, items: [], total: 0 };
+                }
+
+                if (parsed && typeof parsed === 'object') {
+                    const items = (Array.isArray(parsed.items) ? parsed.items : [])
+                        .map(normalizeAddonItem)
+                        .filter(item => item.name || item.total_price > 0);
+                    let names = Array.isArray(parsed.names) ? parsed.names.map(v => String(v).trim()).filter(Boolean) : [];
+                    if (!names.length && items.length) names = items.map(item => item.name).filter(Boolean);
+                    const parsedTotal = Number(parsed.total ?? parsed.tong_tien_dich_vu ?? 0);
+                    return {
+                        names,
+                        items,
+                        total: parsedTotal > 0 ? parsedTotal : items.reduce((sum, item) => sum + item.total_price, 0)
+                    };
+                }
+
+                return { names: [], items: [], total: 0 };
+            }
+
             async function run(id, creds = null) {
                 if(!id) return;
                 try {
@@ -562,6 +649,16 @@
                 const o = currentOrder;
                 const v = vehicleInfo;
                 const pid = String(o.id).padStart(7, '0');
+                const totalAmount = Number(o.tong_tien || 0);
+                const rentalDays = inferRentalDays(o);
+                const pricePerDay = Number(o.gia_thue_nhat ?? o.gia_thue_ngay ?? o.giathue ?? 0);
+                const addonData = parseAddonPayload(o.dich_vu_kem);
+                const hasAddonTotal = o.tong_tien_dich_vu !== undefined && o.tong_tien_dich_vu !== null && String(o.tong_tien_dich_vu) !== '';
+                const addonTotal = hasAddonTotal ? Number(o.tong_tien_dich_vu || 0) : Number(addonData.total || 0);
+                const rentalAmount = (pricePerDay > 0 && rentalDays > 0)
+                    ? pricePerDay * rentalDays
+                    : Math.max(0, totalAmount - addonTotal);
+                const grandTotal = totalAmount > 0 ? totalAmount : (rentalAmount + addonTotal);
 
                 document.getElementById('fullOrderId').textContent = '#' + pid;
                 document.getElementById('carSummary').textContent = o.ten_xe || (v ? v.tenxe : '---');
@@ -574,7 +671,7 @@
                     document.getElementById('carEngine').textContent = v.somay || v.so_may || '---';
                 }
 
-                document.getElementById('totalAmount').textContent = Number(o.tong_tien).toLocaleString() + ' đ';
+                document.getElementById('totalAmount').textContent = fmtMoney(grandTotal);
                 document.getElementById('orderDate').textContent = o.ngaydat || '---';
                 document.getElementById('rentalTime').innerHTML = `
                     <div><span class="opacity-50 fw-normal">Từ:</span> ${o.gio_nhan_yeu_cau} / ${o.ngay_nhan_yeu_cau}</div>
@@ -582,6 +679,28 @@
                 `;
                 document.getElementById('pickupAddr').textContent = o.diachikhachhang || o.dia_chi || 'Tận nơi';
                 document.getElementById('orderNote').textContent = o.ghi_chu || 'Không có ghi chú.';
+                document.getElementById('pricePerDay').textContent = pricePerDay > 0 ? `${fmtMoney(pricePerDay)}/ngày` : '---';
+                document.getElementById('rentalDays').textContent = rentalDays > 0 ? `${rentalDays} ngày` : '---';
+                document.getElementById('rentalAmount').textContent = fmtMoney(rentalAmount);
+                document.getElementById('addonAmount').textContent = fmtMoney(addonTotal);
+                document.getElementById('totalAmountBreakdown').textContent = fmtMoney(grandTotal);
+
+                const addonDetailListEl = document.getElementById('addonDetailList');
+                if (addonDetailListEl) {
+                    if (addonData.items.length) {
+                        addonDetailListEl.innerHTML = addonData.items.map(item => {
+                            const unitLabel = item.unit || 'chuyến';
+                            const serviceName = item.name || 'Dịch vụ';
+                            return `<div class="small mb-1"><strong>${escapeHtml(serviceName)}</strong>: ${fmtMoney(item.unit_price)}/${escapeHtml(unitLabel)} x ${item.quantity} = ${fmtMoney(item.total_price)}</div>`;
+                        }).join('');
+                    } else if (addonData.names.length) {
+                        addonDetailListEl.innerHTML = addonData.names
+                            .map(name => `<div class="small mb-1">- ${escapeHtml(name)}</div>`)
+                            .join('');
+                    } else {
+                        addonDetailListEl.textContent = 'Không có';
+                    }
+                }
 
                 let pct = 0; let stL = 'MỚI'; let stB = '#3b82f6'; let stH = 'Đang xử lý';
                 if(o.ngayhuy) { pct = 0; stL = 'ĐÃ HỦY'; stB = '#ef4444'; stH = 'Đơn đã hủy'; }
