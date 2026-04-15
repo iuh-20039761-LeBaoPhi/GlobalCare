@@ -5,11 +5,9 @@
   var BOOKING_TABLE = "datlich_giatuinhanh";
   var USER_TABLE = "nguoidung";
   var PROVIDER_SERVICE_ID = "11";
-  var ADMIN_SESSION_ENDPOINT = "../public/session-admin.php?action=get";
   var CUSTOMER_LOGIN_PAGE = "../../public/dang-nhap.html?service=giatuinhanh";
   var PROVIDER_LOGIN_PAGE = "../../public/dang-nhap.html?service=giatuinhanh";
-  var ADMIN_LOGIN_PAGE = "dang-nhap-admin.html";
-  var PROVIDER_DASHBOARD_PAGE = "../nha-cung-cap.html";
+  var ADMIN_LOGIN_PAGE = "../../public/admin-login.html";
   var getShared = function () {
     return window.SharedOrderUtils || {};
   };
@@ -771,20 +769,25 @@
   }
 
   function getSessionAdmin() {
-    return fetch(ADMIN_SESSION_ENDPOINT, {
-      method: "GET",
-      credentials: "same-origin",
-      headers: { "Content-Type": "application/json" },
-    })
-      .then(function (response) {
-        if (!response.ok) return null;
-        return response.json().catch(function () {
-          return null;
-        });
-      })
+    var e = getCookie("admin_e");
+    var p = getCookie("admin_p");
+    if (!e || !p || typeof window.krudList !== "function") {
+      return Promise.resolve(null);
+    }
+
+    return Promise.resolve(
+      window.krudList({
+        table: "admin",
+        where: [
+          { field: "email", operator: "=", value: e },
+          { field: "matkhau", operator: "=", value: p },
+        ],
+        limit: 1,
+      }),
+    )
       .then(function (result) {
-        if (!result || result.hasAdmin !== true || !result.admin) return null;
-        return result.admin;
+        var rows = extractRows(result);
+        return rows.length ? rows[0] : null;
       })
       .catch(function () {
         return null;
@@ -2046,18 +2049,28 @@
           config = {
             text: "Hủy đơn",
             loadingText: "Đang hủy...",
-            className: "btn-outline-danger",
+            className: "btn-danger",
             // hint: "Bạn có thể hủy đơn nếu hệ thống chưa cập nhật ngày nhận đồ.",
             handler: function () {
               if (window.confirm("Bạn có chắc chắn muốn hủy đơn hàng này?")) {
-                setActionButtonLoading(actionBtn, true, config.text, config.loadingText);
+                setActionButtonLoading(
+                  actionBtn,
+                  true,
+                  config.text,
+                  config.loadingText,
+                );
                 handleCancelOrder(order.id)
                   .then(function () {
                     start();
                   })
                   .catch(function (err) {
                     window.alert(err.message || "Lỗi hủy đơn.");
-                    setActionButtonLoading(actionBtn, false, config.text, config.loadingText);
+                    setActionButtonLoading(
+                      actionBtn,
+                      false,
+                      config.text,
+                      config.loadingText,
+                    );
                   });
               }
             },
@@ -2071,14 +2084,24 @@
             className: "btn-primary",
             // hint: "Nhận đơn hàng này để bắt đầu quy trình phục vụ.",
             handler: function () {
-              setActionButtonLoading(actionBtn, true, config.text, config.loadingText);
+              setActionButtonLoading(
+                actionBtn,
+                true,
+                config.text,
+                config.loadingText,
+              );
               handleAcceptOrder(order.id)
                 .then(function () {
                   start();
                 })
                 .catch(function (err) {
                   window.alert(err.message || "Lỗi nhận đơn.");
-                  setActionButtonLoading(actionBtn, false, config.text, config.loadingText);
+                  setActionButtonLoading(
+                    actionBtn,
+                    false,
+                    config.text,
+                    config.loadingText,
+                  );
                 });
             },
           };
@@ -2089,14 +2112,24 @@
             className: "btn-info text-white",
             // hint: "Xác nhận đã bắt đầu thực hiện các công đoạn giặt ủi.",
             handler: function () {
-              setActionButtonLoading(actionBtn, true, config.text, config.loadingText);
+              setActionButtonLoading(
+                actionBtn,
+                true,
+                config.text,
+                config.loadingText,
+              );
               handleStartOrder(order.id)
                 .then(function () {
                   start();
                 })
                 .catch(function (err) {
                   window.alert(err.message || "Lỗi cập nhật.");
-                  setActionButtonLoading(actionBtn, false, config.text, config.loadingText);
+                  setActionButtonLoading(
+                    actionBtn,
+                    false,
+                    config.text,
+                    config.loadingText,
+                  );
                 });
             },
           };
@@ -2108,14 +2141,24 @@
             // hint: "Yêu cầu thanh toán và bàn giao đồ sạch cho khách hàng.",
             handler: function () {
               if (window.confirm("Xác nhận hoàn thành đơn hàng này?")) {
-                setActionButtonLoading(actionBtn, true, config.text, config.loadingText);
+                setActionButtonLoading(
+                  actionBtn,
+                  true,
+                  config.text,
+                  config.loadingText,
+                );
                 handleCompleteOrder(order.id)
                   .then(function () {
                     start();
                   })
                   .catch(function (err) {
                     window.alert(err.message || "Lỗi cập nhật.");
-                    setActionButtonLoading(actionBtn, false, config.text, config.loadingText);
+                    setActionButtonLoading(
+                      actionBtn,
+                      false,
+                      config.text,
+                      config.loadingText,
+                    );
                   });
               }
             },
@@ -2129,8 +2172,9 @@
           delete actionBtn.dataset.originalText;
         }
         actionBtn.textContent = config.text;
-        actionBtn.className = "btn btn-sm fw-bold shadow-sm " + config.className;
-        
+        actionBtn.className =
+          "btn btn-sm fw-bold shadow-sm " + config.className;
+
         if (actionHint) {
           actionHint.textContent = config.hint || "";
           actionHint.classList.toggle("d-none", !config.hint);
@@ -2140,12 +2184,12 @@
         var newBtn = actionBtn.cloneNode(true);
         actionBtn.parentNode.replaceChild(newBtn, actionBtn);
         actionBtn = newBtn; // Update reference for closure
-        
-        newBtn.addEventListener("click", function(e) {
+
+        newBtn.addEventListener("click", function (e) {
           e.preventDefault();
           config.handler();
         });
-        
+
         actionBar.classList.remove("d-none");
         actionBar.classList.add("d-flex");
       } else {
@@ -2559,7 +2603,7 @@
       }
 
       if (isProviderUser(user)) {
-        window.location.href = PROVIDER_DASHBOARD_PAGE;
+        window.location.href = "../nhacungcap/danh-sach-don-hang.html";
         return;
       }
 

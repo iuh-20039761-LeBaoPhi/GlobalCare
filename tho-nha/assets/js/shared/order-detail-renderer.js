@@ -179,19 +179,7 @@ const ThoNhaOrderDetailRenderer = (() => {
             if (!order.provider.id && order.status === 'new') {
                 html = `<button class="btn-cancel" data-action="cancel-order" data-id="${order.id}" data-code="${order.orderCode}">Hủy đơn ngay</button>`;
             } else if (order.status === 'done' && (!order.actualCost || order.actualCost === 0)) {
-                html = `
-                <div class="pricing-input-box">
-                    <div class="pricing-title">
-                        <i class="fas fa-gift"></i> NHẬP GIÁ & NHẬN TRỢ GIÁ
-                    </div>
-                    <div class="pricing-group">
-                        <input type="number" id="inputActualPrice" class="pricing-field" placeholder="Giá thực tế đã trả...">
-                        <button class="pricing-submit" data-action="submit-actual-price" data-id="${order.id}">Gửi</button>
-                    </div>
-                    <div class="pricing-tip">
-                        Nhận ngay <b>cấp trợ giá 5%</b> cứu cánh túi tiền!
-                    </div>
-                </div>`;
+                html = `<button class="btn-emerald btn-action-pricing" data-action="open-pricing-modal" data-id="${order.id}"><i class="fas fa-gift me-2"></i>NHẬP GIÁ & NHẬN TRỢ GIÁ</button>`;
             }
         } else if (role === 'provider') {
             // Nhà cung cấp: Nhận -> Bắt đầu -> Hoàn thành
@@ -207,6 +195,16 @@ const ThoNhaOrderDetailRenderer = (() => {
         }
 
         area.innerHTML = html;
+
+        // Toggle 'no-actions' class on the shell based on whether actions are present
+        const shell = container.querySelector('.order-detail-shell');
+        if (shell) {
+            if (!html || html.trim() === '') {
+                shell.classList.add('no-actions');
+            } else {
+                shell.classList.remove('no-actions');
+            }
+        }
     }
 
     return { render };

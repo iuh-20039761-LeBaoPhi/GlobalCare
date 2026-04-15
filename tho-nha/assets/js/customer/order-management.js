@@ -133,6 +133,21 @@ window.initCustomerOrders = function() {
                 return;
             }
 
+            const backBtn = e.target.closest('[data-action="back-to-list"]');
+            if (backBtn) {
+                e.preventDefault();
+                state.selectedOrderId = null;
+                const els = getElements();
+                showList(els);
+                
+                // Hiện lại các section bị ẩn khi xem chi tiết
+                const filterSec = document.getElementById('orderFilterSection');
+                const searchSec = document.getElementById('orderSearchSection');
+                if (filterSec) filterSec.hidden = false;
+                if (searchSec) searchSec.hidden = false;
+                return;
+            }
+
         });
 
         const els = getElements();

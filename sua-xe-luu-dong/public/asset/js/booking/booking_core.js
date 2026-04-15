@@ -19,6 +19,12 @@
       "customItemInputWrapper",
     );
     const customItemInput = document.getElementById("mauxekhac");
+
+    const customBrandInputWrapper = document.getElementById(
+      "customBrandInputWrapper",
+    );
+    const customBrandInput = document.getElementById("hangxekhac");
+
     const datetimeInput = document.querySelector(
       '#formdatdichvu input[type="datetime-local"]',
     );
@@ -40,9 +46,10 @@
 
     let servicesData = [];
     let providerLocation = null;
-    let transportPerKm = 0;
-    let transportMinFee = 0;
-    let transportMaxFee = 0;
+    let providerLocations = [];
+    let transportPerKm = 5;
+    let transportMinFee = 40000;
+    let transportMaxFee = 60000;
     let latestDistanceKm = null;
     let transportFeeValue = 0;
     let transportCalcToken = 0;
@@ -113,6 +120,22 @@
       }
     }
 
+    function toggleCustomBrandInput(force = null) {
+      if (!brandSelect || !customBrandInputWrapper || !customBrandInput) return;
+
+      const useCustom =
+        force == null
+          ? String(brandSelect.value || "") === "__other__"
+          : Boolean(force);
+
+      customBrandInputWrapper.classList.toggle("d-none", !useCustom);
+      customBrandInput.required = useCustom;
+
+      if (!useCustom) {
+        customBrandInput.value = "";
+      }
+    }
+
     function getCurrentDateTimeLocalValue() {
       const now = new Date();
       const year = now.getFullYear();
@@ -141,6 +164,21 @@
       otherOption.value = "__other__";
       otherOption.textContent = "Khác (nhập mẫu xe)";
       itemSelect.appendChild(otherOption);
+    }
+
+    function ensureOtherBrandOption() {
+      if (!brandSelect) return;
+
+      const hasOtherOption = Array.from(brandSelect.options).some(
+        (option) => String(option.value) === "__other__",
+      );
+
+      if (hasOtherOption) return;
+
+      const otherOption = document.createElement("option");
+      otherOption.value = "__other__";
+      otherOption.textContent = "Khác (nhập hãng xe)";
+      brandSelect.appendChild(otherOption);
     }
 
     let vehicleTypesData = [];
@@ -190,9 +228,6 @@
       const surveyFee = getCurrentSurveyFee();
       const transportFee = Number(transportFeeValue || 0);
       const total = surveyFee + transportFee;
-      const noFixTotal = surveyFee + transportFee;
-
-
 
       if (surveyInput) {
         surveyInput.value = surveyFee > 0 ? formatCurrency(surveyFee) : "";
@@ -201,8 +236,6 @@
       if (totalInput) {
         totalInput.value = total > 0 ? formatCurrency(total) : "";
       }
-
-
 
       if (estimateSurveyFee) {
         estimateSurveyFee.textContent =
@@ -271,6 +304,170 @@
       return typeof value === "number" && Number.isFinite(value);
     }
 
+    function hasServiceId(rawServiceIds, targetServiceId) {
+      const target = String(targetServiceId || "").trim();
+      if (!target) return false;
+
+      return String(rawServiceIds || "")
+        .split(",")
+        .map((id) => id.trim())
+        .filter(Boolean)
+        .includes(target);
+    }
+
+    function toRows(result) {
+      return result?.data || (Array.isArray(result) ? result : []);
+    }
+
+    async function listTableRows(tableName, limit = 3000) {
+      if (typeof window.krudList !== "function") {
+        throw new Error("krudList chua duoc nap");
+      }
+      const result = await window.krudList({ table: tableName, limit });
+      return toRows(result);
+    }
+
+    function splitModelNames(rawValue) {
+      const raw = String(rawValue || "").trim();
+      if (!raw) return [];
+      return raw
+        .split(/[,;\n|]/)
+        .map((name) => String(name || "").trim())
+        .filter(Boolean);
+    }
+
+    function buildVehicleTypesData(loaixeRows, dongxeRows) {
+      const allDongxe = Array.isArray(dongxeRows) ? dongxeRows : [];
+
+      return (Array.isArray(loaixeRows) ? loaixeRows : [])
+        .map((row) => {
+        const vehicleTypeId = String(row?.id || "").trim();
+        const vehicleTypeName = String(row?.loaixe || "").trim();
+        const typeBrands = [];
+        const brandMap = new Map();
+
+        allDongxe
+          .filter(
+            (item) => String(item?.id_loaixe || "").trim() === vehicleTypeId,
+          )
+          .forEach((item) => {
+            const brandName = String(item?.thuonghieu || "").trim();
+            if (!brandName) return;
+
+            if (!brandMap.has(brandName)) {
+              const nextBrand = { name: brandName, models: [] };
+              brandMap.set(brandName, nextBrand);
+              typeBrands.push(nextBrand);
+            }
+
+            const brandNode = brandMap.get(brandName);
+            const modelNames = splitModelNames(item?.mauxe);
+
+            modelNames.forEach((modelName, index) => {
+              const exists = brandNode.models.some(
+                (model) =>
+                  String(model.vehicle_name || model.name || "").trim() ===
+                  modelName,
+              );
+              if (exists) return;
+
+              brandNode.models.push({
+                id: item?.id
+                  ? `${item.id}_${index}`
+                  : `${vehicleTypeId}_${brandName}_${modelName}`.replace(
+                       /\s+/g,
+                       "_",
+                    ),
+                vehicle_name: modelName,
+              });
+            });
+          });
+
+        return {
+          id: vehicleTypeId,
+          type: vehicleTypeName,
+          survey_fees: Number(row?.phikhaosat || 0),
+          brands: typeBrands,
+        };
+      })
+        .filter((row) => row.type);
+    }
+
+    async function loadBookingFormData() {
+      const [serviceRows, loaixeRows, dongxeRows] = await Promise.all([
+        listTableRows("dichvu_suaxe", 3000),
+        listTableRows("loaixe", 3000),
+        listTableRows("dongxe", 5000),
+      ]);
+
+      servicesData = (Array.isArray(serviceRows) ? serviceRows : [])
+        .map((row) => ({
+          id: String(row?.id || "").trim(),
+          name: String(row?.tendichvu || "").trim(),
+        }))
+        .filter((row) => row.id && row.name);
+
+      vehicleTypesData = buildVehicleTypesData(loaixeRows, dongxeRows);
+    }
+
+    function haversineDistanceKm(from, to) {
+      const R = 6371;
+      const toRad = (deg) => (Number(deg) * Math.PI) / 180;
+      const dLat = toRad(to.lat - from.lat);
+      const dLng = toRad(to.lng - from.lng);
+      const lat1 = toRad(from.lat);
+      const lat2 = toRad(to.lat);
+
+      const a =
+        Math.sin(dLat / 2) * Math.sin(dLat / 2) +
+        Math.cos(lat1) *
+          Math.cos(lat2) *
+          Math.sin(dLng / 2) *
+          Math.sin(dLng / 2);
+
+      const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+      return R * c;
+    }
+
+    async function listNguoidungRows() {
+      return listTableRows("nguoidung", 3000);
+    }
+
+    async function loadProviderLocations() {
+      const rows = await listNguoidungRows();
+
+      providerLocations = (Array.isArray(rows) ? rows : [])
+        .filter((row) => hasServiceId(row?.id_dichvu, "8"))
+        .map((row) => ({
+          lat: Number(row?.maplat),
+          lng: Number(row?.maplng),
+        }))
+        .filter(
+          (location) =>
+            isValidCoordinate(location.lat) &&
+            isValidCoordinate(location.lng) &&
+            location.lat !== 0 &&
+            location.lng !== 0,
+        );
+    }
+
+    function findNearestProviderLocation(customerCoords) {
+      if (!providerLocations.length) return null;
+
+      let nearest = null;
+      let nearestKm = Number.POSITIVE_INFINITY;
+
+      providerLocations.forEach((provider) => {
+        const km = haversineDistanceKm(provider, customerCoords);
+        if (km < nearestKm) {
+          nearestKm = km;
+          nearest = provider;
+        }
+      });
+
+      return nearest;
+    }
+
     async function geocodeAddress(address) {
       const endpoint = `https://nominatim.openstreetmap.org/search?format=json&limit=1&countrycodes=vn&q=${encodeURIComponent(address)}`;
       const res = await fetch(endpoint, {
@@ -329,19 +526,26 @@
       setTransportFeeDisplay(null, { pending: true });
 
       try {
+        const customerCoords = await geocodeAddress(addressText);
+        providerLocation = findNearestProviderLocation(customerCoords);
+
         if (
           !providerLocation ||
           !isValidCoordinate(providerLocation.lat) ||
           !isValidCoordinate(providerLocation.lng)
         ) {
-          throw new Error("Thiếu tọa độ nhà cung cấp");
+          throw new Error("Khong tim thay nha cung cap co id_dichvu = 8");
         }
 
-        const customerCoords = await geocodeAddress(addressText);
-        const distanceKm = await getRoadDistanceKm(
-          providerLocation,
-          customerCoords,
-        );
+        let distanceKm;
+        let distanceSuffix = "";
+        try {
+          distanceKm = await getRoadDistanceKm(providerLocation, customerCoords);
+          distanceSuffix = `${distanceKm.toFixed(1)} km`;
+        } catch (_routeError) {
+          distanceKm = haversineDistanceKm(providerLocation, customerCoords);
+          distanceSuffix = `${distanceKm.toFixed(1)} km ước tính`;
+        }
 
         if (token !== transportCalcToken && !force) {
           return;
@@ -351,7 +555,7 @@
         const calculated = calculateTransportFeeByThreshold(distanceKm);
         transportFeeValue = calculated;
         setTransportFeeDisplay(calculated, {
-          suffix: `${distanceKm.toFixed(1)} km`,
+          suffix: distanceSuffix,
         });
       } catch (error) {
         if (token !== transportCalcToken && !force) {
@@ -380,8 +584,8 @@
     }
 
     function getSurveyFeeByVehicleType(type) {
-      const vehicleType = vehicleTypesData.find((v) => v.type === type);
-      return vehicleType?.survey_fees || 0;
+      const vType = vehicleTypesData.find((v) => v.type === type);
+      return vType?.survey_fees || 0;
     }
 
     function getCurrentSurveyFee() {
@@ -392,20 +596,14 @@
     setTransportFeeDisplay(null);
     updateEstimateVisibility();
 
-    fetch("public/services.json")
-      .then((res) => res.json())
-      .then((data) => {
-        servicesData = data.services || [];
-        vehicleTypesData = data.vehicles || [];
-        providerLocation = {
-          lat: Number(data.provider?.lat),
-          lng: Number(data.provider?.lng),
-          address: data.provider?.address || "",
-        };
-        transportPerKm = Number(data.provider?.per_km || 0);
-        transportMinFee = Number(data.provider?.min_fee || 0);
-        transportMaxFee = Number(data.provider?.max_fee || 0);
+    const providerPromise = loadProviderLocations().catch((error) => {
+      console.error(error);
+      providerLocations = [];
+      providerLocation = null;
+    });
 
+    const servicesPromise = loadBookingFormData()
+      .then(() => {
         if (!serviceSelect) return;
 
         servicesData.forEach((service) => {
@@ -422,10 +620,12 @@
             delete bookingModal.dataset.pendingServiceId;
           }
         }
-
-        recalculateTransportFee(true);
       })
-      .catch((err) => console.error("Lỗi load JSON:", err));
+      .catch((err) => console.error("Lỗi load dữ liệu đặt lịch:", err));
+
+    Promise.all([servicesPromise, providerPromise]).finally(() => {
+      recalculateTransportFee(true);
+    });
 
     if (serviceSelect) {
       serviceSelect.addEventListener("change", function () {
@@ -433,7 +633,9 @@
         resetSelect(vehicleType, "Chọn loại xe");
         resetSelect(brandSelect, "Chọn hãng");
         resetSelect(itemSelect, "Chọn mẫu xe");
+        ensureOtherBrandOption();
         ensureOtherModelOption();
+        toggleCustomBrandInput(false);
         toggleCustomItemInput(false);
         clearPrice();
         recalculateTransportFee();
@@ -453,7 +655,9 @@
       vehicleType.addEventListener("change", function () {
         resetSelect(brandSelect, "Chọn hãng");
         resetSelect(itemSelect, "Chọn mẫu xe");
+        ensureOtherBrandOption();
         ensureOtherModelOption();
+        toggleCustomBrandInput(false);
         toggleCustomItemInput(false);
         clearPrice();
 
@@ -475,14 +679,22 @@
           option.textContent = brand.name;
           brandSelect.appendChild(option);
         });
+
+        ensureOtherBrandOption();
       });
     }
 
     if (brandSelect) {
       brandSelect.addEventListener("change", function () {
         resetSelect(itemSelect, "Chọn mẫu xe");
+        toggleCustomBrandInput();
         toggleCustomItemInput(false);
         clearPrice();
+
+        if (String(this.value) === "__other__") {
+          ensureOtherModelOption();
+          return;
+        }
 
         const selectedVehicleType = vehicleTypesData.find(
           (v) => v.type === (vehicleType && vehicleType.value),
@@ -508,15 +720,7 @@
 
     if (itemSelect) {
       itemSelect.addEventListener("change", function () {
-        const option = this.options[this.selectedIndex];
-
         toggleCustomItemInput();
-
-        if (!option || !option.value) {
-          clearPrice();
-          return;
-        }
-
         updateTotalPrice();
       });
     }
@@ -524,6 +728,13 @@
     if (customItemInput) {
       customItemInput.addEventListener("input", function () {
         if (String(itemSelect?.value || "") !== "__other__") return;
+        updateTotalPrice();
+      });
+    }
+
+    if (customBrandInput) {
+      customBrandInput.addEventListener("input", function () {
+        if (String(brandSelect?.value || "") !== "__other__") return;
         updateTotalPrice();
       });
     }
@@ -544,7 +755,6 @@
     }
 
     function clearPrice() {
-
       if (totalInput) totalInput.value = "";
     }
 
@@ -563,7 +773,9 @@
     }
 
     bindQuickBookingButtons();
+    ensureOtherBrandOption();
     ensureOtherModelOption();
+    toggleCustomBrandInput(false);
     toggleCustomItemInput(false);
     fillCurrentDateTime();
 
@@ -579,7 +791,9 @@
       bookingForm.dataset.customItemResetBound = "true";
       bookingForm.addEventListener("reset", function () {
         setTimeout(() => {
+          ensureOtherBrandOption();
           ensureOtherModelOption();
+          toggleCustomBrandInput(false);
           toggleCustomItemInput(false);
         }, 0);
       });

@@ -1105,6 +1105,10 @@
         var params = new URLSearchParams(window.location.search || '');
         EMBEDDED_BOOKING_MODE = params.get('embedded') === '1';
         PRESELECT_SERVICE_ID = params.get('serviceId') || '';
+        // Nếu serviceId truyền dạng '1:711' thì chỉ lấy phần trước dấu ':'
+        if (PRESELECT_SERVICE_ID && PRESELECT_SERVICE_ID.indexOf(':') !== -1) {
+          PRESELECT_SERVICE_ID = PRESELECT_SERVICE_ID.split(':')[0];
+        }
         if (EMBEDDED_BOOKING_MODE) {
           document.body.classList.add('booking-embedded-mode');
         }
@@ -2526,33 +2530,50 @@
           updateTotalPrice();
         }
 
-        try {
-          var response = await fetch('services.json');
-          SERVICES = await response.json();
-        } catch (error) {
-          console.error('Lỗi load services.json:', error);
-          alert('Không thể tải danh sách dịch vụ. Vui lòng thử lại sau.');
-          return;
+
+
+        async function loadServices() {
+          try {
+            const res = await fetch('https://api.dvqt.vn/list/', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({ table: 'dichvu_donvesinh' })
+            });
+            let data = await res.json();
+            SERVICES = Array.isArray(data) ? data : (Array.isArray(data.data) ? data.data : []);
+            // Parse các trường JSON string nếu cần
+            SERVICES = SERVICES.map(s => ({
+              ...s,
+              loai: typeof s.loai === 'string' ? JSON.parse(s.loai) : s.loai,
+              includes: typeof s.includes === 'string' ? JSON.parse(s.includes) : s.includes,
+              time_slots: typeof s.time_slots === 'string' ? JSON.parse(s.time_slots) : s.time_slots,
+              pricing: typeof s.pricing === 'string' ? JSON.parse(s.pricing) : s.pricing
+            }));
+            if (!SERVICES.length) throw new Error('No data');
+          } catch (e) {
+            console.warn('Không lấy được dịch vụ từ API, chuyển sang services.json');
+            const res = await fetch('services.json');
+            SERVICES = await res.json();
+          }
+
+          $('#serviceSelector').empty();
+          SERVICES.forEach(s => {
+            $('#serviceSelector').append('<option value="' + s.id + '">' + s.name + '</option>');
+          });
+
+          let defaultService = null;
+          if (PRESELECT_SERVICE_ID) {
+            // So sánh id dạng chuỗi, loại bỏ ký tự thừa nếu có
+            defaultService = SERVICES.find(s => String(s.id) === String(PRESELECT_SERVICE_ID));
+          }
+          if (!defaultService) defaultService = SERVICES[0];
+          if (defaultService) {
+            renderService(defaultService);
+            $('#serviceSelector').val(String(defaultService.id));
+          }
         }
 
-        $('#serviceSelector').empty();
-        SERVICES.forEach(function (s) {
-          $('#serviceSelector').append('<option value="' + s.id + '">' + s.name + '</option>');
-        });
-
-        var defaultService = null;
-        if (PRESELECT_SERVICE_ID) {
-          defaultService = SERVICES.find(function (s) {
-            return String(s.id) === String(PRESELECT_SERVICE_ID);
-          }) || null;
-        }
-        if (!defaultService) {
-          defaultService = SERVICES[0];
-        }
-        if (defaultService) {
-          renderService(defaultService);
-          $('#serviceSelector').val(String(defaultService.id));
-        }
+        await loadServices();
 
         var today = new Date().toISOString().split('T')[0];
         $('#startDate').attr('min', today);

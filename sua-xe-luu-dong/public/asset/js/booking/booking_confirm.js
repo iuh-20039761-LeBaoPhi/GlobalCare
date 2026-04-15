@@ -20,6 +20,7 @@
     const serviceSelect = document.getElementById("loaidichvu");
     const vehicleType = document.getElementById("loaixe");
     const brandSelect = document.getElementById("hangxe");
+    const customBrandInput = document.getElementById("hangxekhac");
     const itemSelect = document.getElementById("mauxe");
     const customItemInput = document.getElementById("mauxekhac");
     const addressInput = document.getElementById("diachi");
@@ -146,6 +147,17 @@
       return selectedText(itemSelect);
     }
 
+    function selectedBrandText() {
+      const selectedValue = String(brandSelect?.value || "").trim();
+      if (!selectedValue) return "";
+
+      if (selectedValue === "__other__") {
+        return String(customBrandInput?.value || "").trim();
+      }
+
+      return selectedText(brandSelect);
+    }
+
     function moneyOnlyText(value) {
       const text = String(value || "").trim();
       if (!text) return "";
@@ -159,7 +171,7 @@
         confirmPhone: document.getElementById("sodienthoaikhachhang")?.value,
         confirmService: selectedText(serviceSelect),
         confirmVehicleType: selectedText(vehicleType),
-        confirmBrand: selectedText(brandSelect),
+        confirmBrand: selectedBrandText(),
         confirmItem: selectedItemText(),
         confirmDatetime: datetimeInput?.value,
         confirmAddress: addressInput?.value,
@@ -183,7 +195,7 @@
         phone: document.getElementById("sodienthoaikhachhang")?.value || "",
         service_name: selectedText(serviceSelect),
         vehicle_type: selectedText(vehicleType),
-        brand: selectedText(brandSelect),
+        brand: selectedBrandText(),
         item: selectedItemText(),
         booking_time: datetimeInput?.value || "",
         address: addressInput?.value || "",
