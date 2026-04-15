@@ -14,14 +14,7 @@ const ThoNhaOrderActions = (() => {
     function init(container, session, callback) {
         if (!container) return;
 
-        container.addEventListener('click', async (e) => {
-            const btn = e.target.closest('[data-action]');
-            if (!btn) return;
-
-            // Dừng sự kiện lan truyền để tránh các listener ở cấp document (như trong order-management.js) chạy đè lên
-            e.stopPropagation();
-            e.preventDefault();
-
+        const actionHandler = async (e, btn) => {
             const action = btn.dataset.action;
             const id = btn.dataset.id;
             
@@ -48,8 +41,17 @@ const ThoNhaOrderActions = (() => {
                 } else if (action === 'complete-order') {
                     if (!confirm('Xác nhận đã hoàn thành công việc?')) return;
                     payload = { ngayhoanthanhthucte: now };
+                } else if (action === 'open-pricing-modal') {
+                    const modalEl = document.getElementById('pricingModal');
+                    if (modalEl) {
+                        const submitBtn = document.getElementById('btnSubmitPricingModal');
+                        if (submitBtn) submitBtn.dataset.id = id;
+                        const modal = new bootstrap.Modal(modalEl);
+                        modal.show();
+                    }
+                    return;
                 } else if (action === 'submit-actual-price') {
-                    const price = Number(document.getElementById('inputActualPrice').value);
+                    const price = Number(document.getElementById('inputActualPriceModal').value);
                     if (!price || price <= 0) return alert('Vui lòng nhập giá thực tế.');
                     const sub = Math.round(price * 0.05);
                     payload = { chiphithucte: price, sotientrogia: sub, khachthanhtoan: price - sub };
@@ -60,11 +62,20 @@ const ThoNhaOrderActions = (() => {
                 }
 
                 if (Object.keys(payload).length > 0) {
+                    const originalHtml = btn.innerHTML;
                     btn.disabled = true;
                     btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i>';
                     
                     await DVQTApp.updateOrder(id, payload, 'datlich_thonha');
                     alert('Hành động thành công!');
+
+                    // Đóng modal nếu đang mở
+                    const modalEl = document.getElementById('pricingModal');
+                    if (modalEl && action === 'submit-actual-price') {
+                        const modal = bootstrap.Modal.getInstance(modalEl);
+                        if (modal) modal.hide();
+                    }
+
                     if (typeof callback === 'function') {
                         callback(action, id);
                     } else {
@@ -75,7 +86,30 @@ const ThoNhaOrderActions = (() => {
                 alert('Lỗi: ' + err.message);
                 btn.disabled = false;
             }
+        };
+
+        // Click trên danh sách/chi tiết
+        container.addEventListener('click', async (e) => {
+            const btn = e.target.closest('[data-action]');
+            if (!btn) return;
+            
+            // Chỉ chặn sự kiện nếu là các hành động mà module này xử lý
+            const handledActions = ['accept-order', 'start-order', 'complete-order', 'open-pricing-modal', 'submit-actual-price', 'cancel-order', 'submit-customer-feedback', 'submit-provider-feedback'];
+            if (handledActions.includes(btn.dataset.action)) {
+                e.stopPropagation();
+                e.preventDefault();
+                await actionHandler(e, btn);
+            }
         });
+
+        // Click trên nút submit của modal trợ giá (nếu có)
+        const modalSubmitBtn = document.getElementById('btnSubmitPricingModal');
+        if (modalSubmitBtn) {
+            modalSubmitBtn.onclick = async (e) => {
+                modalSubmitBtn.dataset.action = 'submit-actual-price';
+                await actionHandler(e, modalSubmitBtn);
+            };
+        }
     }
 
     return { init };

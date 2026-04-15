@@ -198,6 +198,7 @@ window.initProviderOrders = function() {
 
             if (action === 'back-to-list') {
                 e.preventDefault();
+                state.selectedOrderId = null;
                 const listSec = document.getElementById('providerListSection');
                 const detailSec = document.getElementById('providerDetailSection');
                 const filterSec = document.getElementById('orderFilterSection');

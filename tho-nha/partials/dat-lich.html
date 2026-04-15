@@ -219,52 +219,52 @@
                                                     <input type="text" class="form-control" id="giadichvu" readonly>
                                                 </div>
 
+                                                <div class="mt-3">
+                                                    <label for="thoigianphucvu" class="form-label">Yêu cầu thời gian <span class="text-danger">*</span></label>
+                                                    <select class="form-select" id="thoigianphucvu">
+                                                        <option value="Thường">Bình thường (Giờ hành chính)</option>
+                                                        <option value="Buổi tối">Buổi tối (Sau 18h00)</option>
+                                                        <option value="Gấp">Khẩn cấp (Cần sửa gấp)</option>
+                                                    </select>
+                                                </div>
+
                                                 <!-- Ước tính chi phí -->
                                                 <div id="pricingBreakdownWrap" style="display:none;" class="mt-3">
                                                     <div class="pricing-box">
                                                         <div class="pricing-box-title">
                                                             <i class="fas fa-receipt me-1"></i>Ước tính chi phí
-                                                            <small class="fw-normal text-muted">(nếu đồng ý sửa)</small>
                                                         </div>
-                                                        <div class="d-flex justify-content-between mb-1">
-                                                            <span class="text-muted">Giá dịch vụ:</span>
-                                                            <span id="bd-service" class="fw-semibold"></span>
-                                                        </div>
-                                                        <div id="bd-travel-row" class="d-flex justify-content-between mb-1" style="display:none!important;">
-                                                            <span class="text-muted">
-                                                                <i class="fas fa-motorcycle me-1" style="font-size:0.75rem;"></i>Phí di chuyển:
-                                                            </span>
-                                                            <span id="bd-travel"></span>
-                                                        </div>
-                                                        <hr class="my-2">
-                                                        <div class="d-flex justify-content-between">
-                                                            <span class="fw-semibold">Tổng tạm tính:</span>
-                                                            <span id="bd-total" class="fw-bold" style="color:var(--primary);"></span>
-                                                        </div>
-                                                        <div id="bd-survey-notice" style="display:none;">
+                                                        <div id="bd-survey-notice">
                                                             <div class="survey-notice-content">
-                                                                <div>✅ <strong>Nếu đồng ý sửa:</strong> phí khảo sát được <strong>miễn</strong>, chỉ thanh toán tổng tạm tính trên.</div>
-                                                                <div class="mt-1">❌ <strong>Nếu không đồng ý sửa</strong> sau khi thợ đến khảo sát, bạn cần thanh toán:</div>
+                                                                <div>✅ <strong>Nếu đồng ý giao việc sửa chữa:</strong><br>
+                                                                    Khách hàng chỉ thanh toán <strong>Phí dịch vụ</strong>.
+                                                                    <div class="d-flex justify-content-between mt-1 px-2 py-1 bg-light rounded">
+                                                                        <span class="fw-semibold text-muted">Giá dịch vụ (tham khảo):</span>
+                                                                        <span id="bd-service" class="fw-bold" style="color:var(--primary);"></span>
+                                                                    </div>
+                                                                </div>
+                                                                
+                                                                <div class="mt-3 pt-2" style="border-top:1px dashed #cbd5e1;">❌ <strong>Nếu thợ đến khảo sát nhưng không sửa:</strong><br>Khách hàng cần thanh toán phí sau:</div>
                                                                 <div class="survey-breakdown-box">
-                                                                    <div class="d-flex justify-content-between mb-1">
+                                                                    <div class="d-flex justify-content-between mb-1 text-muted">
                                                                         <span><i class="fas fa-motorcycle me-1" style="font-size:0.75rem;"></i>Phí di chuyển:</span>
                                                                         <span id="bd-survey-travel" class="fw-semibold"></span>
                                                                     </div>
-                                                                    <div class="d-flex justify-content-between mb-1">
+                                                                    <div class="d-flex justify-content-between mb-1 text-muted">
                                                                         <span><i class="fas fa-clipboard-check me-1" style="font-size:0.75rem;"></i>Phí khảo sát:</span>
                                                                         <span id="bd-survey-amount" class="fw-semibold"></span>
                                                                     </div>
                                                                     <div class="survey-breakdown-sep"></div>
                                                                     <div class="d-flex justify-content-between">
-                                                                        <span class="fw-semibold">Tổng cần trả:</span>
-                                                                        <span id="bd-survey-no-repair" class="fw-bold survey-no-repair-total"></span>
+                                                                        <span class="fw-semibold">Tổng không sửa:</span>
+                                                                        <span id="bd-survey-no-repair" class="fw-bold text-danger"></span>
                                                                     </div>
+                                                                </div>
+                                                                <div class="text-muted small mt-2">
+                                                                    <i class="fas fa-info-circle me-1"></i> Miễn phí phần di chuyển cho 3km đầu tiên. Khoảng cách tính phí = Tổng quãng đường - 3km.
                                                                 </div>
                                                             </div>
                                                         </div>
-                                                        <p class="text-muted mb-0 mt-2" style="font-size:0.77rem;">
-                                                            <i class="fas fa-info-circle me-1"></i>Giá chính xác xác nhận sau khi thợ khảo sát thực tế
-                                                        </p>
                                                     </div>
                                                 </div>
 
@@ -367,25 +367,30 @@
                                         </div>
 
                                         <div class="cfm-section" id="cf-cost-section" style="display:none;">
-                                            <div class="cfm-section-label"><i class="fas fa-receipt me-1"></i>Chi phí tạm tính</div>
+                                            <div class="cfm-section-label"><i class="fas fa-receipt me-1"></i>Thỏa thuận chi phí</div>
                                             <div class="cfm-cost-box">
                                                 <div class="cfm-cost-row" id="cf-cost-base-row">
-                                                    <span class="cfm-cost-label">Giá dịch vụ</span>
-                                                    <span id="cf-cost-base" class="cfm-cost-val"></span>
+                                                    <span class="cfm-cost-label fw-bold">Giá dịch vụ (Nếu đồng ý sửa)</span>
+                                                    <span id="cf-cost-base" class="cfm-cost-val" style="color:var(--primary); font-weight:bold;"></span>
                                                 </div>
-                                                <div class="cfm-cost-row" id="cf-cost-travel-row" style="display:none;">
+                                                
+                                                <div class="mt-2 pt-2" style="border-top:1px dashed #cbd5e1;"></div>
+                                                <div class="text-muted fw-semibold" style="font-size: 0.82rem; margin-bottom: 6px;">❌ Nếu khách hàng không đồng ý sửa:</div>
+                                                <div class="cfm-cost-row" id="cf-cost-travel-row">
                                                     <span class="cfm-cost-label"><i class="fas fa-motorcycle me-1" style="color:#64748b;"></i>Phí di chuyển</span>
-                                                    <span id="cf-cost-travel" class="cfm-cost-val"></span>
+                                                    <span id="cf-cost-travel" class="cfm-cost-val text-muted"></span>
                                                 </div>
-                                                <div class="cfm-cost-row" id="cf-cost-survey-row" style="display:none;">
+                                                <div class="cfm-cost-row" id="cf-cost-survey-row">
                                                     <span class="cfm-cost-label"><i class="fas fa-clipboard-check me-1" style="color:#b45309;"></i>Phí khảo sát</span>
-                                                    <span id="cf-cost-survey" class="cfm-cost-val" style="color:#b45309;"></span>
+                                                    <span id="cf-cost-survey" class="cfm-cost-val text-muted" style="color:#b45309!important;"></span>
                                                 </div>
-                                                <div class="cfm-cost-total-row">
-                                                    <span class="cfm-cost-total-label">Tổng tạm tính</span>
-                                                    <span id="cf-cost-total" class="cfm-cost-total-val"></span>
+                                                <div class="cfm-cost-total-row justify-content-between mt-2 pt-2" style="border-top:1px dashed #cbd5e1" id="cf-cost-norepair-row">
+                                                    <span class="cfm-cost-total-label text-danger">Tổng không sửa</span>
+                                                    <span id="cf-cost-norepair" class="cfm-cost-total-val text-danger"></span>
                                                 </div>
-                                                <div id="cf-cost-note" class="cfm-cost-note" style="display:none;"></div>
+                                                <div id="cf-cost-note" class="cfm-cost-note text-muted mt-2" style="font-size: 0.77rem; background:transparent; padding:0;">
+                                                    * Miễn phí 3km đầu tiên.
+                                                </div>
                                             </div>
                                         </div>
 
