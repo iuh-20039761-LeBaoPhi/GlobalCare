@@ -5,6 +5,49 @@
 (function(window) {
     const KRUD_URL = 'https://api.dvqt.vn/js/krud.js';
 
+    function isNumericLikeKey(key) {
+        return /^\d+$/.test(String(key || '').trim());
+    }
+
+    function normalizeKrudRow(row) {
+        if (!row || typeof row !== 'object') {
+            return row;
+        }
+
+        return Object.fromEntries(
+            Object.entries(row).filter(([key]) => !isNumericLikeKey(key))
+        );
+    }
+
+    function normalizeKrudRows(rows) {
+        return Array.isArray(rows) ? rows.map(normalizeKrudRow) : [];
+    }
+
+    function sanitizeMovingPricingVehicleRow(row = {}) {
+        return {
+            id_dich_vu: String(row?.id_dich_vu || '').trim(),
+            slug_xe: String(row?.slug_xe || '').trim(),
+            ten_xe: String(row?.ten_xe || '').trim(),
+            gia_mo_cua: Number(row?.gia_mo_cua || 0),
+            don_gia_km_6_15: Number(row?.don_gia_km_6_15 || 0),
+            don_gia_km_16_30: Number(row?.don_gia_km_16_30 || 0),
+            don_gia_km_31_tro_len: Number(row?.don_gia_km_31_tro_len || 0),
+            gia_moi_km_form: Number(row?.gia_moi_km_form || 0),
+            gia_moi_km_duong_dai_form: Number(row?.gia_moi_km_duong_dai_form || 0),
+            phi_toi_thieu_form: Number(row?.phi_toi_thieu_form || 0)
+        };
+    }
+
+    function sanitizeMovingPricingItemRow(row = {}) {
+        return {
+            id_dich_vu: String(row?.id_dich_vu || '').trim(),
+            nhom: String(row?.nhom || '').trim(),
+            slug_muc: String(row?.slug_muc || '').trim(),
+            ten_muc: String(row?.ten_muc || '').trim(),
+            don_gia: Number(row?.don_gia || 0)
+        };
+    }
+
     // Đảm bảo krud.js được nạp
     async function _ensureKrud() {
         if (typeof window.krud === 'function' && typeof window.krudList === 'function') return true;
@@ -25,7 +68,7 @@
         list: async (tableName, options = {}) => {
             await _ensureKrud();
             const res = await window.krudList({ table: tableName, ...options });
-            return (res && res.data) ? res.data : [];
+            return normalizeKrudRows((res && res.data) ? res.data : []);
         },
 
         /**
@@ -34,7 +77,9 @@
         get: async (tableName, id) => {
             await _ensureKrud();
             const res = await window.krudList({ table: tableName, id: id });
-            return (res && res.data && res.data.length > 0) ? res.data[0] : null;
+            return (res && res.data && res.data.length > 0)
+                ? normalizeKrudRow(res.data[0])
+                : null;
         },
 
         /**
@@ -113,6 +158,83 @@
                 { name: 'created_at', type: 'text' },
                 { name: 'updated_at', type: 'text' }
             ]);
+        },
+
+        /**
+         * Đảm bảo bảng giá chuyển dọn có sẵn
+         */
+        ensureMovingPricingTables: async () => {
+            await _ensureKrud();
+
+            await window.krud('ensure', 'bang_gia_chuyen_don_xe', [
+                { name: 'id_dich_vu', type: 'text' },
+                { name: 'slug_xe', type: 'text' },
+                { name: 'ten_xe', type: 'text' },
+                { name: 'gia_mo_cua', type: 'number' },
+                { name: 'don_gia_km_6_15', type: 'number' },
+                { name: 'don_gia_km_16_30', type: 'number' },
+                { name: 'don_gia_km_31_tro_len', type: 'number' },
+                { name: 'gia_moi_km_form', type: 'number' },
+                { name: 'gia_moi_km_duong_dai_form', type: 'number' },
+                { name: 'phi_toi_thieu_form', type: 'number' }
+            ]);
+
+            return await window.krud('ensure', 'bang_gia_chuyen_don_muc', [
+                { name: 'id_dich_vu', type: 'text' },
+                { name: 'nhom', type: 'text' },
+                { name: 'slug_muc', type: 'text' },
+                { name: 'ten_muc', type: 'text' },
+                { name: 'don_gia', type: 'number' }
+            ]);
+        },
+
+        listMovingPricingVehicles: async (idDichVu = '') => {
+            const rows = await adminApi.list('bang_gia_chuyen_don_xe', { limit: 1000 });
+            if (!idDichVu) return rows;
+            return rows.filter((row) => String(row?.id_dich_vu || '').trim() === String(idDichVu || '').trim());
+        },
+
+        listMovingPricingItems: async (idDichVu = '') => {
+            const rows = await adminApi.list('bang_gia_chuyen_don_muc', { limit: 1000 });
+            if (!idDichVu) return rows;
+            return rows.filter((row) => String(row?.id_dich_vu || '').trim() === String(idDichVu || '').trim());
+        },
+
+        getMovingPricingVehicleKey: (row) => {
+            const serviceId = String(row?.id_dich_vu || '').trim();
+            const slug = String(row?.slug_xe || '').trim();
+            return serviceId && slug ? `${serviceId}::${slug}` : '';
+        },
+
+        getMovingPricingItemKey: (row) => {
+            const serviceId = String(row?.id_dich_vu || '').trim();
+            const groupKey = String(row?.nhom || '').trim();
+            const slug = String(row?.slug_muc || '').trim();
+            return serviceId && groupKey && slug ? `${serviceId}::${groupKey}::${slug}` : '';
+        },
+
+        saveMovingPricingVehicle: async (row, currentRow = null) => {
+            const payload = sanitizeMovingPricingVehicleRow(row);
+            if (currentRow?.id) {
+                return adminApi.update('bang_gia_chuyen_don_xe', payload, currentRow.id);
+            }
+            return adminApi.insert('bang_gia_chuyen_don_xe', payload);
+        },
+
+        saveMovingPricingItem: async (row, currentRow = null) => {
+            const payload = sanitizeMovingPricingItemRow(row);
+            if (currentRow?.id) {
+                return adminApi.update('bang_gia_chuyen_don_muc', payload, currentRow.id);
+            }
+            return adminApi.insert('bang_gia_chuyen_don_muc', payload);
+        },
+
+        deleteMovingPricingVehicle: async (id) => {
+            return adminApi.delete('bang_gia_chuyen_don_xe', id);
+        },
+
+        deleteMovingPricingItem: async (id) => {
+            return adminApi.delete('bang_gia_chuyen_don_muc', id);
         }
     };
 
