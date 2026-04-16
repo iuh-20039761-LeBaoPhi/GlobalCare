@@ -1,6 +1,33 @@
 <?php
 declare(strict_types=1);
 
+function moving_pricing_service_extract_services($decoded): array
+{
+    if (is_array($decoded) && isset($decoded['services']) && is_array($decoded['services'])) {
+        $decoded = $decoded['services'];
+    }
+
+    if (!is_array($decoded)) {
+        return [];
+    }
+
+    $services = [];
+    foreach ($decoded as $entry) {
+        if (!is_array($entry)) {
+            continue;
+        }
+
+        $serviceId = trim((string) ($entry['id'] ?? ''));
+        if ($serviceId === '') {
+            continue;
+        }
+
+        $services[] = $entry;
+    }
+
+    return $services;
+}
+
 function moving_pricing_service_read_template(string $path): array
 {
     if (!is_file($path)) {
@@ -13,7 +40,7 @@ function moving_pricing_service_read_template(string $path): array
     }
 
     $decoded = json_decode($raw, true);
-    return is_array($decoded) ? $decoded : [];
+    return moving_pricing_service_extract_services($decoded);
 }
 
 function moving_pricing_service_number($value, $fallback = 0): float
@@ -29,6 +56,24 @@ function moving_pricing_service_text($value, string $fallback = ''): string
 {
     $text = trim((string) $value);
     return $text !== '' ? $text : $fallback;
+}
+
+function moving_pricing_service_item_label(string $groupKey, string $slug, string $fallback = ''): string
+{
+    $normalizedGroup = trim($groupKey);
+    $normalizedSlug = trim($slug);
+
+    if ($normalizedGroup === 'khung_gio') {
+        if ($normalizedSlug === 'buoi_toi') {
+            return 'Buổi tối';
+        }
+
+        if ($normalizedSlug === 'ban_dem') {
+            return 'Ca đêm';
+        }
+    }
+
+    return $fallback;
 }
 
 function moving_pricing_service_group_rows(array $rows, string $serviceKey, string $slugKey): array
@@ -171,13 +216,20 @@ function moving_pricing_service_build_vehicle_entry(array $currentVehicle, array
     ];
 }
 
-function moving_pricing_service_build_item_entry(array $currentItem, array $row): array
+function moving_pricing_service_build_item_entry(array $currentItem, array $row, string $groupKey = ''): array
 {
     $slug = moving_pricing_service_text($row['slug_muc'] ?? ($currentItem['slug'] ?? ''));
+    $amount = moving_pricing_service_number($row['don_gia'] ?? ($currentItem['don_gia'] ?? 0));
+    if ($groupKey === 'checkbox' && $slug !== 'khao_sat_truoc') {
+        $amount = 0;
+    }
+
+    $fallbackLabel = moving_pricing_service_text($row['ten_muc'] ?? ($currentItem['ten'] ?? ''));
+
     $entry = [
         'slug' => $slug,
-        'ten' => moving_pricing_service_text($row['ten_muc'] ?? ($currentItem['ten'] ?? '')),
-        'don_gia' => moving_pricing_service_number($row['don_gia'] ?? ($currentItem['don_gia'] ?? 0)),
+        'ten' => moving_pricing_service_item_label($groupKey, $slug, $fallbackLabel),
+        'don_gia' => $amount,
     ];
 
     $displaySlug = moving_pricing_service_text(
@@ -336,10 +388,10 @@ function moving_pricing_service_build_json_from_rows(
                 }
 
                 $service['bang_gia']['phu_phi'][$groupKey] = array_values(array_map(
-                    static function (array $row) use ($currentItemMap): array {
+                    static function (array $row) use ($currentItemMap, $groupKey): array {
                         $slug = trim((string) ($row['slug_muc'] ?? ''));
                         $currentItem = $currentItemMap[$slug] ?? [];
-                        return moving_pricing_service_build_item_entry($currentItem, $row);
+                        return moving_pricing_service_build_item_entry($currentItem, $row, $groupKey);
                     },
                     $orderedItemMap[$serviceId][$groupKey]
                 ));
@@ -355,7 +407,7 @@ function moving_pricing_service_build_json_from_rows(
                         continue;
                     }
 
-                    $item = moving_pricing_service_build_item_entry($item, $row);
+                    $item = moving_pricing_service_build_item_entry($item, $row, $groupKey);
                 }
                 unset($item);
             }

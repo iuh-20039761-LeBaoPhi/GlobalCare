@@ -143,26 +143,19 @@ import core from "./core/app-core.js";
   }
 
   function renderFormula(container, serviceData) {
-    const transparentInfo = serviceData.thong_tin_minh_bach || {};
-    const basicParts = Array.isArray(transparentInfo.phan_co_ban)
-      ? transparentInfo.phan_co_ban
-      : [];
-    const extraParts = Array.isArray(transparentInfo.phan_phat_sinh)
-      ? transparentInfo.phan_phat_sinh
-      : [];
-    const formulaSummary =
-      transparentInfo.tom_tat_tong_chi_phi ||
-      "Tổng tiền tham khảo = Giá mở cửa 5km đầu theo loại xe + cước phát sinh theo từng dải km + các phụ phí nếu có.";
+    const formulaSummary = core.getPricingSummaryText(serviceData);
     const factorCards = buildPricingFactorCards(serviceData);
     const pricingOverviewUrl = core.toProjectUrl("bang-gia-chuyen-don.html");
     const vehicleOptions = core.getPricingVehicleEntries(serviceData);
     const startingVehicle = vehicleOptions
       .filter((item) => Number(item?.gia_mo_cua || 0) > 0)
       .sort((left, right) => Number(left.gia_mo_cua || 0) - Number(right.gia_mo_cua || 0))[0];
-    const summaryParts = [
-      ...basicParts.map((item) => ({ label: item, tone: "primary" })),
-      ...extraParts.slice(0, 2).map((item) => ({ label: item, tone: "neutral" })),
-    ];
+    const summaryParts = core.getPricingSummaryParts(serviceData).map(
+      (item, index) => ({
+        label: item,
+        tone: index < 2 ? "primary" : "neutral",
+      }),
+    );
 
     container.innerHTML = `
       <div class="pricing-formula-summary">

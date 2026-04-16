@@ -603,7 +603,7 @@ const partialPaths = {
     const mapped = mapBookingPricingTimeSlot(rawValue);
     if (!mapped) return "Chưa chọn";
     if (mapped === "buoi_toi") return "Buổi tối";
-    if (mapped === "ban_dem") return "Ban đêm";
+    if (mapped === "ban_dem") return "Ca đêm";
     if (mapped === "cuoi_tuan") return "Cuối tuần";
     if (mapped === "can_xac_nhan") return "Chờ xác nhận";
     return "Ban ngày";

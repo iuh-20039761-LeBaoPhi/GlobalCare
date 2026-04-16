@@ -364,6 +364,48 @@ function getPricingStartingPrice(serviceData) {
   return values.length ? Math.min(...values) : 0;
 }
 
+function getPricingOpeningKm(serviceData) {
+  const entries = getPricingVehicleEntries(serviceData);
+  const openingKm = entries
+    .map((item) => Number(item?.pham_vi_mo_cua_km || 0))
+    .find((value) => Number.isFinite(value) && value > 0);
+
+  return openingKm || 5;
+}
+
+function getPricingSummaryText(serviceData) {
+  const openingKm = getPricingOpeningKm(serviceData);
+  return `Tổng tiền tham khảo = giá mở cửa ${openingKm}km đầu theo loại xe + cước phát sinh theo từng dải km + phụ phí khảo sát, thời gian và thời tiết nếu có. Các hạng mục hỗ trợ khác chỉ dùng để điều phối.`;
+}
+
+function getPricingSummaryParts(serviceData) {
+  const openingKm = getPricingOpeningKm(serviceData);
+  const parts = [
+    `Giá mở cửa ${openingKm}km đầu`,
+    "Dải km phát sinh",
+  ];
+  const seenParts = new Set(parts);
+  const surveyItem = getPricingCheckboxItems(serviceData).find(
+    (item) => String(item?.slug || "").trim() === "khao_sat_truoc",
+  );
+
+  if (surveyItem?.ten && !seenParts.has(surveyItem.ten)) {
+    parts.push(surveyItem.ten);
+    seenParts.add(surveyItem.ten);
+  }
+
+  getPricingMultiplierEntries(serviceData)
+    .slice(0, 2)
+    .forEach((item) => {
+      const title = String(item?.title || "").trim();
+      if (!title || seenParts.has(title)) return;
+      parts.push(title);
+      seenParts.add(title);
+    });
+
+  return parts;
+}
+
 const core = {
   inPublicDir,
   projectBase,
@@ -393,6 +435,8 @@ const core = {
   getPricingDisplayItems,
   getPricingCheckboxItems,
   getPricingMultiplierEntries,
+  getPricingSummaryParts,
+  getPricingSummaryText,
   getPricingStartingPrice,
   
   /**
@@ -491,6 +535,8 @@ export {
   getPricingCheckboxItems,
   getPricingDisplayItems,
   getPricingMultiplierEntries,
+  getPricingSummaryParts,
+  getPricingSummaryText,
   getPricingStandardStructure,
   getPricingStartingPrice,
   getPricingVehicleEntries,

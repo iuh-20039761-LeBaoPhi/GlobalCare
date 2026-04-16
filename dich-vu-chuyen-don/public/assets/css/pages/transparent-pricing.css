@@ -160,8 +160,7 @@
 }
 
 .the-so-sanh-dich-vu,
-.the-phu-phi,
-.the-nguyen-tac-bang-gia {
+.the-phu-phi {
   display: grid;
   gap: 16px;
   align-content: start;
@@ -200,7 +199,6 @@
 
 .the-so-sanh-dich-vu p,
 .the-phu-phi p,
-.the-nguyen-tac-bang-gia p,
 .o-bang-quyet-dinh {
   margin: 0;
   color: #587166;
@@ -242,8 +240,7 @@
 
 .muc-noi-dung-bang-gia h4,
 .the-yeu-to-gia h3,
-.the-phu-phi h3,
-.the-nguyen-tac-bang-gia h3 {
+.the-phu-phi h3 {
   color: #173528;
 }
 
@@ -586,18 +583,6 @@
   line-height: 1.75;
 }
 
-.luoi-nguyen-tac-bang-gia {
-  display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 18px;
-  margin-top: 28px;
-}
-
-.the-nguyen-tac-bang-gia h3 {
-  margin: 0 0 8px;
-  font-size: 1.1rem;
-}
-
 .cta-bang-gia {
   padding: 18px 0 70px;
 }
@@ -880,7 +865,6 @@
 }
 
 @media (max-width: 1024px) {
-  .luoi-nguyen-tac-bang-gia,
   .khung-cta-bang-gia {
     grid-template-columns: 1fr;
   }
@@ -919,7 +903,6 @@
 
   .the-so-sanh-dich-vu,
   .the-phu-phi,
-  .the-nguyen-tac-bang-gia,
   .the-yeu-to-gia,
   .khung-cta-bang-gia {
     padding: 18px 14px;
@@ -961,8 +944,7 @@
   .luoi-so-sanh-dich-vu,
   .luoi-phu-phi,
   .luoi-yeu-to-gia,
-  .luoi-the-ra-quyet-dinh,
-  .luoi-nguyen-tac-bang-gia {
+  .luoi-the-ra-quyet-dinh {
     gap: 14px;
   }
 
@@ -1038,7 +1020,6 @@
 
   .the-so-sanh-dich-vu,
   .the-phu-phi,
-  .the-nguyen-tac-bang-gia,
   .the-yeu-to-gia,
   .khung-cta-bang-gia {
     padding: 15px 11px;
