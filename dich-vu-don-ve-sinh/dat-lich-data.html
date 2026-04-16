@@ -924,17 +924,21 @@
                   </label>
                   <div class="d-flex gap-2">
                     <button type="button" id="capturePhotoBtn" class="btn flex-fill fw-bold rounded-pill"
-                      style="background:linear-gradient(135deg,#e3f2fd,#d6ecff);color:#1565c0;border:1px solid #bbdefb">
+                      style="background:linear-gradient(135deg,#e3f2fd,#d6ecff);color:#1565c0;border:1px solid #bbdefb"
+                      onclick="document.getElementById('quickPhotoInput').click()">
                       <i class="fas fa-camera me-1"></i>Chụp ảnh
                     </button>
                     <button type="button" id="recordVideoBtn" class="btn flex-fill fw-bold rounded-pill"
-                      style="background:linear-gradient(135deg,#e3f2fd,#d6ecff);color:#1565c0;border:1px solid #bbdefb">
+                      style="background:linear-gradient(135deg,#e3f2fd,#d6ecff);color:#1565c0;border:1px solid #bbdefb"
+                      onclick="document.getElementById('quickVideoInput').click()">
                       <i class="fas fa-video me-1"></i>Quay hình
                     </button>
                   </div>
 
-                  <input type="file" id="quickPhotoInput" accept="image/*" capture="environment" class="d-none" />
-                  <input type="file" id="quickVideoInput" accept="video/*" capture="environment" class="d-none" />
+                  <input type="file" id="quickPhotoInput" accept="image/*" capture="environment" class="d-none"
+                    multiple />
+                  <input type="file" id="quickVideoInput" accept="video/*" capture="environment" class="d-none"
+                    multiple />
 
                   <div id="attachmentPreviewArea" class="attachment-preview-box mt-2">
                     <div class="attachment-preview-split">
@@ -951,8 +955,7 @@
                     </div>
                   </div>
 
-                  <div class="form-text">Nút hiển thị để minh họa giao diện. Ảnh/video chỉ hiển thị tạm, chưa lưu vào hệ
-                    thống.</div>
+                  <div id="uploadStatusMsg" class="form-text"></div>
                 </div>
 
                 <div class="d-flex gap-2 mt-3">
