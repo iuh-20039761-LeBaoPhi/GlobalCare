@@ -36,13 +36,6 @@ $targetPath = dirname(__DIR__, 2) . DIRECTORY_SEPARATOR . 'public' . DIRECTORY_S
 $templateData = moving_pricing_service_read_template($targetPath);
 $pricingData = moving_pricing_service_build_json_from_rows($templateData, $vehicleRows, $itemRows);
 
-// Inject metadata
-$pricingData['metadata'] = [
-    'updated_at' => date('c'), // ISO 8601
-    'updated_by' => $_SESSION['user_id'] ?? 'admin',
-    'system' => 'Admin KRUD',
-];
-
 $encoded = json_encode(
     $pricingData,
     JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES
@@ -96,4 +89,6 @@ echo json_encode([
     'message' => 'Đã export lại bang-gia-minh-bach.json.',
     'verified' => $verified,
     'checksum_sha1' => $checksum,
+    'updated_at' => date('c'),
+    'updated_by' => $_SESSION['user_id'] ?? 'admin',
 ], JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES);

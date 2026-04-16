@@ -59,15 +59,27 @@ function getKrudUpdateFn() {
   return null;
 }
 
+function isNumericLikeKey(value) {
+  return /^\d+$/.test(String(value || "").trim());
+}
+
+function normalizeKrudRow(row) {
+  if (!row || typeof row !== "object") return row;
+
+  return Object.fromEntries(
+    Object.entries(row).filter(([key]) => !isNumericLikeKey(key)),
+  );
+}
+
 function extractRows(payload, depth = 0) {
   if (depth > 4 || payload == null) return [];
-  if (Array.isArray(payload)) return payload;
+  if (Array.isArray(payload)) return payload.map(normalizeKrudRow);
   if (typeof payload !== "object") return [];
 
   const candidateKeys = ["data", "items", "rows", "list", "result", "payload"];
   for (const key of candidateKeys) {
     const value = payload[key];
-    if (Array.isArray(value)) return value;
+    if (Array.isArray(value)) return value.map(normalizeKrudRow);
     const nested = extractRows(value, depth + 1);
     if (nested.length) return nested;
   }
@@ -75,4 +87,10 @@ function extractRows(payload, depth = 0) {
   return [];
 }
 
-export { extractRows, getKrudInsertFn, getKrudListFn, getKrudUpdateFn };
+export {
+  extractRows,
+  getKrudInsertFn,
+  getKrudListFn,
+  getKrudUpdateFn,
+  normalizeKrudRow,
+};

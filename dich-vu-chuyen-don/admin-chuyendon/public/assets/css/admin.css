@@ -670,3 +670,290 @@ tr:hover .vehicle-icon-circle {
 /* Action tooltips or text enhancement */
 [data-save-section] span { font-weight: 700; }
 [data-save-section]:hover { box-shadow: 0 4px 12px rgba(0,0,0,0.1); }
+
+/* Granular Pricing UI Enhancements */
+.pricing-action-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 36px;
+    padding: 0 12px;
+    border: 1px solid var(--line);
+    border-radius: 10px;
+    background: white;
+    color: var(--slate);
+    font-weight: 700;
+    font-size: 13px;
+    cursor: pointer;
+    transition: var(--transition);
+    gap: 6px;
+}
+
+.pricing-action-btn:hover {
+    border-color: var(--primary);
+    background: var(--primary-soft);
+    color: var(--primary-deep);
+    box-shadow: 0 4px 12px rgba(194, 122, 77, 0.1);
+}
+
+.pricing-action-btn--danger:hover {
+    border-color: var(--danger);
+    background: rgba(239, 68, 68, 0.1);
+    color: var(--danger);
+}
+
+.pricing-value {
+    display: inline-flex;
+    align-items: center;
+    padding: 4px 12px;
+    border-radius: 999px;
+    background: var(--slate-soft);
+    border: 1px solid var(--line);
+    color: var(--slate);
+    font-weight: 800;
+    font-size: 14px;
+    font-family: inherit;
+}
+
+.pricing-card {
+    background: white;
+    border-radius: var(--radius-xl);
+    padding: 32px;
+    box-shadow: var(--shadow-premium);
+    border: 1px solid var(--line);
+    margin-bottom: 32px;
+}
+
+.pricing-card__head {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 24px;
+    gap: 20px;
+}
+
+.pricing-card__head h2 {
+    margin: 0;
+    font-size: 24px;
+    font-weight: 800;
+}
+
+.pricing-table-wrap {
+    width: 100%;
+    overflow-x: auto;
+    border: 1px solid var(--line);
+    border-radius: var(--radius-lg);
+}
+
+.pricing-table {
+    width: 100%;
+    border-collapse: collapse;
+}
+
+.pricing-table th {
+    background: var(--slate-soft);
+    padding: 16px 20px;
+    text-align: left;
+    font-size: 11px;
+    text-transform: uppercase;
+    font-weight: 800;
+    color: var(--slate-light);
+    letter-spacing: 0.05em;
+    border-bottom: 1px solid var(--line);
+}
+
+.pricing-table td {
+    padding: 16px 20px;
+    border-bottom: 1px solid var(--line);
+    vertical-align: middle;
+}
+
+.pricing-table tr:last-child td {
+    border-bottom: none;
+}
+
+.pricing-table tr:hover td {
+    background: var(--primary-soft);
+}
+
+.pricing-modal-form {
+    display: grid;
+    gap: 20px;
+}
+
+.pricing-modal-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 16px;
+}
+
+.pricing-modal-grid--full {
+    grid-template-columns: 1fr;
+}
+/* Service Tabs Navigation */
+.pricing-tabs-nav {
+    display: flex;
+    gap: 8px;
+    margin-bottom: 24px;
+    padding: 8px;
+    background: var(--glass);
+    backdrop-filter: blur(20px);
+    border: 1px solid var(--glass-border);
+    border-radius: var(--radius-lg);
+    box-shadow: var(--shadow-premium);
+}
+
+.pricing-tab-btn {
+    flex: 1;
+    padding: 12px 20px;
+    border: none;
+    background: transparent;
+    color: var(--slate-light);
+    font-weight: 700;
+    font-size: 14px;
+    border-radius: 12px;
+    cursor: pointer;
+    transition: var(--transition);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+}
+
+.pricing-tab-btn:hover {
+    background: var(--slate-soft);
+    color: var(--slate);
+}
+
+.pricing-tab-btn.is-active {
+    background: white;
+    color: var(--primary-deep);
+    box-shadow: var(--shadow-premium);
+    transform: scale(1.02);
+}
+
+.pricing-tab-btn .badge {
+    background: var(--slate-soft);
+    color: var(--slate-light);
+    font-size: 10px;
+    padding: 2px 8px;
+    border-radius: 6px;
+}
+
+.pricing-tab-btn.is-active .badge {
+    background: var(--primary-soft);
+    color: var(--primary);
+}
+
+/* Visibility Control for Tabs */
+.pricing-card { display: none; }
+.pricing-card.is-active { 
+    display: block; 
+    animation: fadeInSlideUp 0.5s ease-out forwards;
+}
+
+@keyframes fadeInSlideUp {
+    from { opacity: 0; transform: translateY(15px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+/* Compact Surcharge Layout */
+.surcharge-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+    gap: 24px;
+    margin-top: 32px;
+}
+
+.surcharge-section {
+    background: var(--slate-soft);
+    border-radius: var(--radius-lg);
+    padding: 24px;
+    border: 1px solid var(--line);
+    transition: var(--transition);
+}
+
+.surcharge-section:hover {
+    background: white;
+    box-shadow: var(--shadow-premium);
+    border-color: var(--primary-soft);
+}
+
+.surcharge-section__head {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    margin-bottom: 16px;
+}
+
+.surcharge-section h4 {
+    margin: 0;
+    font-size: 16px;
+    font-weight: 800;
+    color: var(--slate);
+}
+
+.surcharge-section .muted {
+    font-size: 11px;
+    margin-top: 4px;
+}
+
+/* Tighter Tables for Surcharges */
+.compact-table {
+    width: 100%;
+    border-collapse: separate;
+    border-spacing: 0 8px;
+}
+
+.compact-table td {
+    padding: 8px 12px;
+    background: white;
+    border: 1px solid var(--line);
+}
+
+.compact-table td:first-child {
+    border-radius: 10px 0 0 10px;
+    border-right: none;
+}
+
+.compact-table td:last-child {
+    border-radius: 0 10px 10px 0;
+    border-left: none;
+}
+
+.compact-table tr:hover td {
+    background: var(--primary-soft);
+    border-color: var(--primary-soft);
+}
+
+/* Vehicle Icons */
+.vehicle-icon-circle {
+    width: 40px;
+    height: 40px;
+    background: var(--primary-soft);
+    color: var(--primary);
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin: 0 auto;
+    font-size: 18px;
+    transition: all 0.2s ease;
+}
+
+.pricing-card:hover .vehicle-icon-circle {
+    transform: scale(1.1);
+    background: var(--primary);
+    color: white;
+}
+
+.vehicle-icon-circle svg {
+    width: 20px;
+    height: 20px;
+    color: inherit;
+}
+
+.vehicle-icon-circle i {
+    font-size: 18px;
+    color: inherit;
+}

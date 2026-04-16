@@ -29,17 +29,6 @@ let bookingFormLogicPromise = null;
     return bookingFormLogicPromise;
   }
 
-  function getBookingSpecialFixedItem(core, serviceData, slug) {
-    return (
-      core
-        .getPricingCheckboxItems(serviceData)
-        .find(
-          (item) =>
-            String(item?.slug || "").trim() === String(slug || "").trim(),
-        ) || null
-    );
-  }
-
   function getBookingFixedTimeWeatherAmount(core, serviceData, groupKey, slug) {
     const pricing = core.getPricingStandardStructure(serviceData);
     const items = Array.isArray(pricing?.phu_phi?.[groupKey])
@@ -486,7 +475,7 @@ let bookingFormLogicPromise = null;
     return {
       title: serviceData.ten_dich_vu || "Giá tạm tính",
       description:
-        serviceData?.thong_tin_minh_bach?.tom_tat_tong_chi_phi ||
+        core.getPricingSummaryText(serviceData) ||
         "Giá tạm tính đang bám theo quãng đường, loại xe và các hạng mục bạn đã chọn trong form.",
       optionCardsHtml,
       breakdownHtml,
@@ -632,8 +621,8 @@ async function render(scope, deps) {
 
     if (description) {
       description.textContent =
-        serviceData?.thong_tin_minh_bach?.tom_tat_tong_chi_phi ||
-        serviceData?.thong_tin_minh_bach?.phu_hop_khi ||
+        core.getPricingSummaryText(serviceData) ||
+        serviceData?.thong_tin_minh_bach?.mo_ta_ngan ||
         "Hệ thống đang hiển thị gói cơ bản, hạng mục chọn thêm và giá tạm tính của dịch vụ bạn đã chọn.";
     }
 

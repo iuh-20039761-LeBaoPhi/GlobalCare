@@ -5,6 +5,49 @@
 (function(window) {
     const KRUD_URL = 'https://api.dvqt.vn/js/krud.js';
 
+    function isNumericLikeKey(key) {
+        return /^\d+$/.test(String(key || '').trim());
+    }
+
+    function normalizeKrudRow(row) {
+        if (!row || typeof row !== 'object') {
+            return row;
+        }
+
+        return Object.fromEntries(
+            Object.entries(row).filter(([key]) => !isNumericLikeKey(key))
+        );
+    }
+
+    function normalizeKrudRows(rows) {
+        return Array.isArray(rows) ? rows.map(normalizeKrudRow) : [];
+    }
+
+    function sanitizeMovingPricingVehicleRow(row = {}) {
+        return {
+            id_dich_vu: String(row?.id_dich_vu || '').trim(),
+            slug_xe: String(row?.slug_xe || '').trim(),
+            ten_xe: String(row?.ten_xe || '').trim(),
+            gia_mo_cua: Number(row?.gia_mo_cua || 0),
+            don_gia_km_6_15: Number(row?.don_gia_km_6_15 || 0),
+            don_gia_km_16_30: Number(row?.don_gia_km_16_30 || 0),
+            don_gia_km_31_tro_len: Number(row?.don_gia_km_31_tro_len || 0),
+            gia_moi_km_form: Number(row?.gia_moi_km_form || 0),
+            gia_moi_km_duong_dai_form: Number(row?.gia_moi_km_duong_dai_form || 0),
+            phi_toi_thieu_form: Number(row?.phi_toi_thieu_form || 0)
+        };
+    }
+
+    function sanitizeMovingPricingItemRow(row = {}) {
+        return {
+            id_dich_vu: String(row?.id_dich_vu || '').trim(),
+            nhom: String(row?.nhom || '').trim(),
+            slug_muc: String(row?.slug_muc || '').trim(),
+            ten_muc: String(row?.ten_muc || '').trim(),
+            don_gia: Number(row?.don_gia || 0)
+        };
+    }
+
     // Đảm bảo krud.js được nạp
     async function _ensureKrud() {
         if (typeof window.krud === 'function' && typeof window.krudList === 'function') return true;
@@ -25,7 +68,7 @@
         list: async (tableName, options = {}) => {
             await _ensureKrud();
             const res = await window.krudList({ table: tableName, ...options });
-            return (res && res.data) ? res.data : [];
+            return normalizeKrudRows((res && res.data) ? res.data : []);
         },
 
         /**
@@ -34,7 +77,9 @@
         get: async (tableName, id) => {
             await _ensureKrud();
             const res = await window.krudList({ table: tableName, id: id });
-            return (res && res.data && res.data.length > 0) ? res.data[0] : null;
+            return (res && res.data && res.data.length > 0)
+                ? normalizeKrudRow(res.data[0])
+                : null;
         },
 
         /**
@@ -169,17 +214,19 @@
         },
 
         saveMovingPricingVehicle: async (row, currentRow = null) => {
+            const payload = sanitizeMovingPricingVehicleRow(row);
             if (currentRow?.id) {
-                return adminApi.update('bang_gia_chuyen_don_xe', { ...row, id: currentRow.id }, currentRow.id);
+                return adminApi.update('bang_gia_chuyen_don_xe', payload, currentRow.id);
             }
-            return adminApi.insert('bang_gia_chuyen_don_xe', row);
+            return adminApi.insert('bang_gia_chuyen_don_xe', payload);
         },
 
         saveMovingPricingItem: async (row, currentRow = null) => {
+            const payload = sanitizeMovingPricingItemRow(row);
             if (currentRow?.id) {
-                return adminApi.update('bang_gia_chuyen_don_muc', { ...row, id: currentRow.id }, currentRow.id);
+                return adminApi.update('bang_gia_chuyen_don_muc', payload, currentRow.id);
             }
-            return adminApi.insert('bang_gia_chuyen_don_muc', row);
+            return adminApi.insert('bang_gia_chuyen_don_muc', payload);
         },
 
         deleteMovingPricingVehicle: async (id) => {
