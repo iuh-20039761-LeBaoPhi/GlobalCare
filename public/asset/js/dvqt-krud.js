@@ -83,14 +83,40 @@ window.DVQTKrud = (function () {
                 maplat: 'text',
                 maplng: 'text',
                 created_date: 'datetime',
-                avatartenfile: 'text',
-                cccdmattruoctenfile: 'text',
-                cccdmatsautenfile: 'text',
+                link_avatar: 'text',
+                link_cccd_truoc: 'text',
+                link_cccd_sau: 'text',
                 id_dichvu: 'text',
                 trangthai: 'text',
                 motadichvu: 'text'
             };
             return window.DVQTKrud.ensureTable('nguoidung', fields);
+        },
+
+        // Chuyên biệt cho bảng datlich_thonha
+        ensureDatlichThonhaTable: async () => {
+            const fields = {
+                tenkhachhang: 'text',
+                sdtkhachhang: 'text',
+                diachikhachhang: 'text',
+                emailkhachhang: 'text',
+                id_danhmuc: 'int',
+                id_dichvu: 'int',
+                tendichvu: 'text',
+                thuonghieu: 'text',
+                ghichu: 'text',
+                giadichvu: 'int',
+                phidichuyen: 'int',
+                quangduongkm: 'float',
+                trangthaidichuyen: 'text',
+                phikhaosat: 'int',
+                tongtien: 'int',
+                ngaydat: 'datetime',
+                link_hinhanh_khachhang: 'text', // Lưu ID Drive ảnh khách gửi lúc đặt
+                hinhanhminhchung_kh: 'text',    // Lưu ID Drive ảnh khách đánh giá
+                hinhanhminhchung_ncc: 'text'    // Lưu ID Drive ảnh thợ báo cáo
+            };
+            return window.DVQTKrud.ensureTable('datlich_thonha', fields);
         },
 
         // Các hàm viết tắt
