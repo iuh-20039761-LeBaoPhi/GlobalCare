@@ -2547,3 +2547,231 @@
     justify-self: start;
   }
 }
+
+body[data-customer-page="dashboard"] .customer-order-card-compact .customer-order-topline,
+body[data-customer-page="orders"] .customer-order-card-history .customer-order-topline,
+body[data-shipper-page="dashboard"] .customer-order-card-compact .customer-order-topline,
+body[data-shipper-page="orders"] .customer-order-card-history .customer-order-topline {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 12px;
+  align-items: start;
+}
+
+body[data-customer-page="dashboard"] .customer-order-heading,
+body[data-customer-page="orders"] .customer-order-heading,
+body[data-shipper-page="dashboard"] .customer-order-heading,
+body[data-shipper-page="orders"] .customer-order-heading {
+  display: grid;
+  gap: 6px;
+  min-width: 0;
+}
+
+body[data-customer-page="dashboard"] .customer-order-heading-meta,
+body[data-customer-page="orders"] .customer-order-heading-meta,
+body[data-shipper-page="dashboard"] .customer-order-heading-meta,
+body[data-shipper-page="orders"] .customer-order-heading-meta {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+  min-width: 0;
+}
+
+body[data-customer-page="dashboard"] .customer-order-recipient,
+body[data-customer-page="orders"] .customer-order-recipient,
+body[data-shipper-page="dashboard"] .customer-order-recipient,
+body[data-shipper-page="orders"] .customer-order-recipient {
+  margin: 0;
+  color: #111827;
+  font-size: 1rem;
+  font-weight: 800;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+body[data-customer-page="dashboard"] .customer-order-code,
+body[data-customer-page="orders"] .customer-order-code,
+body[data-shipper-page="dashboard"] .customer-order-code,
+body[data-shipper-page="orders"] .customer-order-code {
+  margin: 0;
+  color: #64748b;
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: 0.03em;
+}
+
+body[data-customer-page="dashboard"] .customer-order-route,
+body[data-customer-page="orders"] .customer-order-route,
+body[data-shipper-page="dashboard"] .customer-order-route,
+body[data-shipper-page="orders"] .customer-order-route,
+body[data-customer-page="orders"] .customer-order-dest,
+body[data-shipper-page="orders"] .customer-order-dest {
+  margin: 0;
+  color: #475569;
+  line-height: 1.5;
+  display: -webkit-box;
+  overflow: hidden;
+  -webkit-box-orient: vertical;
+  line-clamp: 2;
+  -webkit-line-clamp: 2;
+}
+
+body[data-customer-page="dashboard"] .customer-order-side,
+body[data-customer-page="orders"] .customer-order-side,
+body[data-shipper-page="dashboard"] .customer-order-side,
+body[data-shipper-page="orders"] .customer-order-side {
+  display: grid;
+  gap: 8px;
+  justify-items: end;
+  align-content: start;
+  min-width: 148px;
+}
+
+body[data-customer-page="dashboard"] .customer-order-price-block,
+body[data-customer-page="orders"] .customer-order-price-block,
+body[data-shipper-page="dashboard"] .customer-order-price-block,
+body[data-shipper-page="orders"] .customer-order-price-block {
+  display: grid;
+  gap: 2px;
+  justify-items: end;
+  text-align: right;
+}
+
+body[data-customer-page="dashboard"] .customer-order-price-label,
+body[data-customer-page="orders"] .customer-order-price-label,
+body[data-shipper-page="dashboard"] .customer-order-price-label,
+body[data-shipper-page="orders"] .customer-order-price-label {
+  color: #64748b;
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+}
+
+body[data-customer-page="dashboard"] .customer-order-price,
+body[data-customer-page="orders"] .customer-order-price,
+body[data-shipper-page="dashboard"] .customer-order-price,
+body[data-shipper-page="orders"] .customer-order-price {
+  color: #111827;
+  font-size: 1rem;
+  font-weight: 800;
+  line-height: 1.2;
+  white-space: nowrap;
+}
+
+body[data-customer-page="dashboard"] .customer-order-actions-compact,
+body[data-customer-page="orders"] .customer-order-actions-compact,
+body[data-shipper-page="dashboard"] .customer-order-actions-compact,
+body[data-shipper-page="orders"] .customer-order-actions-compact {
+  margin-top: 0;
+  justify-content: flex-end;
+}
+
+body[data-customer-page="dashboard"] .customer-order-meta-compact span,
+body[data-customer-page="orders"] .customer-order-meta-compact span,
+body[data-shipper-page="dashboard"] .customer-order-meta-compact span,
+body[data-shipper-page="orders"] .customer-order-meta-compact span {
+  display: flex;
+  align-items: baseline;
+  gap: 6px;
+  min-width: 0;
+}
+
+body[data-customer-page="dashboard"] .customer-order-meta-compact b,
+body[data-customer-page="orders"] .customer-order-meta-compact b,
+body[data-shipper-page="dashboard"] .customer-order-meta-compact b,
+body[data-shipper-page="orders"] .customer-order-meta-compact b {
+  color: #0f172a;
+  flex: 0 0 auto;
+  font-weight: 700;
+}
+
+body[data-customer-page="dashboard"] .customer-order-meta-value,
+body[data-customer-page="orders"] .customer-order-meta-value,
+body[data-shipper-page="dashboard"] .customer-order-meta-value,
+body[data-shipper-page="orders"] .customer-order-meta-value {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+@media (max-width: 768px) {
+  body[data-customer-page="dashboard"] .customer-order-card-compact .customer-order-topline,
+  body[data-customer-page="orders"] .customer-order-card-history .customer-order-topline,
+  body[data-shipper-page="dashboard"] .customer-order-card-compact .customer-order-topline,
+  body[data-shipper-page="orders"] .customer-order-card-history .customer-order-topline {
+    grid-template-columns: 1fr;
+    gap: 10px;
+  }
+
+  body[data-customer-page="dashboard"] .customer-order-topline .customer-status-badge,
+  body[data-customer-page="orders"] .customer-order-topline .customer-status-badge,
+  body[data-shipper-page="dashboard"] .customer-order-topline .customer-status-badge,
+  body[data-shipper-page="orders"] .customer-order-topline .customer-status-badge {
+    justify-self: start;
+  }
+
+  body[data-customer-page="dashboard"] .customer-order-side,
+  body[data-customer-page="orders"] .customer-order-side,
+  body[data-shipper-page="dashboard"] .customer-order-side,
+  body[data-shipper-page="orders"] .customer-order-side {
+    width: 100%;
+    min-width: 0;
+    grid-template-columns: minmax(0, 1fr) auto;
+    align-items: center;
+    justify-items: stretch;
+  }
+
+  body[data-customer-page="dashboard"] .customer-order-price-block,
+  body[data-customer-page="orders"] .customer-order-price-block,
+  body[data-shipper-page="dashboard"] .customer-order-price-block,
+  body[data-shipper-page="orders"] .customer-order-price-block {
+    justify-items: start;
+    text-align: left;
+  }
+}
+
+@media (max-width: 560px) {
+  body[data-customer-page="dashboard"] .customer-order-side,
+  body[data-customer-page="orders"] .customer-order-side,
+  body[data-shipper-page="dashboard"] .customer-order-side,
+  body[data-shipper-page="orders"] .customer-order-side {
+    grid-template-columns: 1fr;
+    gap: 10px;
+  }
+
+  body[data-customer-page="dashboard"] .customer-order-actions-compact,
+  body[data-customer-page="orders"] .customer-order-actions-compact,
+  body[data-shipper-page="dashboard"] .customer-order-actions-compact,
+  body[data-shipper-page="orders"] .customer-order-actions-compact {
+    width: 100%;
+    justify-content: stretch;
+  }
+
+  body[data-customer-page="dashboard"] .customer-order-actions-compact .customer-btn,
+  body[data-customer-page="orders"] .customer-order-actions-compact .customer-btn,
+  body[data-shipper-page="dashboard"] .customer-order-actions-compact .customer-btn,
+  body[data-shipper-page="orders"] .customer-order-actions-compact .customer-btn {
+    flex: 1 1 100%;
+    width: 100%;
+  }
+
+  body[data-customer-page="dashboard"] .customer-order-meta-compact,
+  body[data-customer-page="orders"] .customer-order-meta-compact,
+  body[data-shipper-page="dashboard"] .customer-order-meta-compact,
+  body[data-shipper-page="orders"] .customer-order-meta-compact {
+    grid-template-columns: 1fr;
+  }
+
+  body[data-customer-page="dashboard"] .customer-order-meta-compact span,
+  body[data-customer-page="orders"] .customer-order-meta-compact span,
+  body[data-shipper-page="dashboard"] .customer-order-meta-compact span,
+  body[data-shipper-page="orders"] .customer-order-meta-compact span {
+    justify-content: space-between;
+    border-right: 0;
+    padding-right: 0;
+  }
+}

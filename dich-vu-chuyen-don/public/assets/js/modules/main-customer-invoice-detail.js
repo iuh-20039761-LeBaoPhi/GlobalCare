@@ -87,19 +87,13 @@ const customerInvoiceDetailModule = (function (window, document) {
     })} km`;
   }
 
-  function getWeatherLabel(value) {
-    const weather = normalizeText(value).toLowerCase();
-    if (!weather) return "Chờ đồng bộ";
-    if (weather === "binh_thuong") return "Bình thường";
-    if (weather === "troi_mua") return "Trời mưa";
-    return value;
-  }
-
-  function getStatusTone(statusClass) {
-    if (statusClass === "xac-nhan") return "completed";
-    if (statusClass === "dang-xu-ly") return "shipping";
-    if (statusClass === "da-huy" || statusClass === "huy") return "cancelled";
-    return "pending";
+  function getStatusMeta(invoice) {
+    return store.getBookingDisplayStatus?.(invoice?.raw_row || invoice) || {
+      key: "pending",
+      status_class: "moi",
+      status_text: "Mới tiếp nhận",
+      badge_class: "pending",
+    };
   }
 
   function extractTimeTokens(value) {
@@ -143,8 +137,8 @@ const customerInvoiceDetailModule = (function (window, document) {
   }
 
   function isExpiredPendingInvoice(invoice) {
-    const tone = getStatusTone(invoice?.status_class);
-    if (tone !== "pending") return false;
+    const statusMeta = getStatusMeta(invoice);
+    if (statusMeta.key !== "pending") return false;
 
     if (
       normalizeText(
@@ -171,32 +165,39 @@ const customerInvoiceDetailModule = (function (window, document) {
       };
     }
 
-    const tone = getStatusTone(invoice?.status_class);
-    if (tone === "completed") {
+    const statusMeta = getStatusMeta(invoice);
+    if (statusMeta.key === "completed") {
       return {
-        tone,
-        label: "Đã xác nhận",
-        note: "Đơn đã được xác nhận.",
+        tone: "completed",
+        label: "Đã hoàn thành",
+        note: "Đơn hàng đã hoàn tất và được ghi nhận hoàn thành.",
       };
     }
-    if (tone === "shipping") {
+    if (statusMeta.key === "shipping") {
       return {
-        tone,
-        label: "Đang xử lý",
-        note: "Đơn đang được xử lý.",
+        tone: "shipping",
+        label: "Đang triển khai",
+        note: "Nhà cung cấp đang triển khai công việc cho đơn hàng này.",
       };
     }
-    if (tone === "cancelled") {
+    if (statusMeta.key === "accepted") {
       return {
-        tone,
+        tone: "accepted",
+        label: "Đã nhận đơn",
+        note: "Nhà cung cấp đã nhận đơn và đang chuẩn bị triển khai.",
+      };
+    }
+    if (statusMeta.key === "cancelled") {
+      return {
+        tone: "cancelled",
         label: "Đã hủy",
         note: "Đơn đã bị hủy.",
       };
     }
     return {
-      tone,
+      tone: "pending",
       label: "Mới tiếp nhận",
-      note: "Đơn đang chờ điều phối.",
+      note: "Đơn đang chờ nhà cung cấp nhận xử lý.",
     };
   }
 
@@ -205,8 +206,11 @@ const customerInvoiceDetailModule = (function (window, document) {
     if (status.tone === "completed") {
       return { percent: 100, ...status };
     }
+    if (status.tone === "accepted") {
+      return { percent: 46, ...status };
+    }
     if (status.tone === "shipping") {
-      return { percent: 72, ...status };
+      return { percent: 74, ...status };
     }
     if (status.tone === "cancelled") {
       return { percent: 100, ...status };
@@ -270,48 +274,74 @@ const customerInvoiceDetailModule = (function (window, document) {
     `;
   }
 
-  function renderHeroMetric(icon, label, value, hint, options = {}) {
-    const safeValue = options.valueHtml ? value || "--" : escapeHtml(value || "--");
-    const safeHint = options.hintHtml ? hint || "--" : escapeHtml(hint || "--");
+  function renderHeroStat(label, value, note, options = {}) {
     const className = normalizeText(options.className || "");
+    const safeValue = options.valueHtml ? value || "--" : escapeHtml(value || "--");
+    const safeNote = options.noteHtml ? note || "--" : escapeHtml(note || "--");
+    const valueTag = options.valueTag || "strong";
 
     return `
-      <article class="standalone-order-hero-metric ${escapeHtml(className)}">
-        <div class="standalone-order-hero-metric-icon">
-          <i class="${escapeHtml(icon)}"></i>
+      <article class="standalone-order-hero-stat ${escapeHtml(className)}">
+        <span class="standalone-order-hero-stat-label">${escapeHtml(label || "--")}</span>
+        <${valueTag} class="standalone-order-hero-stat-value">${safeValue}</${valueTag}>
+        <small class="standalone-order-hero-stat-note">${safeNote}</small>
+      </article>
+    `;
+  }
+
+  function renderHeroScheduleCard(invoice) {
+    return `
+      <article class="standalone-order-hero-support-card standalone-order-hero-support-card-schedule">
+        <div class="standalone-order-hero-support-card-head">
+          <span class="standalone-order-hero-support-icon">
+            <i class="fa-solid fa-calendar-check"></i>
+          </span>
+          <div>
+            <span class="standalone-order-hero-support-label">Ngày thực hiện</span>
+            <strong>${escapeHtml(
+              formatBookingDateOnly(invoice?.schedule_date) ||
+                invoice?.schedule_label ||
+                "Chờ xác nhận",
+            )}</strong>
+          </div>
         </div>
-        <div class="standalone-order-hero-metric-copy">
-          <span>${escapeHtml(label)}</span>
-          <strong>${safeValue}</strong>
-          <small>${safeHint}</small>
-        </div>
+        <p class="standalone-order-hero-support-note">${escapeHtml(
+          getBookingScheduleTimeLabel(invoice?.schedule_time) ||
+            "Khung giờ triển khai",
+        )}</p>
       </article>
     `;
   }
 
   function renderHeroRouteCard(invoice) {
     return `
-      <article class="standalone-order-hero-metric standalone-order-hero-metric-route">
-        <div class="standalone-order-hero-metric-copy">
-          <span>Lộ trình thực hiện</span>
-          <div class="standalone-order-hero-route-list">
-            <div class="standalone-order-hero-route-item">
-              <span class="standalone-order-hero-route-icon">
-                <i class="fa-solid fa-location-dot"></i>
-              </span>
-              <div class="standalone-order-hero-route-copy">
-                <small>Điểm đi</small>
-                <strong>${escapeHtml(invoice?.from_address || "--")}</strong>
-              </div>
+      <article class="standalone-order-hero-support-card standalone-order-hero-support-card-route">
+        <div class="standalone-order-hero-support-card-head">
+          <span class="standalone-order-hero-support-icon">
+            <i class="fa-solid fa-route"></i>
+          </span>
+          <div>
+            <span class="standalone-order-hero-support-label">Lộ trình thực hiện</span>
+            <strong>Tuyến đường dự kiến</strong>
+          </div>
+        </div>
+        <div class="standalone-order-hero-route-list">
+          <div class="standalone-order-hero-route-item">
+            <span class="standalone-order-hero-route-icon">
+              <i class="fa-solid fa-location-dot"></i>
+            </span>
+            <div class="standalone-order-hero-route-copy">
+              <small>Điểm đi</small>
+              <strong>${escapeHtml(invoice?.from_address || "--")}</strong>
             </div>
-            <div class="standalone-order-hero-route-item">
-              <span class="standalone-order-hero-route-icon">
-                <i class="fa-solid fa-flag-checkered"></i>
-              </span>
-              <div class="standalone-order-hero-route-copy">
-                <small>Điểm đến</small>
-                <strong>${escapeHtml(invoice?.to_address || "--")}</strong>
-              </div>
+          </div>
+          <div class="standalone-order-hero-route-item">
+            <span class="standalone-order-hero-route-icon">
+              <i class="fa-solid fa-flag-checkered"></i>
+            </span>
+            <div class="standalone-order-hero-route-copy">
+              <small>Điểm đến</small>
+              <strong>${escapeHtml(invoice?.to_address || "--")}</strong>
             </div>
           </div>
         </div>
@@ -503,7 +533,7 @@ const customerInvoiceDetailModule = (function (window, document) {
   function renderPricingRows(invoice) {
     const fallbackRows = [renderInfoRow("Chi tiết phí", "Chưa có bảng tạm tính chi tiết")];
     const breakdown = getRenderableBookingPricingRows(invoice?.pricing_breakdown, {
-      excludeLabelPatterns: [/loai xe|xe tai|thoi tiet|troi mua|binh thuong/i],
+      excludeLabelPatterns: [/loai xe|xe tai|binh thuong/i],
     });
 
     if (!breakdown.length) {
@@ -526,6 +556,7 @@ const customerInvoiceDetailModule = (function (window, document) {
 
   function buildTimeline(invoice) {
     const isExpiredPending = isExpiredPendingInvoice(invoice);
+    const statusMeta = getStatusMeta(invoice);
     const entries = [
       {
         time: invoice?.created_at,
@@ -534,37 +565,47 @@ const customerInvoiceDetailModule = (function (window, document) {
       },
     ];
 
-    if (invoice?.schedule_label) {
-      entries.push({
-        time: invoice.schedule_label,
-        title: "Khung triển khai dự kiến",
-        note: `Lịch dự kiến hiện đang giữ theo mốc ${invoice.schedule_label}.`,
-      });
-    }
-
     if (isExpiredPending) {
       entries.push({
         time: invoice.schedule_label || invoice.schedule_date || "Quá thời gian thực hiện",
         title: "Yêu cầu tự hủy",
         note: "Đơn đã quá thời gian thực hiện nhưng chưa được xử lý nên hệ thống tự động hủy.",
       });
-    } else if (invoice?.status_class === "xac-nhan") {
+      return entries;
+    }
+
+    if (normalizeText(invoice?.accepted_at || "")) {
       entries.push({
-        time: "Đã xác nhận",
-        title: "Phương án đã xác nhận",
-        note: "Điều phối đã chốt lịch, loại xe và phạm vi công việc cho yêu cầu này.",
+        time: invoice.accepted_at,
+        title: "Nhà cung cấp đã nhận đơn",
+        note: "Đơn hàng đã có đơn vị phụ trách tiếp nhận và chuẩn bị triển khai.",
       });
-    } else if (invoice?.status_class === "dang-xu-ly") {
+    }
+
+    if (normalizeText(invoice?.started_at || "")) {
       entries.push({
-        time: "Đang xử lý",
-        title: "Điều phối đang rà soát",
-        note: "Hệ thống đang rà tuyến đường, điều kiện tiếp cận và phương án xe phù hợp.",
+        time: invoice.started_at,
+        title: "Bắt đầu triển khai",
+        note: "Đội thực hiện đã bắt đầu công việc tại hiện trường.",
       });
-    } else {
+    }
+
+    if (normalizeText(invoice?.completed_at || "")) {
       entries.push({
-        time: "Mới tiếp nhận",
-        title: "Chờ điều phối gọi lại",
-        note: "Đội vận hành sẽ xác nhận thêm khối lượng và các phát sinh thực tế trước khi chốt phương án.",
+        time: invoice.completed_at,
+        title: "Hoàn thành đơn hàng",
+        note: "Đơn hàng đã được cập nhật hoàn tất trên hệ thống.",
+      });
+    }
+
+    if (
+      normalizeText(invoice?.cancelled_at || "") ||
+      statusMeta.key === "cancelled"
+    ) {
+      entries.push({
+        time: invoice?.cancelled_at || invoice?.updated_at || invoice?.created_at,
+        title: "Yêu cầu bị hủy",
+        note: "Đơn hàng đã được đánh dấu hủy trên hệ thống.",
       });
     }
 
@@ -684,13 +725,37 @@ const customerInvoiceDetailModule = (function (window, document) {
     `;
   }
 
+  function renderProviderContactCard(invoice) {
+    return `
+      <article class="standalone-order-contact-card standalone-order-provider-contact-card">
+        <div class="standalone-order-contact-card-head">
+          <div class="standalone-order-contact-card-title">
+            <span class="standalone-order-contact-card-icon">
+              <i class="fa-solid fa-truck-ramp-box"></i>
+            </span>
+            <div>
+              <strong>Nhà cung cấp phụ trách</strong>
+              <p>Thông tin đơn vị hiện đang nhận và xử lý đơn hàng này.</p>
+            </div>
+          </div>
+          <span class="standalone-order-chip">Nhà cung cấp</span>
+        </div>
+        <div class="standalone-order-info-list">
+          ${renderInfoRow("Đơn vị", invoice.provider_name || "Chưa có đơn vị phụ trách")}
+          ${renderInfoRow("Số điện thoại", invoice.provider_phone || "Chưa cập nhật")}
+          ${renderInfoRow("Địa chỉ", invoice.provider_address || "Chưa cập nhật")}
+        </div>
+      </article>
+    `;
+  }
+
   function renderCustomerFeedbackBlock(invoice) {
     const feedback = normalizeText(invoice?.customer_feedback || "");
     const rating = Number(invoice?.customer_rating || 0);
     const safeRating = Number.isFinite(rating)
       ? Math.min(5, Math.max(0, Math.round(rating)))
       : 0;
-    const canSubmit = getStatusTone(invoice?.status_class) === "completed";
+    const canSubmit = getStatusMeta(invoice).key === "completed";
 
     return `
       <details class="standalone-order-fold">
@@ -799,24 +864,78 @@ const customerInvoiceDetailModule = (function (window, document) {
 
     const progressMeta = getProgressMeta(invoice);
     const timeline = buildTimeline(invoice);
+    const statusBadge = renderStatusBadge(invoice);
     root.innerHTML = `
       <div class="standalone-order-layout">
         <section class="standalone-order-unified-card">
+          <div class="standalone-order-topbar">
+            <div class="standalone-order-topbar-logo">
+              <img src="${escapeHtml(getProjectUrl("public/assets/images/logo-dich-vu-quanh-ta.png"))}" alt="Logo Dịch Vụ Quanh Ta" />
+            </div>
+            <div class="standalone-order-topbar-center">
+              <h2 class="standalone-order-topbar-title">Chi tiết đơn hàng</h2>
+              <div class="standalone-order-topbar-meta">
+                <span><i class="fa-solid fa-user"></i> Khách hàng</span>
+                <span><i class="fa-solid fa-clock"></i> Tạo lúc ${escapeHtml(formatDateTime(invoice.created_at || ""))}</span>
+              </div>
+            </div>
+            <div class="standalone-order-topbar-logo">
+              <img src="${escapeHtml(getProjectUrl("public/assets/images/favicon.png"))}" alt="Logo Dịch vụ Chuyển Dọn" />
+            </div>
+          </div>
+
           <header class="standalone-order-card-header">
             <div class="standalone-order-header-main-content">
-              <div class="standalone-order-hero-top-row">
-                <div class="standalone-order-card-title">
-                  <p class="standalone-order-card-kicker">Chi tiết đơn hàng</p>
-                  <h1>${escapeHtml(invoice.code || "Chi tiết đơn hàng")}</h1>
-                  <p class="standalone-order-card-subtitle">${escapeHtml(invoice.service_label || "Dịch vụ Chuyển Dọn")}</p>
-                  <div class="standalone-order-inline-meta">
-                    <span><i class="fa-solid fa-clock"></i>${escapeHtml(formatDateTime(invoice.created_at))}</span>
-                    <span><i class="fa-solid fa-box"></i>${escapeHtml(getSurveyRequirementLabel(invoice))}</span>
-                    <span><i class="fa-solid fa-truck-front"></i>${escapeHtml(invoice.vehicle_label || "Chưa chốt loại xe")}</span>
+              <div class="standalone-order-hero-frame-grid">
+                <div class="standalone-order-hero-frame standalone-order-hero-frame-main">
+                  <div class="standalone-order-card-title">
+                    <p class="standalone-order-card-kicker">Chi tiết đơn hàng</p>
+                    <h1>${escapeHtml(invoice.service_label || "Dịch vụ Chuyển Dọn")}</h1>
+                    <p class="standalone-order-card-subtitle standalone-order-reference">${escapeHtml(invoice.code || "Chi tiết đơn hàng")}</p>
+                  </div>
+                  <div class="standalone-order-hero-summary-grid">
+                    ${renderHeroStat(
+                      "Tạm tính",
+                      formatCurrency(invoice.estimated_amount),
+                      "Mức giá tham khảo hiện tại",
+                      { className: "standalone-order-hero-stat--amount" },
+                    )}
+                    ${renderHeroStat(
+                      "Khoảng cách",
+                      formatDistance(invoice.distance_km),
+                      "Quãng đường dự kiến",
+                    )}
+                    ${renderHeroStat(
+                      "Trạng thái đơn",
+                      statusBadge,
+                      progressMeta.note,
+                      {
+                        className: "standalone-order-hero-stat--status",
+                        valueHtml: true,
+                        noteHtml: false,
+                        valueTag: "div",
+                      },
+                    )}
                   </div>
                 </div>
 
-                <div class="standalone-order-hero-side-stack">
+                <div class="standalone-order-hero-frame standalone-order-hero-frame-side">
+                  <div class="standalone-order-hero-progress-card">
+                    <div class="standalone-order-hero-side-progress">
+                      <div class="standalone-order-progress-ring status-${escapeHtml(
+                        progressMeta.tone,
+                      )}" style="--progress:${escapeHtml(String(progressMeta.percent))}%;">
+                        <div class="standalone-order-progress-ring-core">
+                          <strong>${escapeHtml(String(progressMeta.percent))}%</strong>
+                          <span>Tiến độ</span>
+                        </div>
+                      </div>
+                      <div class="standalone-order-progress-info">
+                        <span class="standalone-order-progress-label">${escapeHtml(progressMeta.label)}</span>
+                        <p>${escapeHtml(progressMeta.note)}</p>
+                      </div>
+                    </div>
+                  </div>
                   <div class="standalone-order-actions-group standalone-order-hero-actions-group">
                     ${
                       canCancelInvoice(invoice)
@@ -829,50 +948,11 @@ const customerInvoiceDetailModule = (function (window, document) {
                       getProjectUrl("khach-hang/danh-sach-don-hang.html"),
                     )}">Về lịch sử đơn</a>
                   </div>
-                  <div class="standalone-order-hero-side-progress">
-                    <div class="standalone-order-progress-ring status-${escapeHtml(
-                      progressMeta.tone,
-                    )}" style="--progress:${escapeHtml(String(progressMeta.percent))}%;">
-                      <div class="standalone-order-progress-ring-core">
-                        <strong>${escapeHtml(String(progressMeta.percent))}%</strong>
-                        <span>Tiến độ</span>
-                      </div>
-                    </div>
-                    <div class="standalone-order-progress-info">
-                      <span class="standalone-order-progress-label">${escapeHtml(progressMeta.label)}</span>
-                      <p>${escapeHtml(progressMeta.note)}</p>
-                    </div>
-                  </div>
                 </div>
               </div>
 
-              <div class="standalone-order-hero-metrics">
-                ${renderHeroMetric(
-                  "fa-solid fa-wallet",
-                  "Tổng tạm tính",
-                  formatCurrency(invoice.estimated_amount),
-                  invoice.vehicle_label || "Chưa chốt loại xe",
-                  { className: "standalone-order-hero-metric-primary" },
-                )}
-                ${renderHeroMetric(
-                  "fa-solid fa-calendar-check",
-                  "Ngày thực hiện",
-                  formatBookingDateOnly(invoice.schedule_date) ||
-                    invoice.schedule_label ||
-                    "Chờ xác nhận",
-                  getBookingScheduleTimeLabel(invoice.schedule_time) ||
-                    "Khung giờ triển khai",
-                )}
-                ${renderHeroMetric(
-                  "fa-solid fa-signal",
-                  "Trạng thái đơn",
-                  renderStatusBadge(invoice),
-                  progressMeta.note,
-                  {
-                    className: "standalone-order-hero-metric-status",
-                    valueHtml: true,
-                  },
-                )}
+              <div class="standalone-order-hero-support-grid">
+                ${renderHeroScheduleCard(invoice)}
                 ${renderHeroRouteCard(invoice)}
               </div>
             </div>
@@ -896,8 +976,8 @@ const customerInvoiceDetailModule = (function (window, document) {
                     <span class="standalone-order-chip">Đơn hàng</span>
                   </div>
                   <div class="standalone-order-info-list">
-                    ${renderInfoRow("Khoảng cách", formatDistance(invoice.distance_km))}
-                    ${renderInfoRow("Tệp gửi kèm", String(getAttachmentCount(invoice)))}
+                    ${renderInfoRow("Khảo sát", getSurveyRequirementLabel(invoice))}
+                    ${renderInfoRow("Loại xe", invoice.vehicle_label || "Chưa chốt loại xe")}
                   </div>
                 </div>
                 <div class="standalone-order-panel standalone-order-panel-fees" id="order-summary-fees">
@@ -941,6 +1021,8 @@ const customerInvoiceDetailModule = (function (window, document) {
                     ${renderInfoRow("Đơn vị", invoice.company_name || "--")}
                   </div>
                 </article>
+
+                ${renderProviderContactCard(invoice)}
 
                 <div class="standalone-order-contact-note">
                   <article class="standalone-order-contact-note-card">
