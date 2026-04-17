@@ -56,9 +56,17 @@
 
         // Top Bar
         document.getElementById('topName').textContent = name;
-        document.getElementById('topAvatar').textContent = initial;
+        
+        const topAvatar = document.getElementById('topAvatar');
+        const avatarLink = currentUser.link_avatar;
+        if (avatarLink) {
+            const avatarUrl = app.getDriveUrl(avatarLink);
+            topAvatar.innerHTML = `<img src="${avatarUrl}" style="width:100%; height:100%; object-fit:cover; border-radius:50%;">`;
+        } else {
+            topAvatar.textContent = initial;
+        }
 
-        // Sidebar if any (not used in current HTML but good for consistency)
+        // Sidebar if any
         const sidebarName = document.getElementById('sidebarName');
         if (sidebarName) sidebarName.textContent = name;
     }
@@ -70,6 +78,33 @@
         form.sodienthoai.value = currentUser.sodienthoai || '';
         form.email.value = currentUser.email || '';
         form.diachi.value = currentUser.diachi || '';
+
+        // Show existing images
+        const avatarLink = currentUser.link_avatar;
+        const cccdTruocLink = currentUser.link_cccd_truoc;
+        const cccdSauLink = currentUser.link_cccd_sau;
+
+        if (avatarLink) {
+             const url = app.getDriveUrl(avatarLink);
+             console.log('[Profile] Avatar URL:', url); // Bạn có thể nhấn vào link này ở Console để kiểm tra
+             document.getElementById('avatarImage').src = url;
+        }
+        
+        if (cccdTruocLink) {
+            const url = app.getDriveUrl(cccdTruocLink);
+            console.log('[Profile] CCCD Front URL:', url);
+            const p = document.getElementById('previewTruoc');
+            p.src = url;
+            p.style.display = 'block';
+        }
+
+        if (cccdSauLink) {
+            const url = app.getDriveUrl(cccdSauLink);
+            console.log('[Profile] CCCD Back URL:', url);
+            const p = document.getElementById('previewSau');
+            p.src = url;
+            p.style.display = 'block';
+        }
 
         // Fill coordinates
         if (currentUser.maplat && currentUser.maplng) {
@@ -113,7 +148,29 @@
         }
     };
 
+    function setupImagePreview(inputId, previewId) {
+        const input = document.getElementById(inputId);
+        const preview = document.getElementById(previewId);
+        if (!input || !preview) return;
+
+        input.onchange = (e) => {
+            const file = e.target.files[0];
+            if (file) {
+                const reader = new FileReader();
+                reader.onload = (event) => {
+                    preview.src = event.target.result;
+                    preview.style.display = 'block';
+                };
+                reader.readAsDataURL(file);
+            }
+        };
+    }
+
     function setupEvents() {
+        // Setup Image Previews
+        setupImagePreview('avatarUpload', 'avatarImage');
+        setupImagePreview('cccdTruoc', 'previewTruoc');
+        setupImagePreview('cccdSau', 'previewSau');
         // Save Personal Info
         document.getElementById('formInfo').onsubmit = async (e) => {
             e.preventDefault();
@@ -129,6 +186,34 @@
                 maplng: document.getElementById('reg_lng').value || ''
             };
 
+            // Image Upload Handling
+            try {
+                const avatarFile = document.getElementById('avatarUpload').files[0];
+                const cccdTruocFile = document.getElementById('cccdTruoc').files[0];
+                const cccdSauFile = document.getElementById('cccdSau').files[0];
+
+                if (avatarFile) {
+                    btn.innerHTML = '<i class="fas fa-spinner fa-spin me-1"></i> Đang tải lên ảnh đại diện...';
+                    const up = await app.uploadFile(avatarFile);
+                    if (up.success) payload.link_avatar = up.fileId;
+                }
+
+                if (cccdTruocFile) {
+                    btn.innerHTML = '<i class="fas fa-spinner fa-spin me-1"></i> Đang tải lên CCCD (mặt trước)...';
+                    const up = await app.uploadFile(cccdTruocFile);
+                    if (up.success) payload.link_cccd_truoc = up.fileId;
+                }
+
+                if (cccdSauFile) {
+                    btn.innerHTML = '<i class="fas fa-spinner fa-spin me-1"></i> Đang tải lên CCCD (mặt sau)...';
+                    const up = await app.uploadFile(cccdSauFile);
+                    if (up.success) payload.link_cccd_sau = up.fileId;
+                }
+            } catch (uploadErr) {
+                console.warn('Image upload failed but continuing with info update:', uploadErr);
+            }
+
+            btn.innerHTML = '<i class="fas fa-spinner fa-spin me-1"></i> Đang lưu thông tin cá nhân...';
             const res = await krud.updateRow('nguoidung', currentUser.id, payload);
             if (res) {
                 Swal.fire('Thành công', 'Thông tin cá nhân đã được cập nhật.', 'success').then(() => {

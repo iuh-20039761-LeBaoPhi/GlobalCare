@@ -112,7 +112,7 @@
             if (stored !== password) throw new Error('Mật khẩu không chính xác');
 
             const idDichvu = String(user.id_dichvu || '0');
-            const role = (idDichvu === '0' || idDichvu === '') ? 'customer' : 'provider';
+            const role = 'customer'; // Mặc định là khách hàng, các module sẽ tự kiểm tra id_dichvu để xác định NCC
 
             const profile = {
                 id: user.id,
@@ -122,9 +122,9 @@
                 address: user.diachi || user.dia_chi || user.address || '',
                 id_dichvu: idDichvu,
                 role: role,
-                avatartenfile: user.avatartenfile || '',
-                cccdmattruoctenfile: user.cccdmattruoctenfile || '',
-                cccdmatsautenfile: user.cccdmatsautenfile || ''
+                link_avatar: user.link_avatar || '',
+                link_cccd_truoc: user.link_cccd_truoc || '',
+                link_cccd_sau: user.link_cccd_sau || ''
             };
 
             Utils.setCookie('dvqt_u', phone);
@@ -229,6 +229,46 @@
         getCookie: (name) => Utils.getCookie(name),
         setCookie: (name, value, days) => Utils.setCookie(name, value, days),
         getApiPath: (suffix) => Utils.getApiPath(suffix),
+        /**
+         * Tải file lên Google Drive thông qua Proxy PHP
+         * @param {File} fileObj - Đối tượng File lấy từ input[type=file]
+         * @returns {Promise<Object>} - { success: true, url: '...', fileId: '...' }
+         */
+        uploadFile: async (fileObj) => {
+            if (!fileObj) throw new Error('Không có file để tải lên');
+            
+            const formData = new FormData();
+            formData.append('file', fileObj);
+            formData.append('name', fileObj.name);
+
+            const uploadPath = window.location.origin + ROOT_URL + '/public/upload_to_drive.php';
+            
+            try {
+                const response = await fetch(uploadPath, {
+                    method: 'POST',
+                    body: formData
+                });
+                
+                if (!response.ok) throw new Error('Lỗi phản hồi từ server upload (' + response.status + ')');
+                return await response.json();
+            } catch (e) {
+                console.error('[DVQTApp] Upload failed:', e);
+                throw new Error('Không thể tải file lên Drive: ' + e.message);
+            }
+        },
+
+        /**
+         * Chuyển đổi File ID thành Link hiển thị trực tiếp
+         * @param {string} fileId - ID file từ Google Drive
+         * @returns {string} - URL hiển thị ảnh
+         */
+        getDriveUrl: (fileId) => {
+            if (!fileId) return '';
+            if (fileId.startsWith('http')) return fileId;
+            // Định dạng link hiển thị ảnh trực tiếp tối ưu nhất của Google
+            return `https://lh3.googleusercontent.com/d/${fileId}`;
+        },
+
         ROOT_URL: ROOT_URL,
         TABLE_USER: API_CONFIG.TABLE_USER
     };

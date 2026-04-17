@@ -1686,7 +1686,6 @@
 			const TABLE_USER = 'nguoidung'; // Bảng duy nhất chứa cả khách hàng lẫn nhà cung cấp
 			const TABLE_ORDER = 'datlich_donvesinh';
 			const TABLE_HISTORY = 'lich_su_lam_viec_donvesinh';
-			const REVIEW_UPLOAD_API = 'upload-review-media.php';
 
 			const app = {
 				params: {},
@@ -1825,8 +1824,8 @@
 
 			async function listTableRows(tableName) {
 				const result = typeof krudList === 'function'
-					? await krudList({ table: tableName })
-					: await krud('list', tableName, { p: 1, limit: 1000 });
+					? await krudList({ table: tableName, limit: 100000 })
+					: await krud('list', tableName, { p: 1, limit: 100000 });
 
 				if (Array.isArray(result)) return result;
 				if (Array.isArray(result?.data)) return result.data;
@@ -1888,10 +1887,10 @@
 				// Xác định role dựa vào id_dichvu:
 				// Nếu id_dichvu chứa '1' → nhà cung cấp (staff), ngược lại → khách hàng (customer)
 				const idDichvuList = String(matched.id_dichvu || '').split(',').map(s => s.trim());
-				const isProvider = idDichvuList.includes('3');
+				const isProvider = idDichvuList.includes('5');
 				const role = isProvider ? 'staff' : 'customer';
 
-				// Bổ sung: Nếu là khách hàng, phải khớp SĐT trong hóa đơn
+				// Bổ sung: Nếu là khách hàng, phải khớp SĐT trong đơn hàng
 				if (role === 'customer' && app.$datlich_donvesinh) {
 					const customerPhone = String(app.$datlich_donvesinh.sdtkhachhang || '').trim();
 					if (customerPhone !== sodienthoai.trim()) {
@@ -1940,7 +1939,7 @@
 			async function loadOrderById() {
 				const $datlich_donvesinh_rows = await listTableRows(TABLE_ORDER);
 				const $datlich_donvesinh = $datlich_donvesinh_rows.find((row) => String(row.id) === String(app.params.mahd));
-				if (!$datlich_donvesinh) throw new Error('Không tìm thấy hóa đơn');
+				if (!$datlich_donvesinh) throw new Error('Không tìm thấy đơn hàng');
 
 				app.$datlich_donvesinh = await applyAutoOrderStatusRules($datlich_donvesinh);
 			}

@@ -1011,7 +1011,8 @@ select:focus-visible {
   }
 
   .filter-grid {
-    grid-template-columns: repeat(2, minmax(140px, 1fr));
+    grid-template-columns: repeat(2, 1fr);
+    gap: 15px;
   }
 
   .detail-grid,
@@ -1036,17 +1037,20 @@ select:focus-visible {
 
   /* Adjust Page Heading on Mobile */
   .page-heading {
-    padding: 10px 15px;
+    /* padding: 10px 15px;
     text-align: center;
-    justify-content: center !important;
+    justify-content: center !important; */
+    flex-direction: column;
+    gap: 12px;
+    align-items: flex-start !important;
   }
   .page-title {
     font-size: 1.2rem;
   }
-  .page-heading .btn {
+  /* .page-heading .btn {
     width: 100%;
     margin-top: 5px;
-  }
+  } */
 
   /* Invoice Hero Mobile */
   .invoice-hero {
@@ -1124,6 +1128,7 @@ select:focus-visible {
     gap: 10px;
   }
 
+  .filter-grid,
   .invoice-main-grid,
   .identity-grid,
   .review-grid,
@@ -1186,85 +1191,126 @@ select:focus-visible {
   
   /* Order Table Card Transform */
   .order-table, 
+  .service-table,
   .order-table thead, 
+  .service-table thead,
   .order-table tbody, 
+  .service-table tbody,
   .order-table th, 
+  .service-table th,
   .order-table td, 
-  .order-table tr { 
+  .service-table td,
+  .order-table tr,
+  .service-table tr { 
     display: block; 
   }
 
-  .order-table thead tr { 
+  .order-table thead tr,
+  .service-table thead tr { 
     position: absolute;
     top: -9999px;
     left: -9999px;
   }
 
-  .order-table tr {
-    border: 1px solid #e2e8f0;
-    margin-bottom: 15px;
-    border-radius: 12px;
+  .order-table tr,
+  .service-table tr {
+    border: 1px solid #edf2f7;
+    margin-bottom: 20px;
+    border-radius: 16px;
     overflow: hidden;
     background: #ffffff;
-    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.03);
   }
 
-  .order-table td { 
+  .order-table td,
+  .service-table td { 
     border: none;
-    border-bottom: 1px solid #f1f5f9; 
+    border-bottom: 1px solid #f7fafc; 
     position: relative;
-    padding-left: 45% !important; 
+    padding: 14px 15px 14px 45% !important; 
     text-align: right;
-    min-height: 45px;
+    min-height: 52px;
     display: flex;
     align-items: center;
     justify-content: flex-end;
-    font-size: 0.88rem;
+    font-size: 0.9rem;
+    color: #2d3748;
   }
 
   /* Restore labels for all cells */
-  .order-table td:before { 
-    content: attr(data-label);
-    position: absolute;
-    left: 15px;
-    width: 40%; 
-    padding-right: 10px; 
-    white-space: nowrap;
-    text-align: left;
-    font-weight: 700;
-    color: #64748b;
-    text-transform: uppercase;
-    font-size: 0.7rem;
-    letter-spacing: 0.03em;
+  .order-table td:before,
+  .service-table td:before { 
+    content: attr(data-label) !important;
+    position: absolute !important;
+    left: 15px !important;
+    top: 50% !important;
+    transform: translateY(-50%) !important;
+    width: 40% !important; 
+    padding-right: 10px !important; 
+    white-space: nowrap !important;
+    text-align: left !important;
+    font-weight: 700 !important;
+    color: #718096 !important;
+    text-transform: uppercase !important;
+    font-size: 0.72rem !important;
+    letter-spacing: 0.04em !important;
+    display: block !important;
+    opacity: 0.85;
   }
 
-  .order-table td:last-child {
+  .order-table td:last-child,
+  .service-table td:last-child {
     border-bottom: none;
-    background: #f8fafc;
+    background: #fbfcfd;
     justify-content: center;
     padding: 15px !important; 
     display: flex;
-    flex-direction: column; 
-    gap: 8px; 
+    /* flex-direction: column;  */
+    gap: 10px; 
+    min-height: auto;
   }
 
-  .order-table td:last-child:before {
-    display: none; 
+  .order-table td:last-child:before,
+  .service-table td:last-child:before {
+    display: none !important; 
   }
 
   .order-table td:last-child .btn,
   .order-table td:last-child .d-flex {
     width: 100% !important; 
-    justify-content: center;
-    flex-wrap: wrap;
+    margin: 0 !important;
   }
 
   .customer-block {
     align-items: flex-end;
+    width: 100%;
+    overflow: hidden;
+  }
+
+  .customer-block strong {
+    display: block;
+    width: 100%;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    color: #1a202c;
+  }
+
+  .customer-block span {
+    font-size: 0.82rem;
+    color: #a0aec0;
+  }
+
+  .order-code {
+    font-weight: 700;
+    color: #2b6cb0 !important;
   }
 
   .service-text {
-    min-width: unset;
+    max-width: 100%;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
   }
 
   .panel-foot {
@@ -1317,4 +1363,8 @@ select:focus-visible {
     width: 100%;
     padding: 12px;
   }
+  .order-table td:last-child .btn, .service-table td:last-child .btn, .order-table td:last-child .d-flex {
+    width: 100% !important;
+    margin: 0 !important;
+}
 }

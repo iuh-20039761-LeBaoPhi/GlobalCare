@@ -68,19 +68,21 @@
         </header>
 
         <section class="container-fluid py-3 py-lg-4">
-          <div class="page-heading">
-            <nav aria-label="breadcrumb">
-              <ol class="breadcrumb panel-breadcrumb">
-                <li class="breadcrumb-item">
-                  <a href="index.html">Trang quản trị</a>
-                </li>
-                <li class="breadcrumb-item active">Phí khảo sát</li>
-              </ol>
-            </nav>
-            <h1 class="page-title">Quản lý phí khảo sát</h1>
-            <p class="page-subtitle">
-              Quản lý phí khảo sát dựa trên từng loại phương tiện (loaixe).
-            </p>
+          <div class="page-heading d-flex flex-wrap align-items-center justify-content-between gap-3">
+            <div>
+              <nav aria-label="breadcrumb">
+                <ol class="breadcrumb panel-breadcrumb">
+                  <li class="breadcrumb-item">
+                    <a href="index.html">Trang quản trị</a>
+                  </li>
+                  <li class="breadcrumb-item active">Phí khảo sát</li>
+                </ol>
+              </nav>
+              <h1 class="page-title">Quản lý phí khảo sát</h1>
+            </div>
+            <button class="btn btn-primary shadow-sm px-3" onclick="openFeeModal()">
+              <i class="fas fa-plus me-1"></i> Thêm cấu hình
+            </button>
           </div>
 
           <article class="panel-card mt-3">
@@ -89,15 +91,10 @@
                 <i class="fas fa-hand-holding-usd"></i> Danh sách phí theo loại
                 xe
               </h3>
-              <div class="d-flex align-items-center gap-3">
-                <span class="record-count" id="itemCount">0 loại xe</span>
-                <button class="btn btn-sm btn-primary" onclick="openFeeModal()">
-                  <i class="fas fa-plus"></i> Thêm cấu hình
-                </button>
-              </div>
+              <span class="record-count" id="itemCount">0 loại xe</span>
             </div>
             <div class="table-responsive">
-              <table class="table table-hover align-middle mb-0">
+              <table class="table table-hover align-middle mb-0 service-table">
                 <thead>
                   <tr>
                     <th>STT</th>
@@ -211,9 +208,9 @@
             .map(
               (s, i) => `
             <tr>
-              <td>${(page - 1) * limit + i + 1}</td>
-              <td><strong>${s.loaixe}</strong></td>
-              <td>${Number(s.phikhaosat).toLocaleString("vi-VN")} đ</td>
+              <td data-label="STT">${(page - 1) * limit + i + 1}</td>
+              <td data-label="Loại xe"><strong>${s.loaixe}</strong></td>
+              <td data-label="Phí khảo sát">${Number(s.phikhaosat).toLocaleString("vi-VN")} đ</td>
               <td class="text-end">
                 <button class="btn btn-sm btn-outline-primary me-1" onclick="openFeeModal(${s.id})"><i class="fas fa-edit"></i></button>
                 <button class="btn btn-sm btn-outline-danger" onclick="deleteFee(${s.id})"><i class="fas fa-trash"></i></button>
