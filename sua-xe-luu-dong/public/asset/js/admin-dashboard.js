@@ -177,7 +177,7 @@
 
     orders = extractRows(result)
       .map(mapOrder)
-      .sort((a, b) => b.sortTime - a.sortTime);
+      .sort((a, b) => b.id - a.id);
   }
 
   function renderStats() {
@@ -219,18 +219,18 @@
         const status = statusConfig[order.status] || statusConfig.pending;
         return `
           <tr>
-            <td class="order-code">${order.code}</td>
-            <td>
+            <td data-label="Mã đơn" class="order-code">${order.code}</td>
+            <td data-label="Khách hàng">
               <div class="customer-block">
                 <strong>${order.customerName}</strong>
                 <span>${order.customerPhone || "--"}</span>
               </div>
             </td>
-            <td><p class="service-text mb-0">${order.service}</p></td>
-            <td>${order.date}</td>
-            <td><span class="status-pill ${status.className}">${status.label}</span></td>
-            <td>${formatCurrency(order.total)}</td>
-            <td>
+            <td data-label="Dịch vụ"><p class="service-text mb-0">${order.service}</p></td>
+            <td data-label="Ngày đặt">${order.date}</td>
+            <td data-label="Trạng thái"><span class="status-pill ${status.className}">${status.label}</span></td>
+            <td data-label="Tổng tiền">${formatCurrency(order.total)}</td>
+            <td data-label="Thao tác">
               <a class="btn btn-sm btn-outline-secondary btn-view-detail" href="chi-tiet-don-hang.html?id=${order.id}">
                 Xem chi tiết
               </a>

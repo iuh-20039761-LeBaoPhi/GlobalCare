@@ -897,9 +897,7 @@
     )
       .then(function (rows) {
         return (rows || []).map(mapDbOrderToPanelOrder).sort(function (a, b) {
-          return (
-            new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
-          );
+          return b.id - a.id;
         });
       })
       .catch(function () {
@@ -1146,14 +1144,14 @@
       role === "provider" && sourceOrders && !Array.isArray(sourceOrders)
         ? sourceOrders
         : null;
-    var allOrders = providerSource
+    var allOrders = (providerSource
       ? providerSource.pendingOrders || []
       : Array.isArray(sourceOrders)
         ? sourceOrders
-        : [];
-    var assignedOrders = providerSource
+        : []).sort((a, b) => b.id - a.id);
+    var assignedOrders = (providerSource
       ? providerSource.assignedOrders || []
-      : [];
+      : []).sort((a, b) => b.id - a.id);
     var statsOrders = providerSource
       ? providerSource.statsOrders || allOrders
       : allOrders;
@@ -1201,13 +1199,13 @@
 
       return loadProviderOrders(providerContextUser).then(function (bundle) {
         var nextBundle = bundle || {};
-        state.all = Array.isArray(nextBundle.pendingOrders)
+        state.all = (Array.isArray(nextBundle.pendingOrders)
           ? nextBundle.pendingOrders
-          : [];
+          : []).sort((a, b) => b.id - a.id);
         state.filtered = state.all.slice();
-        assignedOrders = Array.isArray(nextBundle.assignedOrders)
+        assignedOrders = (Array.isArray(nextBundle.assignedOrders)
           ? nextBundle.assignedOrders
-          : [];
+          : []).sort((a, b) => b.id - a.id);
         assignedState.all = assignedOrders.slice();
         assignedState.filtered = assignedOrders.slice();
         assignedState.page = 1;

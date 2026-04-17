@@ -78,39 +78,38 @@
         </header>
 
         <section class="container-fluid py-3 py-lg-4">
-          <div class="page-heading">
-            <nav aria-label="breadcrumb">
-              <ol class="breadcrumb panel-breadcrumb">
-                <li class="breadcrumb-item">
-                  <a href="index.html">Trang quản trị</a>
-                </li>
-                <li class="breadcrumb-item active">Danh sách dịch vụ</li>
-              </ol>
-            </nav>
-            <h1 class="page-title">Danh sách dịch vụ</h1>
+          <div class="page-heading d-flex flex-wrap align-items-center justify-content-between gap-3">
+            <div>
+              <nav aria-label="breadcrumb">
+                <ol class="breadcrumb panel-breadcrumb">
+                  <li class="breadcrumb-item">
+                    <a href="index.html">Trang quản trị</a>
+                  </li>
+                  <li class="breadcrumb-item active">Danh sách dịch vụ</li>
+                </ol>
+              </nav>
+              <h1 class="page-title">Danh sách dịch vụ</h1>
+            </div>
+            <button
+              class="btn btn-primary shadow-sm px-3"
+              onclick="openServiceModal()"
+            >
+              <i class="fas fa-plus me-1"></i> Thêm dịch vụ
+            </button>
           </div>
 
           <article class="panel-card mt-3">
             <div class="panel-head">
               <h3><i class="fas fa-concierge-bell"></i> Danh mục dịch vụ</h3>
-              <div class="d-flex align-items-center gap-3">
-                <span class="record-count" id="itemCount">0 dịch vụ</span>
-                <button
-                  class="btn btn-sm btn-primary"
-                  onclick="openServiceModal()"
-                >
-                  <i class="fas fa-plus"></i> Thêm dịch vụ
-                </button>
-              </div>
+              <span class="record-count" id="itemCount">0 dịch vụ</span>
             </div>
             <div class="table-responsive">
-              <table class="table table-hover align-middle mb-0">
+              <table class="table table-hover align-middle mb-0 service-table">
                 <thead>
                   <tr>
                     <th>STT</th>
                     <th>Hình ảnh</th>
                     <th>Tên dịch vụ</th>
-                    <th>Mô tả</th>
                     <th class="text-end">Thao tác</th>
                   </tr>
                 </thead>
@@ -248,10 +247,9 @@
             .map(
               (s, i) => `
             <tr>
-              <td>${(page - 1) * limit + i + 1}</td>
-              <td><img src="../public/asset/image/${s.hinhanh}" style="width:60px;height:45px;object-fit:cover;border-radius:6px;border:1px solid #eee;"></td>
-              <td><strong>${s.tendichvu}</strong></td>
-              <td><div class="text-truncate" style="max-width:350px;">${s.mota}</div></td>
+              <td data-label="STT">${(page - 1) * limit + i + 1}</td>
+              <td data-label="Hình ảnh"><img src="../public/asset/image/${s.hinhanh}" style="width:60px;height:45px;object-fit:cover;border-radius:6px;border:1px solid #eee;"></td>
+              <td data-label="Tên dịch vụ"><strong>${s.tendichvu}</strong></td>
               <td class="text-end">
                 <button class="btn btn-sm btn-outline-primary me-1" onclick="openServiceModal(${s.id})"><i class="fas fa-edit"></i></button>
                 <button class="btn btn-sm btn-outline-danger" onclick="deleteService(${s.id})"><i class="fas fa-trash"></i></button>
