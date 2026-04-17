@@ -2054,7 +2054,7 @@
             className: "btn-danger",
             // hint: "Bạn có thể hủy đơn nếu hệ thống chưa cập nhật ngày nhận đồ.",
             handler: function () {
-              if (window.confirm("Bạn có chắc chắn muốn hủy đơn hàng này?")) {
+              showConfirm("Bạn có chắc chắn muốn hủy đơn hàng này?", function () {
                 setActionButtonLoading(
                   actionBtn,
                   true,
@@ -2063,10 +2063,11 @@
                 );
                 handleCancelOrder(order.id)
                   .then(function () {
+                    showSuccess("Hủy đơn thành công!");
                     start();
                   })
                   .catch(function (err) {
-                    window.alert(err.message || "Lỗi hủy đơn.");
+                    showError(err.message || "Lỗi hủy đơn.");
                     setActionButtonLoading(
                       actionBtn,
                       false,
@@ -2074,7 +2075,7 @@
                       config.loadingText,
                     );
                   });
-              }
+              });
             },
           };
         }
@@ -2086,25 +2087,28 @@
             className: "btn-primary",
             // hint: "Nhận đơn hàng này để bắt đầu quy trình phục vụ.",
             handler: function () {
-              setActionButtonLoading(
-                actionBtn,
-                true,
-                config.text,
-                config.loadingText,
-              );
-              handleAcceptOrder(order.id)
-                .then(function () {
-                  start();
-                })
-                .catch(function (err) {
-                  window.alert(err.message || "Lỗi nhận đơn.");
-                  setActionButtonLoading(
-                    actionBtn,
-                    false,
-                    config.text,
-                    config.loadingText,
-                  );
-                });
+              showConfirm("Bạn có chắc chắn muốn thực hiện hành động 'Nhận đơn'?", function () {
+                setActionButtonLoading(
+                  actionBtn,
+                  true,
+                  config.text,
+                  config.loadingText,
+                );
+                handleAcceptOrder(order.id)
+                  .then(function () {
+                    showSuccess("Nhận đơn thành công!");
+                    start();
+                  })
+                  .catch(function (err) {
+                    showError(err.message || "Lỗi nhận đơn.");
+                    setActionButtonLoading(
+                      actionBtn,
+                      false,
+                      config.text,
+                      config.loadingText,
+                    );
+                  });
+              });
             },
           };
         } else if (currentStatus === "accepted") {
@@ -2114,25 +2118,28 @@
             className: "btn-info text-white",
             // hint: "Xác nhận đã bắt đầu thực hiện các công đoạn giặt ủi.",
             handler: function () {
-              setActionButtonLoading(
-                actionBtn,
-                true,
-                config.text,
-                config.loadingText,
-              );
-              handleStartOrder(order.id)
-                .then(function () {
-                  start();
-                })
-                .catch(function (err) {
-                  window.alert(err.message || "Lỗi cập nhật.");
-                  setActionButtonLoading(
-                    actionBtn,
-                    false,
-                    config.text,
-                    config.loadingText,
-                  );
-                });
+              showConfirm("Bạn có chắc chắn muốn thực hiện hành động 'Bắt đầu'?", function () {
+                setActionButtonLoading(
+                  actionBtn,
+                  true,
+                  config.text,
+                  config.loadingText,
+                );
+                handleStartOrder(order.id)
+                  .then(function () {
+                    showSuccess("Cập nhật thành công!");
+                    start();
+                  })
+                  .catch(function (err) {
+                    showError(err.message || "Lỗi cập nhật.");
+                    setActionButtonLoading(
+                      actionBtn,
+                      false,
+                      config.text,
+                      config.loadingText,
+                    );
+                  });
+              });
             },
           };
         } else if (currentStatus === "processing") {
@@ -2142,19 +2149,20 @@
             className: "btn-success",
             // hint: "Yêu cầu thanh toán và bàn giao đồ sạch cho khách hàng.",
             handler: function () {
-              if (window.confirm("Xác nhận hoàn thành đơn hàng này?")) {
+              showConfirm("Bạn có chắc chắn muốn thực hiện hành động 'Hoàn thành'?", function () {
                 setActionButtonLoading(
                   actionBtn,
                   true,
                   config.text,
                   config.loadingText,
                 );
-                handleCompleteOrder(order.id)
+                handleCompleteOrder(order.id, order)
                   .then(function () {
+                    showSuccess("Cập nhật hoàn thành thành công!");
                     start();
                   })
                   .catch(function (err) {
-                    window.alert(err.message || "Lỗi cập nhật.");
+                    showError(err.message || "Lỗi cập nhật.");
                     setActionButtonLoading(
                       actionBtn,
                       false,
@@ -2162,7 +2170,7 @@
                       config.loadingText,
                     );
                   });
-              }
+              });
             },
           };
         }
@@ -2494,11 +2502,11 @@
     function submitReview(actor) {
       if (role !== actor) return;
       if (statusLower !== "completed") {
-        window.alert("Chi gui danh gia sau khi hoa don da hoan thanh.");
+        showError("Chỉ gửi đánh giá sau khi hóa đơn đã hoàn thành.");
         return;
       }
       if (typeof shared.updateOrder !== "function") {
-        window.alert("Chua san sang chuc nang gui danh gia.");
+        showError("Chưa sẵn sàng chức năng gửi đánh giá.");
         return;
       }
 
@@ -2508,9 +2516,7 @@
 
       var current = resolveReview(actor);
       if (hasReviewData(current)) {
-        window.alert(
-          "Danh gia nay da duoc gui truoc do va khong the chinh sua.",
-        );
+        showError("Đánh giá này đã được gửi trước đó và không thể chỉnh sửa.");
         return;
       }
 
@@ -2519,7 +2525,7 @@
         ? Array.prototype.slice.call(upload.files)
         : [];
       if (!content && !selectedFiles.length) {
-        window.alert("Vui long nhap noi dung hoac chon anh/video.");
+        showError("Vui lòng nhập nội dung hoặc chọn ảnh/video.");
         return;
       }
 
@@ -2539,6 +2545,7 @@
               order.raw[current.columns.text] = payload[current.columns.text];
               order.raw[current.columns.date] = payload[current.columns.date];
               order.raw[current.columns.media] = payload[current.columns.media];
+              showSuccess("Gửi đánh giá thành công!");
               renderAllReviews();
               syncReviewEditors();
             });

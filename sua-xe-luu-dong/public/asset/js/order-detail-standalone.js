@@ -1610,19 +1610,15 @@
     }
   }
 
-  // function showActionAlert(message, type) {
-  //   var node = document.getElementById("detailActionAlert");
-  //   if (!node) return;
-
-  //   node.classList.remove(
-  //     "d-none",
-  //     "alert-success",
-  //     "alert-danger",
-  //     "alert-info",
-  //   );
-  //   node.classList.add(type || "alert-info");
-  //   node.textContent = message;
-  // }
+  function showActionAlert(message, type) {
+    if (type === "alert-success") {
+      showSuccess(message);
+    } else if (type === "alert-danger") {
+      showError(message);
+    } else {
+      showInfo(message);
+    }
+  }
 
   /**
    * Ẩn tất cả các thông báo hành động đang hiện.
@@ -1843,12 +1839,12 @@
       if (!isPending) {
         var hideHint =
           String(orderStatus || "").toLowerCase() === "canceled"
-            ? "\u0110\u01A1n \u0111\u00E3 h\u1EE7y, kh\u00F4ng th\u1EC3 thao t\u00E1c th\u00EAm."
-            : "Ch\u1EC9 c\u00F3 th\u1EC3 h\u1EE7y \u0111\u01A1n khi tr\u1EA1ng th\u00E1i l\u00E0 Ch\u1EDD x\u1EED l\u00FD.";
+            ? "Đơn đã hủy, không thể thao tác thêm."
+            : "Chỉ có thể hủy đơn khi trạng thái là Chờ xử lý.";
 
         return {
-          text: "\u0048\u1EE7y \u0111\u01A1n",
-          className: "btn btn-outline-danger",
+          text: "Hủy đơn",
+          className: "btn btn-danger",
           hint: hideHint,
           canSubmit: false,
           hideButton: true,
@@ -1858,11 +1854,11 @@
       var canCancel = !hasReceivedDate;
 
       return {
-        text: "\u0048\u1EE7y \u0111\u01A1n",
-        className: "btn btn-outline-danger",
+        text: "Hủy đơn",
+        className: "btn btn-danger",
         hint: hasReceivedDate
-          ? "\u0110\u01A1n \u0111\u00E3 c\u00F3 ng\u00E0y nh\u1EADn, kh\u00F4ng th\u1EC3 h\u1EE7y."
-          : "Kh\u00E1ch h\u00E0ng ch\u1EC9 c\u00F3 th\u1EC3 h\u1EE7y \u0111\u01A1n khi ch\u01B0a c\u00F3 ng\u00E0y nh\u1EADn.",
+          ? "Đơn đã có ngày nhận, không thể hủy."
+          : "Khách hàng chỉ có thể hủy đơn khi chưa có ngày nhận.",
         canSubmit: canCancel,
         hideButton: false,
       };
@@ -1986,78 +1982,78 @@
 
       if (canReceive) {
         var receiveBtn = makeButton("Nhận đơn", "btn btn-primary");
-        receiveBtn.addEventListener("click", async function () {
-          if (state.isSubmitting) return;
-          state.isSubmitting = true;
-          hideActionAlert();
+        receiveBtn.addEventListener("click", function () {
+          showConfirm("Bạn có chắc chắn muốn nhận đơn mới này?", async function () {
+            if (state.isSubmitting) return;
+            state.isSubmitting = true;
+            hideActionAlert();
 
-          var originalText = receiveBtn.textContent;
-          receiveBtn.disabled = true;
-          receiveBtn.textContent = "Đang nhận...";
+            var originalText = receiveBtn.textContent;
+            receiveBtn.disabled = true;
+            receiveBtn.textContent = "Đang nhận...";
 
-          try {
-            var provider = resolveProviderIdentity(auth);
-            var orderRaw = (order && order.raw) || {};
+            try {
+              var provider = resolveProviderIdentity(auth);
+              var orderRaw = (order && order.raw) || {};
 
-            var supplierLat = Number(provider.lat);
-            var supplierLng = Number(provider.lng);
-            var customerLat = Number(orderRaw.lat_kh);
-            var customerLng = Number(orderRaw.lng_kh);
+              var supplierLat = Number(provider.lat);
+              var supplierLng = Number(provider.lng);
+              var customerLat = Number(orderRaw.lat_kh);
+              var customerLng = Number(orderRaw.lng_kh);
 
-            if (
-              !supplierLat ||
-              !supplierLng ||
-              supplierLat <= 0 ||
-              supplierLng <= 0
-            ) {
-              throw new Error(
-                "Thiếu tọa độ nhà cung cấp (maplat/maplng). Vui lòng cập nhật thông tin cá nhân.",
+              if (
+                !supplierLat ||
+                !supplierLng ||
+                supplierLat <= 0 ||
+                supplierLng <= 0
+              ) {
+                throw new Error(
+                  "Thiếu tọa độ nhà cung cấp (maplat/maplng). Vui lòng cập nhật thông tin cá nhân.",
+                );
+              }
+              if (
+                !customerLat ||
+                !customerLng ||
+                customerLat <= 0 ||
+                customerLng <= 0
+              ) {
+                throw new Error(
+                  "Hệ thống chưa có tọa độ vị trí khách hàng. Vui lòng yêu cầu khách hàng cập nhật địa chỉ.",
+                );
+              }
+
+              var distanceKm = await getDistance(
+                supplierLat,
+                supplierLng,
+                customerLat,
+                customerLng,
               );
+
+              var pricing = await calculatePricing(orderRaw, distanceKm);
+
+              var payload = {
+                idnhacungcap: provider.id || "",
+                tennhacungcap: provider.name || "",
+                sdt_ncc: provider.phone || "",
+                email_ncc: provider.email || "",
+                diachi_ncc: provider.address || "",
+                ngaynhan: new Date().toISOString(),
+                tongtien: pricing.totalAmount,
+                tiendichuyen: pricing.transportFee,
+                khoangcachdichuyen: pricing.distanceKm,
+              };
+
+              await updateOrderRow(state.orderRaw.id, payload);
+              await loadAndRenderOrder();
+              showSuccess("Nhận đơn thành công!");
+            } catch (error) {
+              showError((error && error.message) || "Không thể nhận đơn.");
+            } finally {
+              state.isSubmitting = false;
+              receiveBtn.textContent = originalText;
+              receiveBtn.disabled = false;
             }
-            if (
-              !customerLat ||
-              !customerLng ||
-              customerLat <= 0 ||
-              customerLng <= 0
-            ) {
-              throw new Error(
-                "Hệ thống chưa có tọa độ vị trí khách hàng. Vui lòng yêu cầu khách hàng cập nhật địa chỉ.",
-              );
-            }
-
-            var distanceKm = await getDistance(
-              supplierLat,
-              supplierLng,
-              customerLat,
-              customerLng,
-            );
-
-            var pricing = await calculatePricing(orderRaw, distanceKm);
-
-            var payload = {
-              idnhacungcap: provider.id || "",
-              tennhacungcap: provider.name || "",
-              sdt_ncc: provider.phone || "",
-              email_ncc: provider.email || "",
-              diachi_ncc: provider.address || "",
-              ngaynhan: new Date().toISOString(),
-              tongtien: pricing.totalAmount,
-              tiendichuyen: pricing.transportFee,
-              khoangcachdichuyen: pricing.distanceKm,
-            };
-
-            await updateOrderRow(state.orderRaw.id, payload);
-            await loadAndRenderOrder();
-          } catch (error) {
-            showActionAlert(
-              (error && error.message) || "Không thể nhận đơn.",
-              "alert-danger",
-            );
-          } finally {
-            state.isSubmitting = false;
-            receiveBtn.textContent = originalText;
-            receiveBtn.disabled = false;
-          }
+          });
         });
         group.appendChild(receiveBtn);
       } else if (canStart) {
@@ -2133,55 +2129,50 @@
 
     btn.onclick = async function () {
       if (state.isSubmitting || !action.canSubmit) return;
-      state.isSubmitting = true;
-      hideActionAlert();
+      
+      var actionLabel = action.text;
+      showConfirm("Bạn có chắc chắn muốn thực hiện hành động '" + actionLabel + "'?", async function () {
+        state.isSubmitting = true;
+        hideActionAlert();
 
-      var originalText = btn.textContent;
-      btn.disabled = true;
-      btn.textContent = "Đang xử lý...";
+        var originalText = btn.textContent;
+        btn.disabled = true;
+        btn.textContent = "Đang xử lý...";
 
-      try {
-        if (!state.orderRaw || !state.orderRaw.id) {
-          throw new Error("Không xác định được mã hóa đơn để cập nhật.");
-        }
-
-        if (auth.role === "customer") {
-          var hasReceivedDate = hasDateValue(
-            state.orderView &&
-              (state.orderView.receivedAt ||
-                (state.orderView.raw && state.orderView.raw.ngaynhan)),
-          );
-
-          if (hasReceivedDate) {
-            throw new Error("Đơn đã có ngày nhận, không thể hủy.");
+        try {
+          if (!state.orderRaw || !state.orderRaw.id) {
+            throw new Error("Không xác định được mã hóa đơn để cập nhật.");
           }
 
-          await updateOrderRow(state.orderRaw.id, {
-            ngayhuy: new Date().toISOString(),
-          });
-        } else {
-          // var transportFee = toNumber(state.orderView && state.orderView.transportFee);
-          await updateOrderRow(state.orderRaw.id, {
-            ngayhoanthanh: new Date().toISOString(),
-            // phikhaosat: 0,
-            // tongtien: transportFee,
-          });
-        }
+          if (auth.role === "customer") {
+            var hasReceivedDate = hasDateValue(
+              state.orderView &&
+                (state.orderView.receivedAt ||
+                  (state.orderView.raw && state.orderView.raw.ngaynhan)),
+            );
 
-        await loadAndRenderOrder();
-        showActionAlert(
-          "Cập nhật trạng thái hóa đơn thành công.",
-          "alert-success",
-        );
-      } catch (error) {
-        showActionAlert(
-          (error && error.message) || "Không thể cập nhật trạng thái hóa đơn.",
-          "alert-danger",
-        );
-      } finally {
-        state.isSubmitting = false;
-        btn.textContent = originalText;
-      }
+            if (hasReceivedDate) {
+              throw new Error("Đơn đã có ngày nhận, không thể hủy.");
+            }
+
+            await updateOrderRow(state.orderRaw.id, {
+              ngayhuy: new Date().toISOString(),
+            });
+          } else {
+            await updateOrderRow(state.orderRaw.id, {
+              ngayhoanthanh: new Date().toISOString(),
+            });
+          }
+
+          await loadAndRenderOrder();
+          showSuccess(actionLabel + " thành công.");
+        } catch (error) {
+          showError((error && error.message) || "Không thể cập nhật trạng thái hóa đơn.");
+        } finally {
+          state.isSubmitting = false;
+          btn.textContent = originalText;
+        }
+      });
     };
   }
 
@@ -2230,46 +2221,44 @@
     if (!btn || !input || btn.dataset.bound === "1") return;
     btn.dataset.bound = "1";
 
-    btn.addEventListener("click", async function () {
+    btn.addEventListener("click", function () {
       var rawValue = input.value;
       var amount = toNumber(rawValue);
       if (amount <= 0) {
-        alert("Vui lòng nhập số tiền hợp lệ.");
+        showError("Vui lòng nhập số tiền hợp lệ.");
         return;
       }
 
       var finalAmount = Math.round(amount * 0.95);
-      if (!confirm("Hệ thống sẽ áp dụng giảm giá 5%. Số tiền thanh toán cuối cùng là: " + formatCurrencyVnd(finalAmount) + ". Bạn có chắc chắn?")) {
-        return;
-      }
+      showConfirm("Hệ thống sẽ áp dụng giảm giá 5%. Số tiền thanh toán cuối cùng là: " + formatCurrencyVnd(finalAmount) + ". Bạn có chắc chắn?", async function () {
+        if (state.isSubmitting) return;
+        state.isSubmitting = true;
+        btn.disabled = true;
+        var originalText = btn.textContent;
+        btn.textContent = "Đang xử lý...";
 
-      if (state.isSubmitting) return;
-      state.isSubmitting = true;
-      btn.disabled = true;
-      var originalText = btn.textContent;
-      btn.textContent = "Đang xử lý...";
+        try {
+          if (!state.orderRaw || !state.orderRaw.id) {
+            throw new Error("Không xác định được mã hóa đơn.");
+          }
 
-      try {
-        if (!state.orderRaw || !state.orderRaw.id) {
-          throw new Error("Không xác định được mã hóa đơn.");
+          var discountAmount = amount - finalAmount;
+          await updateOrderRow(state.orderRaw.id, {
+            tongtienthucte: finalAmount,
+            sotiengiam: discountAmount,
+            trangthaithanhtoan: "Paid",
+          });
+
+          await loadAndRenderOrder();
+          showSuccess("Thanh toán thành công! Bạn đã được giảm giá 5%.");
+        } catch (error) {
+          showError((error && error.message) || "Không thể thực hiện thanh toán.");
+        } finally {
+          state.isSubmitting = false;
+          btn.disabled = false;
+          btn.textContent = originalText;
         }
-
-        var discountAmount = amount - finalAmount;
-        await updateOrderRow(state.orderRaw.id, {
-          tongtienthucte: finalAmount,
-          sotiengiam: discountAmount,
-          trangthaithanhtoan: "Paid",
-        });
-
-        await loadAndRenderOrder();
-        alert("Thanh toán thành công! Bạn đã được giảm giá 5%.");
-      } catch (error) {
-        alert((error && error.message) || "Không thể thực hiện thanh toán.");
-      } finally {
-        state.isSubmitting = false;
-        btn.disabled = false;
-        btn.textContent = originalText;
-      }
+      });
     });
   }
 

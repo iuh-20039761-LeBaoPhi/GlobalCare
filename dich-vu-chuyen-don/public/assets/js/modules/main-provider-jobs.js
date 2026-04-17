@@ -23,6 +23,7 @@ const providerJobsModule = (function (window, document) {
   const root = document.getElementById("provider-jobs-root");
   if (!root || !store) return;
   let refreshController = null;
+  const ITEMS_PER_PAGE = 10;
 
   function escapeHtml(value) {
     if (typeof core.escapeHtml === "function") {
@@ -89,6 +90,30 @@ const providerJobsModule = (function (window, document) {
     return formatBookingScheduleLabel(dateValue, timeValue) || "--";
   }
 
+  function normalizePageNumber(value, fallback = 1) {
+    const page = Number.parseInt(String(value || ""), 10);
+    return Number.isFinite(page) && page > 0 ? page : fallback;
+  }
+
+  function buildPaginationModel(currentPage, totalPages) {
+    if (totalPages <= 1) return [];
+
+    const pages = new Set([1, totalPages, currentPage, currentPage - 1, currentPage + 1]);
+    const normalizedPages = Array.from(pages)
+      .filter((page) => page >= 1 && page <= totalPages)
+      .sort((left, right) => left - right);
+
+    const model = [];
+    normalizedPages.forEach((page, index) => {
+      if (index > 0 && page - normalizedPages[index - 1] > 1) {
+        model.push("ellipsis");
+      }
+      model.push(page);
+    });
+
+    return model;
+  }
+
   function persistCurrentFiltersToUrl() {
     const keywordInput = root.querySelector("#provider-job-keyword");
     const surveySelect = root.querySelector("#provider-job-survey-filter");
@@ -118,41 +143,29 @@ const providerJobsModule = (function (window, document) {
       url.searchParams.delete("status");
     }
 
+    const nextPage = normalizePageNumber(root.getAttribute("data-current-page"), 1);
+    if (nextPage > 1) {
+      url.searchParams.set("page", String(nextPage));
+    } else {
+      url.searchParams.delete("page");
+    }
+
     window.history.replaceState({}, "", url.toString());
   }
 
-  function getStatusMeta(row) {
-    const rawStatus = normalizeLowerText(row?.trang_thai || row?.status || "");
-
-    if (["da_xac_nhan", "xac_nhan", "confirmed", "accepted", "da_chot_lich"].includes(rawStatus)) {
-      return {
-        className: "completed",
-        value: "xac-nhan",
-        label: "Đã xác nhận",
-      };
-    }
-
-    if (["dang_xu_ly", "processing", "in_progress", "dang_dieu_phoi", "dang_trien_khai"].includes(rawStatus)) {
-      return {
-        className: "shipping",
-        value: "dang-xu-ly",
-        label: "Đang xử lý",
-      };
-    }
-
-    if (["cancelled", "canceled", "huy", "da_huy", "huy_bo"].includes(rawStatus)) {
-      return {
-        className: "cancelled",
-        value: "da-huy",
-        label: "Đã hủy",
-      };
-    }
-
-    return {
-      className: "pending",
-      value: "moi",
-      label: "Mới tiếp nhận",
+  function getStatusMeta(source) {
+    return store.getBookingDisplayStatus?.(source) || {
+      status_class: "moi",
+      status_text: "Mới tiếp nhận",
+      badge_class: "pending",
     };
+  }
+
+  function normalizeStatusFilterValue(value) {
+    const normalized = String(value || "").trim();
+    if (normalized === "dang-xu-ly") return "da-nhan";
+    if (normalized === "xac-nhan") return "da-hoan-thanh";
+    return normalized || "all";
   }
 
   function hasSurveyFirst(row) {
@@ -180,9 +193,9 @@ const providerJobsModule = (function (window, document) {
       serviceLabel: getBookingServiceLabel(
         row?.ten_dich_vu || row?.loai_dich_vu || "Chuyển dọn",
       ),
-      statusClass: status.className,
-      statusValue: status.value,
-      statusText: status.label,
+      statusClass: status.badge_class,
+      statusValue: status.status_class,
+      statusText: status.status_text,
       route:
         fromAddress && toAddress
           ? `${fromAddress} → ${toAddress}`
@@ -209,18 +222,30 @@ const providerJobsModule = (function (window, document) {
 
     try {
       await store.autoCancelExpiredBookings?.();
-      const response = await Promise.resolve(
-        listFn({
-          table: store.bookingCrudTableName || "dich_vu_chuyen_don_dat_lich",
-          page: 1,
-          limit: 100,
-          sort: {
-            created_at: "desc",
-          },
-        }),
-      );
+      const limit = 200;
+      const maxPages = 10;
+      const rows = [];
 
-      return extractRows(response).map(normalizeBookingRow);
+      for (let page = 1; page <= maxPages; page += 1) {
+        const response = await Promise.resolve(
+          listFn({
+            table: store.bookingCrudTableName || "dich_vu_chuyen_don_dat_lich",
+            page,
+            limit,
+            sort: {
+              created_at: "desc",
+            },
+          }),
+        );
+
+        const pageRows = extractRows(response);
+        if (!pageRows.length) break;
+
+        rows.push(...pageRows);
+        if (pageRows.length < limit) break;
+      }
+
+      return rows.map(normalizeBookingRow);
     } catch (error) {
       console.error("Cannot load provider jobs:", error);
       return [];
@@ -244,7 +269,8 @@ const providerJobsModule = (function (window, document) {
     const params = new URLSearchParams(window.location.search);
     const initialKeyword = String(params.get("search") || "").trim();
     const initialSurvey = String(params.get("survey") || "all").trim();
-    const initialStatus = String(params.get("status") || "all").trim();
+    const initialStatus = normalizeStatusFilterValue(params.get("status") || "all");
+    let currentPage = normalizePageNumber(params.get("page"), 1);
 
     root.innerHTML = `
       <div class="customer-portal-shell customer-portal-shell--simple">
@@ -279,8 +305,9 @@ const providerJobsModule = (function (window, document) {
               <select id="provider-job-status-filter">
                 <option value="all" ${initialStatus === "all" ? "selected" : ""}>Tất cả</option>
                 <option value="moi" ${initialStatus === "moi" ? "selected" : ""}>Mới tiếp nhận</option>
-                <option value="dang-xu-ly" ${initialStatus === "dang-xu-ly" ? "selected" : ""}>Đang xử lý</option>
-                <option value="xac-nhan" ${initialStatus === "xac-nhan" ? "selected" : ""}>Đã xác nhận</option>
+                <option value="da-nhan" ${initialStatus === "da-nhan" ? "selected" : ""}>Đã nhận đơn</option>
+                <option value="dang-trien-khai" ${initialStatus === "dang-trien-khai" ? "selected" : ""}>Đang triển khai</option>
+                <option value="da-hoan-thanh" ${initialStatus === "da-hoan-thanh" ? "selected" : ""}>Đã hoàn thành</option>
                 <option value="da-huy" ${initialStatus === "da-huy" ? "selected" : ""}>Đã hủy</option>
               </select>
             </label>
@@ -303,6 +330,10 @@ const providerJobsModule = (function (window, document) {
           </div>
 
           <div class="customer-list customer-list-history" id="provider-job-list"></div>
+          <div class="customer-pagination-wrap" id="provider-jobs-pagination-wrap" hidden>
+            <p class="customer-pagination-summary" id="provider-jobs-pagination-summary"></p>
+            <div class="customer-pagination" id="provider-jobs-pagination"></div>
+          </div>
         </section>
       </div>
     `;
@@ -315,6 +346,9 @@ const providerJobsModule = (function (window, document) {
     const listNode = root.querySelector("#provider-job-list");
     const resultNode = root.querySelector("#provider-job-result-text");
     const activeFiltersNode = root.querySelector("#provider-jobs-active-filters");
+    const paginationWrapNode = root.querySelector("#provider-jobs-pagination-wrap");
+    const paginationSummaryNode = root.querySelector("#provider-jobs-pagination-summary");
+    const paginationNode = root.querySelector("#provider-jobs-pagination");
 
     function syncFilterUrl() {
       const url = new URL(window.location.href);
@@ -340,13 +374,19 @@ const providerJobsModule = (function (window, document) {
         url.searchParams.delete("status");
       }
 
+      if (currentPage > 1) {
+        url.searchParams.set("page", String(currentPage));
+      } else {
+        url.searchParams.delete("page");
+      }
+
       window.history.replaceState({}, "", url.toString());
     }
 
     function renderList() {
       const keyword = normalizeLowerText(keywordInput?.value || "");
       const survey = String(surveySelect?.value || "all").trim();
-      const status = String(statusSelect?.value || "all").trim();
+      const status = normalizeStatusFilterValue(statusSelect?.value || "all");
 
       const filtered = items.filter((item) => {
         if (survey === "co-khao-sat" && !item.surveyFirst) return false;
@@ -368,8 +408,22 @@ const providerJobsModule = (function (window, document) {
         return haystack.includes(keyword);
       });
 
-      resultNode.textContent = filtered.length
-        ? `Hiển thị ${filtered.length} yêu cầu theo bộ lọc hiện tại.`
+      const totalItems = filtered.length;
+      const totalPages = Math.max(1, Math.ceil(totalItems / ITEMS_PER_PAGE));
+      const normalizedPage = Math.min(currentPage, totalPages);
+      if (normalizedPage !== currentPage) {
+        currentPage = normalizedPage;
+        syncFilterUrl();
+      }
+      root.setAttribute("data-current-page", String(currentPage));
+
+      const startIndex = totalItems ? (currentPage - 1) * ITEMS_PER_PAGE : 0;
+      const paginatedItems = filtered.slice(startIndex, startIndex + ITEMS_PER_PAGE);
+      const startLabel = totalItems ? startIndex + 1 : 0;
+      const endLabel = totalItems ? startIndex + paginatedItems.length : 0;
+
+      resultNode.textContent = totalItems
+        ? `Hiển thị ${startLabel}-${endLabel} trên ${totalItems} yêu cầu. Trang ${currentPage}/${totalPages}.`
         : "Không tìm thấy yêu cầu nào khớp với điều kiện lọc.";
 
       const activeFilters = [];
@@ -388,11 +442,14 @@ const providerJobsModule = (function (window, document) {
       if (status === "moi") {
         activeFilters.push({ key: "status", label: "Trạng thái: Mới tiếp nhận" });
       }
-      if (status === "dang-xu-ly") {
-        activeFilters.push({ key: "status", label: "Trạng thái: Đang xử lý" });
+      if (status === "da-nhan") {
+        activeFilters.push({ key: "status", label: "Trạng thái: Đã nhận đơn" });
       }
-      if (status === "xac-nhan") {
-        activeFilters.push({ key: "status", label: "Trạng thái: Đã xác nhận" });
+      if (status === "dang-trien-khai") {
+        activeFilters.push({ key: "status", label: "Trạng thái: Đang triển khai" });
+      }
+      if (status === "da-hoan-thanh") {
+        activeFilters.push({ key: "status", label: "Trạng thái: Đã hoàn thành" });
       }
       if (status === "da-huy") {
         activeFilters.push({ key: "status", label: "Trạng thái: Đã hủy" });
@@ -426,47 +483,93 @@ const providerJobsModule = (function (window, document) {
             if (keywordInput) keywordInput.value = "";
             if (surveySelect) surveySelect.value = "all";
             if (statusSelect) statusSelect.value = "all";
+            currentPage = 1;
             syncFilterUrl();
             renderList();
           });
+        paginationWrapNode.hidden = true;
+        paginationNode.innerHTML = "";
+        paginationSummaryNode.textContent = "";
         return;
       }
 
-      listNode.innerHTML = filtered
+      listNode.innerHTML = paginatedItems
         .map(
           (item) => `
             <article class="customer-order-card customer-order-card-history">
               <div class="customer-order-topline">
                 <div class="customer-order-heading">
-                  <p class="customer-order-code">${escapeHtml(item.code || "--")}</p>
                   <p class="customer-order-recipient">${escapeHtml(item.serviceLabel || "Yêu cầu chuyển dọn")}</p>
+                  <div class="customer-order-heading-meta">
+                    <p class="customer-order-code">${escapeHtml(item.code || "--")}</p>
+                    <span class="customer-status-badge status-${escapeHtml(
+                      item.statusClass,
+                    )}">${escapeHtml(item.statusText || "Mới tiếp nhận")}</span>
+                  </div>
                   <p class="customer-order-dest">${escapeHtml(getRouteSummary(item))}</p>
                 </div>
-                <span class="customer-status-badge status-${escapeHtml(
-                  item.statusClass,
-                )}">${escapeHtml(item.statusText || "Mới tiếp nhận")}</span>
+                <div class="customer-order-side">
+                  <div class="customer-order-price-block">
+                    <span class="customer-order-price-label">Tạm tính</span>
+                    <strong class="customer-order-price">${escapeHtml(formatCurrency(item.estimatedAmount))}</strong>
+                  </div>
+                  <div class="customer-order-actions customer-order-actions-compact">
+                    <a class="customer-btn customer-btn-primary" href="${escapeHtml(
+                      getOrderDetailUrl(item.id || item.code || ""),
+                    )}">Xem chi tiết</a>
+                  </div>
+                </div>
               </div>
               <div class="customer-order-meta customer-order-meta-compact customer-order-meta-history">
-                <span><b>Khách hàng</b>${escapeHtml(item.contactName || "--")}</span>
-                <span><b>Số điện thoại</b>${escapeHtml(item.contactPhone || "--")}</span>
-                <span><b>Khảo sát</b>${escapeHtml(item.surveyFirst ? "Có" : "Không")}</span>
-                <span><b>Lịch</b>${escapeHtml(item.scheduleLabel || "--")}</span>
-                <span><b>Tạo lúc</b>${escapeHtml(formatDateTime(item.createdAt))}</span>
-                <span><b>Tạm tính</b>${escapeHtml(formatCurrency(item.estimatedAmount))}</span>
-              </div>
-              <div class="customer-order-actions customer-order-actions-compact">
-                <a class="customer-btn customer-btn-primary" href="${escapeHtml(
-                  getOrderDetailUrl(item.id || item.code || ""),
-                )}">Xem chi tiết</a>
+                <span><b>Khách hàng</b><span class="customer-order-meta-value">${escapeHtml(item.contactName || "--")}</span></span>
+                <span><b>Số điện thoại</b><span class="customer-order-meta-value">${escapeHtml(item.contactPhone || "--")}</span></span>
+                <span><b>Khảo sát</b><span class="customer-order-meta-value">${escapeHtml(item.surveyFirst ? "Có" : "Không")}</span></span>
+                <span><b>Lịch</b><span class="customer-order-meta-value">${escapeHtml(item.scheduleLabel || "--")}</span></span>
+                <span><b>Tạo lúc</b><span class="customer-order-meta-value">${escapeHtml(formatDateTime(item.createdAt))}</span></span>
               </div>
             </article>
           `,
         )
         .join("");
+
+      if (totalPages <= 1) {
+        paginationWrapNode.hidden = true;
+        paginationNode.innerHTML = "";
+        paginationSummaryNode.textContent = "";
+        return;
+      }
+
+      paginationWrapNode.hidden = false;
+      paginationSummaryNode.textContent = `Trang ${currentPage}/${totalPages} • ${totalItems} yêu cầu`;
+      const paginationModel = buildPaginationModel(currentPage, totalPages);
+      paginationNode.innerHTML = `
+        ${
+          currentPage > 1
+            ? `<button type="button" class="customer-page-btn" data-page-action="prev">Trước</button>`
+            : ""
+        }
+        ${paginationModel
+          .map((entry) =>
+            entry === "ellipsis"
+              ? '<span class="customer-page-ellipsis" aria-hidden="true">…</span>'
+              : `<button type="button" class="customer-page-btn ${
+                  entry === currentPage ? "is-active" : ""
+                }" data-page="${entry}" ${
+                  entry === currentPage ? 'aria-current="page"' : ""
+                }>${entry}</button>`,
+          )
+          .join("")}
+        ${
+          currentPage < totalPages
+            ? `<button type="button" class="customer-page-btn" data-page-action="next">Sau</button>`
+            : ""
+        }
+      `;
     }
 
     filterForm?.addEventListener("submit", function (event) {
       event.preventDefault();
+      currentPage = 1;
       syncFilterUrl();
       renderList();
     });
@@ -475,6 +578,7 @@ const providerJobsModule = (function (window, document) {
       if (keywordInput) keywordInput.value = "";
       if (surveySelect) surveySelect.value = "all";
       if (statusSelect) statusSelect.value = "all";
+      currentPage = 1;
       syncFilterUrl();
       renderList();
     });
@@ -499,8 +603,27 @@ const providerJobsModule = (function (window, document) {
         statusSelect.value = "all";
       }
 
+      currentPage = 1;
       syncFilterUrl();
       renderList();
+    });
+
+    paginationNode?.addEventListener("click", function (event) {
+      const button = event.target.closest("[data-page], [data-page-action]");
+      if (!button) return;
+
+      const action = String(button.getAttribute("data-page-action") || "").trim();
+      if (action === "prev") {
+        currentPage = Math.max(1, currentPage - 1);
+      } else if (action === "next") {
+        currentPage += 1;
+      } else {
+        currentPage = normalizePageNumber(button.getAttribute("data-page"), 1);
+      }
+
+      syncFilterUrl();
+      renderList();
+      root.scrollIntoView({ behavior: "smooth", block: "start" });
     });
 
     renderList();

@@ -13,6 +13,7 @@ const customerHistoryModule = (function (window, document) {
 
   const root = document.getElementById("customer-history-root");
   if (!root || !store) return;
+  const ITEMS_PER_PAGE = 10;
 
   function escapeHtml(value) {
     if (typeof core.escapeHtml === "function") {
@@ -63,11 +64,19 @@ const customerHistoryModule = (function (window, document) {
     });
   }
 
-  function getStatusBadgeClass(statusClass) {
-    if (statusClass === "xac-nhan") return "completed";
-    if (statusClass === "dang-xu-ly") return "shipping";
-    if (statusClass === "da-huy" || statusClass === "huy") return "cancelled";
-    return "pending";
+  function getStatusMeta(item) {
+    return store.getBookingDisplayStatus?.(item) || {
+      status_class: item?.status_class || "moi",
+      status_text: item?.status_text || "Mới tiếp nhận",
+      badge_class: "pending",
+    };
+  }
+
+  function normalizeStatusFilterValue(value) {
+    const normalized = String(value || "").trim();
+    if (normalized === "xac-nhan") return "da-hoan-thanh";
+    if (normalized === "dang-xu-ly") return "da-nhan";
+    return normalized || "all";
   }
 
   function getRouteSummary(item) {
@@ -77,6 +86,30 @@ const customerHistoryModule = (function (window, document) {
       return `${fromAddress || "--"} → ${toAddress || "--"}`;
     }
     return String(item?.summary || item?.meta || "Chưa có mô tả chi tiết.").trim();
+  }
+
+  function normalizePageNumber(value, fallback = 1) {
+    const page = Number.parseInt(String(value || ""), 10);
+    return Number.isFinite(page) && page > 0 ? page : fallback;
+  }
+
+  function buildPaginationModel(currentPage, totalPages) {
+    if (totalPages <= 1) return [];
+
+    const pages = new Set([1, totalPages, currentPage, currentPage - 1, currentPage + 1]);
+    const normalizedPages = Array.from(pages)
+      .filter((page) => page >= 1 && page <= totalPages)
+      .sort((left, right) => left - right);
+
+    const model = [];
+    normalizedPages.forEach((page, index) => {
+      if (index > 0 && page - normalizedPages[index - 1] > 1) {
+        model.push("ellipsis");
+      }
+      model.push(page);
+    });
+
+    return model;
   }
 
   function renderHistory(data) {
@@ -99,7 +132,8 @@ const customerHistoryModule = (function (window, document) {
     const items = Array.isArray(data?.history) ? data.history : [];
     const params = new URLSearchParams(window.location.search);
     const initialKeyword = String(params.get("search") || "").trim();
-    const initialStatus = String(params.get("status") || "all").trim();
+    const initialStatus = normalizeStatusFilterValue(params.get("status") || "all");
+    let currentPage = normalizePageNumber(params.get("page"), 1);
 
     root.innerHTML = `
       <div class="customer-portal-shell customer-portal-shell--simple">
@@ -122,8 +156,10 @@ const customerHistoryModule = (function (window, document) {
               <select id="bo-loc-trang-thai-lich-su">
                 <option value="all" ${initialStatus === "all" ? "selected" : ""}>Tất cả</option>
                 <option value="moi" ${initialStatus === "moi" ? "selected" : ""}>Mới tiếp nhận</option>
-                <option value="xac-nhan" ${initialStatus === "xac-nhan" ? "selected" : ""}>Đã xác nhận</option>
-                <option value="dang-xu-ly" ${initialStatus === "dang-xu-ly" ? "selected" : ""}>Đang xử lý</option>
+                <option value="da-nhan" ${initialStatus === "da-nhan" ? "selected" : ""}>Đã nhận đơn</option>
+                <option value="dang-trien-khai" ${initialStatus === "dang-trien-khai" ? "selected" : ""}>Đang triển khai</option>
+                <option value="da-hoan-thanh" ${initialStatus === "da-hoan-thanh" ? "selected" : ""}>Đã hoàn thành</option>
+                <option value="da-huy" ${initialStatus === "da-huy" ? "selected" : ""}>Đã hủy</option>
               </select>
             </label>
             <div class="customer-inline-actions customer-filter-actions">
@@ -148,6 +184,10 @@ const customerHistoryModule = (function (window, document) {
           </div>
 
           <div class="customer-list customer-list-history" id="customer-history-list"></div>
+          <div class="customer-pagination-wrap" id="customer-history-pagination-wrap" hidden>
+            <p class="customer-pagination-summary" id="customer-history-pagination-summary"></p>
+            <div class="customer-pagination" id="customer-history-pagination"></div>
+          </div>
         </section>
       </div>
     `;
@@ -159,6 +199,9 @@ const customerHistoryModule = (function (window, document) {
     const listNode = root.querySelector("#customer-history-list");
     const resultNode = root.querySelector("#customer-history-result-text");
     const activeFiltersNode = root.querySelector("#customer-history-active-filters");
+    const paginationWrapNode = root.querySelector("#customer-history-pagination-wrap");
+    const paginationSummaryNode = root.querySelector("#customer-history-pagination-summary");
+    const paginationNode = root.querySelector("#customer-history-pagination");
 
     function syncFilterUrl() {
       const url = new URL(window.location.href);
@@ -178,15 +221,21 @@ const customerHistoryModule = (function (window, document) {
       }
 
       url.searchParams.delete("survey");
+      if (currentPage > 1) {
+        url.searchParams.set("page", String(currentPage));
+      } else {
+        url.searchParams.delete("page");
+      }
       window.history.replaceState({}, "", url.toString());
     }
 
     function renderList() {
       const keyword = String(keywordInput?.value || "").trim().toLowerCase();
-      const status = String(statusSelect?.value || "all").trim();
+      const status = normalizeStatusFilterValue(statusSelect?.value || "all");
 
       const filtered = items.filter((item) => {
-        if (status !== "all" && item.status_class !== status) return false;
+        const statusMeta = getStatusMeta(item);
+        if (status !== "all" && statusMeta.status_class !== status) return false;
 
         if (!keyword) return true;
         const haystack = [
@@ -205,8 +254,22 @@ const customerHistoryModule = (function (window, document) {
         return haystack.includes(keyword);
       });
 
-      resultNode.textContent = filtered.length
-        ? `Hiển thị ${filtered.length} đơn hàng theo bộ lọc hiện tại.`
+      const totalItems = filtered.length;
+      const totalPages = Math.max(1, Math.ceil(totalItems / ITEMS_PER_PAGE));
+      const normalizedPage = Math.min(currentPage, totalPages);
+      if (normalizedPage !== currentPage) {
+        currentPage = normalizedPage;
+        syncFilterUrl();
+      }
+      root.setAttribute("data-current-page", String(currentPage));
+
+      const startIndex = totalItems ? (currentPage - 1) * ITEMS_PER_PAGE : 0;
+      const paginatedItems = filtered.slice(startIndex, startIndex + ITEMS_PER_PAGE);
+      const startLabel = totalItems ? startIndex + 1 : 0;
+      const endLabel = totalItems ? startIndex + paginatedItems.length : 0;
+
+      resultNode.textContent = totalItems
+        ? `Hiển thị ${startLabel}-${endLabel} trên ${totalItems} đơn hàng. Trang ${currentPage}/${totalPages}.`
         : "Không tìm thấy đơn hàng nào khớp với điều kiện lọc.";
 
       const activeFilters = [];
@@ -219,11 +282,17 @@ const customerHistoryModule = (function (window, document) {
       if (status === "moi") {
         activeFilters.push({ key: "status", label: "Trạng thái: Mới tiếp nhận" });
       }
-      if (status === "xac-nhan") {
-        activeFilters.push({ key: "status", label: "Trạng thái: Đã xác nhận" });
+      if (status === "da-nhan") {
+        activeFilters.push({ key: "status", label: "Trạng thái: Đã nhận đơn" });
       }
-      if (status === "dang-xu-ly") {
-        activeFilters.push({ key: "status", label: "Trạng thái: Đang xử lý" });
+      if (status === "dang-trien-khai") {
+        activeFilters.push({ key: "status", label: "Trạng thái: Đang triển khai" });
+      }
+      if (status === "da-hoan-thanh") {
+        activeFilters.push({ key: "status", label: "Trạng thái: Đã hoàn thành" });
+      }
+      if (status === "da-huy") {
+        activeFilters.push({ key: "status", label: "Trạng thái: Đã hủy" });
       }
 
       activeFiltersNode.innerHTML = activeFilters.length
@@ -248,47 +317,95 @@ const customerHistoryModule = (function (window, document) {
             <a class="customer-btn customer-btn-primary" href="${escapeHtml(getProjectUrl("dat-lich.html"))}">Tạo yêu cầu mới</a>
           </div>
         `;
+        paginationWrapNode.hidden = true;
+        paginationNode.innerHTML = "";
+        paginationSummaryNode.textContent = "";
         return;
       }
 
-      listNode.innerHTML = filtered
+      listNode.innerHTML = paginatedItems
         .map(
-          (item) => `
+          (item) => {
+            const statusMeta = getStatusMeta(item);
+            return `
             <article class="customer-order-card customer-order-card-history">
               <div class="customer-order-topline">
                 <div class="customer-order-heading">
-                  <p class="customer-order-code">${escapeHtml(item.code || "--")}</p>
+                  <p class="customer-order-recipient">${escapeHtml(item.service_label || item.title || "--")}</p>
+                  <div class="customer-order-heading-meta">
+                    <p class="customer-order-code">${escapeHtml(item.code || "--")}</p>
+                    <span class="customer-status-badge status-${escapeHtml(
+                      statusMeta.badge_class,
+                    )}">${escapeHtml(statusMeta.status_text)}</span>
+                  </div>
                   <p class="customer-order-dest">${escapeHtml(getRouteSummary(item))}</p>
                 </div>
-                <span class="customer-status-badge status-${escapeHtml(
-                  getStatusBadgeClass(item.status_class),
-                )}">${escapeHtml(item.status_text || "Mới tiếp nhận")}</span>
+                <div class="customer-order-side">
+                  <div class="customer-order-price-block">
+                    <span class="customer-order-price-label">Tạm tính</span>
+                    <strong class="customer-order-price">${escapeHtml(formatCurrency(item.estimated_amount))}</strong>
+                  </div>
+                  <div class="customer-order-actions customer-order-actions-compact">
+                    ${
+                      item.type === "dat-lich"
+                        ? `<a class="customer-btn customer-btn-primary" href="${escapeHtml(
+                            getOrderDetailUrl(item.remote_id || item.code || ""),
+                          )}">Xem chi tiết</a>`
+                        : `<a class="customer-btn customer-btn-primary" href="${escapeHtml(
+                            getProjectUrl("khach-hang/danh-sach-don-hang.html"),
+                          )}">Mở đơn hàng</a>`
+                    }
+                  </div>
+                </div>
               </div>
               <div class="customer-order-meta customer-order-meta-compact customer-order-meta-history">
-                <span><b>Dịch vụ</b>${escapeHtml(item.service_label || "--")}</span>
-                <span><b>Khảo sát</b>${escapeHtml(item.survey_first ? "Có" : "Không")}</span>
-                <span><b>Tạo</b>${escapeHtml(formatDateTime(item.created_at || ""))}</span>
-                <span><b>Tạm tính</b>${escapeHtml(formatCurrency(item.estimated_amount))}</span>
-              </div>
-              <div class="customer-order-actions customer-order-actions-compact">
-                ${
-                  item.type === "dat-lich"
-                    ? `<a class="customer-btn customer-btn-primary" href="${escapeHtml(
-                        getOrderDetailUrl(item.remote_id || item.code || ""),
-                      )}">Xem chi tiết</a>`
-                    : `<a class="customer-btn customer-btn-primary" href="${escapeHtml(
-                        getProjectUrl("khach-hang/danh-sach-don-hang.html"),
-                      )}">Mở đơn hàng</a>`
-                }
+                <span><b>Khảo sát</b><span class="customer-order-meta-value">${escapeHtml(item.survey_first ? "Có" : "Không")}</span></span>
+                <span><b>Tạo</b><span class="customer-order-meta-value">${escapeHtml(formatDateTime(item.created_at || ""))}</span></span>
               </div>
             </article>
-          `,
+          `;
+          },
         )
         .join("");
+
+      if (totalPages <= 1) {
+        paginationWrapNode.hidden = true;
+        paginationNode.innerHTML = "";
+        paginationSummaryNode.textContent = "";
+        return;
+      }
+
+      paginationWrapNode.hidden = false;
+      paginationSummaryNode.textContent = `Trang ${currentPage}/${totalPages} • ${totalItems} đơn hàng`;
+      const paginationModel = buildPaginationModel(currentPage, totalPages);
+      paginationNode.innerHTML = `
+        ${
+          currentPage > 1
+            ? `<button type="button" class="customer-page-btn" data-page-action="prev">Trước</button>`
+            : ""
+        }
+        ${paginationModel
+          .map((entry) =>
+            entry === "ellipsis"
+              ? '<span class="customer-page-ellipsis" aria-hidden="true">…</span>'
+              : `<button type="button" class="customer-page-btn ${
+                  entry === currentPage ? "is-active" : ""
+                }" data-page="${entry}" ${
+                  entry === currentPage ? 'aria-current="page"' : ""
+                }>${entry}</button>`,
+          )
+          .join("")}
+        ${
+          currentPage < totalPages
+            ? `<button type="button" class="customer-page-btn" data-page-action="next">Sau</button>`
+            : ""
+        }
+      `;
     }
 
     filterForm?.addEventListener("submit", function (event) {
       event.preventDefault();
+      currentPage = 1;
       syncFilterUrl();
       renderList();
     });
@@ -296,6 +413,7 @@ const customerHistoryModule = (function (window, document) {
     resetButton?.addEventListener("click", function () {
       if (keywordInput) keywordInput.value = "";
       if (statusSelect) statusSelect.value = "all";
+      currentPage = 1;
       syncFilterUrl();
       renderList();
     });
@@ -316,8 +434,27 @@ const customerHistoryModule = (function (window, document) {
         statusSelect.value = "all";
       }
 
+      currentPage = 1;
       syncFilterUrl();
       renderList();
+    });
+
+    paginationNode?.addEventListener("click", function (event) {
+      const button = event.target.closest("[data-page], [data-page-action]");
+      if (!button) return;
+
+      const action = String(button.getAttribute("data-page-action") || "").trim();
+      if (action === "prev") {
+        currentPage = Math.max(1, currentPage - 1);
+      } else if (action === "next") {
+        currentPage += 1;
+      } else {
+        currentPage = normalizePageNumber(button.getAttribute("data-page"), 1);
+      }
+
+      syncFilterUrl();
+      renderList();
+      root.scrollIntoView({ behavior: "smooth", block: "start" });
     });
 
     renderList();

@@ -2211,11 +2211,11 @@
     function submitReview(actor) {
       if (role !== actor) return;
       if (statusLower !== "completed") {
-        window.alert("Chi gui danh gia sau khi hoa don da hoan thanh.");
+        showError("Chỉ gửi đánh giá sau khi hóa đơn đã hoàn thành.");
         return;
       }
       if (typeof shared.updateOrder !== "function") {
-        window.alert("Chua san sang chuc nang gui danh gia.");
+        showError("Chưa sẵn sàng chức năng gửi đánh giá.");
         return;
       }
 
@@ -2225,9 +2225,7 @@
 
       var current = resolveReview(actor);
       if (hasReviewData(current)) {
-        window.alert(
-          "Danh gia nay da duoc gui truoc do va khong the chinh sua.",
-        );
+        showError("Đánh giá này đã được gửi trước đó và không thể chỉnh sửa.");
         return;
       }
 
@@ -2236,7 +2234,7 @@
         ? Array.prototype.slice.call(upload.files)
         : [];
       if (!content && !selectedFiles.length) {
-        window.alert("Vui long nhap noi dung hoac chon anh/video.");
+        showError("Vui lòng nhập nội dung hoặc chọn ảnh/video.");
         return;
       }
 
@@ -2256,12 +2254,13 @@
               order.raw[current.columns.text] = payload[current.columns.text];
               order.raw[current.columns.date] = payload[current.columns.date];
               order.raw[current.columns.media] = payload[current.columns.media];
+              showSuccess("Gửi đánh giá thành công!");
               renderAllReviews();
               syncReviewEditors();
             });
         })
         .catch(function (error) {
-          window.alert((error && error.message) || "Khong the gui danh gia.");
+          showError((error && error.message) || "Không thể gửi đánh giá.");
         })
         .finally(function () {
           setReviewSubmitting(actor, false);
@@ -2405,15 +2404,18 @@
             loadingText: "Đang hủy...",
             className: "btn-danger",
             handler: function (btn) {
-              if (window.confirm("Bạn có chắc chắn muốn hủy đơn hàng này?")) {
+              showConfirm("Bạn có chắc chắn muốn thực hiện hành động 'Hủy đơn'?", function () {
                 setActionButtonLoading(btn, true, "Hủy đơn", "Đang hủy...");
                 handleCancelOrder(order.id)
-                  .then(function () { start(); })
+                  .then(function () { 
+                    showSuccess("Đã hủy đơn hàng thành công!");
+                    start(); 
+                  })
                   .catch(function (err) {
-                    window.alert(err.message || "Lỗi hủy đơn.");
+                    showError(err.message || "Lỗi hủy đơn.");
                     setActionButtonLoading(btn, false, "Hủy đơn", "Đang hủy...");
                   });
-              }
+              });
             },
           });
         }
@@ -2424,13 +2426,18 @@
             loadingText: "Đang xử lý...",
             className: "btn-primary",
             handler: function (btn) {
-              setActionButtonLoading(btn, true, "Nhận đơn", "Đang xử lý...");
-              handleAcceptOrder(order.id)
-                .then(function () { start(); })
-                .catch(function (err) {
-                  window.alert(err.message || "Lỗi nhận đơn.");
-                  setActionButtonLoading(btn, false, "Nhận đơn", "Đang xử lý...");
-                });
+              showConfirm("Bạn có chắc chắn muốn thực hiện hành động 'Nhận đơn'?", function () {
+                setActionButtonLoading(btn, true, "Nhận đơn", "Đang xử lý...");
+                handleAcceptOrder(order.id)
+                  .then(function () { 
+                    showSuccess("Nhận đơn thành công!");
+                    start(); 
+                  })
+                  .catch(function (err) {
+                    showError(err.message || "Lỗi nhận đơn.");
+                    setActionButtonLoading(btn, false, "Nhận đơn", "Đang xử lý...");
+                  });
+              });
             },
           });
         } else if (currentStatus === "accepted") {
@@ -2439,13 +2446,18 @@
             loadingText: "Đang cập nhật...",
             className: "btn-info text-white",
             handler: function (btn) {
-              setActionButtonLoading(btn, true, "Bắt đầu", "Đang cập nhật...");
-              handleStartOrder(order.id)
-                .then(function () { start(); })
-                .catch(function (err) {
-                  window.alert(err.message || "Lỗi cập nhật.");
-                  setActionButtonLoading(btn, false, "Bắt đầu", "Đang cập nhật...");
-                });
+              showConfirm("Bạn có chắc chắn muốn thực hiện hành động 'Bắt đầu'?", function () {
+                setActionButtonLoading(btn, true, "Bắt đầu", "Đang cập nhật...");
+                handleStartOrder(order.id)
+                  .then(function () { 
+                    showSuccess("Đã bắt đầu xử lý đơn hàng!");
+                    start(); 
+                  })
+                  .catch(function (err) {
+                    showError(err.message || "Lỗi cập nhật.");
+                    setActionButtonLoading(btn, false, "Bắt đầu", "Đang cập nhật...");
+                  });
+              });
             },
           });
         } else if (currentStatus === "processing") {
@@ -2454,15 +2466,18 @@
             loadingText: "Đang xử lý...",
             className: "btn-success",
             handler: function (btn) {
-              if (window.confirm("Xác nhận hoàn thành hóa đơn này?")) {
+              showConfirm("Bạn có chắc chắn muốn thực hiện hành động 'Hoàn thành'?", function () {
                 setActionButtonLoading(btn, true, "Hoàn thành", "Đang xử lý...");
                 handleCompleteOrder(order.id, order)
-                  .then(function () { start(); })
+                  .then(function () { 
+                    showSuccess("Hoàn thành hóa đơn thành công!");
+                    start(); 
+                  })
                   .catch(function (err) {
-                    window.alert(err.message || "Lỗi cập nhật.");
+                    showError(err.message || "Lỗi cập nhật.");
                     setActionButtonLoading(btn, false, "Hoàn thành", "Đang xử lý...");
                   });
-              }
+              });
             },
           });
           configs.push({
@@ -2470,15 +2485,18 @@
             loadingText: "Đang cập nhật...",
             className: "btn-info",
             handler: function (btn) {
-              if (window.confirm("Xác nhận đã hoàn thành khảo sát?")) {
+              showConfirm("Bạn có chắc chắn muốn thực hiện hành động 'Khảo sát xong'?", function () {
                 setActionButtonLoading(btn, true, "Khảo sát xong", "Đang cập nhật...");
                 handleSurveyCompleteOrder(order.id, order)
-                  .then(function () { start(); })
+                  .then(function () { 
+                    showSuccess("Cập nhật khảo sát thành công!");
+                    start(); 
+                  })
                   .catch(function (err) {
-                    window.alert(err.message || "Lỗi cập nhật.");
+                    showError(err.message || "Lỗi cập nhật.");
                     setActionButtonLoading(btn, false, "Khảo sát xong", "Đang cập nhật...");
                   });
-              }
+              });
             },
           });
         }
@@ -2537,31 +2555,29 @@
       var rawValue = input.value;
       var amount = toNumber(rawValue);
       if (amount <= 0) {
-        window.alert("Vui lòng nhập số tiền hợp lệ.");
+        showError("Vui lòng nhập số tiền hợp lệ.");
         return;
       }
 
       var finalAmount = Math.round(amount * 0.95);
-      if (!window.confirm("Hệ thống sẽ áp dụng giảm giá 5%. Số tiền thanh toán cuối cùng là: " + formatCurrencyVnd(finalAmount) + ". Bạn có chắc chắn?")) {
-        return;
-      }
+      showConfirm("Hệ thống sẽ áp dụng giảm giá 5%. Số tiền thanh toán cuối cùng là: " + formatCurrencyVnd(finalAmount) + ". Bạn có chắc chắn?", function () {
+        btn.disabled = true;
+        var originalText = btn.textContent;
+        btn.textContent = "Đang xử lý...";
 
-      btn.disabled = true;
-      var originalText = btn.textContent;
-      btn.textContent = "Đang xử lý...";
-
-      var discountAmount = amount - finalAmount;
-      shared.updateOrder(BOOKING_TABLE, order.id, {
-        tongtienthucte: finalAmount,
-        sotiengiam: discountAmount,
-        trangthaithanhtoan: "Paid"
-      }).then(function() {
-        window.alert("Thanh toán thành công! Bạn đã được giảm giá 5%.");
-        start();
-      }).catch(function(error) {
-        window.alert((error && error.message) || "Không thể thực hiện thanh toán.");
-        btn.disabled = false;
-        btn.textContent = originalText;
+        var discountAmount = amount - finalAmount;
+        shared.updateOrder(BOOKING_TABLE, order.id, {
+          tongtienthucte: finalAmount,
+          sotiengiam: discountAmount,
+          trangthaithanhtoan: "Paid"
+        }).then(function() {
+          showSuccess("Thanh toán thành công! Bạn đã được giảm giá 5%.");
+          start();
+        }).catch(function(error) {
+          showError((error && error.message) || "Không thể thực hiện thanh toán.");
+          btn.disabled = false;
+          btn.textContent = originalText;
+        });
       });
     });
   }

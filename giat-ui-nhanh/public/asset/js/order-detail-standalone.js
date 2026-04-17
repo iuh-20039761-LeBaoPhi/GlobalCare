@@ -1664,19 +1664,15 @@
     renderSourceMedia(order);
   }
 
-  // function showActionAlert(message, type) {
-  //   var node = document.getElementById("detailActionAlert");
-  //   if (!node) return;
-
-  //   node.classList.remove(
-  //     "d-none",
-  //     "alert-success",
-  //     "alert-danger",
-  //     "alert-info",
-  //   );
-  //   node.classList.add(type || "alert-info");
-  //   node.textContent = message;
-  // }
+  function showActionAlert(message, type) {
+    if (type === "alert-success") {
+      showSuccess(message);
+    } else if (type === "alert-danger") {
+      showError(message);
+    } else {
+      showInfo(message);
+    }
+  }
 
   /**
    * Ẩn thông báo hành động và xóa nội dung của nó.
@@ -1895,12 +1891,12 @@
       if (!isPending) {
         var hideHint =
           String(orderStatus || "").toLowerCase() === "canceled"
-            ? "\u0110\u01A1n \u0111\u00E3 h\u1EE7y, kh\u00F4ng th\u1EC3 thao t\u00E1c th\u00EAm."
-            : "Ch\u1EC9 c\u00F3 th\u1EC3 h\u1EE7y \u0111\u01A1n khi tr\u1EA1ng th\u00E1i l\u00E0 Ch\u1EDD x\u1EED l\u00FD.";
+            ? "Đơn đã hủy, không thể thao tác thêm."
+            : "Chỉ có thể hủy đơn khi trạng thái là Chờ xử lý.";
 
         return {
-          text: "\u0048\u1EE7y \u0111\u01A1n",
-          className: "btn btn-outline-danger",
+          text: "Hủy đơn",
+          className: "btn btn-danger",
           hint: hideHint,
           canSubmit: false,
           hideButton: true,
@@ -1910,11 +1906,11 @@
       var canCancel = !hasReceivedDate;
 
       return {
-        text: "\u0048\u1EE7y \u0111\u01A1n",
-        className: "btn btn-outline-danger",
+        text: "Hủy đơn",
+        className: "btn btn-danger",
         hint: hasReceivedDate
-          ? "\u0110\u01A1n \u0111\u00E3 c\u00F3 ng\u00E0y nh\u1EADn, kh\u00F4ng th\u1EC3 h\u1EE7y."
-          : "Kh\u00E1ch h\u00E0ng ch\u1EC9 c\u00F3 th\u1EC3 h\u1EE7y \u0111\u01A1n khi ch\u01B0a c\u00F3 ng\u00E0y nh\u1EADn.",
+          ? "Đơn đã có ngày nhận, không thể hủy."
+          : "Khách hàng chỉ có thể hủy đơn khi chưa có ngày nhận.",
         canSubmit: canCancel,
         hideButton: false,
       };
@@ -2009,30 +2005,31 @@
 
       async function runProviderAction(buttonEl, loadingText, payloadFactory) {
         if (state.isSubmitting) return;
-        state.isSubmitting = true;
-        hideActionAlert();
 
-        var originalText = buttonEl.textContent;
-        buttonEl.disabled = true;
-        buttonEl.textContent = loadingText;
+        var actionText = buttonEl.textContent;
+        showConfirm("Bạn có chắc chắn muốn thực hiện hành động '" + actionText + "'?", async function () {
+          state.isSubmitting = true;
+          hideActionAlert();
 
-        try {
-          if (!state.orderRaw || !state.orderRaw.id) {
-            throw new Error("Không xác định được mã hóa đơn để cập nhật.");
+          var originalText = buttonEl.textContent;
+          buttonEl.disabled = true;
+          buttonEl.textContent = loadingText;
+
+          try {
+            if (!state.orderRaw || !state.orderRaw.id) {
+              throw new Error("Không xác định được mã hóa đơn để cập nhật.");
+            }
+
+            await updateOrderRow(state.orderRaw.id, await payloadFactory());
+            await loadAndRenderOrder();
+            showSuccess(actionText + " thành công!");
+          } catch (error) {
+            showError((error && error.message) || "Không thể cập nhật trạng thái hóa đơn.");
+          } finally {
+            state.isSubmitting = false;
+            buttonEl.textContent = originalText;
           }
-
-          await updateOrderRow(state.orderRaw.id, await payloadFactory());
-          await loadAndRenderOrder();
-        } catch (error) {
-          showActionAlert(
-            (error && error.message) ||
-              "Không thể cập nhật trạng thái hóa đơn.",
-            "alert-danger",
-          );
-        } finally {
-          state.isSubmitting = false;
-          buttonEl.textContent = originalText;
-        }
+        });
       }
 
       if (canReceive) {
@@ -2094,7 +2091,7 @@
         });
         group.appendChild(receiveBtn);
       } else if (canStart) {
-        var startBtn = makeButton("Bắt đầu", "btn btn-primary");
+        var startBtn = makeButton("Bắt đầu", "btn btn-info");
         startBtn.addEventListener("click", function () {
           runProviderAction(startBtn, "Đang bắt đầu...", function () {
             return {
@@ -2139,52 +2136,50 @@
 
     btn.onclick = async function () {
       if (state.isSubmitting || !action.canSubmit) return;
-      state.isSubmitting = true;
-      hideActionAlert();
+      
+      var actionLabel = action.text;
+      showConfirm("Bạn có chắc chắn muốn thực hiện hành động '" + actionLabel + "'?", async function () {
+        state.isSubmitting = true;
+        hideActionAlert();
 
-      var originalText = btn.textContent;
-      btn.disabled = true;
-      btn.textContent = "Đang xử lý...";
+        var originalText = btn.textContent;
+        btn.disabled = true;
+        btn.textContent = "Đang xử lý...";
 
-      try {
-        if (!state.orderRaw || !state.orderRaw.id) {
-          throw new Error("Không xác định được mã hóa đơn để cập nhật.");
-        }
-
-        if (auth.role === "customer") {
-          var hasReceivedDate = hasDateValue(
-            state.orderView &&
-              (state.orderView.receivedAt ||
-                (state.orderView.raw && state.orderView.raw.ngaynhan)),
-          );
-
-          if (hasReceivedDate) {
-            throw new Error("Đơn đã có ngày nhận, không thể hủy.");
+        try {
+          if (!state.orderRaw || !state.orderRaw.id) {
+            throw new Error("Không xác định được mã hóa đơn để cập nhật.");
           }
 
-          await updateOrderRow(state.orderRaw.id, {
-            ngayhuy: new Date().toISOString(),
-          });
-        } else {
-          await updateOrderRow(state.orderRaw.id, {
-            ngayhoanthanh: new Date().toISOString(),
-          });
-        }
+          if (auth.role === "customer") {
+            var hasReceivedDate = hasDateValue(
+              state.orderView &&
+                (state.orderView.receivedAt ||
+                  (state.orderView.raw && state.orderView.raw.ngaynhan)),
+            );
 
-        await loadAndRenderOrder();
-        showActionAlert(
-          "Cập nhật trạng thái hóa đơn thành công.",
-          "alert-success",
-        );
-      } catch (error) {
-        showActionAlert(
-          (error && error.message) || "Không thể cập nhật trạng thái hóa đơn.",
-          "alert-danger",
-        );
-      } finally {
-        state.isSubmitting = false;
-        btn.textContent = originalText;
-      }
+            if (hasReceivedDate) {
+              throw new Error("Đơn đã có ngày nhận, không thể hủy.");
+            }
+
+            await updateOrderRow(state.orderRaw.id, {
+              ngayhuy: new Date().toISOString(),
+            });
+          } else {
+            await updateOrderRow(state.orderRaw.id, {
+              ngayhoanthanh: new Date().toISOString(),
+            });
+          }
+
+          await loadAndRenderOrder();
+          showSuccess(actionLabel + " thành công.");
+        } catch (error) {
+          showError((error && error.message) || "Không thể thực hiện hành động.");
+        } finally {
+          state.isSubmitting = false;
+          btn.textContent = originalText;
+        }
+      });
     };
   }
 

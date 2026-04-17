@@ -126,10 +126,15 @@ function normalizeBookingPricingBreakdown(value) {
       const amountValue = parseNumber(
         item.amount_value || item.amount || item.value || 0,
       );
+      const normalizedLabel = label.toLowerCase();
+      const isSurchargeLine =
+        /^khung gio\b/.test(normalizedLabel) ||
+        /phu phi.*thoi tiet|thoi tiet|troi mua|cuoi tuan|buoi toi|ca dem/.test(
+          normalizedLabel,
+        );
       const isTotal =
-        item.is_total === true ||
-        /tong/i.test(label) ||
-        (index === list.length - 1 && amountValue > 0);
+        (item.is_total === true && !isSurchargeLine) ||
+        /tong/i.test(label);
 
       if (!label && !amount && !detail) return null;
 
@@ -162,6 +167,7 @@ function getRenderableBookingPricingRows(value, options = {}) {
     ? value.filter(Boolean)
     : normalizeBookingPricingBreakdown(value);
   const includeTotals = options?.includeTotals === true;
+  const includeZeroAmounts = options?.includeZeroAmounts === true;
   const excludeLabelPatterns = Array.isArray(options?.excludeLabelPatterns)
     ? options.excludeLabelPatterns.filter((pattern) => pattern instanceof RegExp)
     : [];
@@ -177,6 +183,7 @@ function getRenderableBookingPricingRows(value, options = {}) {
       const label = normalizeText(item?.label || "").toLowerCase();
       return !excludeLabelPatterns.some((pattern) => pattern.test(label));
     })
+    .filter((item) => includeZeroAmounts || Number(item?.amount_value || 0) > 0)
     .map(({ index, ...item }) => item);
 }
 
