@@ -59,15 +59,44 @@ const ThoNhaOrderActions = (() => {
                     const code = btn.dataset.code || id;
                     if (!confirm(`Bạn có chắc chắn muốn hủy đơn hàng #${code}?`)) return;
                     payload = { ngayhuy: now };
-                }
-
-                if (Object.keys(payload).length > 0) {
-                    const originalHtml = btn.innerHTML;
+                } else if (action === 'submit-customer-feedback') {
+                    const text = document.getElementById('inputCustFeedback')?.value;
+                    const fileInput = document.getElementById('fileCustEvidence');
+                    if (!text) return alert('Vui lòng nhập cảm nhận của bạn.');
+                    
                     btn.disabled = true;
                     btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i>';
                     
+                    let driveFileId = '';
+                    if (fileInput && fileInput.files.length > 0) {
+                        const up = await DVQTApp.uploadFile(fileInput.files[0]);
+                        if (up.success) driveFileId = up.fileId;
+                    }
+                    payload = { danhgiakhachhang: text, hinhanhminhchung_kh: driveFileId };
+                } else if (action === 'submit-provider-feedback') {
+                    const text = document.getElementById('inputProviderFeedback')?.value;
+                    const fileInput = document.getElementById('fileProviderEvidence');
+                    if (!text) return alert('Vui lòng nhập báo cáo công việc.');
+                    
+                    btn.disabled = true;
+                    btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i>';
+                    
+                    let driveFileId = '';
+                    if (fileInput && fileInput.files.length > 0) {
+                        const up = await DVQTApp.uploadFile(fileInput.files[0]);
+                        if (up.success) driveFileId = up.fileId;
+                    }
+                    payload = { danhgiancc: text, hinhanhminhchung_ncc: driveFileId };
+                }
+
+                if (Object.keys(payload).length > 0) {
+                    if (!btn.disabled) {
+                        btn.disabled = true;
+                        btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i>';
+                    }
+                    
                     await DVQTApp.updateOrder(id, payload, 'datlich_thonha');
-                    alert('Hành động thành công!');
+                    alert('Gửi thông tin thành công!');
 
                     // Đóng modal nếu đang mở
                     const modalEl = document.getElementById('pricingModal');

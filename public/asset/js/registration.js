@@ -255,6 +255,32 @@ async function regSubmit() {
             ? Array.from(_selectedServiceIds).sort((a,b) => a-b).join(',') 
             : '0';
 
+        // Xử lý upload ảnh lên Google Drive
+        const app = window.DVQTApp;
+        let linkAvatar = '';
+        let linkCccdTruoc = '';
+        let linkCccdSau = '';
+
+        try {
+            if (avatarFile) {
+                btn.innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span>Đang tải lên Avatar...';
+                const up = await app.uploadFile(avatarFile);
+                if (up.success) linkAvatar = up.fileId;
+            }
+            if (cccdFront) {
+                btn.innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span>Đang tải lên CCCD mặt trước...';
+                const up = await app.uploadFile(cccdFront);
+                if (up.success) linkCccdTruoc = up.fileId;
+            }
+            if (cccdBack) {
+                btn.innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span>Đang tải lên CCCD mặt sau...';
+                const up = await app.uploadFile(cccdBack);
+                if (up.success) linkCccdSau = up.fileId;
+            }
+        } catch (uploadErr) {
+            console.warn('Upload ảnh thất bại, vẫn tiếp tục đăng ký:', uploadErr.message);
+        }
+
         // Lưu vào bảng nguoidung với id_dichvu
         const userData = {
             hovaten: name,
@@ -265,13 +291,14 @@ async function regSubmit() {
             maplat: lat,
             maplng: lng,
             created_date: created,
-            avatartenfile: avatarFile ? avatarFile.name : '',
-            cccdmattruoctenfile: cccdFront ? cccdFront.name : '',
-            cccdmatsautenfile: cccdBack ? cccdBack.name : '',
+            link_avatar: linkAvatar,
+            link_cccd_truoc: linkCccdTruoc,
+            link_cccd_sau: linkCccdSau,
             id_dichvu: idDichvuStr, 
             trangthai: 'active'
         };
 
+        btn.innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span>Đang tạo tài khoản...';
         await krud.insertRow('nguoidung', userData);
 
         const isProvider = idDichvuStr !== '0';
