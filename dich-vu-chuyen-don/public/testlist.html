@@ -482,6 +482,21 @@
           return [];
         }
 
+        function isNumericLikeKey(key) {
+          return /^\d+$/.test(String(key || "").trim());
+        }
+
+        function normalizeKrudRow(row) {
+          if (!row || typeof row !== "object") return row;
+          return Object.fromEntries(
+            Object.entries(row).filter(([key]) => !isNumericLikeKey(key)),
+          );
+        }
+
+        function normalizeKrudRows(rows) {
+          return Array.isArray(rows) ? rows.map(normalizeKrudRow) : [];
+        }
+
         function getKrudListFn() {
           if (typeof window.krudList === "function") {
             return (payload) => window.krudList(payload);
@@ -709,8 +724,8 @@
                 }),
               ),
             ]);
-            const rows = extractRows(orderResult).sort((a, b) => Number(b.id || 0) - Number(a.id || 0));
-            const userRows = extractRows(userResult).sort((a, b) => Number(b.id || 0) - Number(a.id || 0));
+            const rows = normalizeKrudRows(extractRows(orderResult)).sort((a, b) => Number(b.id || 0) - Number(a.id || 0));
+            const userRows = normalizeKrudRows(extractRows(userResult)).sort((a, b) => Number(b.id || 0) - Number(a.id || 0));
             renderSummary(rows);
             renderRows(rows);
             renderUserRows(userRows);

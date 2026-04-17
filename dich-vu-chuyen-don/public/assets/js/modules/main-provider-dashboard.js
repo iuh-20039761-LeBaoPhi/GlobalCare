@@ -77,33 +77,11 @@ const providerDashboardModule = (function (window, document) {
     return formatBookingScheduleLabel(dateValue, timeValue) || "--";
   }
 
-  function getStatusMeta(row) {
-    const rawStatus = normalizeLowerText(row?.trang_thai || row?.status || "");
-
-    if (["da_xac_nhan", "xac_nhan", "confirmed", "accepted", "da_chot_lich"].includes(rawStatus)) {
-      return {
-        className: "completed",
-        label: "Đã xác nhận",
-      };
-    }
-
-    if (["dang_xu_ly", "processing", "in_progress", "dang_dieu_phoi", "dang_trien_khai"].includes(rawStatus)) {
-      return {
-        className: "shipping",
-        label: "Đang xử lý",
-      };
-    }
-
-    if (["cancelled", "canceled", "huy", "da_huy", "huy_bo"].includes(rawStatus)) {
-      return {
-        className: "cancelled",
-        label: "Đã hủy",
-      };
-    }
-
-    return {
-      className: "pending",
-      label: "Mới tiếp nhận",
+  function getStatusMeta(source) {
+    return store.getBookingDisplayStatus?.(source) || {
+      status_text: "Mới tiếp nhận",
+      badge_class: "pending",
+      status_class: "moi",
     };
   }
 
@@ -132,8 +110,9 @@ const providerDashboardModule = (function (window, document) {
       serviceLabel: getBookingServiceLabel(
         row?.ten_dich_vu || row?.loai_dich_vu || "Chuyển dọn",
       ),
-      statusClass: status.className,
-      statusText: status.label,
+      statusClass: status.badge_class,
+      statusValue: status.status_class,
+      statusText: status.status_text,
       route:
         fromAddress && toAddress
           ? `${fromAddress} → ${toAddress}`
@@ -149,7 +128,7 @@ const providerDashboardModule = (function (window, document) {
     };
   }
 
-  async function fetchRecentBookings() {
+  async function fetchDashboardBookings() {
     let listFn = getKrudListFn();
     if (!listFn && typeof store.fetchProfile === "function") {
       await store.fetchProfile();
@@ -159,18 +138,30 @@ const providerDashboardModule = (function (window, document) {
 
     try {
       await store.autoCancelExpiredBookings?.();
-      const response = await Promise.resolve(
-        listFn({
-          table: store.bookingCrudTableName || "dich_vu_chuyen_don_dat_lich",
-          page: 1,
-          limit: 12,
-          sort: {
-            created_at: "desc",
-          },
-        }),
-      );
+      const limit = 200;
+      const maxPages = 10;
+      const rows = [];
 
-      return extractRows(response).map(normalizeBookingRow);
+      for (let page = 1; page <= maxPages; page += 1) {
+        const response = await Promise.resolve(
+          listFn({
+            table: store.bookingCrudTableName || "dich_vu_chuyen_don_dat_lich",
+            page,
+            limit,
+            sort: {
+              created_at: "desc",
+            },
+          }),
+        );
+
+        const pageRows = extractRows(response);
+        if (!pageRows.length) break;
+
+        rows.push(...pageRows);
+        if (pageRows.length < limit) break;
+      }
+
+      return rows.map(normalizeBookingRow);
     } catch (error) {
       console.error("Cannot load provider dashboard bookings:", error);
       return [];
@@ -214,23 +205,26 @@ const providerDashboardModule = (function (window, document) {
 
     const identity = profile;
     const displayName = store.getDisplayName(identity);
-    const recentRequests = await fetchRecentBookings();
-    const previewRequests = recentRequests.slice(0, 3);
-    const pendingCount = recentRequests.filter(
-      (item) => item.statusClass === "pending",
+    const allRequests = await fetchDashboardBookings();
+    const previewRequests = allRequests.slice(0, 3);
+    const pendingCount = allRequests.filter(
+      (item) => item.statusValue === "moi",
     ).length;
-    const processingCount = recentRequests.filter(
-      (item) => item.statusClass === "shipping",
+    const acceptedCount = allRequests.filter(
+      (item) => item.statusValue === "da-nhan",
     ).length;
-    const confirmedCount = recentRequests.filter(
-      (item) => item.statusClass === "completed",
+    const shippingCount = allRequests.filter(
+      (item) => item.statusValue === "dang-trien-khai",
+    ).length;
+    const completedCount = allRequests.filter(
+      (item) => item.statusValue === "da-hoan-thanh",
     ).length;
     const summaryText = pendingCount
       ? "Ưu tiên rà các yêu cầu mới tiếp nhận để quyết định nhận đơn, khảo sát trước và phương án triển khai."
-      : processingCount
-        ? "Các đơn mới đã được nhận. Tiếp tục bám tiến độ triển khai và ghi chú điều phối cho khách hàng."
-        : recentRequests.length
-          ? "Nhịp xử lý hiện khá ổn định. Có thể mở danh sách đơn hàng để kiểm tra lại các đơn đã xác nhận hoặc đã hủy."
+      : acceptedCount || shippingCount
+        ? "Một phần đơn đã được nhận hoặc đang triển khai. Tiếp tục bám tiến độ và cập nhật ghi chú cho khách hàng."
+        : allRequests.length
+          ? "Nhịp xử lý hiện khá ổn định. Có thể mở danh sách đơn hàng để kiểm tra lại các đơn đã hoàn thành hoặc đã hủy."
           : "Chưa có yêu cầu nào trong danh sách đơn hàng gần đây của nhà cung cấp.";
 
     root.innerHTML = `
@@ -244,11 +238,6 @@ const providerDashboardModule = (function (window, document) {
             </div>
             <div class="customer-inline-actions">
               <span class="customer-panel-note">Nhà cung cấp</span>
-              <a class="customer-btn customer-btn-primary" href="${escapeHtml(
-                getProjectUrl("nha-cung-cap/danh-sach-don-hang.html"),
-              )}">
-                <i class="fas fa-box"></i> Mở danh sách đơn hàng
-              </a>
             </div>
           </div>
           <div class="customer-kpi-grid customer-kpi-grid-dashboard">
@@ -260,17 +249,17 @@ const providerDashboardModule = (function (window, document) {
               )}</small>
             </article>
             <article class="customer-kpi-card customer-kpi-card-pending">
-              <span>Đang xử lý</span>
-              <strong>${escapeHtml(String(processingCount))}</strong>
+              <span>Đã nhận / triển khai</span>
+              <strong>${escapeHtml(String(acceptedCount + shippingCount))}</strong>
               <small>${escapeHtml(
-                processingCount ? "Đã có đầu mối nhận việc" : "Chưa có đơn đang xử lý",
+                acceptedCount + shippingCount ? "Đơn đã có đầu mối hoặc đang làm việc" : "Chưa có đơn đang triển khai",
               )}</small>
             </article>
             <article class="customer-kpi-card customer-kpi-card-completed">
-              <span>Đã xác nhận</span>
-              <strong>${escapeHtml(String(confirmedCount))}</strong>
+              <span>Đã hoàn thành</span>
+              <strong>${escapeHtml(String(completedCount))}</strong>
               <small>${escapeHtml(
-                confirmedCount ? "Đơn đã chốt/hoàn tất" : "Chưa có đơn xác nhận",
+                completedCount ? "Đơn đã hoàn tất" : "Chưa có đơn hoàn thành",
               )}</small>
             </article>
           </div>
@@ -308,30 +297,37 @@ const providerDashboardModule = (function (window, document) {
                         <article class="customer-order-card customer-order-card-compact">
                           <div class="customer-order-topline">
                             <div class="customer-order-heading">
-                              <p class="customer-order-code">${escapeHtml(request.code || "--")}</p>
                               <p class="customer-order-recipient">${escapeHtml(
                                 request.serviceLabel || "Yêu cầu chuyển dọn",
                               )}</p>
+                              <div class="customer-order-heading-meta">
+                                <p class="customer-order-code">${escapeHtml(request.code || "--")}</p>
+                                ${renderStatusBadge(request.statusClass, request.statusText)}
+                              </div>
+                              <p class="customer-order-route">${escapeHtml(
+                                request.route || "Chưa có lộ trình",
+                              )}</p>
                             </div>
-                            ${renderStatusBadge(request.statusClass, request.statusText)}
+                            <div class="customer-order-side">
+                              <div class="customer-order-price-block">
+                                <span class="customer-order-price-label">Tạm tính</span>
+                                <strong class="customer-order-price">${escapeHtml(
+                                  formatCurrency(request.estimatedAmount),
+                                )}</strong>
+                              </div>
+                              <div class="customer-order-actions customer-order-actions-compact">
+                                <a class="customer-btn customer-btn-primary customer-btn-sm" href="${escapeHtml(
+                                  getOrderDetailUrl(request.id || request.code || ""),
+                                )}">Xem chi tiết</a>
+                              </div>
+                            </div>
                           </div>
-                          <p class="customer-order-route">${escapeHtml(
-                            request.route || "Chưa có lộ trình",
-                          )}</p>
                           <div class="customer-order-meta customer-order-meta-compact">
-                            <span><b>Khách hàng</b>${escapeHtml(request.contactName || "--")}</span>
-                            <span><b>Lịch</b>${escapeHtml(request.scheduleLabel || "--")}</span>
-                            <span><b>Khảo sát</b>${escapeHtml(
+                            <span><b>Khách hàng</b><span class="customer-order-meta-value">${escapeHtml(request.contactName || "--")}</span></span>
+                            <span><b>Lịch</b><span class="customer-order-meta-value">${escapeHtml(request.scheduleLabel || "--")}</span></span>
+                            <span><b>Khảo sát</b><span class="customer-order-meta-value">${escapeHtml(
                               request.surveyFirst ? "Có" : "Không",
-                            )}</span>
-                            <span><b>Tạm tính</b>${escapeHtml(
-                              formatCurrency(request.estimatedAmount),
-                            )}</span>
-                          </div>
-                          <div class="customer-order-actions customer-order-actions-compact">
-                            <a class="customer-btn customer-btn-primary customer-btn-sm" href="${escapeHtml(
-                              getOrderDetailUrl(request.id || request.code || ""),
-                            )}">Xem chi tiết</a>
+                            )}</span></span>
                           </div>
                         </article>
                       `,

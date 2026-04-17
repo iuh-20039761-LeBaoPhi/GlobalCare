@@ -77,6 +77,7 @@ const ThoNhaOrderDetailRenderer = (() => {
         // 3. Render sub-sections
         renderTasks(container, order);
         renderReviews(container, order, role);
+        renderBookingMedia(container, order);
         renderActions(container, order, role);
     }
 
@@ -90,9 +91,13 @@ const ThoNhaOrderDetailRenderer = (() => {
             if (raw.danhgiakhachhang) {
                 custTextEl.innerHTML = `<div>${raw.danhgiakhachhang}</div>`;
                 if (raw.hinhanhminhchung_kh) {
-                    custTextEl.innerHTML += `<div class="mt-2"><img src="../../uploads/evidence/${raw.hinhanhminhchung_kh}" style="max-width:100%; border-radius:8px; border:1px solid #eee;"></div>`;
+                    const driveUrl = DVQTApp.getDriveUrl(raw.hinhanhminhchung_kh);
+                    custTextEl.innerHTML += `<div class="mt-2"><img src="${driveUrl}" style="max-width:100%; max-height: 400px; border-radius:8px; border:1px solid #eee; object-fit: contain;"></div>`;
                 }
-                if (custHeadEl) custHeadEl.querySelector('.panel-chip').outerHTML = '<span class="panel-chip success">Đã đánh giá</span>';
+                if (custHeadEl) {
+                    const chip = custHeadEl.querySelector('.panel-chip');
+                    if (chip) chip.outerHTML = '<span class="panel-chip success">Đã đánh giá</span>';
+                }
             } else if (role === 'customer' && order.status === 'done') {
                 custTextEl.innerHTML = `
                     <textarea class="form-control mb-2" id="inputCustFeedback" placeholder="Nhập cảm nhận của bạn về dịch vụ..." rows="3"></textarea>
@@ -101,6 +106,8 @@ const ThoNhaOrderDetailRenderer = (() => {
                         <button class="btn btn-primary btn-sm" data-action="submit-customer-feedback" data-id="${order.id}">Gửi</button>
                     </div>
                 `;
+            } else {
+                custTextEl.innerHTML = '<div class="text-muted small"><em>Chưa có đánh giá từ khách hàng.</em></div>';
             }
         }
 
@@ -111,9 +118,13 @@ const ThoNhaOrderDetailRenderer = (() => {
             if (raw.danhgiancc) {
                 nccTextEl.innerHTML = `<div>${raw.danhgiancc}</div>`;
                 if (raw.hinhanhminhchung_ncc) {
-                    nccTextEl.innerHTML += `<div class="mt-2"><img src="../../uploads/evidence/${raw.hinhanhminhchung_ncc}" style="max-width:100%; border-radius:8px; border:1px solid #eee;"></div>`;
+                    const driveUrl = DVQTApp.getDriveUrl(raw.hinhanhminhchung_ncc);
+                    nccTextEl.innerHTML += `<div class="mt-2"><img src="${driveUrl}" style="max-width:100%; max-height: 400px; border-radius:8px; border:1px solid #eee; object-fit: contain;"></div>`;
                 }
-                if (nccHeadEl) nccHeadEl.querySelector('.panel-chip').outerHTML = '<span class="panel-chip success">Đã báo cáo</span>';
+                if (nccHeadEl) {
+                    const chip = nccHeadEl.querySelector('.panel-chip');
+                    if (chip) chip.outerHTML = '<span class="panel-chip success">Đã báo cáo</span>';
+                }
             } else if (role === 'provider' && order.status === 'done') {
                 nccTextEl.innerHTML = `
                     <textarea class="form-control mb-2" id="inputProviderFeedback" placeholder="Mô tả công việc đã hoàn thành hoặc sự cố..." rows="3"></textarea>
@@ -122,7 +133,46 @@ const ThoNhaOrderDetailRenderer = (() => {
                         <button class="btn btn-primary btn-sm" data-action="submit-provider-feedback" data-id="${order.id}">Báo cáo</button>
                     </div>
                 `;
+            } else {
+                nccTextEl.innerHTML = '<div class="text-muted small"><em>Chưa có báo cáo từ thợ.</em></div>';
             }
+        }
+    }
+
+    /**
+     * Render ảnh đính kèm khi đặt đơn (Drive IDs) - Hiển thị dưới Ghi chú
+     */
+    function renderBookingMedia(container, order) {
+        const raw = order._raw || {};
+        const mediaField = raw.link_hinhanh_khachhang || '';
+        if (!mediaField) return;
+
+        const ids = mediaField.split(',').filter(Boolean);
+        if (ids.length === 0) return;
+
+        // Mục tiêu: Chèn vào ngay trong cột Ghi chú khách hàng
+        const noteEl = container.querySelector('#detailNote');
+        if (!noteEl) return;
+
+        let galleryWrap = container.querySelector('#detailBookingMediaWrap');
+        if (!galleryWrap) {
+            galleryWrap = document.createElement('div');
+            galleryWrap.id = 'detailBookingMediaWrap';
+            galleryWrap.className = 'mt-2 pt-2 border-top-dashed';
+            galleryWrap.innerHTML = '<div id="detailBookingMediaGrid"></div>';
+            noteEl.after(galleryWrap);
+        }
+
+        const mediaGrid = container.querySelector('#detailBookingMediaGrid');
+        if (mediaGrid) {
+            mediaGrid.innerHTML = ids.map(id => {
+                const url = DVQTApp.getDriveUrl(id);
+                return `
+                    <a href="${url}" target="_blank" class="booking-media-item-mini">
+                        <img src="${url}" loading="lazy">
+                    </a>
+                `;
+            }).join('');
         }
     }
 

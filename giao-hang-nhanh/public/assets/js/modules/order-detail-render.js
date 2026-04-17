@@ -140,7 +140,7 @@
         return {
           percent: 100,
           tone: "completed",
-          label: "Hoàn thành",
+          label: "Đã hoàn thành",
           note: `Đơn hàng đã hoàn tất vào ${formatDateTime(
             milestones.completedAt || order?.created_at,
           )}.`,
@@ -152,7 +152,7 @@
         ["shipping", "in_transit"].includes(normalizedStatus)
       ) {
         return {
-          percent: 75,
+          percent: 74,
           tone: "shipping",
           label: "Đang giao",
           note: "Shipper đang thực hiện lộ trình giao hàng và cập nhật minh chứng thực tế.",
@@ -161,8 +161,8 @@
 
       if (milestones.acceptedAt) {
         return {
-          percent: 40,
-          tone: "shipping",
+          percent: 46,
+          tone: "accepted",
           label: "Đã nhận đơn",
           note: `Đơn đã được shipper tiếp nhận lúc ${formatDateTime(
             milestones.acceptedAt,
@@ -171,97 +171,85 @@
       }
 
       return {
-        percent: 15,
+        percent: 24,
         tone: "pending",
-        label: "Chờ xử lý",
+        label: "Mới tiếp nhận",
         note: "Hệ thống đã ghi nhận đơn và đang chờ điều phối nhà cung cấp phù hợp.",
       };
     }
 
-    function renderHeroMetric(icon, label, value, hint, options = {}) {
-      const safeValue = options.valueHtml ? value || "--" : escapeHtml(value || "--");
-      const safeHint = options.hintHtml ? hint || "--" : escapeHtml(hint || "--");
+    function renderHeroStat(label, value, note, options = {}) {
       const className = normalizeText(options.className || "");
+      const safeValue = options.valueHtml
+        ? value || "--"
+        : escapeHtml(value || "--");
+      const safeNote = options.noteHtml
+        ? note || "--"
+        : escapeHtml(note || "--");
+      const valueTag = options.valueTag || "strong";
 
       return `
-      <article class="standalone-order-hero-metric ${escapeHtml(className)}">
-        <div class="standalone-order-hero-metric-icon">
-          <i class="${escapeHtml(icon)}"></i>
+      <article class="standalone-order-hero-stat ${escapeHtml(className)}">
+        <span class="standalone-order-hero-stat-label">${escapeHtml(label || "--")}</span>
+        <${valueTag} class="standalone-order-hero-stat-value">${safeValue}</${valueTag}>
+        <small class="standalone-order-hero-stat-note">${safeNote}</small>
+      </article>
+    `;
+    }
+
+    function renderHeroScheduleCard(pickupSlotLabel, estimatedDelivery) {
+      return `
+      <article class="standalone-order-hero-support-card standalone-order-hero-support-card-schedule">
+        <div class="standalone-order-hero-support-card-head">
+          <span class="standalone-order-hero-support-icon">
+            <i class="fa-solid fa-calendar-check"></i>
+          </span>
+          <div>
+            <span class="standalone-order-hero-support-label">Lấy hàng và giao dự kiến</span>
+            <strong>${escapeHtml(pickupSlotLabel || "Chờ xác nhận khung giờ")}</strong>
+          </div>
         </div>
-        <div class="standalone-order-hero-metric-copy">
-          <span>${escapeHtml(label)}</span>
-          <strong>${safeValue}</strong>
-          <small>${safeHint}</small>
-        </div>
+        <p class="standalone-order-hero-support-note">${escapeHtml(
+          estimatedDelivery || "Thời gian giao dự kiến sẽ được cập nhật khi có shipper nhận đơn.",
+        )}</p>
       </article>
     `;
     }
 
     function renderHeroRouteCard(order) {
       return `
-      <article class="standalone-order-hero-metric standalone-order-hero-metric-route">
-        <div class="standalone-order-hero-metric-copy">
-          <span>Lộ trình giao nhận</span>
-          <div class="standalone-order-hero-route-list">
-            <div class="standalone-order-hero-route-item">
-              <span class="standalone-order-hero-route-icon">
-                <i class="fa-solid fa-location-dot"></i>
-              </span>
-              <div class="standalone-order-hero-route-copy">
-                <small>Điểm lấy hàng</small>
-                <strong>${escapeHtml(order?.pickup_address || "--")}</strong>
-              </div>
-            </div>
-            <div class="standalone-order-hero-route-item">
-              <span class="standalone-order-hero-route-icon">
-                <i class="fa-solid fa-flag-checkered"></i>
-              </span>
-              <div class="standalone-order-hero-route-copy">
-                <small>Điểm giao hàng</small>
-                <strong>${escapeHtml(order?.delivery_address || "--")}</strong>
-              </div>
+      <article class="standalone-order-hero-support-card standalone-order-hero-support-card-route">
+        <div class="standalone-order-hero-support-card-head">
+          <span class="standalone-order-hero-support-icon">
+            <i class="fa-solid fa-route"></i>
+          </span>
+          <div>
+            <span class="standalone-order-hero-support-label">Lộ trình giao nhận</span>
+            <strong>Tuyến đường dự kiến</strong>
+          </div>
+        </div>
+        <div class="standalone-order-hero-route-list">
+          <div class="standalone-order-hero-route-item">
+            <span class="standalone-order-hero-route-icon">
+              <i class="fa-solid fa-location-dot"></i>
+            </span>
+            <div class="standalone-order-hero-route-copy">
+              <small>Điểm lấy hàng</small>
+              <strong>${escapeHtml(order?.pickup_address || "--")}</strong>
             </div>
           </div>
-          <small>${escapeHtml(order?.service_label || order?.service_name || "Giao hàng nhanh")}</small>
+          <div class="standalone-order-hero-route-item">
+            <span class="standalone-order-hero-route-icon">
+              <i class="fa-solid fa-flag-checkered"></i>
+            </span>
+            <div class="standalone-order-hero-route-copy">
+              <small>Điểm giao hàng</small>
+              <strong>${escapeHtml(order?.delivery_address || "--")}</strong>
+            </div>
+          </div>
         </div>
       </article>
     `;
-    }
-
-    function getLatestOrderEvent(order) {
-      const milestones = getMilestones(order);
-      if (milestones.cancelledAt) {
-        return {
-          label: "Hủy đơn",
-          time: formatDateTime(milestones.cancelledAt),
-        };
-      }
-
-      if (milestones.completedAt) {
-        return {
-          label: "Hoàn thành",
-          time: formatDateTime(milestones.completedAt),
-        };
-      }
-
-      if (milestones.startedAt) {
-        return {
-          label: "Bắt đầu giao",
-          time: formatDateTime(milestones.startedAt),
-        };
-      }
-
-      if (milestones.acceptedAt) {
-        return {
-          label: "Nhận đơn",
-          time: formatDateTime(milestones.acceptedAt),
-        };
-      }
-
-      return {
-        label: "Tạo đơn",
-        time: formatDateTime(order?.created_at),
-      };
     }
 
     function renderOverviewStat(icon, label, value, hint) {
@@ -833,8 +821,8 @@
       const totalFeeLabel = formatCurrency(
         order?.fee_breakdown?.total_fee || order.shipping_fee,
       );
-      const serviceLabel = order.service_label || order.service_name || "--";
-      const latestEvent = getLatestOrderEvent(order);
+      const serviceLabel =
+        order.ten_dich_vu || order.service_label || order.service_name || "--";
       const feePayerLabel =
         order.payer_label ||
         (typeof getFeePayerLabel === "function"
@@ -869,9 +857,9 @@
       const receiverName = order.receiver_name || "--";
       const receiverPhone = order.receiver_phone || "--";
       const providerMetaLine = `
-      <span>${escapeHtml(providerPhone || "Chưa cập nhật")}</span>
-      <span>${escapeHtml(providerAddress)}</span>
+      <p class="standalone-order-note-text">${escapeHtml(providerPhone || "Chưa cập nhật")} · ${escapeHtml(providerAddress)}</p>
     `;
+      const statusBadge = renderStatusBadge(progressMeta.tone, progressMeta.label);
 
       root.innerHTML = `
       <div class="standalone-order-layout">
@@ -896,57 +884,66 @@
 
           <header class="standalone-order-card-header">
             <div class="standalone-order-header-main-content">
-              <div class="standalone-order-hero-top-row">
-                <div class="standalone-order-card-title">
-                  <p class="standalone-order-card-kicker">Mã đơn hàng nội bộ</p>
-                  <h1>${escapeHtml(order.order_code || "--")}</h1>
-                  <p class="standalone-order-card-subtitle">${escapeHtml(serviceLabel)}</p>
-                </div>
-                
-                <div class="standalone-order-hero-side-stack">
-                  <div class="standalone-order-actions-group standalone-order-hero-actions-group">
-                    ${buildActionButtons(detail, viewer)}
+              <div class="standalone-order-hero-frame-grid">
+                <div class="standalone-order-hero-frame standalone-order-hero-frame-main">
+                  <div class="standalone-order-card-title">
+                    <p class="standalone-order-card-kicker">Chi tiết đơn hàng</p>
+                    <h1>${escapeHtml(serviceLabel)}</h1>
+                    <p class="standalone-order-card-subtitle standalone-order-reference">${escapeHtml(order.order_code || "--")}</p>
                   </div>
-                  <div class="standalone-order-hero-side-progress">
-                    <div class="standalone-order-progress-ring status-${escapeHtml(progressMeta.tone)}"
-                      style="--progress:${Math.max(0, Math.min(progressMeta.percent, 100))}%;"
-                    >
-                      <div class="standalone-order-progress-ring-core">
-                        <strong>${escapeHtml(String(progressMeta.percent))}%</strong>
-                        <span>Tiến độ</span>
+
+                  <div class="standalone-order-hero-summary-grid">
+                    ${renderHeroStat(
+                      "Tổng phí",
+                      totalFeeLabel,
+                      "Cước phí và phụ phí hiện tại",
+                      { className: "standalone-order-hero-stat--amount" },
+                    )}
+                    ${renderHeroStat(
+                      "Khoảng cách",
+                      distanceLabel,
+                      "Tuyến giao nhận dự kiến",
+                    )}
+                    ${renderHeroStat(
+                      "Trạng thái đơn",
+                      statusBadge,
+                      "Theo mốc điều phối hiện tại",
+                      {
+                        className: "standalone-order-hero-stat--status",
+                        valueHtml: true,
+                        valueTag: "div",
+                      },
+                    )}
+                  </div>
+                </div>
+
+                <div class="standalone-order-hero-frame standalone-order-hero-frame-side">
+                  <div class="standalone-order-hero-progress-card">
+                    <div class="standalone-order-hero-side-progress">
+                      <div class="standalone-order-progress-ring status-${escapeHtml(progressMeta.tone)}"
+                        style="--progress:${Math.max(0, Math.min(progressMeta.percent, 100))}%;"
+                      >
+                        <div class="standalone-order-progress-ring-core">
+                          <strong>${escapeHtml(String(progressMeta.percent))}%</strong>
+                          <span>Tiến độ</span>
+                        </div>
+                      </div>
+                      <div class="standalone-order-progress-info">
+                        <span class="standalone-order-progress-label">${escapeHtml(progressMeta.label)}</span>
+                        <p>${escapeHtml(progressMeta.note)}</p>
                       </div>
                     </div>
-                    <div class="standalone-order-progress-info">
-                      <span class="standalone-order-progress-label">${escapeHtml(progressMeta.label)}</span>
-                      <p>${escapeHtml(progressMeta.note)}</p>
-                    </div>
+                  </div>
+                  <div class="standalone-order-actions-group standalone-order-hero-actions-group">
+                    ${buildActionButtons(detail, viewer)}
                   </div>
                 </div>
               </div>
 
-              <div class="standalone-order-hero-metrics">
-                ${renderHeroMetric(
-                  "fa-solid fa-wallet",
-                  "Tổng phí",
-                  totalFeeLabel,
-                  "Cước phí & phụ phí",
-                  { className: "standalone-order-hero-metric-primary" },
-                )}
-                ${renderHeroMetric(
-                  "fa-solid fa-route",
-                  "Khoảng cách",
-                  distanceLabel,
-                  "Tuyến giao nhận",
-                )}
-                ${renderHeroMetric(
-                  "fa-solid fa-signal",
-                  "Trạng thái đơn",
-                  renderStatusBadge(order.status, order.status_label),
-                  progressMeta.note,
-                  {
-                    className: "standalone-order-hero-metric-status",
-                    valueHtml: true,
-                  },
+              <div class="standalone-order-hero-support-grid">
+                ${renderHeroScheduleCard(
+                  pickupSlotLabel,
+                  estimatedDelivery,
                 )}
                 ${renderHeroRouteCard(order)}
               </div>
@@ -971,10 +968,7 @@
                   ${renderInfoRow("Thanh toán", order.payment_method_label || "--")}
                   ${renderInfoRow("Người trả cước", feePayerLabel)}
                   ${renderInfoRow("Trạng thái thanh toán", order.payment_status_label || "Chưa hoàn tất")}
-                  ${renderInfoRow("Khung giờ lấy hàng", pickupSlotLabel)}
-                  ${renderInfoRow("Dự kiến giao", estimatedDelivery)}
                   ${renderInfoRow("Phương tiện", vehicleLabel)}
-                  ${renderInfoRow("Cập nhật gần nhất", `${latestEvent.label} · ${latestEvent.time}`)}
                   </div>
                 </div>
                 <div class="standalone-order-panel standalone-order-panel-fees" id="order-summary-fees">

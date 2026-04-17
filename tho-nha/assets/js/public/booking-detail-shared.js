@@ -842,9 +842,6 @@ function _bdGetKrudHelper() {
 
 /**
  * Mapping dữ liệu pending → schema bảng 'datlich_thonha' (KRUD).
- * @param {Object} pendingData - Payload từ _bdBuildPendingData()
- * @param {string} orderCode   - Mã đơn hàng
- * @returns {Object} Row object sẵn sàng insert vào KRUD
  */
 function _bdBuildKrudBookingRecord(pendingData) {
     const mediaStats = _bdGetMediaStats();
@@ -855,7 +852,6 @@ function _bdBuildKrudBookingRecord(pendingData) {
     const lng = Number(_bdPendingCoords?.lng);
 
     return {
-        // Chỉ lưu vào các cột Milestone mới
         tenkhachhang: pendingData.name || '',
         sdtkhachhang: pendingData.phone || '',
         diachikhachhang: pendingData.address || '',
@@ -872,13 +868,15 @@ function _bdBuildKrudBookingRecord(pendingData) {
         trangthaidichuyen: _bdTravelStatus === 'ok' ? 'calculated' : 'waiting_provider',
         phikhaosat: surveyFee,
         tongtien: basePrice + _bdToMoney(_bdTravelAmt), 
+        
+        // Ảnh đính kèm (Lưu ID Drive)
+        link_hinhanh_khachhang: pendingData.link_hinhanh_khachhang || '',
         soluongmedia: mediaStats.total,
         soluonganh: mediaStats.images,
         soluongvideo: mediaStats.videos,
+        
         maplat: Number.isFinite(lat) ? Number(lat.toFixed(7)) : null,
         maplng: Number.isFinite(lng) ? Number(lng.toFixed(7)) : null,
-        
-        // Mốc thời gian đặt đơn duy nhất
         ngaydat: _bdNowSql()
     };
 }
@@ -910,9 +908,33 @@ async function _bdSubmitApi(pendingData, submitBtn, onSuccess) {
     submitBtn.innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span>Đang gửi...';
 
     try {
+        // --- 1. Upload Media lên Drive ---
+        const app = window.DVQTApp;
+        const mediaIds = [];
+        
+        if (_bdMediaFiles && _bdMediaFiles.length > 0) {
+            for (let i = 0; i < _bdMediaFiles.length; i++) {
+                const item = _bdMediaFiles[i];
+                submitBtn.innerHTML = `<span class="spinner-border spinner-border-sm me-2"></span>Đang tải ảnh ${i+1}/${_bdMediaFiles.length}...`;
+                try {
+                    const up = await app.uploadFile(item.file);
+                    if (up.success) mediaIds.push(up.fileId);
+                } catch (e) {
+                    console.warn('Lỗi tải file lên Drive:', e);
+                }
+            }
+        }
+        
+        pendingData.link_hinhanh_khachhang = mediaIds.join(',');
+
+        // --- 2. Tạo đơn hàng ---
+        submitBtn.innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span>Đang tạo đơn...';
         const inserted = await _bdInsertBookingWithKrud(pendingData);
+        
+        // --- 3. Backup Sheets ---
         _bdSendToSheet(pendingData, inserted.rawId);
         onSuccess(inserted.orderCode || null);
+
     } catch (err) {
         alert('❌ ' + (err?.message || 'Lỗi đặt lịch. Thử lại sau!'));
         submitBtn.disabled = false;

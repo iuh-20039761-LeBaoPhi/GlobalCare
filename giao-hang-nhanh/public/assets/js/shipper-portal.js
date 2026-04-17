@@ -1353,20 +1353,27 @@
               <article class="customer-order-card customer-order-card-compact">
                 <div class="customer-order-topline">
                   <div class="customer-order-heading">
-                    <p class="customer-order-code">${escapeHtml(order.order_code)}</p>
-                    <p class="customer-order-recipient">Người nhận: ${escapeHtml(order.receiver_name || "Chưa cập nhật")}</p>
+                    <p class="customer-order-recipient">${escapeHtml(order.service_label || "Giao hàng nhanh")}</p>
+                    <div class="customer-order-heading-meta">
+                      <p class="customer-order-code">${escapeHtml(order.order_code)}</p>
+                      ${createStatusBadge(order.status, order.status_label)}
+                    </div>
+                    <p class="customer-order-route">${escapeHtml(order.pickup_address)} → ${escapeHtml(order.delivery_address)}</p>
                   </div>
-                  ${createStatusBadge(order.status, order.status_label)}
-                </div>
-                <div class="customer-order-dest">
-                  ${escapeHtml(order.pickup_address)} → ${escapeHtml(order.delivery_address)}
+                  <div class="customer-order-side">
+                    <div class="customer-order-price-block">
+                      <span class="customer-order-price-label">Cước ship</span>
+                      <strong class="customer-order-price">${formatCurrency(order.shipping_fee || 0)}</strong>
+                    </div>
+                    <div class="customer-order-actions customer-order-actions-compact">
+                      <a class="customer-btn customer-btn-primary customer-btn-sm" href="${buildOrderDetailUrl(order)}">Xử lý ngay</a>
+                    </div>
+                  </div>
                 </div>
                 <div class="customer-order-meta customer-order-meta-compact">
-                  <span><b>COD</b>${formatCurrency(order.cod_amount || 0)}</span>
-                  <span><b>Tạo lúc</b>${formatDateTime(order.created_at)}</span>
-                </div>
-                <div class="customer-order-actions customer-order-actions-compact">
-                  <a class="customer-btn customer-btn-primary customer-btn-sm" href="${buildOrderDetailUrl(order)}">Xử lý ngay</a>
+                  <span><b>Người nhận</b><span class="customer-order-meta-value">${escapeHtml(order.receiver_name || "Chưa cập nhật")}</span></span>
+                  <span><b>COD</b><span class="customer-order-meta-value">${formatCurrency(order.cod_amount || 0)}</span></span>
+                  <span><b>Tạo</b><span class="customer-order-meta-value">${formatDateTime(order.created_at)}</span></span>
                 </div>
               </article>`,
                   )
@@ -1468,19 +1475,28 @@
               <article class="customer-order-card customer-order-card-history">
                 <div class="customer-order-topline">
                   <div class="customer-order-heading">
-                    <p class="customer-order-code">${escapeHtml(order.order_code)}</p>
+                    <p class="customer-order-recipient">${escapeHtml(order.service_label || "Giao hàng nhanh")}</p>
+                    <div class="customer-order-heading-meta">
+                      <p class="customer-order-code">${escapeHtml(order.order_code)}</p>
+                      ${createStatusBadge(order.status, order.status_label)}
+                    </div>
                     <p class="customer-order-dest">Từ ${escapeHtml(order.pickup_address)} đến ${escapeHtml(order.delivery_address)}</p>
                   </div>
-                  ${createStatusBadge(order.status, order.status_label)}
+                  <div class="customer-order-side">
+                    <div class="customer-order-price-block">
+                      <span class="customer-order-price-label">Cước ship</span>
+                      <strong class="customer-order-price">${formatCurrency(order.shipping_fee || 0)}</strong>
+                    </div>
+                    <div class="customer-order-actions customer-order-actions-compact">
+                      <a class="customer-btn customer-btn-primary customer-btn-sm" href="${buildOrderDetailUrl(order)}">Xem chi tiết</a>
+                    </div>
+                  </div>
                 </div>
                 <div class="customer-order-meta customer-order-meta-compact customer-order-meta-history">
-                  <span><b>Người gửi</b>${escapeHtml(order.sender_name || "--")}</span>
-                  <span><b>Người nhận</b>${escapeHtml(order.receiver_name || "--")} · ${escapeHtml(order.receiver_phone || "--")}</span>
-                  <span><b>COD</b>${formatCurrency(order.cod_amount)}</span>
-                  <span><b>Tạo lúc</b>${formatDateTime(order.created_at)}</span>
-                </div>
-                <div class="customer-order-actions customer-order-actions-compact">
-                  <a class="customer-btn customer-btn-primary customer-btn-sm" href="${buildOrderDetailUrl(order)}">Xem chi tiết</a>
+                  <span><b>Người gửi</b><span class="customer-order-meta-value">${escapeHtml(order.sender_name || "--")}</span></span>
+                  <span><b>Người nhận</b><span class="customer-order-meta-value">${escapeHtml(order.receiver_name || "--")} · ${escapeHtml(order.receiver_phone || "--")}</span></span>
+                  <span><b>COD</b><span class="customer-order-meta-value">${formatCurrency(order.cod_amount)}</span></span>
+                  <span><b>Tạo</b><span class="customer-order-meta-value">${formatDateTime(order.created_at)}</span></span>
                 </div>
               </article>`,
                   )

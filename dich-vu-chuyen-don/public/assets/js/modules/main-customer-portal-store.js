@@ -42,6 +42,7 @@ const customerPortalStoreModule = (function (window) {
   const AUTO_CANCEL_SWEEP_COOLDOWN_MS = 60 * 1000;
   let krudScriptPromise = null;
   let autoCancelSweepPromise = null;
+  let authRowsPromise = null;
   let lastAutoCancelSweepAt = 0;
 
   function normalizeText(value) {
@@ -356,15 +357,9 @@ const customerPortalStoreModule = (function (window) {
   }
 
   function normalizeHistoryItem(item) {
-    const statusMap = {
-      moi: "moi",
-      xac_nhan: "xac-nhan",
-      "xac-nhan": "xac-nhan",
-      dang_xu_ly: "dang-xu-ly",
-      "dang-xu-ly": "dang-xu-ly",
-    };
-    const normalizedStatusClass =
-      statusMap[String(item?.status_class || "").trim()] || "moi";
+    const statusMeta = getBookingDisplayStatus(item, {
+      includeExpiredPending: false,
+    });
     const surveyFirst = resolveSurveyFirstFlag(item);
 
     return {
@@ -373,8 +368,9 @@ const customerPortalStoreModule = (function (window) {
       type_label: "Đặt lịch",
       title: normalizeText(item?.title || ""),
       service_label: normalizeText(item?.service_label || ""),
-      status_class: normalizedStatusClass,
-      status_text: normalizeText(item?.status_text || "Mới tiếp nhận"),
+      status_class: statusMeta.status_class,
+      status_text: statusMeta.status_text,
+      status_badge_class: statusMeta.badge_class,
       summary: normalizeText(item?.summary || ""),
       meta: normalizeText(item?.meta || ""),
       from_address: normalizeText(item?.from_address || ""),
@@ -384,6 +380,9 @@ const customerPortalStoreModule = (function (window) {
       estimated_amount: Number(item?.estimated_amount || 0),
       contact_name: normalizeText(item?.contact_name || ""),
       contact_phone: normalizeText(item?.contact_phone || ""),
+      provider_name: normalizeText(item?.provider_name || ""),
+      provider_phone: normalizeText(item?.provider_phone || ""),
+      provider_address: normalizeText(item?.provider_address || ""),
       note: normalizeText(item?.note || ""),
       survey_first: surveyFirst,
       source: normalizeText(item?.source || "krud"),
@@ -469,20 +468,146 @@ const customerPortalStoreModule = (function (window) {
     );
   }
 
+  function getBookingDisplayStatus(source, options = {}) {
+    const row = source && typeof source === "object" ? source : {};
+    const statusClass = normalizeLowerText(
+      row?.status_class || row?.statusClass || "",
+    );
+    const statusText = normalizeLowerText(
+      row?.status_text || row?.statusText || row?.status_label || "",
+    );
+    const rawStatus = normalizeLowerText(row?.trang_thai || row?.status || "");
+    const acceptedAt = normalizeText(row?.accepted_at || row?.acceptedAt || "");
+    const startedAt = normalizeText(row?.started_at || row?.startedAt || "");
+    const completedAt = normalizeText(row?.completed_at || row?.completedAt || "");
+    const cancelledAt = normalizeText(row?.cancelled_at || row?.cancelledAt || "");
+    const includeExpiredPending = options?.includeExpiredPending !== false;
+    const expiredPending =
+      includeExpiredPending && isExpiredPendingBookingRow(row, options?.nowMs);
+
+    if (
+      cancelledAt ||
+      expiredPending ||
+      isCancelledBookingStatus(rawStatus) ||
+      statusClass === "da-huy" ||
+      statusClass === "cancelled" ||
+      statusText === "đã hủy"
+    ) {
+      return {
+        key: "cancelled",
+        status_class: "da-huy",
+        status_text: "Đã hủy",
+        badge_class: "cancelled",
+      };
+    }
+
+    if (
+      completedAt ||
+      ["completed", "delivered", "success", "da_xac_nhan", "xac_nhan"].includes(
+        rawStatus,
+      ) ||
+      statusClass === "da-hoan-thanh" ||
+      statusClass === "completed" ||
+      statusClass === "xac-nhan" ||
+      ["đã hoàn thành", "hoàn thành", "đã xác nhận"].includes(statusText)
+    ) {
+      return {
+        key: "completed",
+        status_class: "da-hoan-thanh",
+        status_text: "Đã hoàn thành",
+        badge_class: "completed",
+      };
+    }
+
+    if (
+      startedAt ||
+      ["dang_trien_khai", "shipping", "started", "in_progress"].includes(
+        rawStatus,
+      ) ||
+      statusClass === "dang-trien-khai" ||
+      ["đang triển khai", "bắt đầu triển khai"].includes(statusText)
+    ) {
+      return {
+        key: "shipping",
+        status_class: "dang-trien-khai",
+        status_text: "Đang triển khai",
+        badge_class: "shipping",
+      };
+    }
+
+    if (
+      acceptedAt ||
+      [
+        "accepted",
+        "receiving",
+        "assigned",
+        "da_nhan",
+        "dang_xu_ly",
+        "processing",
+        "dang_dieu_phoi",
+        "da_chot_lich",
+      ].includes(rawStatus) ||
+      statusClass === "da-nhan" ||
+      statusClass === "dang-xu-ly" ||
+      ["đã nhận đơn", "đang xử lý"].includes(statusText)
+    ) {
+      return {
+        key: "accepted",
+        status_class: "da-nhan",
+        status_text: "Đã nhận đơn",
+        badge_class: "accepted",
+      };
+    }
+
+    return {
+      key: "pending",
+      status_class: "moi",
+      status_text: "Mới tiếp nhận",
+      badge_class: "pending",
+    };
+  }
+
   function getDashboardStats(items) {
     const list = Array.isArray(items) ? items : [];
-    const openCount = list.filter((item) =>
-      ["moi", "dang-xu-ly"].includes(item.status_class),
-    ).length;
-    const confirmedCount = list.filter(
-      (item) => item.status_class === "xac-nhan",
-    ).length;
+    const counts = {
+      pending_count: 0,
+      accepted_count: 0,
+      shipping_count: 0,
+      completed_count: 0,
+      cancelled_count: 0,
+    };
+
+    list.forEach((item) => {
+      const statusMeta = getBookingDisplayStatus(item);
+      if (statusMeta.key === "accepted") {
+        counts.accepted_count += 1;
+        return;
+      }
+      if (statusMeta.key === "shipping") {
+        counts.shipping_count += 1;
+        return;
+      }
+      if (statusMeta.key === "completed") {
+        counts.completed_count += 1;
+        return;
+      }
+      if (statusMeta.key === "cancelled") {
+        counts.cancelled_count += 1;
+        return;
+      }
+      counts.pending_count += 1;
+    });
+
+    const activeCount =
+      counts.pending_count + counts.accepted_count + counts.shipping_count;
     const surveyCount = list.filter((item) => item.survey_first).length;
     return {
       total: list.length,
-      open_count: openCount,
-      confirmed_count: confirmedCount,
+      open_count: activeCount,
+      active_count: activeCount,
+      confirmed_count: counts.completed_count,
       survey_count: surveyCount,
+      ...counts,
     };
   }
 
@@ -502,6 +627,96 @@ const customerPortalStoreModule = (function (window) {
       id_dichvu: normalizeText(row.id_dichvu || "0"),
       trangthai: normalizeText(row.trangthai || "active"),
     };
+  }
+
+  async function loadAuthRows() {
+    if (authRowsPromise) {
+      return authRowsPromise;
+    }
+
+    authRowsPromise = (async () => {
+      let listFn = getKrudListFn();
+      if (!listFn) {
+        await ensureKrudRuntime();
+        listFn = getKrudListFn();
+      }
+      if (!listFn) return [];
+
+      const limit = 200;
+      const maxPages = 5;
+      const rows = [];
+
+      for (let page = 1; page <= maxPages; page += 1) {
+        let response;
+
+        try {
+          response = await Promise.resolve(
+            listFn({
+              table: dvqtUserTable,
+              page,
+              limit,
+              sort: {
+                id: "desc",
+              },
+            }),
+          );
+        } catch (error) {
+          console.error("Cannot load auth rows from KRUD:", error);
+          break;
+        }
+
+        const pageRows = extractRows(response);
+        if (!pageRows.length) break;
+
+        rows.push(...pageRows);
+        if (pageRows.length < limit) break;
+      }
+
+      return rows;
+    })().finally(() => {
+      authRowsPromise = null;
+    });
+
+    return authRowsPromise;
+  }
+
+  function getProviderFallbackAddress(profileRow) {
+    const region = normalizeText(
+      profileRow?.region ||
+        profileRow?.diachi ||
+        profileRow?.dia_chi ||
+        profileRow?.address ||
+        "",
+    );
+    return region || "";
+  }
+
+  async function findProviderProfileForBooking(row) {
+    const providerId = normalizeText(
+      row?.provider_id ||
+        row?.accepted_by_id ||
+        row?.provider_owner_id ||
+        "",
+    );
+    const providerPhone = normalizePhone(
+      row?.provider_phone ||
+        row?.accepted_by_phone ||
+        row?.provider_owner_phone ||
+        "",
+    );
+    if (!providerId && !providerPhone) return null;
+
+    const rows = await loadAuthRows();
+    return (
+      rows.find((item) => {
+        const rowId = normalizeText(item?.id || "");
+        const rowPhone = normalizePhone(item?.sodienthoai || "");
+        return (
+          (providerId && rowId === providerId) ||
+          (providerPhone && rowPhone === providerPhone)
+        );
+      }) || null
+    );
   }
 
   async function hydrateAuthSessionFromDvqtCookie() {
@@ -907,46 +1122,26 @@ const customerPortalStoreModule = (function (window) {
   }
 
   function getBookingStatusMeta(row) {
-    const rawStatus = normalizeLowerText(row?.trang_thai || row?.status || "");
-
-    if (isConfirmedBookingStatus(rawStatus)) {
-      return {
-        status_class: "xac-nhan",
-        status_text: "Đã xác nhận",
-      };
-    }
-
-    if (isProcessingBookingStatus(rawStatus)) {
-      return {
-        status_class: "dang-xu-ly",
-        status_text: "Đang xử lý",
-      };
-    }
-
-    if (isCancelledBookingStatus(rawStatus)) {
-      return {
-        status_class: "da-huy",
-        status_text: "Đã hủy",
-      };
-    }
-
-    return {
-      status_class: "moi",
-      status_text: "Mới tiếp nhận",
-    };
+    return getBookingDisplayStatus(row);
   }
 
   function buildBookingSummary(row, statusText, surveyFirst) {
-    if (statusText === "Đã xác nhận") {
+    if (statusText === "Đã hoàn thành") {
       return surveyFirst
-        ? "Yêu cầu đặt lịch có khảo sát trước đã được ghi nhận trên hệ thống và đang chờ đội vận hành khóa phương án cuối."
-        : "Yêu cầu đặt lịch đã được ghi nhận trên hệ thống và đang chờ đội vận hành khóa phương án cuối.";
+        ? "Yêu cầu có khảo sát trước đã được triển khai và hoàn thành trên hệ thống."
+        : "Yêu cầu đặt lịch đã được triển khai và hoàn thành trên hệ thống.";
     }
 
-    if (statusText === "Đang xử lý") {
+    if (statusText === "Đang triển khai") {
       return surveyFirst
-        ? "Điều phối đang sắp lịch khảo sát trước khi khóa phương án xe, tuyến đường và khối lượng."
-        : "Điều phối đang rà phương án xe, tuyến đường và khối lượng phù hợp cho yêu cầu đặt lịch này.";
+        ? "Nhà cung cấp đang triển khai công việc sau bước nhận đơn và khảo sát."
+        : "Nhà cung cấp đang triển khai công việc theo phương án xe và tuyến đường đã chốt.";
+    }
+
+    if (statusText === "Đã nhận đơn") {
+      return surveyFirst
+        ? "Nhà cung cấp đã nhận đơn và đang chuẩn bị bước khảo sát hoặc triển khai thực tế."
+        : "Nhà cung cấp đã nhận đơn và đang chuẩn bị triển khai thực tế.";
     }
 
     if (statusText === "Đã hủy") {
@@ -997,6 +1192,18 @@ const customerPortalStoreModule = (function (window) {
       estimated_amount: Number(row?.tong_tam_tinh || 0),
       contact_name: contactName,
       contact_phone: contactPhone,
+      provider_name: normalizeText(
+        row?.provider_owner_name ||
+          row?.accepted_by_name ||
+          row?.provider_name ||
+          "",
+      ),
+      provider_phone: normalizeText(
+        row?.provider_owner_phone ||
+          row?.accepted_by_phone ||
+          row?.provider_phone ||
+          "",
+      ),
       note: normalizeText(row?.ghi_chu || ""),
       survey_first: surveyFirst,
       source: "krud",
@@ -1104,6 +1311,23 @@ const customerPortalStoreModule = (function (window) {
       image_attachments: splitPipeValues(row?.anh_dinh_kem),
       video_attachments: splitPipeValues(row?.video_dinh_kem),
       provider_note: normalizeText(row?.provider_note || ""),
+      provider_name: normalizeText(
+        row?.provider_owner_name ||
+          row?.accepted_by_name ||
+          row?.provider_name ||
+          request?.provider_name ||
+          "",
+      ),
+      provider_phone: normalizeText(
+        row?.provider_owner_phone ||
+          row?.accepted_by_phone ||
+          row?.provider_phone ||
+          request?.provider_phone ||
+          "",
+      ),
+      provider_address: normalizeText(
+        row?.provider_address || request?.provider_address || "",
+      ),
       accepted_at: normalizeText(row?.accepted_at || ""),
       started_at: normalizeText(row?.started_at || ""),
       completed_at: normalizeText(row?.completed_at || ""),
@@ -1295,6 +1519,9 @@ const customerPortalStoreModule = (function (window) {
     const profile = await requireVerifiedProfile();
     await ensureBookingVehicleLabelMapLoaded();
     const rawRow = await findKrudBookingRow(code, profile);
+    const providerProfile = rawRow
+      ? await findProviderProfileForBooking(rawRow)
+      : null;
     const invoice = rawRow ? normalizeBookingInvoiceDetail(rawRow, null) : null;
 
     if (!invoice) {
@@ -1305,10 +1532,32 @@ const customerPortalStoreModule = (function (window) {
       };
     }
 
+    const providerName = normalizeText(
+      invoice.provider_name ||
+        providerProfile?.hovaten ||
+        providerProfile?.name ||
+        "",
+    );
+    const providerPhone = normalizeText(
+      invoice.provider_phone ||
+        providerProfile?.sodienthoai ||
+        providerProfile?.phone ||
+        "",
+    );
+    const providerAddress = normalizeText(
+      invoice.provider_address || getProviderFallbackAddress(providerProfile),
+    );
+    const hydratedInvoice = {
+      ...invoice,
+      provider_name: providerName,
+      provider_phone: providerPhone,
+      provider_address: providerAddress || "Chưa cập nhật",
+    };
+
     return {
       profile,
-      request: invoice.request || null,
-      invoice,
+      request: hydratedInvoice.request || null,
+      invoice: hydratedInvoice,
     };
   }
 
@@ -1514,6 +1763,7 @@ const customerPortalStoreModule = (function (window) {
     syncIdentityFromProfile,
     getSavedRole,
     getDisplayName,
+    getBookingDisplayStatus,
     getDashboardStats,
     resolveBookingRowCode,
     matchesBookingCode,
@@ -1554,6 +1804,7 @@ export const {
   fetchDetail,
   fetchHistory,
   fetchProfile,
+  getBookingDisplayStatus,
   getDashboardStats,
   getDisplayName,
   getSavedRole,

@@ -110,6 +110,11 @@
             ? "Người nhận"
             : "Người gửi";
 
+  const getServiceLabel =
+    typeof core.getServiceLabel === "function"
+      ? (value, fallback = "") => core.getServiceLabel(value, fallback)
+      : (value, fallback = "") => fallback || value || "--";
+
   function formatOrderDateCode(value = new Date()) {
     const date = value instanceof Date ? value : new Date(value);
     if (Number.isNaN(date.getTime())) return "";
@@ -561,6 +566,21 @@
       order.phuong_tien ||
       order.service_meta?.vehicle_label ||
       "";
+    const explicitServiceLabel = normalizeText(
+      order.ten_dich_vu ||
+        order.service_name ||
+        order.service_label ||
+        order.service_meta?.service_name ||
+        order.service_meta?.service_label ||
+        "",
+    );
+    order.service_label =
+      explicitServiceLabel ||
+      getServiceLabel(
+        order.service_type || order.loai_dich_vu || order.dich_vu || "",
+        order.service_label,
+      );
+    order.service_name = order.service_label;
 
     order.rating = Number(order.rating || order.danh_gia_so_sao || 0);
     order.feedback = normalizeMultilineText(
@@ -1031,8 +1051,16 @@
           record.estimated_eta ||
           record.thoi_gian_giao_hang_du_kien ||
           "",
-        service_name: record.ten_dich_vu || record.service_label || "",
-        service_label: record.ten_dich_vu || record.service_label || "",
+        service_name:
+          record.ten_dich_vu ||
+          record.service_name ||
+          record.service_label ||
+          "",
+        service_label:
+          record.ten_dich_vu ||
+          record.service_name ||
+          record.service_label ||
+          "",
         ten_phuong_tien:
           record.ten_phuong_tien ||
           record.vehicle_label ||
@@ -1254,6 +1282,25 @@
     return "";
   }
 
+  function buildBackListUrl(viewer) {
+    const access = getUrlAccessParams();
+    let targetUrl = null;
+    if (viewer === "customer") {
+      targetUrl = new URL("public/khach-hang/lich-su-don-hang.html", window.location.href);
+    } else if (viewer === "shipper") {
+      targetUrl = new URL("public/nha-cung-cap/don-hang.html", window.location.href);
+    } else {
+      targetUrl = new URL("tra-don-hang.html", window.location.href);
+    }
+
+    if (access.username && access.password) {
+      targetUrl.searchParams.set("username", access.username);
+      targetUrl.searchParams.set("password", access.password);
+    }
+
+    return targetUrl.toString();
+  }
+
   function buildActionButtons(detail, viewer) {
     const order = detail.order || {};
     const buttons = [];
@@ -1280,6 +1327,18 @@
         '<button type="button" class="customer-btn customer-btn-primary" data-order-action="complete">Hoàn thành</button>',
       );
     }
+
+    const backLabel =
+      viewer === "customer"
+        ? "Về lịch sử đơn"
+        : viewer === "shipper"
+          ? "Về danh sách đơn"
+          : "Về tra đơn hàng";
+    buttons.push(
+      `<a class="customer-btn customer-btn-ghost" href="${escapeHtml(
+        buildBackListUrl(viewer),
+      )}">${backLabel}</a>`,
+    );
 
     return buttons.join("");
   }

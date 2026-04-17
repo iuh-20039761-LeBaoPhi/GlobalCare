@@ -63,11 +63,11 @@ const customerDashboardModule = (function (window, document) {
     });
   }
 
-  function getStatusBadgeClass(statusClass) {
-    if (statusClass === "xac-nhan") return "completed";
-    if (statusClass === "dang-xu-ly") return "shipping";
-    if (statusClass === "da-huy" || statusClass === "huy") return "cancelled";
-    return "pending";
+  function getStatusMeta(item) {
+    return store.getBookingDisplayStatus?.(item) || {
+      status_text: item?.status_text || "Mới tiếp nhận",
+      badge_class: "pending",
+    };
   }
 
   function getRouteSummary(request) {
@@ -103,19 +103,20 @@ const customerDashboardModule = (function (window, document) {
       : [];
     const stats = data?.stats || store.getDashboardStats([]);
     const totalRequests = Number(stats.total || 0);
-    const openRequests = Number(stats.open_count || 0);
-    const confirmedRequests = Number(stats.confirmed_count || 0);
+    const activeRequests = Number(stats.active_count || stats.open_count || 0);
+    const completedRequests = Number(
+      stats.completed_count || stats.confirmed_count || 0,
+    );
     const previewRequests = requests.slice(0, 3);
-    const activeRequests = openRequests + confirmedRequests;
     const summaryText = activeRequests
-      ? "Tập trung vào các đơn đang mở hoặc đã xác nhận để xử lý lịch, khảo sát và phương án xe nhanh hơn."
+      ? "Tập trung vào các đơn đang chờ nhận, đã nhận hoặc đang triển khai để bám tiến độ nhanh hơn."
       : totalRequests
         ? "Mọi đơn gần đây đang ở trạng thái ổn định. Bạn có thể mở danh sách đơn hàng để xem lại chi tiết."
         : "Bạn chưa có yêu cầu nào trong tài khoản này. Tạo yêu cầu mới để bắt đầu theo dõi ngay tại đây.";
-    const heroState = openRequests
-      ? `${openRequests} yêu cầu đang mở`
-      : confirmedRequests
-        ? `${confirmedRequests} yêu cầu đã xác nhận`
+    const heroState = activeRequests
+      ? `${activeRequests} yêu cầu đang theo dõi`
+      : completedRequests
+        ? `${completedRequests} yêu cầu đã hoàn thành`
         : "Chưa có đơn cần theo dõi ngay";
     const kpiCards = [
       {
@@ -125,15 +126,15 @@ const customerDashboardModule = (function (window, document) {
         className: "customer-kpi-card-total",
       },
       {
-        label: "Đang mở",
-        value: String(openRequests),
-        hint: openRequests ? "Cần theo dõi hoặc khảo sát" : "Không có đơn đang mở",
+        label: "Đang theo dõi",
+        value: String(activeRequests),
+        hint: activeRequests ? "Chờ nhận, đã nhận hoặc đang triển khai" : "Không có đơn cần theo dõi",
         className: "customer-kpi-card-pending",
       },
       {
-        label: "Đã xác nhận",
-        value: String(confirmedRequests),
-        hint: confirmedRequests ? "Đã chốt lịch hoặc phương án" : "Chưa có đơn xác nhận",
+        label: "Đã hoàn thành",
+        value: String(completedRequests),
+        hint: completedRequests ? "Đơn đã hoàn tất xử lý" : "Chưa có đơn hoàn thành",
         className: "customer-kpi-card-completed",
       },
     ];
@@ -191,36 +192,46 @@ const customerDashboardModule = (function (window, document) {
               previewRequests.length
                 ? previewRequests
                     .map(
-                      (request) => `
+                      (request) => {
+                        const statusMeta = getStatusMeta(request);
+                        return `
                         <article class="customer-order-card customer-order-card-compact">
                           <div class="customer-order-topline">
                             <div class="customer-order-heading">
-                              <p class="customer-order-code">${escapeHtml(request.code || "--")}</p>
-                              <p class="customer-order-recipient">${escapeHtml(request.title || "Yêu cầu chuyển dọn")}</p>
+                              <p class="customer-order-recipient">${escapeHtml(request.service_label || request.title || "Yêu cầu chuyển dọn")}</p>
+                              <div class="customer-order-heading-meta">
+                                <p class="customer-order-code">${escapeHtml(request.code || "--")}</p>
+                                <span class="customer-status-badge status-${escapeHtml(
+                                  statusMeta.badge_class,
+                                )}">${escapeHtml(statusMeta.status_text)}</span>
+                              </div>
+                              <p class="customer-order-route">${escapeHtml(getRouteSummary(request))}</p>
                             </div>
-                            <span class="customer-status-badge status-${escapeHtml(
-                              getStatusBadgeClass(request.status_class),
-                            )}">${escapeHtml(request.status_text || "Mới tiếp nhận")}</span>
+                            <div class="customer-order-side">
+                              <div class="customer-order-price-block">
+                                <span class="customer-order-price-label">Tạm tính</span>
+                                <strong class="customer-order-price">${escapeHtml(formatCurrency(request.estimated_amount))}</strong>
+                              </div>
+                              <div class="customer-order-actions customer-order-actions-compact">
+                                ${
+                                  request.type === "dat-lich"
+                                    ? `<a class="customer-btn customer-btn-primary customer-btn-sm" href="${escapeHtml(
+                                        getOrderDetailUrl(request.remote_id || request.code || ""),
+                                      )}">Xem chi tiết</a>`
+                                    : `<a class="customer-btn customer-btn-primary customer-btn-sm" href="${escapeHtml(
+                                        getProjectUrl("khach-hang/danh-sach-don-hang.html"),
+                                      )}">Mở đơn hàng</a>`
+                                }
+                              </div>
+                            </div>
                           </div>
-                          <p class="customer-order-route">${escapeHtml(getRouteSummary(request))}</p>
                           <div class="customer-order-meta customer-order-meta-compact">
-                            <span><b>Dịch vụ</b>${escapeHtml(request.service_label || "--")}</span>
-                            <span><b>Tạm tính</b>${escapeHtml(formatCurrency(request.estimated_amount))}</span>
-                            <span><b>Thời gian</b>${escapeHtml(formatDateTime(request.created_at || request.schedule_date || ""))}</span>
-                          </div>
-                          <div class="customer-order-actions customer-order-actions-compact">
-                            ${
-                              request.type === "dat-lich"
-                                ? `<a class="customer-btn customer-btn-primary customer-btn-sm" href="${escapeHtml(
-                                    getOrderDetailUrl(request.remote_id || request.code || ""),
-                                  )}">Xem chi tiết</a>`
-                                : `<a class="customer-btn customer-btn-primary customer-btn-sm" href="${escapeHtml(
-                                    getProjectUrl("khach-hang/danh-sach-don-hang.html"),
-                                  )}">Mở đơn hàng</a>`
-                            }
+                            <span><b>Khảo sát</b><span class="customer-order-meta-value">${escapeHtml(request.survey_first ? "Có" : "Không")}</span></span>
+                            <span><b>Tạo</b><span class="customer-order-meta-value">${escapeHtml(formatDateTime(request.created_at || request.schedule_date || ""))}</span></span>
                           </div>
                         </article>
-                      `,
+                      `;
+                      },
                     )
                     .join("")
                 : `
