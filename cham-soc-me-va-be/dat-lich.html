@@ -931,17 +931,21 @@
                 </label>
                 <div class="d-flex gap-2">
                   <button type="button" id="capturePhotoBtn" class="btn flex-fill fw-bold rounded-pill"
-                    style="background:linear-gradient(135deg,#ffe0ec,#ffd1e3);color:#c2185b;border:1px solid #f8bbd0">
+                    style="background:linear-gradient(135deg,#ffe0ec,#ffd1e3);color:#c2185b;border:1px solid #f8bbd0"
+                    onclick="document.getElementById('quickPhotoInput').click()">
                     <i class="fas fa-camera me-1"></i>Chụp ảnh
                   </button>
                   <button type="button" id="recordVideoBtn" class="btn flex-fill fw-bold rounded-pill"
-                    style="background:linear-gradient(135deg,#e3f2fd,#d6ecff);color:#1565c0;border:1px solid #bbdefb">
+                    style="background:linear-gradient(135deg,#e3f2fd,#d6ecff);color:#1565c0;border:1px solid #bbdefb"
+                    onclick="document.getElementById('quickVideoInput').click()">
                     <i class="fas fa-video me-1"></i>Quay hình
                   </button>
                 </div>
 
-                <input type="file" id="quickPhotoInput" accept="image/*" capture="environment" class="d-none" />
-                <input type="file" id="quickVideoInput" accept="video/*" capture="environment" class="d-none" />
+                <input type="file" id="quickPhotoInput" accept="image/*" capture="environment" class="d-none"
+                  multiple />
+                <input type="file" id="quickVideoInput" accept="video/*" capture="environment" class="d-none"
+                  multiple />
 
                 <div id="attachmentPreviewArea" class="attachment-preview-box mt-2">
                   <div class="attachment-preview-split">
@@ -960,9 +964,7 @@
                   </div>
                 </div>
 
-                <div class="form-text">Nút hiển thị để minh họa giao diện. Ảnh/video chỉ hiển thị tạm,
-                  chưa lưu vào hệ
-                  thống.</div>
+                <div id="uploadStatusMsg" class="form-text"></div>
               </div>
 
               <div class="d-flex gap-2 mt-3">
@@ -1773,13 +1775,24 @@
         setReviewText('#reviewNote', formData.note);
         setReviewText('#reviewPrice', formData.price);
 
-        // Bản rút gọn chỉ hiển thị trạng thái tệp tạm, không thực hiện sao chép media.
-        var hasImage = !$('#attachmentImageGrid').hasClass('d-none') && $('#attachmentImageGrid').children().length > 0;
-        var hasVideo = !$('#attachmentVideoGrid').hasClass('d-none') && $('#attachmentVideoGrid').children().length > 0;
+
+        // Clone ảnh/video từ booking grid sang review grid để người dùng xem lại.
+        var $imgGrid = $('#attachmentImageGrid');
+        var $vidGrid = $('#attachmentVideoGrid');
+        var hasImage = !$imgGrid.hasClass('d-none') && $imgGrid.children().length > 0;
+        var hasVideo = !$vidGrid.hasClass('d-none') && $vidGrid.children().length > 0;
+
         $('#reviewAttachmentImageEmpty').toggleClass('d-none', hasImage);
+        var $rImgGrid = $('#reviewAttachmentImageGrid').toggleClass('d-none', !hasImage).empty();
+        if (hasImage) {
+          $imgGrid.children().each(function () { $rImgGrid.append($(this).clone()); });
+        }
+
         $('#reviewAttachmentVideoEmpty').toggleClass('d-none', hasVideo);
-        $('#reviewAttachmentImageGrid').toggleClass('d-none', true).empty();
-        $('#reviewAttachmentVideoGrid').toggleClass('d-none', true).empty();
+        var $rVidGrid = $('#reviewAttachmentVideoGrid').toggleClass('d-none', !hasVideo).empty();
+        if (hasVideo) {
+          $vidGrid.children().each(function () { $rVidGrid.append($(this).clone()); });
+        }
       }
 
       // Render gói dịch vụ và danh sách công việc theo dịch vụ chọn.
@@ -2029,6 +2042,32 @@
           // =========================
           // 2. LƯU DATABASE (KRUD)
           // =========================
+          // =========================
+          // 2a. UPLOAD ẢNH/VIDEO LÊN DRIVE
+          // =========================
+          var anhId = window._uploadedPhotoIds ? window._uploadedPhotoIds.join(',') : '';
+          var videoId = window._uploadedVideoIds ? window._uploadedVideoIds.join(',') : '';
+
+          // Upload các file chưa được upload (còn trong queue)
+          if (window._pendingPhotoFiles && window._pendingPhotoFiles.length) {
+            btn.innerHTML = 'Đang upload ảnh...';
+            var photoIds = await uploadFilesToDrive(window._pendingPhotoFiles);
+            if (photoIds.length) anhId = (anhId ? anhId + ',' : '') + photoIds.join(',');
+            window._uploadedPhotoIds = (window._uploadedPhotoIds || []).concat(photoIds);
+            window._pendingPhotoFiles = [];
+          }
+          if (window._pendingVideoFiles && window._pendingVideoFiles.length) {
+            btn.innerHTML = 'Đang upload video...';
+            var videoIds = await uploadFilesToDrive(window._pendingVideoFiles);
+            if (videoIds.length) videoId = (videoId ? videoId + ',' : '') + videoIds.join(',');
+            window._uploadedVideoIds = (window._uploadedVideoIds || []).concat(videoIds);
+            window._pendingVideoFiles = [];
+          }
+          btn.innerHTML = 'Đang lưu...';
+
+          // =========================
+          // 2. LƯU DATABASE (KRUD)
+          // =========================
           var res = await krud('insert', 'datlich_mevabe', {
             tenkhachhang: formData.name || '',
             sdtkhachhang: formData.phone || '',
@@ -2047,7 +2086,8 @@
 
             yeu_cau_khac: formData.extraRequest || '',
             ghi_chu: formData.note || '',
-
+            anh_id: anhId,
+            video_id: videoId,
             ngaydat: nowNgayDat()
           });
 
@@ -2075,6 +2115,82 @@
           btn.innerHTML = oldHtml;
         }
       });
+
+      // ==========================================
+      // XỬ LÝ UPLOAD ẢNH/VIDEO
+      // ==========================================
+
+      // Upload nhiều file lên Drive qua upload.php, trả về mảng fileId
+      async function uploadFilesToDrive(files) {
+        var ids = [];
+        for (var i = 0; i < files.length; i++) {
+          var fd = new FormData();
+          fd.append('file', files[i]);
+          fd.append('name', 'booking_' + Date.now() + '_' + files[i].name);
+          try {
+            var res = await fetch('upload.php', { method: 'POST', body: fd });
+            var data = await res.json();
+            if (data.success && data.fileId) ids.push(data.fileId);
+            else console.warn('Upload lỗi:', data.message);
+          } catch (e) { console.warn('Upload exception:', e); }
+        }
+        return ids;
+      }
+
+      // Thêm ảnh vào grid xem trước
+      function addPhotoPreview(file) {
+        var url = URL.createObjectURL(file);
+        var item = '<div class="attachment-item"><img src="' + url + '" alt=""><div class="attachment-item-name">' + file.name + '</div></div>';
+        $('#attachmentImageGrid').removeClass('d-none').append(item);
+        $('#attachmentImageEmpty').addClass('d-none');
+      }
+
+      // Thêm video vào grid xem trước
+      function addVideoPreview(file) {
+        var url = URL.createObjectURL(file);
+        var item = '<div class="attachment-item"><video src="' + url + '" controls></video><div class="attachment-item-name">' + file.name + '</div></div>';
+        $('#attachmentVideoGrid').removeClass('d-none').append(item);
+        $('#attachmentVideoEmpty').addClass('d-none');
+      }
+
+      // Khởi tạo storage
+      window._pendingPhotoFiles = [];
+      window._pendingVideoFiles = [];
+      window._uploadedPhotoIds = [];
+      window._uploadedVideoIds = [];
+
+      // Khi chọn ảnh
+      $('#quickPhotoInput').on('change', async function () {
+        var files = Array.from(this.files);
+        if (!files.length) return;
+        files.forEach(function (f) {
+          addPhotoPreview(f);
+          window._pendingPhotoFiles.push(f);
+        });
+        this.value = '';
+        $('#uploadStatusMsg').text('Đang upload ' + files.length + ' ảnh lên Drive...');
+        var ids = await uploadFilesToDrive(files);
+        window._uploadedPhotoIds = window._uploadedPhotoIds.concat(ids);
+        window._pendingPhotoFiles = [];
+        $('#uploadStatusMsg').text(ids.length ? '✅ Upload ' + ids.length + ' ảnh thành công.' : '⚠️ Upload ảnh thất bại, sẽ thử lại khi xác nhận.');
+      });
+
+      // Khi chọn video
+      $('#quickVideoInput').on('change', async function () {
+        var files = Array.from(this.files);
+        if (!files.length) return;
+        files.forEach(function (f) {
+          addVideoPreview(f);
+          window._pendingVideoFiles.push(f);
+        });
+        this.value = '';
+        $('#uploadStatusMsg').text('Đang upload ' + files.length + ' video lên Drive...');
+        var ids = await uploadFilesToDrive(files);
+        window._uploadedVideoIds = window._uploadedVideoIds.concat(ids);
+        window._pendingVideoFiles = [];
+        $('#uploadStatusMsg').text(ids.length ? '✅ Upload ' + ids.length + ' video thành công.' : '⚠️ Upload video thất bại, sẽ thử lại khi xác nhận.');
+      });
+
     });
   </script>
 
