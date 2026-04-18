@@ -58,33 +58,7 @@ $supplierAssigned =
 admin_render_layout_start('Chi Tiết đơn hàng', 'orders', $admin);
 ?>
 
-<?php
-if (!function_exists('listHistoryByOrder')) {
-    function listHistoryByOrder($idDv) {
-        $history = [
-            'success' => false,
-            'data' => []
-        ];
-        if (function_exists('krud')) {
-            $res = krud('list', 'lich_su_lam_viec_donvesinh', ['p' => 1, 'limit' => 1000]);
-            if (!empty($res['data'])) $history['data'] = $res['data'];
-            else if (!empty($res['rows'])) $history['data'] = $res['rows'];
-            else if (!empty($res['items'])) $history['data'] = $res['items'];
-            else if (is_array($res)) $history['data'] = $res;
-        }
-        $filtered = [];
-        foreach ($history['data'] as $r) {
-            if ((string)($r['id_dv'] ?? '') === (string)$idDv) {
-                $filtered[] = $r;
-            }
-        }
-        usort($filtered, function($a, $b) {
-            return strtotime($b['ngay_lam']) - strtotime($a['ngay_lam']);
-        });
-        return $filtered;
-    }
-}
-?>
+
 
 <style>
 
@@ -1429,7 +1403,7 @@ if (!function_exists('listHistoryByOrder')) {
 											<h2 class="invoice-order-title">Đơn #<span id="invoiceId"><?= admin_h(str_pad((string)($row["id"] ?? ""), 7, "0", STR_PAD_LEFT)) ?></span></h2>
 											<span id="badgeInvoiceStatus" class="invoice-status-badge <?= strpos($statusRaw, 'hoan thanh') !== false ? 'success' : (strpos($statusRaw, 'huy') !== false || strpos($statusRaw, 'qua han') !== false ? 'danger' : (strpos($statusRaw, 'dang') !== false ? 'warning' : '')) ?>"><?= admin_h($statusText) ?></span>
 										</div>
-										<p id="invoiceService" class="invoice-subtitle">---</p>
+										<p id="invoiceService" class="invoice-subtitle"><?= admin_h(trim((string)($row['dich_vu'] ?? '')) !== '' ? (string)$row['dich_vu'] : '---') ?></p>
 										<div class="invoice-title-line" style="margin-top: 5px; gap: 8px;">
 											<span id="invoiceLoaiNoiDon" class="invoice-status-badge"
 												style="background: rgba(255, 255, 255, 0.45); color: #000; border: 1px solid rgba(0,0,0,0.1);"><?= admin_h(trim((string)($row['loai_noi_don'] ?? '')) !== '' ? (string)$row['loai_noi_don'] : '---') ?></span>
@@ -1588,12 +1562,14 @@ if (!function_exists('listHistoryByOrder')) {
 							</div>
 						</div>
 
-
-
-						
-
 						<div id="workHistoryTable" style="margin-top:4px;">
 							<span style="font-size:12px;font-weight:800;color:#000000;">Lịch sử làm việc</span>
+        <?php 
+        $historyResult = get_work_history_by_datlich_id($id);
+        $historyRows = $historyResult['rows'] ?? []; 
+        // Sắp xếp giảm dần theo ID hoặc ngày để hiển thị mới nhất lên đầu
+        usort($historyRows, fn($a, $b) => (int)($b['id'] ?? 0) <=> (int)($a['id'] ?? 0));
+        ?>
 							<div id="workHistoryContent" style="overflow-x:auto;margin-top:4px; <?= empty($historyRows) ? 'display:none;' : '' ?>">
 								<table style="width:100%;border-collapse:collapse;font-size:12px;">
 									<thead>
@@ -1608,7 +1584,6 @@ if (!function_exists('listHistoryByOrder')) {
 									
         <tbody id="workHistoryBody">
         <?php
-        $historyRows = listHistoryByOrder($id);
         if ($historyRows):
             foreach ($historyRows as $idx => $r):
                 $isAutoEnd = ($r["is_auto_end"] ?? 0) == 1 || (trim((string)($row["gio_ket_thuc_kehoach"] ?? "")) === trim((string)($r["gio_ket_thuc_trong_ngay"] ?? "")));
@@ -1708,6 +1683,39 @@ if (!function_exists('listHistoryByOrder')) {
 								</div>
 
 								
+							</section>
+
+							<section class="review-box">
+								<div class="review-head">
+									<h3 class="review-title">Đánh giá nhà cung cấp</h3>
+									<span id="badgeStaffReview" class="badge <?= trim((string)($row['danhgia_nhanvien'] ?? '')) !== '' ? 'success' : 'warning' ?>"><?= trim((string)($row['danhgia_nhanvien'] ?? '')) !== '' ? 'Đã gửi' : 'Chưa có' ?></span>
+								</div>
+
+								<div class="review-display">
+									<p class="field-label">Nội dung đánh giá</p>
+									<p id="staffReviewText" class="review-text"><?= admin_h(trim((string)($row['danhgia_nhanvien'] ?? '')) !== '' ? (string)$row['danhgia_nhanvien'] : 'Chưa có đánh giá') ?></p>
+									<p class="field-label">Thời gian gửi</p>
+									<p id="staffReviewTime" class="review-time"><?= admin_h(trim((string)($row['thoigian_danhgia_nhanvien'] ?? '')) !== '' ? (string)$row['thoigian_danhgia_nhanvien'] : '---') ?></p>
+									<p class="field-label">Ảnh/video đánh giá</p>
+									
+									<div id="staffReviewMediaGrid" class="review-media-grid">
+									<?php
+									$mediaNvInfo = trim((string)($row['media_danhgia_nhanvien'] ?? ''));
+									$mediaNv = json_decode($mediaNvInfo, true) ?? [];
+									if (!$mediaNv && $mediaNvInfo) {
+										$mediaNv = preg_split('/[,;\s]+/', $mediaNvInfo, -1, PREG_SPLIT_NO_EMPTY);
+									}
+									if (!$mediaNv) {
+										echo '<div class="media-empty">Chưa có tệp</div>';
+									} else {
+										foreach ($mediaNv as $m_id):
+											$m_id = trim((string)$m_id);
+											if ($m_id):
+									?>
+										<iframe src="https://drive.google.com/file/d/<?= admin_h($m_id) ?>/preview" style="width:100%;height:200px;border:0;border-radius:6px;display:block;margin-bottom:6px;" allowfullscreen></iframe>
+									<?php endif; endforeach; } ?>
+									</div>
+								</div>
 							</section>
 </div>
 

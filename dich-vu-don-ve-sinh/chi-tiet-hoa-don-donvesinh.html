@@ -1366,12 +1366,12 @@
 								</div>
 								<div class="actions d-flex flex-wrap align-items-center"
 									style="gap:8px; margin-left: auto;">
-									<button id="btnCancelService" class="btn btn-danger btn-sm hidden" type="button">Hủy
-										dịch vụ</button>
-									<button id="btnHdrClaim" class="btn btn-primary btn-sm hidden" type="button">Nhận
-										việc</button>
-									<button id="btnHdrStart" class="btn btn-success btn-sm hidden" type="button">Bắt đầu
-										dịch vụ</button>
+									<button id="btnCancelService" class="btn btn-danger btn-sm hidden" type="button">
+										Hủy dịch vụ</button>
+									<button id="btnHdrClaim" class="btn btn-primary btn-sm hidden" type="button">
+										Nhận việc</button>
+									<button id="btnHdrStart" class="btn btn-success btn-sm hidden" type="button">
+										Bắt đầu dịch vụ</button>
 									<button id="btnHdrEnd" class="btn btn-warning btn-sm hidden" style="color:#fff;"
 										type="button">Hoàn thành dịch vụ</button>
 								</div>
@@ -1694,7 +1694,7 @@
 				$nguoidung: [], // Danh sách tất cả người dùng từ bảng nguoidung
 				$datlich_donvesinh: null,
 				stateTimer: null,
-				// id của record lich_su_lam_viec_donvesinh đang mở trong ngày (sau khi nhấn btnStart)
+				// id của record lich_su_lam_viec_mvb đang mở trong ngày (sau khi nhấn btnStart)
 				currentWorkLogId: null
 			};
 
@@ -2274,7 +2274,6 @@
 				// Render bảng lịch sử làm việc (cho cả staff và khách hàng xem)
 				renderWorkHistoryTable();
 
-
 				$('badgeStaff').textContent = toNum($datlich_donvesinh.id_nhacungcap) > 0 ? 'Đã nhận' : 'Chưa nhận';
 				$('badgeStaff').className = toNum($datlich_donvesinh.id_nhacungcap) > 0 ? 'profile-status badge success' : 'profile-status badge warning';
 
@@ -2429,7 +2428,7 @@
 				await reloadOrder();
 			}
 
-			// handleStart: bắt đầu làm trong ngày - insert mới vào lich_su_lam_viec_donvesinh
+			// handleStart: bắt đầu làm trong ngày - insert mới vào lich_su_lam_viec_mvb
 			async function handleStart() {
 				const idDv = app.$datlich_donvesinh.id;
 				const todayStr = (() => {

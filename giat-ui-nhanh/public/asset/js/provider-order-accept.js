@@ -290,29 +290,32 @@
 
       var orderId = extractOrderIdFromButton(button);
       if (!orderId) {
-        window.alert("Khong xac dinh duoc ma don hang.");
+        showError("Không xác định được mã đơn hàng.");
         return;
       }
 
-      setButtonLoading(button, true);
+      showConfirm("Bạn có chắc chắn muốn thực hiện hành động 'Nhận đơn'?", async function () {
+        setButtonLoading(button, true);
 
-      try {
-        await handleAcceptOrder(orderId);
+        try {
+          await handleAcceptOrder(orderId);
+          showSuccess("Nhận đơn hàng thành công!");
 
-        if (
-          window.ProviderDashboard &&
-          typeof window.ProviderDashboard.refreshDashboardData === "function"
-        ) {
-          await window.ProviderDashboard.refreshDashboardData();
+          if (
+            window.ProviderDashboard &&
+            typeof window.ProviderDashboard.refreshDashboardData === "function"
+          ) {
+            await window.ProviderDashboard.refreshDashboardData();
+          }
+        } catch (error) {
+          console.error("Accept order failed:", error);
+          showError(
+            error && error.message ? error.message : "Không thể nhận đơn.",
+          );
+        } finally {
+          setButtonLoading(button, false);
         }
-      } catch (error) {
-        console.error("Accept order failed:", error);
-        window.alert(
-          error && error.message ? error.message : "Khong the nhan don.",
-        );
-      } finally {
-        setButtonLoading(button, false);
-      }
+      });
     });
   }
 
