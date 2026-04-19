@@ -15,13 +15,11 @@ if (!isset($_SESSION['user'])) {
     ob_end_clean();
 }
 
-$userName = $_SESSION['user']['hovaten'] ?? 'Nhân viên';
-$userAvatar = $_SESSION['user']['avatartenfile'] ?? 'logo-cham-soc-benh-nhan.png';
-if (strpos($userAvatar, 'assets/') === false && $userAvatar !== 'logo-cham-soc-benh-nhan.png') {
-    $userAvatar = '../assets/' . $userAvatar;
-} else if ($userAvatar === 'logo-cham-soc-benh-nhan.png') {
-    $userAvatar = '../assets/logo-cham-soc-benh-nhan.png';
-}
+$userName = $_SESSION['user']['hovaten'];
+$userFileId = $_SESSION['user']['avatartenfile'] ?? '';
+$isDriveAvatar = !empty($userFileId);
+$userAvatarPath = '../assets/logo-cham-soc-benh-nhan.png';
+
 
 $current_page = basename($_SERVER['PHP_SELF']);
 $pageTitle = $pageTitle ?? 'MamaCore - Staff Panel';
@@ -36,8 +34,10 @@ $pageTitle = $pageTitle ?? 'MamaCore - Staff Panel';
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
     <script src="https://api.dvqt.vn/js/krud.js"></script>
-    
+
     <style>
         :root {
             --nv-border: #3498db;
@@ -234,8 +234,15 @@ $pageTitle = $pageTitle ?? 'MamaCore - Staff Panel';
             }
 
             @keyframes slideDown {
-                from { opacity: 0; transform: translateY(-10px); }
-                to { opacity: 1; transform: translateY(0); }
+                from {
+                    opacity: 0;
+                    transform: translateY(-10px);
+                }
+
+                to {
+                    opacity: 1;
+                    transform: translateY(0);
+                }
             }
 
             .nv-admin-sidebar .list-group-item {
@@ -284,7 +291,8 @@ $pageTitle = $pageTitle ?? 'MamaCore - Staff Panel';
         <aside class="nv-admin-sidebar">
             <div class="nv-admin-brand-wrapper">
                 <div class="d-flex align-items-center gap-2">
-                    <div class="nv-admin-brand"><img src="../assets/logo-cham-soc-benh-nhan.png" width="22" alt="logo"></div>
+                    <div class="nv-admin-brand"><img src="../assets/logo-cham-soc-benh-nhan.png" width="22" alt="logo">
+                    </div>
                     <div class="fw-bold lh-1 profile-name-text">Chăm Sóc Người Bệnh</div>
                 </div>
                 <button class="btn p-0 d-lg-none" id="mobileMenuToggle" type="button">
@@ -297,14 +305,13 @@ $pageTitle = $pageTitle ?? 'MamaCore - Staff Panel';
                 <a href="../index.html" class="list-group-item">
                     <i class="bi bi-house"></i> <span>Trang chủ</span>
                 </a>
-                <a href="thong-tin-nhan-vien.php" class="list-group-item <?php echo $current_page == 'thong-tin-nhan-vien.php' || $current_page == 'sua-thong-tin-nhan-vien.php' ? 'active' : ''; ?>" data-page="thong-tin-nhan-vien.php">
-                    <i class="bi bi-person-badge"></i> <span>Thông tin cá nhân</span>
-                </a>
-                <a href="danh-sach-hoa-don.php" class="list-group-item <?php echo $current_page == 'danh-sach-hoa-don.php' ? 'active' : ''; ?>" data-page="danh-sach-hoa-don.php">
+                <a href="danh-sach-hoa-don.php"
+                    class="list-group-item <?php echo $current_page == 'danh-sach-hoa-don.php' ? 'active' : ''; ?>"
+                    data-page="danh-sach-hoa-don.php">
                     <i class="bi bi-receipt"></i> <span>Danh sách đơn hàng</span>
                 </a>
-                
-                <a href="../logout.html" class="list-group-item text-warning">
+
+                <a href="../logout.php" class="list-group-item text-warning">
                     <i class="bi bi-box-arrow-right"></i> <span>Đăng xuất</span>
                 </a>
             </nav>
@@ -312,17 +319,23 @@ $pageTitle = $pageTitle ?? 'MamaCore - Staff Panel';
 
         <section class="nv-main-wrapper">
             <header class="nv-admin-topbar">
-                <h1 class="h5 fw-bold mb-0 text-truncate" id="page-title"><?php echo htmlspecialchars($pageTitle); ?></h1>
+                <h1 class="h5 fw-bold mb-0 text-truncate" id="page-title"><?php echo htmlspecialchars($pageTitle); ?>
+                </h1>
 
                 <div class="dropdown">
                     <button class="btn border-0 d-flex align-items-center gap-2" data-bs-toggle="dropdown">
                         <span class="fw-semibold d-none d-sm-inline"><?php echo htmlspecialchars($userName); ?></span>
-                        <img class="nv-admin-avatar" src="<?php echo htmlspecialchars($userAvatar); ?>" alt="avatar">
+                        <?php if ($isDriveAvatar): ?>
+                            <iframe class="nv-admin-avatar"
+                                src="https://drive.google.com/file/d/<?php echo htmlspecialchars($userFileId); ?>/preview"
+                                frameborder="0"></iframe>
+                        <?php else: ?>
+                            <img class="nv-admin-avatar" src="<?php echo htmlspecialchars($userAvatarPath); ?>"
+                                alt="avatar">
+                        <?php endif; ?>
                     </button>
                     <ul class="dropdown-menu dropdown-menu-end shadow-lg border-0" style="border-radius: 15px;">
-                        <li><a class="dropdown-item py-2 px-3" href="#"><i class="bi bi-gear me-2"></i>Cài đặt</a></li>
-                        <li><hr class="dropdown-divider"></li>
-                        <li><a class="dropdown-item text-danger py-2 px-3" href="../logout.html"><i
+                        <li><a class="dropdown-item text-danger py-2 px-3" href="../logout.php"><i
                                     class="bi bi-box-arrow-right me-2"></i>Đăng xuất</a></li>
                     </ul>
                 </div>

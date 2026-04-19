@@ -15,13 +15,14 @@ $workHistory = [];
 if ($row) {
     $whResult = get_work_history_by_datlich_id($id);
     $rawHistory = $whResult['rows'] ?? [];
-    
+
     // Gộp các row theo ngày giống JS
     $groups = [];
     foreach ($rawHistory as $rh) {
-        $date = substr((string)($rh['ngay_lam'] ?? ''), 0, 10);
-        if ($date === '') continue;
-        
+        $date = substr((string) ($rh['ngay_lam'] ?? ''), 0, 10);
+        if ($date === '')
+            continue;
+
         if (!isset($groups[$date])) {
             $groups[$date] = [
                 'ngay_lam' => $date,
@@ -31,13 +32,17 @@ if ($row) {
                 'isAuto' => false
             ];
         }
-        
-        if (!empty($rh['gio_bat_dau_trong_ngay'])) $groups[$date]['start'] = $rh['gio_bat_dau_trong_ngay'];
-        if (!empty($rh['gio_ket_thuc_trong_ngay'])) $groups[$date]['end'] = $rh['gio_ket_thuc_trong_ngay'];
-        if (!empty($rh['ghichu_cv_ngay'])) $groups[$date]['note'] = $rh['ghichu_cv_ngay'];
-        if (($rh['is_auto_end'] ?? 0) == 1) $groups[$date]['isAuto'] = true;
+
+        if (!empty($rh['gio_bat_dau_trong_ngay']))
+            $groups[$date]['start'] = $rh['gio_bat_dau_trong_ngay'];
+        if (!empty($rh['gio_ket_thuc_trong_ngay']))
+            $groups[$date]['end'] = $rh['gio_ket_thuc_trong_ngay'];
+        if (!empty($rh['ghichu_cv_ngay']))
+            $groups[$date]['note'] = $rh['ghichu_cv_ngay'];
+        if (($rh['is_auto_end'] ?? 0) == 1)
+            $groups[$date]['isAuto'] = true;
     }
-    
+
     // Sắp xếp theo ngày tăng dần để hiển thị Ngày 1, Ngày 2...
     ksort($groups);
     $workHistory = array_values($groups);
@@ -149,6 +154,13 @@ admin_render_layout_start('Chi Tiết đơn hàng', 'orders', $admin);
             transform: translateY(0);
             opacity: 1;
         }
+    }
+
+    /* Style for iframes as avatars */
+    .profile-avatar {
+        display: block;
+        margin: 0;
+        border: 0;
     }
 
     .topbar {
@@ -509,6 +521,51 @@ admin_render_layout_start('Chi Tiết đơn hàng', 'orders', $admin);
         grid-column: 1 / -1;
     }
 
+    .invoice-media-grid {
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 8px;
+        margin: 4px;
+    }
+
+    .invoice-media-item {
+        border: 1px solid #e665a9;
+        background: #ffeef7;
+        border-radius: 8px;
+        padding: 8px 10px;
+        display: flex;
+        flex-direction: column;
+        gap: 6px;
+        overflow: hidden;
+        min-height: 72px;
+    }
+
+    .invoice-media-item .field-label {
+        color: #be185d;
+        font-size: 10px;
+        margin: 0;
+        font-weight: 600;
+    }
+
+    .invoice-media-item img,
+    .invoice-media-item video,
+    .invoice-media-item iframe {
+        width: 100%;
+        flex: 1;
+        object-fit: cover;
+        border-radius: 5px;
+        background: rgba(0, 0, 0, 0.04);
+        display: block;
+    }
+
+    .invoice-media-item .media-empty-label {
+        color: #be185d;
+        font-size: 11px;
+        text-align: center;
+        padding: 8px 0;
+        flex: 1;
+    }
+
     #invoiceJob {
         list-style: none;
         margin: 0;
@@ -751,6 +808,7 @@ admin_render_layout_start('Chi Tiết đơn hàng', 'orders', $admin);
         .grid,
         .info-grid,
         .invoice-extra-grid,
+        .invoice-media-grid,
         .review-split {
             grid-template-columns: 1fr;
         }
@@ -879,6 +937,22 @@ admin_render_layout_start('Chi Tiết đơn hàng', 'orders', $admin);
                             <p class="field-value"><?= admin_h($row['ghi_chu'] ?? 'Không có') ?></p>
                         </div>
                     </div>
+                    <div class="invoice-media-grid">
+                        <div class="invoice-media-item" id="invoiceMediaImage">
+                            <p class="field-label">Ảnh</p>
+                            <span class="media-empty-label" id="invoiceMediaImageEmpty">Chưa có ảnh</span>
+                            <iframe id="invoiceMediaImageEl"
+                                style="display:none;width:100%;flex:1;min-height:90px;border:0;border-radius:5px;"
+                                allowfullscreen></iframe>
+                        </div>
+                        <div class="invoice-media-item" id="invoiceMediaVideo">
+                            <p class="field-label">Video</p>
+                            <span class="media-empty-label" id="invoiceMediaVideoEmpty">Chưa có video</span>
+                            <iframe id="invoiceMediaVideoEl"
+                                style="display:none;width:100%;flex:1;min-height:90px;border:0;border-radius:5px;"
+                                allowfullscreen></iframe>
+                        </div>
+                    </div>
                 </article>
 
                 <article class="panel" id="panelTime">
@@ -896,15 +970,18 @@ admin_render_layout_start('Chi Tiết đơn hàng', 'orders', $admin);
                             <div class="progress-inner" style="width:<?= $progressText ?>%;"></div>
                         </div>
                         <?php
-                        $totalDays = max(1, (int)($row['so_ngay'] ?? 1));
+                        $totalDays = max(1, (int) ($row['so_ngay'] ?? 1));
                         $percentPerDay = number_format(100 / $totalDays, 2, '.', '');
                         ?>
-                        <p id="progressHint" class="hint" style="font-size:12px;margin-top:-2px; color: #7c4760; font-weight: 700;">
-                            Mỗi ngày cộng <?= $percentPerDay ?>% (tổng <?= $totalDays ?> ngày). Tiến độ cộng dồn theo từng ngày làm việc.
+                        <p id="progressHint" class="hint"
+                            style="font-size:12px;margin-top:-2px; color: #7c4760; font-weight: 700;">
+                            Mỗi ngày cộng <?= $percentPerDay ?>% (tổng <?= $totalDays ?> ngày). Tiến độ cộng dồn theo từng
+                            ngày làm việc.
                         </p>
                     </div>
 
-                    <div style="border:1px solid #efd3e9;border-radius:8px;overflow:hidden;background:#fff7fe;margin-bottom:8px;">
+                    <div
+                        style="border:1px solid #efd3e9;border-radius:8px;overflow:hidden;background:#fff7fe;margin-bottom:8px;">
                         <div
                             style="display:grid;grid-template-columns:repeat(3,1fr);background:#e779c1;color:#000;font-size:11px;font-weight:800;text-align:center;">
                             <span style="padding:7px 5px;border-right:1px solid rgba(0,0,0,0.05);">Dự kiến BĐ</span>
@@ -926,7 +1003,8 @@ admin_render_layout_start('Chi Tiết đơn hàng', 'orders', $admin);
                         <span class="badge <?= $badgeClass ?>"><?= admin_h($statusText) ?></span>
                     </div>
 
-                    <div style="border:1px solid #efd3e9;border-radius:8px;overflow:hidden;background:#fff7fe; margin-bottom: 8px;">
+                    <div
+                        style="border:1px solid #efd3e9;border-radius:8px;overflow:hidden;background:#fff7fe; margin-bottom: 8px;">
                         <div
                             style="display:grid;grid-template-columns:repeat(2,minmax(0,1fr));background:#e779c1;color:#000000;font-size:12px;font-weight:800;">
                             <span style="padding:7px 10px;">Thời gian dự kiến</span>
@@ -937,24 +1015,28 @@ admin_render_layout_start('Chi Tiết đơn hàng', 'orders', $admin);
                                 <div class="d-flex justify-content-between align-items-center"
                                     style="gap:8px;padding:7px 10px;font-size:12px;">
                                     <span style="color:#000000;font-weight:700;">Bắt đầu</span>
-                                    <span style="color:#1f3853;font-weight:800;"><?= admin_h($row['gio_bat_dau_kehoach'] ?? '--:--') ?></span>
+                                    <span
+                                        style="color:#1f3853;font-weight:800;"><?= admin_h($row['gio_bat_dau_kehoach'] ?? '--:--') ?></span>
                                 </div>
                                 <div class="d-flex justify-content-between align-items-center"
                                     style="gap:8px;padding:7px 10px;border-top:1px solid #efd3e9;font-size:12px;">
                                     <span style="color:#000000;font-weight:700;">Kết thúc</span>
-                                    <span style="color:#1f3853;font-weight:800;"><?= admin_h($row['gio_ket_thuc_kehoach'] ?? '--:--') ?></span>
+                                    <span
+                                        style="color:#1f3853;font-weight:800;"><?= admin_h($row['gio_ket_thuc_kehoach'] ?? '--:--') ?></span>
                                 </div>
                             </div>
                             <div>
                                 <div class="d-flex justify-content-between align-items-center"
                                     style="gap:8px;padding:7px 10px;font-size:12px;">
                                     <span style="color:#000000;font-weight:700;">Bắt đầu</span>
-                                    <span style="color:#1f3853;font-weight:800;"><?= admin_h($row['thoigian_batdau_thucte'] ?? '---') ?></span>
+                                    <span
+                                        style="color:#1f3853;font-weight:800;"><?= admin_h($row['thoigian_batdau_thucte'] ?? '---') ?></span>
                                 </div>
                                 <div class="d-flex justify-content-between align-items-center"
                                     style="gap:8px;padding:7px 10px;border-top:1px solid #efd3e9;font-size:12px;">
                                     <span style="color:#000000;font-weight:700;">Kết thúc</span>
-                                    <span style="color:#1f3853;font-weight:800;"><?= admin_h($row['thoigian_ketthuc_thucte'] ?? '---') ?></span>
+                                    <span
+                                        style="color:#1f3853;font-weight:800;"><?= admin_h($row['thoigian_ketthuc_thucte'] ?? '---') ?></span>
                                 </div>
                             </div>
                         </div>
@@ -975,20 +1057,22 @@ admin_render_layout_start('Chi Tiết đơn hàng', 'orders', $admin);
                                         </tr>
                                     </thead>
                                     <tbody id="workHistoryBody">
-                                        <?php 
+                                        <?php
                                         $stt = 1;
                                         $endPlanTime = $row['gio_ket_thuc_kehoach'] ?? '';
-                                        foreach ($workHistory as $wh): 
+                                        foreach ($workHistory as $wh):
                                             $isAutoEnd = ($wh['isAuto'] ?? false) || ($endPlanTime && $wh['end'] === $endPlanTime);
                                             $endDisplay = admin_h($wh['end'] !== '' ? $wh['end'] : 'Chưa kết thúc');
                                             if ($wh['end'] !== '' && $isAutoEnd) {
                                                 $endDisplay .= ' <i class="fa fa-info-circle text-warning" title="NCC quên nhấn Kết Thúc" style="cursor:pointer;color:#f0ba2c;"></i>';
                                             }
-                                        ?>
+                                            ?>
                                             <tr style="border-bottom: 1px solid #f0d4e3;">
                                                 <td style="padding:5px 8px;font-weight:700;color:#c21178;">Ngày <?= $stt++ ?></td>
                                                 <td style="padding:5px 8px;"><?= admin_h($wh['ngay_lam']) ?></td>
-                                                <td style="padding:5px 8px;"><?= admin_h($wh['start'] !== '' ? $wh['start'] : '---') ?></td>
+                                                <td style="padding:5px 8px;">
+                                                    <?= admin_h($wh['start'] !== '' ? $wh['start'] : '---') ?>
+                                                </td>
                                                 <td style="padding:5px 8px;"><?= $endDisplay ?></td>
                                                 <td style="padding:5px 8px;"><?= admin_h($wh['note']) ?></td>
                                             </tr>
@@ -1007,17 +1091,22 @@ admin_render_layout_start('Chi Tiết đơn hàng', 'orders', $admin);
                         <h2 class="profile-title">Khách hàng</h2>
                         <span class="badge success">Khách hàng</span>
                     </div>
-                    <div class="profile-body">
-                        <img class="profile-avatar"
-                            src="../<?= admin_h($row['avatar_khachhang'] ?? 'assets/logomvb.png') ?>" alt="Customer">
+                    <div class="profile-body" style="display: flex; align-items: center; gap: 15px;">
+                        <div style="position:relative; width:88px; height:88px; flex-shrink:0;">
+                            <span id="avatarCustomerEmpty" style="display:none; position:absolute; inset:0; display:grid; place-items:center; font-size:10px; background:#f0f0f0; border-radius:50%;">---</span>
+                            <iframe id="avatarCustomerEl" class="profile-avatar" style="display:none; position:absolute; width:100%; height:100%; border:0; border-radius:50%;" allowfullscreen></iframe>
+                            <img id="avatarCustomerImg" class="profile-avatar" src="../<?= admin_h($row['avatar_khachhang'] ?? 'assets/logomvb.png') ?>" alt="Customer" style="width:100%; height:100%; border-radius:50%; object-fit:cover;">
+                        </div>
                         <div class="profile-main">
                             <h3 class="profile-name"><?= admin_h($row['tenkhachhang'] ?? '---') ?></h3>
                             <p class="profile-contact contact-email">
-                                <span><?= admin_h($row['emailkhachhang'] ?? '---') ?></span></p>
+                                <span><?= admin_h($row['emailkhachhang'] ?? '---') ?></span>
+                            </p>
                             <p class="profile-row contact-phone"><span><?= admin_h($row['sdtkhachhang'] ?? '---') ?></span>
                             </p>
                             <p class="profile-row contact-address">
-                                <span><?= admin_h($row['diachikhachhang'] ?? '---') ?></span></p>
+                                <span><?= admin_h($row['diachikhachhang'] ?? '---') ?></span>
+                            </p>
                         </div>
                     </div>
                     <div class="profile-foot">
@@ -1031,9 +1120,12 @@ admin_render_layout_start('Chi Tiết đơn hàng', 'orders', $admin);
                         <span
                             class="badge warning"><?= (int) ($row['id_nhacungcap'] ?? 0) > 0 ? 'Đã nhận' : 'Chưa nhận' ?></span>
                     </div>
-                    <div class="profile-body">
-                        <img class="profile-avatar" src="../<?= admin_h($row['avatar_ncc'] ?? 'assets/logomvb.png') ?>"
-                            alt="Staff">
+                    <div class="profile-body" style="display: flex; align-items: center; gap: 15px;">
+                        <div style="position:relative; width:88px; height:88px; flex-shrink:0;">
+                            <span id="avatarStaffEmpty" style="display:none; position:absolute; inset:0; display:grid; place-items:center; font-size:10px; background:#f0f0f0; border-radius:50%;">---</span>
+                            <iframe id="avatarStaffEl" class="profile-avatar" style="display:none; position:absolute; width:100%; height:100%; border:0; border-radius:50%;" allowfullscreen></iframe>
+                            <img id="avatarStaffImg" class="profile-avatar" src="../<?= admin_h($row['avatar_ncc'] ?? 'assets/logomvb.png') ?>" alt="Staff" style="width:100%; height:100%; border-radius:50%; object-fit:cover;">
+                        </div>
                         <div class="profile-main">
                             <h3 class="profile-name"><?= admin_h($row['tenncc'] ?? '---') ?></h3>
                             <p class="profile-contact contact-email"><span><?= admin_h($row['emailncc'] ?? '---') ?></span>
@@ -1045,7 +1137,6 @@ admin_render_layout_start('Chi Tiết đơn hàng', 'orders', $admin);
                     </div>
                     <div class="profile-foot">
                         <span class="profile-pill">Nhận việc: <?= admin_h($row['ngaynhan'] ?? '---') ?></span>
-                        <span class="profile-pill">Kinh nghiệm: <?= admin_h($row['kinh_nghiem_ncc'] ?? 'Khong co') ?></span>
                     </div>
                 </article>
 
@@ -1064,6 +1155,11 @@ admin_render_layout_start('Chi Tiết đơn hàng', 'orders', $admin);
                                 <p class="review-text"><?= admin_h($row['danhgia_khachhang'] ?? 'Chưa có đánh giá') ?></p>
                                 <p class="field-label">Thời gian</p>
                                 <p class="review-time"><?= admin_h($row['thoigian_danhgia_khachhang'] ?? '---') ?></p>
+                                <p class="field-label">Minh chứng</p>
+                                <div class="invoice-media-item" style="border:0;padding:0;min-height:auto;background:transparent;">
+                                    <span class="media-empty-label" id="reviewCustomerMediaEmpty" style="font-size:10px; text-align:left; padding:0;">Chưa có minh chứng</span>
+                                    <iframe id="reviewCustomerMediaEl" style="display:none;width:100%;min-height:120px;border:0;border-radius:8px;" allowfullscreen></iframe>
+                                </div>
                             </div>
                         </section>
                         <section class="review-box">
@@ -1075,6 +1171,11 @@ admin_render_layout_start('Chi Tiết đơn hàng', 'orders', $admin);
                                 <p class="review-text"><?= admin_h($row['danhgia_nhanvien'] ?? 'Chưa có đánh giá') ?></p>
                                 <p class="field-label">Thời gian</p>
                                 <p class="review-time"><?= admin_h($row['thoigian_danhgia_nhanvien'] ?? '---') ?></p>
+                                <p class="field-label">Minh chứng</p>
+                                <div class="invoice-media-item" style="border:0;padding:0;min-height:auto;background:transparent;">
+                                    <span class="media-empty-label" id="reviewStaffMediaEmpty" style="font-size:10px; text-align:left; padding:0;">Chưa có minh chứng</span>
+                                    <iframe id="reviewStaffMediaEl" style="display:none;width:100%;min-height:120px;border:0;border-radius:8px;" allowfullscreen></iframe>
+                                </div>
                             </div>
                         </section>
                     </div>
@@ -1083,5 +1184,42 @@ admin_render_layout_start('Chi Tiết đơn hàng', 'orders', $admin);
         <?php endif; ?>
     </div>
 </div>
+
+<script>
+    (function () {
+        const $ = id => document.getElementById(id);
+        const row = <?= json_encode($row) ?>;
+
+        function renderDriveFrame(rawId, frameId, emptyId, imgId) {
+            const frame = $(frameId);
+            const emptyEl = $(emptyId);
+            const imgEl = $(imgId);
+            if (!frame || !emptyEl) return;
+
+            const id = String(rawId || '').trim().replace(/[\[\]" ]/g, '').split(',')[0];
+            if (!id || id.length < 10) { 
+                emptyEl.style.display = (imgEl ? 'none' : 'block');
+                frame.style.display = 'none';
+                if (imgEl) imgEl.style.display = 'block';
+                return;
+            }
+
+            const url = 'https://drive.google.com/file/d/' + id + '/preview';
+            frame.src = url;
+            emptyEl.style.display = 'none';
+            frame.style.display = 'block';
+            if (imgEl) imgEl.style.display = 'none';
+        }
+
+        if (row) {
+            renderDriveFrame(row.anh_id, 'invoiceMediaImageEl', 'invoiceMediaImageEmpty');
+            renderDriveFrame(row.video_id, 'invoiceMediaVideoEl', 'invoiceMediaVideoEmpty');
+            renderDriveFrame(row.avatar_khachhang, 'avatarCustomerEl', 'avatarCustomerEmpty', 'avatarCustomerImg');
+            renderDriveFrame(row.avatar_ncc, 'avatarStaffEl', 'avatarStaffEmpty', 'avatarStaffImg');
+            renderDriveFrame(row.media_danhgia_khachhang, 'reviewCustomerMediaEl', 'reviewCustomerMediaEmpty');
+            renderDriveFrame(row.media_danhgia_nhanvien, 'reviewStaffMediaEl', 'reviewStaffMediaEmpty');
+        }
+    })();
+</script>
 
 <?php admin_render_layout_end(); ?>

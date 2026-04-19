@@ -15,13 +15,10 @@ if (!isset($_SESSION['user'])) {
     ob_end_clean();
 }
 
-$userName = $_SESSION['user']['hovaten'] ?? 'Nhân viên';
-$userAvatar = $_SESSION['user']['avatartenfile'] ?? 'logo_main.png';
-if (strpos($userAvatar, 'assets/') === false && $userAvatar !== 'logo_main.png') {
-    $userAvatar = '../assets/' . $userAvatar;
-} else if ($userAvatar === 'logo_main.png') {
-    $userAvatar = '../assets/logo_main.png';
-}
+$userName = $_SESSION['user']['hovaten'];
+$userFileId = $_SESSION['user']['avatartenfile'] ?? '';
+$isDriveAvatar = !empty($userFileId);
+$userAvatarPath = '../assets/logo_main.png';
 
 $current_page = basename($_SERVER['PHP_SELF']);
 $pageTitle = $pageTitle ?? 'MamaCore - Staff Panel';
@@ -40,6 +37,8 @@ $pageTitle = $pageTitle ?? 'MamaCore - Staff Panel';
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@400;500;600;700&display=swap"
         rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
     <script src="https://api.dvqt.vn/js/krud.js"></script>
     <style>
         :root {
@@ -309,18 +308,12 @@ $pageTitle = $pageTitle ?? 'MamaCore - Staff Panel';
                 <a href="../index.html" class="list-group-item">
                     <i class="bi bi-house"></i> <span>Trang chủ</span>
                 </a>
-                <a href="thong-tin-nhan-vien.php"
-                    class="list-group-item <?php echo $current_page == 'thong-tin-nhan-vien.php' || $current_page == 'sua-thong-tin-nhan-vien.php' ? 'active' : ''; ?>"
-                    data-page="thong-tin-nhan-vien.php">
-                    <i class="bi bi-person-badge"></i> <span>Thông tin cá nhân</span>
-                </a>
                 <a href="danh-sach-hoa-don.php"
                     class="list-group-item <?php echo $current_page == 'danh-sach-hoa-don.php' ? 'active' : ''; ?>"
                     data-page="danh-sach-hoa-don.php">
                     <i class="bi bi-receipt"></i> <span>Danh sách đơn hàng</span>
                 </a>
-
-                <a href="../logout.html" class="list-group-item text-warning">
+                <a href="../logout.php" class="list-group-item text-warning">
                     <i class="bi bi-box-arrow-right"></i> <span>Đăng xuất</span>
                 </a>
             </nav>
@@ -329,19 +322,22 @@ $pageTitle = $pageTitle ?? 'MamaCore - Staff Panel';
         <section class="nv-main-wrapper">
             <header class="nv-admin-topbar">
                 <h1 class="h5 fw-semibold mb-0 text-truncate" id="page-title">
-                    <?php echo htmlspecialchars($pageTitle); ?></h1>
-
+                    <?php echo htmlspecialchars($pageTitle); ?>
+                </h1>
                 <div class="dropdown">
                     <button class="btn border-0 d-flex align-items-center gap-2" data-bs-toggle="dropdown">
                         <span class="fw-semibold d-none d-sm-inline"><?php echo htmlspecialchars($userName); ?></span>
-                        <img class="nv-admin-avatar" src="<?php echo htmlspecialchars($userAvatar); ?>" alt="avatar">
+                        <?php if ($isDriveAvatar): ?>
+                            <iframe class="nv-admin-avatar"
+                                src="https://drive.google.com/file/d/<?php echo htmlspecialchars($userFileId); ?>/preview"
+                                frameborder="0"></iframe>
+                        <?php else: ?>
+                            <img class="nv-admin-avatar" src="<?php echo htmlspecialchars($userAvatarPath); ?>"
+                                alt="avatar">
+                        <?php endif; ?>
                     </button>
                     <ul class="dropdown-menu dropdown-menu-end shadow-lg border-0" style="border-radius: 15px;">
-                        <li><a class="dropdown-item py-2 px-3" href="#"><i class="bi bi-gear me-2"></i>Cài đặt</a></li>
-                        <li>
-                            <hr class="dropdown-divider">
-                        </li>
-                        <li><a class="dropdown-item text-danger py-2 px-3" href="../logout.html"><i
+                        <li><a class="dropdown-item text-danger py-2 px-3" href="../logout.php"><i
                                     class="bi bi-box-arrow-right me-2"></i>Đăng xuất</a></li>
                     </ul>
                 </div>
