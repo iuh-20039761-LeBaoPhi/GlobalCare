@@ -354,8 +354,23 @@ table th {
   background-color: #f2f2f2;
 }
 
-/* Responsive */
-@media (max-width: 991px) {
+/* ============================================================
+   RESPONSIVE — blog_detail.css
+   Mobile:  width < 740px     → @media (max-width: 739px)
+   Tablet:  740px – 1023px    → @media (min-width: 740px) and (max-width: 1023px)
+   PC:      width ≥ 1024px    → @media (min-width: 1024px)
+   ============================================================ */
+
+/* --- PC: 1024px and above --- */
+@media only screen and (min-width: 1024px) {
+  .sidebar {
+    position: sticky;
+    top: 100px;
+  }
+}
+
+/* --- TABLET: 740px to 1023px --- */
+@media only screen and (min-width: 740px) and (max-width: 1023px) {
   .page-header h1 {
     font-size: 2.2rem;
   }
@@ -373,7 +388,7 @@ table th {
   }
 
   .sidebar {
-    position: relative;
+    position: static;
     top: 0;
     margin-top: 2rem;
   }
@@ -382,17 +397,23 @@ table th {
     background: rgba(31, 41, 55, 0.98);
     padding: 1rem;
     border-radius: 10px;
-    margin-top: 1rem;
+    margin-top: 0.5rem;
+    backdrop-filter: blur(10px);
+  }
+
+  .blog-content {
+    padding: 50px 0;
   }
 }
 
-@media (max-width: 767px) {
+/* --- MOBILE: Under 740px --- */
+@media only screen and (max-width: 739px) {
   .page-header h1 {
     font-size: 1.8rem;
   }
 
   .article {
-    padding: 1.5rem;
+    padding: 1.2rem;
   }
 
   .article h1 {
@@ -403,14 +424,41 @@ table th {
     font-size: 1.3rem;
   }
 
+  .article h3 {
+    font-size: 1.15rem;
+  }
+
   .article p,
   .article li {
     font-size: 1rem;
   }
 
-  .article-content table {
+  .article-content table,
+  .article table {
     display: block;
     overflow-x: auto;
     white-space: nowrap;
   }
+
+  .sidebar {
+    position: static;
+    top: 0;
+    margin-top: 2rem;
+  }
+
+  .navbar-collapse {
+    background: rgba(31, 41, 55, 0.98);
+    padding: 1rem;
+    border-radius: 10px;
+    margin-top: 1rem;
+  }
+
+  .blog-content {
+    padding: 30px 0;
+  }
+
+  .sidebar-widget {
+    padding: 1.2rem;
+  }
 }
+

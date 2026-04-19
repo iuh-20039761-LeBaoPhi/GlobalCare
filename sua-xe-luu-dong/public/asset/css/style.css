@@ -756,16 +756,117 @@ footer ul li a:hover {
   margin-left: 10px;
   padding: 5px;
 }
-/* Responsive */
-@media (max-width: 991px) {
-  .hero h1 {
-    font-size: 2.5rem;
+/* ============================================================
+   RESPONSIVE DESIGN SYSTEM — Sửa Xe Lưu Động
+   Mobile:  width < 740px     → @media (max-width: 739px)
+   Tablet:  740px – 1023px    → @media (min-width: 740px) and (max-width: 1023px)
+   PC:      width ≥ 1024px    → @media (min-width: 1024px)
+   ============================================================ */
+
+/* --- PC: 1024px and above --- */
+@media only screen and (min-width: 1024px) {
+  /* Đảm bảo hero full-screen trên PC */
+  .hero {
+    min-height: 100vh;
+  }
+}
+
+/* --- TABLET: 740px to 1023px --- */
+@media only screen and (min-width: 740px) and (max-width: 1023px) {
+  /* Navbar collapse trên Tablet */
+  .navbar-collapse {
+    background: rgba(31, 41, 55, 0.98);
+    padding: 1rem;
+    border-radius: 10px;
+    margin-top: 0.5rem;
+    text-align: center;
+    backdrop-filter: blur(10px);
   }
 
+  /* Hero */
+  .hero {
+    min-height: auto;
+    padding: 120px 0 60px;
+    background-attachment: scroll; /* Tắt parallax trên tablet */
+  }
+
+  .hero h1 {
+    font-size: 2.5rem;
+    line-height: 1.25;
+  }
+
+  .hero p {
+    font-size: 1.15rem;
+  }
+
+  .stats-box {
+    margin-top: 2rem;
+    padding: 1.5rem;
+  }
+
+  .stat-item h3 {
+    font-size: 2rem;
+  }
+
+  /* Section */
   .section-title {
     font-size: 2.2rem;
   }
 
+  .section-subtitle {
+    font-size: 1.05rem;
+    margin-bottom: 2rem;
+  }
+
+  /* Buttons */
+  .btn-primary-custom,
+  .btn-secondary-custom {
+    padding: 13px 35px;
+    font-size: 1rem;
+  }
+
+  /* Booking */
+  .booking-card {
+    padding: 2.5rem;
+  }
+
+  /* Page header */
+  .page-header {
+    padding: 100px 0 60px;
+  }
+
+  .page-header h1 {
+    font-size: 2.4rem;
+  }
+
+  /* About section */
+  .about-section {
+    padding: 4rem 0;
+  }
+
+  /* Contact section */
+  .contact-section {
+    padding: 4rem 0;
+  }
+
+  /* Logo */
+  .logo-icon {
+    width: 65px;
+    height: 48px;
+  }
+
+  /* Auth dropdown */
+  .auth-user-dropdown {
+    left: 50%;
+    right: auto;
+    transform: translateX(-50%);
+    width: min(280px, calc(100vw - 32px));
+  }
+}
+
+/* --- MOBILE: Under 740px --- */
+@media only screen and (max-width: 739px) {
+  /* Navbar */
   .navbar-collapse {
     background: rgba(31, 41, 55, 0.98);
     padding: 1rem;
@@ -773,49 +874,125 @@ footer ul li a:hover {
     margin-top: 1rem;
     text-align: center;
   }
-}
 
-@media (max-width: 767px) {
+  .logo-icon {
+    width: 55px;
+    height: 38px;
+  }
+
+  .navbar-brand span {
+    font-size: 17px;
+  }
+
+  /* Hero */
+  .hero {
+    min-height: auto;
+    padding: 100px 0 50px;
+    background-attachment: scroll;
+  }
+
   .hero h1 {
     font-size: 2rem;
+    line-height: 1.3;
   }
 
   .hero p {
-    font-size: 1.1rem;
+    font-size: 1.05rem;
+    margin-bottom: 1.5rem;
   }
 
-  .btn-primary-custom,
-  .btn-secondary-custom {
-    padding: 12px 30px;
-    font-size: 1rem;
+  .stats-box {
+    max-width: 100%;
+    margin-top: 2rem;
+    padding: 1.5rem 1rem;
   }
 
+  .stat-item h3 {
+    font-size: 2rem;
+  }
+
+  /* Section */
   .section-title {
     font-size: 1.8rem;
   }
 
+  .section-subtitle {
+    font-size: 1rem;
+    margin-bottom: 1.5rem;
+  }
+
+  /* Buttons */
+  .btn-primary-custom,
+  .btn-secondary-custom {
+    padding: 12px 28px;
+    font-size: 0.97rem;
+    display: block;
+    width: 100%;
+    text-align: center;
+    margin-bottom: 0.75rem;
+  }
+
+  /* Booking */
   .booking-card {
-    padding: 2rem;
+    padding: 1.5rem;
   }
 
-  .logo-icon {
-    width: 60px;
-    height: 40px;
-  }
-  .navbar-brand span {
-    font-size: 18px;
-  }
-  .info {
-    width: auto;
+  /* Service cards */
+  .service-card {
+    padding: 1.5rem;
   }
 
+  .service-icon {
+    width: 70px;
+    height: 70px;
+    font-size: 2rem;
+  }
+
+  /* Page header */
+  .page-header {
+    padding: 90px 0 50px;
+    margin-top: 60px;
+  }
+
+  .page-header h1 {
+    font-size: 1.8rem;
+  }
+
+  /* About */
+  .about-section {
+    padding: 3rem 0;
+  }
+
+  .feature-box {
+    padding: 1rem;
+    margin-bottom: 1rem;
+  }
+
+  /* Contact */
+  .contact-section {
+    padding: 3rem 0;
+  }
+
+  .contact-card {
+    padding: 1.5rem;
+  }
+
+  /* Footer */
+  footer {
+    padding: 2rem 0 1rem;
+  }
+
+  /* Auth dropdown */
   .auth-user-dropdown {
     left: 50%;
     right: auto;
     transform: translateX(-50%);
     width: min(280px, calc(100vw - 32px));
   }
-  .stats-box {
-    max-width: 390px;
+
+  /* Info */
+  .info {
+    width: auto;
   }
 }
+

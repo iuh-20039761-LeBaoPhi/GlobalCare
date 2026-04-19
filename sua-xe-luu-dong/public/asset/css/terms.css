@@ -10,14 +10,37 @@
   color: #374151;
 }
 
-@media (max-width: 991px) {
+/* ============================================================
+   RESPONSIVE — terms.css
+   Mobile:  width < 740px     → @media (max-width: 739px)
+   Tablet:  740px – 1023px    → @media (min-width: 740px) and (max-width: 1023px)
+   PC:      width ≥ 1024px    → @media (min-width: 1024px)
+   ============================================================ */
+
+/* --- TABLET: 740px to 1023px --- */
+@media only screen and (min-width: 740px) and (max-width: 1023px) {
   .page-header h1 {
     font-size: 2.2rem;
   }
+
+  .terms-content {
+    padding: 1.5rem;
+  }
 }
 
-@media (max-width: 767px) {
+/* --- MOBILE: Under 740px --- */
+@media only screen and (max-width: 739px) {
   .page-header h1 {
     font-size: 1.8rem;
   }
+
+  .terms-content {
+    padding: 1rem;
+    border-radius: 8px;
+  }
+
+  .terms-content p {
+    font-size: 0.97rem;
+  }
 }
+
