@@ -5,8 +5,13 @@
         <span class="badge bg-primary rounded-pill" id="pendingOrderCount">0</span>
     </div>
     <div class="card-body p-0">
-        <div id="pendingOrdersWrap" class="p-0">
-            <div class="text-center py-4 text-muted small">Đang tải đơn hàng...</div>
+        <!-- Desktop Table -->
+        <div id="pendingOrdersTableWrap" class="d-none d-md-block">
+            <div class="text-center py-4 text-muted small">Đang tải dữ liệu...</div>
+        </div>
+        <!-- Mobile Cards -->
+        <div id="pendingOrdersCardsWrap" class="d-block d-md-none p-2">
+            <!-- Mobile cards go here -->
         </div>
     </div>
 </div>
@@ -23,7 +28,8 @@
         </button>
     </div>
     <div class="card-body p-0">
-        <div class="table-responsive">
+        <!-- Desktop Table -->
+        <div class="table-responsive d-none d-md-block">
             <table class="table align-middle mb-0">
                 <thead class="bg-light text-muted small uppercase">
                     <tr>
@@ -43,6 +49,10 @@
                     </tr>
                 </tbody>
             </table>
+        </div>
+        <!-- Mobile Cards -->
+        <div id="providerOrderCards" class="d-block d-md-none p-2">
+            <!-- History cards go here -->
         </div>
     </div>
 </div>
@@ -125,7 +135,9 @@
 
         window.loadProviderOrders = async function () {
             const tbody = document.getElementById('providerOrderBody');
-            const pendingWrap = document.getElementById('pendingOrdersWrap');
+            const historyCards = document.getElementById('providerOrderCards');
+            const pendingTableWrap = document.getElementById('pendingOrdersTableWrap');
+            const pendingCardsWrap = document.getElementById('pendingOrdersCardsWrap');
             if (!tbody) return;
 
             try {
@@ -152,8 +164,10 @@
                 document.getElementById('pendingOrderCount').textContent = pendingOrders.length;
 
                 if (!pendingOrders.length) {
-                    pendingWrap.innerHTML = '<div class="p-4 text-center text-muted small">Không có đơn hàng mới nào đang chờ xử lý.</div>';
+                    pendingTableWrap.innerHTML = '<div class="p-4 text-center text-muted small">Không có đơn hàng mới nào đang chờ xử lý.</div>';
+                    pendingCardsWrap.innerHTML = '<div class="p-4 text-center text-muted small">Không có đơn hàng mới.</div>';
                 } else {
+                    // DESKTOP TABLE
                     const pendingRows = pendingOrders.map(o => {
                         return `
                     <tr>
@@ -162,23 +176,20 @@
                             <div class="small fw-600 text-dark">${o.ten_xe}</div>
                         </td>
                         <td>
-                            <div class="fw-bold text-dark small">${o.tenkhachhang || o.ho_ten || '---'}</div>
-                            <div class="small text-muted">${o.sdtkhachhang || o.dien_thoai || '---'}</div>
+                            <div class="fw-bold text-dark small">${o.tenkhachhang || '---'}</div>
+                            <div class="small text-muted">${o.sdtkhachhang || '---'}</div>
                         </td>
-                        <td>
-                            <div class="small fw-600 text-dark">${o.ngay_nhan_yeu_cau} → ${o.ngay_tra_yeu_cau}</div>
-                            <div class="small text-muted">${o.gio_nhan_yeu_cau} / ${o.gio_tra_yeu_cau}</div>
-                        </td>
+                        <td><div class="small fw-600 text-dark">${o.ngay_nhan_yeu_cau} → ${o.ngay_tra_yeu_cau}</div></td>
                         <td class="fw-bold text-primary">${Number(o.tong_tien).toLocaleString()}đ</td>
-                        <td><span class="badge bg-warning bg-opacity-10 text-dark">Chờ xác nhận</span></td>
+                        <td><span class="badge bg-warning bg-opacity-10 text-dark">Mới</span></td>
                         <td class="pe-4 text-end">
-                            <button class="btn btn-sm btn-light me-1" onclick="viewOrderDetailP(${o.id})" title="Chi tiết"><i class="fas fa-eye text-primary"></i></button>
-                            <button class="btn btn-sm btn-primary px-3 rounded-pill me-1" onclick="updateOrderStatus(${o.id}, 'accept', ${o.id_xe || 0})">Nhận đơn</button>
+                            <button class="btn btn-sm btn-light me-1" onclick="viewOrderDetailP(${o.id})"><i class="fas fa-eye text-primary"></i></button>
+                            <button class="btn btn-sm btn-primary px-3 rounded-pill me-1" onclick="updateOrderStatus(${o.id}, 'accept', ${o.id_xe || 0})">Nhận</button>
                             <button class="btn btn-sm btn-outline-danger px-3 rounded-pill" onclick="updateOrderStatus(${o.id}, 'cancel', ${o.id_xe || 0})">Hủy</button>
                         </td>
                     </tr>`;
                     }).join('');
-                    pendingWrap.innerHTML = `
+                    pendingTableWrap.innerHTML = `
                 <div class="table-responsive">
                     <table class="table align-middle mb-0">
                         <thead class="bg-light text-muted small uppercase">
@@ -194,6 +205,30 @@
                         <tbody>${pendingRows}</tbody>
                     </table>
                 </div>`;
+
+                    // MOBILE CARDS
+                    pendingCardsWrap.innerHTML = pendingOrders.map(o => {
+                        return `
+                        <div class="card mb-3 border-0 shadow-sm" style="border-radius:12px; border-left: 4px solid #f59e0b !important;">
+                            <div class="card-body p-3">
+                                <div class="d-flex justify-content-between mb-2">
+                                    <div class="fw-bold text-primary small">#${String(o.id).padStart(7, '0')}</div>
+                                    <span class="badge bg-warning bg-opacity-10 text-dark" style="font-size:10px;">ĐƠN MỚI</span>
+                                </div>
+                                <h6 class="fw-bold mb-1" style="font-size:14px;">${o.ten_xe}</h6>
+                                <div class="small mb-2 pt-2 border-top">
+                                    <div class="d-flex justify-content-between"><span>Khách:</span> <strong class="text-dark">${o.tenkhachhang || '---'}</strong></div>
+                                    <div class="d-flex justify-content-between"><span>Thuê:</span> <strong>${o.ngay_nhan_yeu_cau} → ${o.ngay_tra_yeu_cau}</strong></div>
+                                    <div class="d-flex justify-content-between text-primary"><span>Giá:</span> <strong>${Number(o.tong_tien || 0).toLocaleString()}đ</strong></div>
+                                </div>
+                                <div class="d-flex gap-2">
+                                    <button class="btn btn-sm btn-primary flex-grow-1" onclick="updateOrderStatus(${o.id}, 'accept', ${o.id_xe || 0})">Nhận đơn</button>
+                                    <button class="btn btn-sm btn-outline-danger" onclick="updateOrderStatus(${o.id}, 'cancel', ${o.id_xe || 0})">Hủy</button>
+                                    <button class="btn btn-sm btn-light" onclick="viewOrderDetailP(${o.id})"><i class="fas fa-eye text-primary"></i></button>
+                                </div>
+                            </div>
+                        </div>`;
+                    }).join('');
                 }
 
                 // 2. Render Đơn đặt xe của tôi (HIỆN ĐƠN ĐÃ NHẬN + ĐANG THUÊ + HOÀN THÀNH)
@@ -201,17 +236,14 @@
 
                 if (!confirmedOrders.length) {
                     tbody.innerHTML = '<tr><td colspan="6" class="text-center py-5 text-muted">Chưa có đơn hàng nào đã được xác nhận.</td></tr>';
+                    historyCards.innerHTML = '<div class="p-3 text-center text-muted small">Chưa có đơn xác nhận.</div>';
                 } else {
+                    // DESKTOP TABLE
                     tbody.innerHTML = confirmedOrders.map(o => {
                         const st = getStatusInfo(o);
-
-                        // Thêm nút thao tác tùy theo trạng thái ngay tại bảng history
                         let actionsHtml = '';
-                        if (st.code === 'accepted') {
-                            actionsHtml = `<button class="btn btn-sm btn-success px-3 rounded-pill ms-2" onclick="updateOrderStatus(${o.id}, 'start', ${o.id_xe || 0})">Giao xe</button>`;
-                        } else if (st.code === 'doing') {
-                            actionsHtml = `<button class="btn btn-sm btn-info text-white px-3 rounded-pill ms-2" onclick="updateOrderStatus(${o.id}, 'complete', ${o.id_xe || 0})">Nhận xe trả</button>`;
-                        }
+                        if (st.code === 'accepted') actionsHtml = `<button class="btn btn-sm btn-success px-3 rounded-pill ms-1" onclick="updateOrderStatus(${o.id}, 'start', ${o.id_xe || 0})">Giao xe</button>`;
+                        else if (st.code === 'doing') actionsHtml = `<button class="btn btn-sm btn-info text-white px-3 rounded-pill ms-1" onclick="updateOrderStatus(${o.id}, 'complete', ${o.id_xe || 0})">Nhận xe trả</button>`;
 
                         return `<tr>
                         <td class="ps-4">
@@ -222,17 +254,41 @@
                             <div class="fw-bold text-dark">${o.tenkhachhang || o.ho_ten || '---'}</div>
                             <div class="small text-muted">${o.sdtkhachhang || o.dien_thoai || '---'}</div>
                         </td>
-                        <td>
-                            <div class="small fw-600 text-dark">${o.ngay_nhan_yeu_cau} → ${o.ngay_tra_yeu_cau}</div>
-                            <div class="small text-muted">${o.gio_nhan_yeu_cau} / ${o.gio_tra_yeu_cau}</div>
-                        </td>
+                        <td><div class="small fw-600 text-dark">${o.ngay_nhan_yeu_cau} → ${o.ngay_tra_yeu_cau}</div></td>
                         <td class="fw-bold text-dark">${Number(o.tong_tien).toLocaleString()}đ</td>
                         <td><span class="badge ${st.class} bg-opacity-10">${st.label}</span></td>
                         <td class="pe-4 text-nowrap">
-                            <button class="btn btn-sm btn-light" onclick="viewOrderDetailP(${o.id})" title="Chi tiết"><i class="fas fa-eye text-primary"></i> Chi tiết</button>
+                            <button class="btn btn-sm btn-light" onclick="viewOrderDetailP(${o.id})"><i class="fas fa-eye"></i></button>
                             ${actionsHtml}
                         </td>
                     </tr>`;
+                    }).join('');
+
+                    // MOBILE CARDS
+                    historyCards.innerHTML = confirmedOrders.map(o => {
+                        const st = getStatusInfo(o);
+                        let actionsHtml = '';
+                        if (st.code === 'accepted') actionsHtml = `<button class="btn btn-sm btn-success flex-grow-1" onclick="updateOrderStatus(${o.id}, 'start', ${o.id_xe || 0})">Giao xe</button>`;
+                        else if (st.code === 'doing') actionsHtml = `<button class="btn btn-sm btn-info text-white flex-grow-1" onclick="updateOrderStatus(${o.id}, 'complete', ${o.id_xe || 0})">Trả xe</button>`;
+
+                        return `<div class="card mb-3 border-0 shadow-sm" style="border-radius:12px; background:#fff;">
+                            <div class="card-body p-3">
+                                <div class="d-flex justify-content-between mb-2">
+                                    <div class="fw-bold text-primary small">#${String(o.id).padStart(7, '0')}</div>
+                                    <span class="badge ${st.class} bg-opacity-10" style="font-size:10px;">${st.label}</span>
+                                </div>
+                                <h6 class="fw-bold mb-1" style="font-size:14px;">${o.ten_xe || 'N/A'}</h6>
+                                <div class="small mb-2 pt-2 border-top">
+                                    <div class="d-flex justify-content-between"><span>KH:</span> <strong class="text-dark">${o.tenkhachhang || '---'}</strong></div>
+                                    <div class="d-flex justify-content-between"><span>Thuê:</span> <strong>${o.ngay_nhan_yeu_cau} → ${o.ngay_tra_yeu_cau}</strong></div>
+                                    <div class="d-flex justify-content-between text-primary"><span>Tổng:</span> <strong>${Number(o.tong_tien || 0).toLocaleString()}đ</strong></div>
+                                </div>
+                                <div class="d-flex gap-2">
+                                    ${actionsHtml}
+                                    <button class="btn btn-sm btn-light px-3" onclick="viewOrderDetailP(${o.id})"><i class="fas fa-eye text-primary"></i></button>
+                                </div>
+                            </div>
+                        </div>`;
                     }).join('');
                 }
             } catch (e) {
@@ -251,17 +307,8 @@
 <style>
 /* Quản lý đơn - Responsive */
 @media (max-width: 768px) {
-    .card-header { flex-direction: column; gap: 8px; padding: 16px !important; }
-    .card-header h5, .card-header h6 { font-size: 0.95rem; }
-    table th, table td { font-size: 0.78rem; padding: 8px 6px !important; white-space: nowrap; }
-    /* Ẩn cột "Khách hàng" & "Tổng tiền" trên mobile */
-    table th:nth-child(2), table td:nth-child(2),
-    table th:nth-child(4), table td:nth-child(4) { display: none; }
-    .btn-sm { font-size: 0.7rem; padding: 4px 8px; }
-    .pending-order-card { flex-direction: column !important; gap: 8px; }
-}
-@media (max-width: 480px) {
-    /* Ẩn thêm cột thời gian thuê trên rất nhỏ */
-    table th:nth-child(3), table td:nth-child(3) { display: none; }
+    .card-header { padding: 12px 16px !important; }
+    .card-header h5 { font-size: 1.1rem; }
+    #pageTitleDisplay { font-size: 1.1rem; }
 }
 </style>

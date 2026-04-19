@@ -409,6 +409,45 @@
         if (modalPickup) modalPickup.addEventListener('change', syncModalDateConstraints);
         if (modalReturn) modalReturn.addEventListener('change', syncModalDateConstraints);
 
+        // E. Handle Media Capture
+        let _modalMediaFiles = [];
+        const photoInput = document.getElementById('txMediaPhotoInput');
+        const videoInput = document.getElementById('txMediaVideoInput');
+        const photoBtn   = document.getElementById('txPhotoCaptureBtn');
+        const videoBtn   = document.getElementById('txVideoCaptureBtn');
+        const photoPreview = document.getElementById('txMediaPhotoPreviewContainer');
+        const videoPreview = document.getElementById('txMediaVideoPreviewContainer');
+
+        const addMediaPreview = (file, container) => {
+            const id = Date.now() + Math.random();
+            _modalMediaFiles.push({ id, file });
+            const wrap = document.createElement('div');
+            wrap.style.cssText = 'position:relative;width:80px;height:80px;border-radius:8px;overflow:hidden;border:2px solid rgba(59,130,246,0.4);';
+            wrap.dataset.mediaId = id;
+            const removeBtn = document.createElement('button');
+            removeBtn.type = 'button'; removeBtn.innerHTML = '&times;';
+            removeBtn.style.cssText = 'position:absolute;top:2px;right:4px;background:rgba(0,0,0,0.6);color:white;border:none;border-radius:50%;width:18px;height:18px;font-size:12px;line-height:16px;cursor:pointer;padding:0;z-index:1;';
+            removeBtn.addEventListener('click', () => { _modalMediaFiles = _modalMediaFiles.filter(m => m.id !== id); wrap.remove(); });
+            if (file.type.startsWith('image/')) {
+                const img = document.createElement('img');
+                img.style.cssText = 'width:100%;height:100%;object-fit:cover;';
+                img.src = URL.createObjectURL(file);
+                wrap.appendChild(img);
+            } else {
+                const icon = document.createElement('div');
+                icon.style.cssText = 'width:100%;height:100%;background:#0f172a;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;';
+                icon.innerHTML = '<i class="fas fa-video" style="color:#3B82F6;font-size:1.4rem;"></i><span style="color:#ccc;font-size:0.6rem;text-align:center;padding:0 4px;overflow:hidden;white-space:nowrap;text-overflow:ellipsis;width:100%;">' + file.name + '</span>';
+                wrap.appendChild(icon);
+            }
+            wrap.appendChild(removeBtn);
+            if (container) container.appendChild(wrap);
+        };
+
+        if (photoBtn) photoBtn.onclick = () => photoInput && photoInput.click();
+        if (videoBtn) videoBtn.onclick = () => videoInput && videoInput.click();
+        if (photoInput) photoInput.onchange = function() { Array.from(this.files).forEach(f => addMediaPreview(f, photoPreview)); this.value = ''; };
+        if (videoInput) videoInput.onchange = function() { Array.from(this.files).forEach(f => addMediaPreview(f, videoPreview)); this.value = ''; };
+
         // D. Handle Form Submission -> Show Confirmation
         form.onsubmit = function(e) {
             e.preventDefault();
@@ -574,7 +613,21 @@
                         }
                     }
 
-                    // BƯỚC 2: Gửi đơn đặt xe
+                    // BƯỚC 2: Tải file lên Drive (nếu có)
+                    let driveIds = [];
+                    if (_modalMediaFiles.length > 0) {
+                        this.innerHTML = '<i class="fas fa-spinner fa-spin me-2"></i>Đang tải ảnh...';
+                        for (const m of _modalMediaFiles) {
+                            try {
+                                const up = await DVQTApp.uploadFile(m.file);
+                                if (up && up.success) driveIds.push(up.fileId);
+                            } catch (err) {
+                                console.warn('Upload failed for 1 file:', err);
+                            }
+                        }
+                    }
+
+                    // BƯỚC 3: Gửi đơn đặt xe
                     const nowStr = new Date().toISOString().slice(0, 19).replace('T', ' ');
                     const payload = {
                         id_nguoidung: accountResult?.userId || s?.id || null,
@@ -589,6 +642,7 @@
                         gio_tra_yeu_cau: document.getElementById('returnTime')?.value || '08:00',
                         diachikhachhang: form.customer_address.value,
                         ghi_chu: form.notes.value,
+                        hinh_anh: driveIds.join(','),
                         dich_vu_kem: JSON.stringify(addonPayload),
                         so_ngay_thue: days,
                         gia_thue_nhat: pricePerDay,
@@ -623,7 +677,7 @@
                         window.saveToGoogleSheet(sheetData).catch(e => console.error('Gửi Sheet thất bại:', e));
                     }
 
-                    // BƯỚC 3: Xử lý kết quả
+                    // BƯỚC 4: Xử lý kết quả
                     if (window.DVQTBookingHelper) {
                         const helper = window.DVQTBookingHelper;
                         const redirectUrl = 'views/pages/customer/trang-ca-nhan.html';

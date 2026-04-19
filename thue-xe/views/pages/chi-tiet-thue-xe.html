@@ -53,13 +53,14 @@
         }
 
         .standalone-logo {
-            width: 44px;
-            height: 44px;
-            border-radius: 12px;
-            background: rgba(255, 255, 255, 0.15);
-            padding: 4px;
-            border: 1px solid rgba(255, 255, 255, 0.25);
-            object-fit: cover;
+            width: 42px;
+            height: 42px;
+            border-radius: 10px;
+            background: #ffffff;
+            padding: 2px;
+            border: 1px solid rgba(255, 255, 255, 0.3);
+            object-fit: contain;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
         }
 
         .standalone-title-wrap {
@@ -255,6 +256,14 @@
             .content-left { grid-column: span 2; display: grid; grid-template-columns: 1.5fr 1fr; gap: 5px; }
         }
 
+        .review-media-wrap { position: relative; width: 60px; height: 60px; border-radius: 8px; overflow: hidden; border: 1px solid #e2e8f0; }
+        .review-media-wrap img { width: 100%; height: 100%; object-fit: cover; }
+        .review-media-remove { position: absolute; top: 2px; right: 2px; width: 16px; height: 16px; background: rgba(0,0,0,0.5); color: white; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 10px; cursor: pointer; }
+        .review-video-placeholder { width: 100%; height: 100%; background: #0f172a; display: flex; align-items: center; justify-content: center; color: #3b82f6; }
+        
+        .review-media-thumb { width: 50px; height: 50px; border-radius: 6px; overflow: hidden; display: block; border: 1px solid #eee; }
+        .review-media-thumb img { width: 100%; height: 100%; object-fit: cover; }
+
         @media (max-width: 767px) {
             .invoice-hero { padding: 20px 15px; }
             .invoice-hero-top { flex-direction: column; text-align: center; align-items: center; gap: 10px; }
@@ -315,21 +324,24 @@
 <body class="order-standalone-page">
     <header class="standalone-header">
         <div class="standalone-header-inner">
-            <a href="../../index.html">
+            <a href="../../../index.html" title="Trang chủ Dịch Vụ Quanh Ta">
                 <img class="standalone-logo" src="../../../public/asset/image/logo-dich-vu-quanh-ta.png" alt="Logo DVQT" />
             </a>
             <div class="standalone-title-wrap">
                 <h1 class="standalone-title">Chi tiết hóa đơn Thuê Xe</h1>
-                <p class="standalone-subtitle">Dịch vụ cho thuê xe tự lái Premium</p>
+                <p class="standalone-subtitle">Quản lý và Theo dõi hành trình</p>
             </div>
-            <a href="javascript:history.back()" class="standalone-logo d-flex align-items-center justify-content-center text-white text-decoration-none">
-                <i class="fas fa-arrow-left"></i>
+            <a href="../../index.html" title="Trang chủ Thuê Xe">
+                <img class="standalone-logo" src="../../assets/images/thue-xe-logo-header-navigation.jpg" alt="Logo Thuê Xe" />
             </a>
         </div>
     </header>
 
     <main class="standalone-content">
-        <div class="mb-3 px-2">
+        <div class="mb-3 px-2 d-flex align-items-center gap-3">
+            <button class="btn btn-sm btn-white shadow-sm fw-bold px-3 py-1 text-primary" onclick="OrderDetailComponent.goBackToDashboard()" style="border-radius: 8px; font-size: 0.8rem; border: 1px solid #e2e8f0;">
+                <i class="fas fa-arrow-left me-1"></i>Quay lại
+            </button>
             <div class="small fw-bold text-muted" id="accessInfo">Quyền: --- | Đang xem đơn #-------</div>
         </div>
         <!-- 1. HERO SECTION -->
@@ -412,6 +424,11 @@
                         <div class="small italic text-muted" id="orderNote">Không có ghi chú.</div>
                     </div>
 
+                    <div class="mt-3" id="orderMediaSection" style="display:none;">
+                        <div class="tech-label mb-2">Hình ảnh đính kèm</div>
+                        <div id="orderMediaContainer" class="d-flex flex-wrap gap-2"></div>
+                    </div>
+
                     <div class="mt-4 pt-3 border-top">
                         <div class="tech-label mb-2">Chi tiết chi phí</div>
                         <div class="row g-3">
@@ -488,15 +505,63 @@
                     <div class="col-md-6 border-end">
                         <div class="label text-muted fw-800 small uppercase mb-1">Đánh giá khách hàng <span class="badge bg-secondary ms-2" id="custReviewBadge">CHƯA CÓ</span></div>
                         <div id="custReviewMsg" class="small fw-500">Chưa có đánh giá.</div>
+                        <div id="custReviewMedia" class="d-flex flex-wrap gap-2 mt-2"></div>
                     </div>
                     <div class="col-md-6">
                         <div class="label text-muted fw-800 small uppercase mb-1">Báo cáo nhà xe <span class="badge bg-secondary ms-2" id="nccReviewBadge">CHƯA CÓ</span></div>
                         <div id="nccReviewMsg" class="small fw-500">Chưa có báo cáo bàn giao.</div>
+                        <div id="nccReviewMedia" class="d-flex flex-wrap gap-2 mt-2"></div>
                     </div>
                 </div>
             </div>
         </div>
     </main>
+
+    <!-- Review Modal -->
+    <div class="modal fade" id="reviewModal" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content border-0 shadow-lg" style="border-radius: 1.5rem; overflow: hidden;">
+                <div class="modal-header border-0 bg-primary text-white p-4">
+                    <h5 class="modal-title fw-bold">
+                        <i class="fas fa-edit me-2"></i>Viết đánh giá
+                    </h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body p-4">
+                    <input type="hidden" id="reviewRole">
+                    <div class="mb-4">
+                        <label class="form-label fw-bold text-dark mb-2">Trải nghiệm của bạn</label>
+                        <textarea class="form-control border-light-subtle bg-light" id="reviewText" rows="4" placeholder="Nhập cảm nhận của bạn về chuyến xe hoặc đối tác..." style="border-radius: 1rem; resize: none;"></textarea>
+                    </div>
+                    <div class="mb-4">
+                        <div class="row g-2">
+                            <div class="col-6">
+                                <button type="button" class="btn btn-outline-secondary w-100 py-3" onclick="document.getElementById('reviewPhotoInput').click()" style="border-radius:1rem; border-style:dashed;">
+                                    <i class="fas fa-camera d-block mb-1 fs-4"></i>
+                                    <span class="small">Thêm ảnh</span>
+                                </button>
+                                <input type="file" id="reviewPhotoInput" accept="image/*" multiple class="d-none" onchange="OrderDetailComponent.handleMediaChange(this, 'reviewPhotoPreview')">
+                            </div>
+                            <div class="col-6">
+                                <button type="button" class="btn btn-outline-secondary w-100 py-3" onclick="document.getElementById('reviewVideoInput').click()" style="border-radius:1rem; border-style:dashed;">
+                                    <i class="fas fa-video d-block mb-1 fs-4"></i>
+                                    <span class="small">Thêm video</span>
+                                </button>
+                                <input type="file" id="reviewVideoInput" accept="video/*" multiple class="d-none" onchange="OrderDetailComponent.handleMediaChange(this, 'reviewVideoPreview')">
+                            </div>
+                        </div>
+                        <div id="reviewPhotoPreview" class="d-flex flex-wrap gap-2 mt-3"></div>
+                        <div id="reviewVideoPreview" class="d-flex flex-wrap gap-2 mt-2"></div>
+                    </div>
+                    <div class="d-grid">
+                        <button type="button" class="btn btn-primary py-3 fw-bold shadow-sm" id="btnSubmitReview" onclick="OrderDetailComponent.submitReview()" style="border-radius: 1rem;">
+                            Gửi đánh giá <i class="fas fa-paper-plane ms-2"></i>
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
 
     <!-- JS Dependencies -->
     <script src="../../../public/asset/js/dvqt-app.js"></script>
@@ -679,6 +744,25 @@
                 `;
                 document.getElementById('pickupAddr').textContent = o.diachikhachhang || o.dia_chi || 'Tận nơi';
                 document.getElementById('orderNote').textContent = o.ghi_chu || 'Không có ghi chú.';
+                
+                // Hiển thị hình ảnh đính kèm (nếu có)
+                const mediaSection = document.getElementById('orderMediaSection');
+                const mediaContainer = document.getElementById('orderMediaContainer');
+                if (mediaSection && mediaContainer) {
+                    const driveIds = (o.hinh_anh || o.hinhanh || '').split(',').filter(Boolean);
+                    if (driveIds.length > 0) {
+                        mediaContainer.innerHTML = driveIds.map(id => {
+                            const url = DVQTApp.getDriveUrl(id);
+                            return `<div class="order-media-item" style="width:100px;height:100px;border-radius:12px;overflow:hidden;border:2px solid #f1f5f9;cursor:pointer;" onclick="window.open('${url}', '_blank')">
+                                <img src="${url}" style="width:100%;height:100%;object-fit:cover;" onerror="this.src='../../../public/asset/image/image-placeholder.png'">
+                            </div>`;
+                        }).join('');
+                        mediaSection.style.display = 'block';
+                    } else {
+                        mediaSection.style.display = 'none';
+                    }
+                }
+
                 document.getElementById('pricePerDay').textContent = pricePerDay > 0 ? `${fmtMoney(pricePerDay)}/ngày` : '---';
                 document.getElementById('rentalDays').textContent = rentalDays > 0 ? `${rentalDays} ngày` : '---';
                 document.getElementById('rentalAmount').textContent = fmtMoney(rentalAmount);
@@ -735,22 +819,132 @@
                     document.getElementById('nccAvatar').textContent = (o.tenncc || 'NC').substring(0, 2).toUpperCase();
                 }
 
-                const renderRev = (raw, badgeId, msgId, role) => {
+                const renderRev = (raw, badgeId, msgId, mediaId, role) => {
                     const badge = document.getElementById(badgeId);
                     const msg = document.getElementById(msgId);
-                    if(!raw) {
+                    const mediaBox = document.getElementById(mediaId);
+                    if(!raw || (typeof raw === 'string' && !raw.trim())) {
                         if(o.ngayhoanthanhthucte && window._currentSessionRole === role) {
-                            msg.innerHTML = `<button class="btn btn-sm btn-primary mt-2" onclick="OrderDetailComponent.openReviewModal('${role}')"><i class="fas fa-edit me-1"></i> Viết đánh giá</button>`;
+                            msg.innerHTML = `<button class="btn btn-sm btn-outline-primary mt-2" onclick="OrderDetailComponent.openReviewModal('${role}')" style="border-radius:0.5rem;"><i class="fas fa-edit me-1"></i> Viết đánh giá</button>`;
                         }
                         return;
                     }
                     badge.textContent = 'ĐÃ CÓ';
                     badge.className = 'badge bg-success ms-2';
                     msg.innerHTML = raw.startsWith('{') ? JSON.parse(raw).text : raw;
+
+                    // Render Review Media (Hỗ trợ cả hinh_anh_... và hinhanh_...)
+                    const colKey = role === 'customer' ? 'kh' : 'ncc';
+                    const mediaRaw = o['hinh_anh_danhgia_' + colKey] || o['hinhanh_danhgia_' + colKey] || '';
+                    const mediaIds = mediaRaw.split(',').filter(Boolean);
+                    
+                    console.log(`[Review] Found ${mediaIds.length} images for ${role}`);
+                    
+                    if(mediaBox) {
+                        mediaBox.innerHTML = mediaIds.map(id => {
+                            const url = DVQTApp.getDriveUrl(id);
+                            return `<a href="${url}" target="_blank" class="review-media-thumb">
+                                <img src="${url}" alt="Review" onerror="this.src='https://placehold.co/100?text=No+Image';">
+                            </a>`;
+                        }).join('');
+                    }
                 };
 
-                renderRev(o.danhgia_kh, 'custReviewBadge', 'custReviewMsg', 'customer');
-                renderRev(o.danhgia_ncc, 'nccReviewBadge', 'nccReviewMsg', 'provider');
+                renderRev(o.danhgia_kh, 'custReviewBadge', 'custReviewMsg', 'custReviewMedia', 'customer');
+                renderRev(o.danhgia_ncc, 'nccReviewBadge', 'nccReviewMsg', 'nccReviewMedia', 'provider');
+            }
+
+            let _reviewMediaStore = [];
+            function openReviewModal(role) {
+                document.getElementById('reviewRole').value = role;
+                document.getElementById('reviewText').value = '';
+                document.getElementById('reviewPhotoPreview').innerHTML = '';
+                document.getElementById('reviewVideoPreview').innerHTML = '';
+                _reviewMediaStore = [];
+                const modal = new bootstrap.Modal(document.getElementById('reviewModal'));
+                modal.show();
+            }
+
+            function handleMediaChange(input, previewId) {
+                const container = document.getElementById(previewId);
+                Array.from(input.files).forEach(file => {
+                    const id = Date.now() + Math.random();
+                    _reviewMediaStore.push({ id, file });
+                    
+                    const wrap = document.createElement('div');
+                    wrap.className = 'review-media-wrap';
+                    wrap.dataset.id = id;
+                    
+                    const remove = document.createElement('div');
+                    remove.className = 'review-media-remove';
+                    remove.innerHTML = '<i class="fas fa-times"></i>';
+                    remove.onclick = () => {
+                        _reviewMediaStore = _reviewMediaStore.filter(m => m.id !== id);
+                        wrap.remove();
+                    };
+
+                    if(file.type.startsWith('image/')) {
+                        const img = document.createElement('img');
+                        img.src = URL.createObjectURL(file);
+                        wrap.appendChild(img);
+                    } else {
+                        const icon = document.createElement('div');
+                        icon.className = 'review-video-placeholder';
+                        icon.innerHTML = '<i class="fas fa-video"></i>';
+                        wrap.appendChild(icon);
+                    }
+                    wrap.appendChild(remove);
+                    container.appendChild(wrap);
+                });
+                input.value = '';
+            }
+
+            async function submitReview() {
+                const role = document.getElementById('reviewRole').value;
+                const text = document.getElementById('reviewText').value.trim();
+                const btn = document.getElementById('btnSubmitReview');
+
+                if(!text) {
+                    Swal.fire('Thiếu thông tin', 'Vui lòng nhập nội dung đánh giá', 'warning');
+                    return;
+                }
+
+                btn.disabled = true;
+                btn.innerHTML = '<i class="fas fa-spinner fa-spin me-2"></i>Đang gửi...';
+
+                try {
+                    let driveIds = [];
+                    if(_reviewMediaStore.length > 0) {
+                        for(const m of _reviewMediaStore) {
+                            try {
+                                const up = await DVQTApp.uploadFile(m.file);
+                                if(up && up.success) driveIds.push(up.fileId);
+                            } catch(err) { console.error('Upload media review failed:', err); }
+                        }
+                    }
+
+                    const payload = {};
+                    if(role === 'customer') {
+                        payload.danhgia_kh = text;
+                        payload.hinh_anh_danhgia_kh = driveIds.join(',');
+                    } else {
+                        payload.danhgia_ncc = text;
+                        payload.hinh_anh_danhgia_ncc = driveIds.join(',');
+                    }
+
+                    const res = await DVQTKrud.updateRow(TABLE_ORDERS, currentOrder.id, payload);
+                    if(res) {
+                        Swal.fire('Thành công', 'Đánh giá của bạn đã được ghi nhận', 'success').then(() => {
+                            location.reload();
+                        });
+                    }
+                } catch(err) {
+                    console.error('Submit review error:', err);
+                    Swal.fire('Lỗi', 'Không thể gửi đánh giá lúc này', 'error');
+                } finally {
+                    btn.disabled = false;
+                    btn.innerHTML = 'Gửi đánh giá <i class="fas fa-paper-plane ms-2"></i>';
+                }
             }
 
             function renderActions(session) {
@@ -806,7 +1000,20 @@
                 }
             }
 
-            return { run };
+            function goBackToDashboard() {
+                const role = window._currentSessionRole;
+                if (role === 'provider') {
+                    window.location.href = 'provider/trang-ca-nhan.html';
+                } else if (role === 'customer') {
+                    window.location.href = 'customer/trang-ca-nhan.html';
+                } else if (role === 'admin') {
+                    window.location.href = '../../admin/index.html';
+                } else {
+                    window.history.back();
+                }
+            }
+
+            return { run, openReviewModal, handleMediaChange, submitReview, goBackToDashboard };
         })();
 
         (function() {
