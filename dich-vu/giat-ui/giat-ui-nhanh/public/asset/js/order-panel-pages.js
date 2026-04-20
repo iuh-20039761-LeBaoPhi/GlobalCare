@@ -5,9 +5,9 @@
   var BOOKING_TABLE = "datlich_giatuinhanh";
   var USER_TABLE = "nguoidung";
   var PROVIDER_SERVICE_ID = "11";
-  var CUSTOMER_LOGIN_PAGE = "../../public/dang-nhap.html?service=giatuinhanh";
-  var PROVIDER_LOGIN_PAGE = "../../public/dang-nhap.html?service=giatuinhanh";
-  var ADMIN_LOGIN_PAGE = "../../public/admin-login.html";
+  var CUSTOMER_LOGIN_PAGE = "../../../../public/dang-nhap.html?service=giatuinhanh";
+  var PROVIDER_LOGIN_PAGE = "../../../../public/dang-nhap.html?service=giatuinhanh";
+  var ADMIN_LOGIN_PAGE = "../../../../public/admin-login.html";
   var getShared = function () {
     return window.SharedOrderUtils || {};
   };
