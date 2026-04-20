@@ -1,0 +1,407 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Hệ Thống Thợ Nhà - Tài Liệu Hướng Dẫn Chi Tiết (Toàn diện)</title>
+    
+    <!-- Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Pacifico&display=swap" rel="stylesheet">
+    
+    <!-- Bootstrap 5 CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+    <!-- Font Awesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    
+    <style>
+        :root {
+            --primary: #10b981;
+            --primary-dark: #059669;
+            --primary-light: #ecfdf5;
+            --gradient: linear-gradient(135deg, #11998e, #38ef7d);
+            --text-main: #1e293b;
+            --text-sub: #64748b;
+            --bg: #f8fafc;
+            --border: #e2e8f0;
+            --radius-md: 12px;
+            --radius-lg: 20px;
+            --shadow: 0 10px 15px -3px rgba(0,0,0,0.1);
+        }
+
+        body { font-family: 'Inter', sans-serif; background: var(--bg); color: var(--text-main); scroll-behavior: smooth; }
+
+        /* Header */
+        .doc-header {
+            background: var(--gradient);
+            color: white;
+            padding: 80px 0 100px;
+            text-align: center;
+            clip-path: ellipse(150% 100% at 50% 0%);
+        }
+        .doc-header h1 { font-family: 'Pacifico', cursive; font-size: 3.5rem; margin-bottom: 10px; }
+
+        /* Navigation */
+        .doc-nav {
+            position: sticky;
+            top: 20px;
+            background: white;
+            border-radius: var(--radius-md);
+            padding: 10px;
+            box-shadow: var(--shadow);
+            border: 1px solid var(--border);
+            z-index: 1000;
+        }
+        .doc-nav .nav-link {
+            padding: 10px 15px;
+            color: var(--text-sub);
+            font-weight: 600;
+            border-radius: 8px;
+            margin-bottom: 2px;
+        }
+        .doc-nav .nav-link:hover { background: var(--primary-light); color: var(--primary); }
+        .doc-nav .nav-link.active { background: var(--gradient); color: white; }
+
+        /* Content Sections */
+        .doc-section { background: white; padding: 40px; border-radius: var(--radius-lg); box-shadow: var(--shadow); border: 1px solid var(--border); margin-bottom: 40px; scroll-margin-top: 20px; }
+        .section-title { font-weight: 800; font-size: 1.8rem; margin-bottom: 30px; display: flex; align-items: center; gap: 12px; color: var(--text-main); }
+        .section-title i { color: var(--primary); }
+
+        /* Step Details */
+        .detail-step { margin-bottom: 60px; padding-left: 20px; border-left: 3px solid var(--primary-light); }
+        .detail-step:last-child { margin-bottom: 0; }
+        .step-label { color: var(--primary); font-weight: 800; text-transform: uppercase; font-size: 0.75rem; letter-spacing: 1.5px; margin-bottom: 8px; display: block; }
+        .step-heading { font-weight: 700; font-size: 1.25rem; margin-bottom: 15px; }
+
+        /* DEVICE GALLERY - THE CORE REQUEST */
+        .device-gallery {
+            background: #f1f5f9;
+            border-radius: var(--radius-md);
+            padding: 20px;
+            margin-top: 20px;
+        }
+        .frame-label {
+            font-size: 10px; font-weight: 800; color: #64748b; text-transform: uppercase;
+            margin-bottom: 8px; display: block; text-align: center;
+        }
+        
+        .mockup {
+            background: white; border: 1px solid #cbd5e1; border-radius: 8px;
+            position: relative; overflow: hidden; display: flex; align-items: center; justify-content: center;
+            box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05);
+        }
+        
+        .pc-mockup { width: 100%; height: 220px; border-top: 20px solid #e2e8f0; }
+        .pc-mockup::before { content: ""; position: absolute; top: -14px; left: 8px; width: 6px; height: 6px; border-radius: 50%; background: #94a3b8; box-shadow: 10px 0 #94a3b8, 20px 0 #94a3b8; }
+        
+        .tablet-mockup { width: 100%; height: 220px; border: 6px solid #1e293b; border-radius: 12px; }
+        
+        .mobile-mockup { width: 120px; height: 220px; border: 6px solid #1e293b; border-radius: 20px; margin: 0 auto; }
+
+        .placeholder-content {
+            flex-direction: column; color: #94a3b8; text-align: center; padding: 10px; font-size: 11px; font-weight: 500;
+        }
+        .placeholder-content i { font-size: 1.8rem; margin-bottom: 5px; color: #cbd5e1; }
+
+        /* Tip Box */
+        .note-box {
+            background: #f0fdf4; border-left: 4px solid var(--primary); padding: 15px; border-radius: 0 8px 8px 0; margin: 15px 0;
+            font-size: 14px;
+        }
+
+        footer { background: #0f172a; color: #94a3b8; padding: 60px 0; text-align: center; margin-top: 80px; }
+        
+        @media (max-width: 991px) {
+            .doc-nav { position: relative; top: 0; margin-bottom: 30px; }
+            .mobile-mockup { width: 100px; height: 180px; }
+            .tablet-mockup, .pc-mockup { height: 180px; }
+        }
+    </style>
+</head>
+<body data-bs-spy="scroll" data-bs-target="#sideNav" data-bs-offset="100">
+
+    <!-- Header -->
+    <header class="doc-header">
+        <div class="container-fluid px-lg-5">
+            <h1>Thợ Nhà</h1>
+            <p class="lead">Tài liệu hướng dẫn v4.0 - Toàn diện cho mọi thiết bị</p>
+        </div>
+    </header>
+
+    <div class="container-fluid px-lg-5" style="margin-top: -40px;">
+        <div class="row g-4">
+            <!-- Sidebar Navigation -->
+            <div class="col-lg-3 col-xxl-2">
+                <nav class="doc-nav" id="sideNav">
+                    <a class="nav-link" href="#sec-auth"><i class="fas fa-user-plus me-2"></i> Đăng ký/Đăng nhập</a>
+                    <a class="nav-link" href="#sec-booking"><i class="fas fa-calendar-alt me-2"></i> Quy trình Đặt lịch</a>
+                    <a class="nav-link" href="#sec-customer"><i class="fas fa-user me-2"></i> Cho Khách hàng</a>
+                    <a class="nav-link" href="#sec-provider"><i class="fas fa-tools me-2"></i> Cho Nhà cung cấp</a>
+                    <a class="nav-link" href="#sec-admin"><i class="fas fa-user-shield me-2"></i> Cho Quản trị viên</a>
+                </nav>
+            </div>
+
+            <!-- Main Content -->
+            <div class="col-lg-9 col-xxl-10">
+                
+                <!-- SECTION: AUTH -->
+                <section id="sec-auth" class="doc-section">
+                    <h2 class="section-title"><i class="fas fa-sign-in-alt"></i> 1. Đăng ký & Đăng nhập</h2>
+                    
+                    <!-- Step 1.1 -->
+                    <div class="detail-step">
+                        <span class="step-label">Bước 1.1</span>
+                        <h3 class="step-heading">Vào menu tài khoản</h3>
+                        <p>Từ Header chính, click chọn "Tài khoản" để bắt đầu truy cập hệ thống.</p>
+                        
+                        <div class="device-gallery">
+                            <div class="row g-3">
+                                <div class="col-lg-7">
+                                    <span class="frame-label">Desktop (PC)</span>
+                                    <div class="mockup pc-mockup"><div class="placeholder-content d-flex w-100 h-100"><i class="fas fa-desktop"></i><span>Ảnh Header PC</span></div></div>
+                                </div>
+                                <div class="col-lg-3 col-6">
+                                    <span class="frame-label">Tablet</span>
+                                    <div class="mockup tablet-mockup"><div class="placeholder-content d-flex w-100 h-100"><i class="fas fa-tablet-alt"></i><span>Ảnh Header Tablet</span></div></div>
+                                </div>
+                                <div class="col-lg-2 col-6">
+                                    <span class="frame-label">Điện thoại</span>
+                                    <div class="mockup mobile-mockup"><div class="placeholder-content d-flex w-100 h-100"><i class="fas fa-mobile-alt"></i><span>Ảnh Header Mobile</span></div></div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Step 1.2 -->
+                    <div class="detail-step">
+                        <span class="step-label">Bước 1.2</span>
+                        <h3 class="step-heading">Điền form Đăng ký</h3>
+                        <p>Nhập đầy đủ Họ tên, SĐT, Email và đặc biệt là chọn vai trò: <strong>Khách hàng</strong> hoặc <strong>Thợ</strong>.</p>
+                        
+                        <div class="device-gallery">
+                            <div class="row g-3">
+                                <div class="col-lg-7">
+                                    <span class="frame-label">Desktop (PC)</span>
+                                    <div class="mockup pc-mockup"><div class="placeholder-content d-flex w-100 h-100"><i class="fas fa-desktop"></i><span>Ảnh Form Đăng ký PC</span></div></div>
+                                </div>
+                                <div class="col-lg-3 col-6">
+                                    <span class="frame-label">Tablet</span>
+                                    <div class="mockup tablet-mockup"><div class="placeholder-content d-flex w-100 h-100"><i class="fas fa-tablet-alt"></i><span>Ảnh Form Tablet</span></div></div>
+                                </div>
+                                <div class="col-lg-2 col-6">
+                                    <span class="frame-label">Điện thoại</span>
+                                    <div class="mockup mobile-mockup"><div class="placeholder-content d-flex w-100 h-100"><i class="fas fa-mobile-alt"></i><span>Ảnh Form Mobile</span></div></div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- SECTION: BOOKING -->
+                <section id="sec-booking" class="doc-section">
+                    <h2 class="section-title"><i class="fas fa-calendar-check"></i> 2. Quy trình Đặt lịch</h2>
+                    
+                    <!-- Step 2.1 -->
+                    <div class="detail-step">
+                        <span class="step-label">Bước 2.1</span>
+                        <h3 class="step-heading">Chọn dịch vụ sửa chữa</h3>
+                        <p>Duyệt qua danh mục (Máy lạnh, Điện nước...) và click vào nút chi tiết hoặc đặt lịch.</p>
+                        
+                        <div class="device-gallery">
+                            <div class="row g-3">
+                                <div class="col-lg-7">
+                                    <span class="frame-label">Desktop (PC)</span>
+                                    <div class="mockup pc-mockup"><div class="placeholder-content d-flex w-100 h-100"><i class="fas fa-desktop"></i><span>Danh sách dịch vụ PC</span></div></div>
+                                </div>
+                                <div class="col-lg-3 col-6">
+                                    <span class="frame-label">Tablet</span>
+                                    <div class="mockup tablet-mockup"><div class="placeholder-content d-flex w-100 h-100"><i class="fas fa-tablet-alt"></i><span>Danh sách Tablet</span></div></div>
+                                </div>
+                                <div class="col-lg-2 col-6">
+                                    <span class="frame-label">Điện thoại</span>
+                                    <div class="mockup mobile-mockup"><div class="placeholder-content d-flex w-100 h-100"><i class="fas fa-mobile-alt"></i><span>Danh sách Mobile</span></div></div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Step 2.2 -->
+                    <div class="detail-step">
+                        <span class="step-label">Bước 2.2</span>
+                        <h3 class="step-heading">Hoàn tất Form Đặt lịch</h3>
+                        <p>Nhập địa chỉ và mô tả sự cố. Chú ý kiểm tra chính xác số điện thoại để Thợ liên hệ.</p>
+                        
+                        <div class="device-gallery">
+                            <div class="row g-3">
+                                <div class="col-lg-7">
+                                    <span class="frame-label">Desktop (PC)</span>
+                                    <div class="mockup pc-mockup"><div class="placeholder-content d-flex w-100 h-100"><i class="fas fa-desktop"></i><span>Form Đặt lịch PC</span></div></div>
+                                </div>
+                                <div class="col-lg-3 col-6">
+                                    <span class="frame-label">Tablet</span>
+                                    <div class="mockup tablet-mockup"><div class="placeholder-content d-flex w-100 h-100"><i class="fas fa-tablet-alt"></i><span>Form Tablet</span></div></div>
+                                </div>
+                                <div class="col-lg-2 col-6">
+                                    <span class="frame-label">Điện thoại</span>
+                                    <div class="mockup mobile-mockup"><div class="placeholder-content d-flex w-100 h-100"><i class="fas fa-mobile-alt"></i><span>Form Mobile</span></div></div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- SECTION: CUSTOMER -->
+                <section id="sec-customer" class="doc-section">
+                    <h2 class="section-title"><i class="fas fa-user"></i> 3. Hướng dẫn cho Khách hàng</h2>
+                    
+                    <!-- Step 3.1 -->
+                    <div class="detail-step">
+                        <span class="step-label">Bước 3.1</span>
+                        <h3 class="step-heading">Quản lý Đơn hàng cá nhân</h3>
+                        <p>Theo dõi trạng thái đơn từ lúc Chờ xác nhận đến khi Thợ hoàn thành công việc.</p>
+                        
+                        <div class="device-gallery">
+                            <div class="row g-3">
+                                <div class="col-lg-7">
+                                    <span class="frame-label">Desktop (PC)</span>
+                                    <div class="mockup pc-mockup"><div class="placeholder-content d-flex w-100 h-100"><i class="fas fa-desktop"></i><span>Dashboard KH PC</span></div></div>
+                                </div>
+                                <div class="col-lg-3 col-6">
+                                    <span class="frame-label">Tablet</span>
+                                    <div class="mockup tablet-mockup"><div class="placeholder-content d-flex w-100 h-100"><i class="fas fa-tablet-alt"></i><span>Dashboard Tablet</span></div></div>
+                                </div>
+                                <div class="col-lg-2 col-6">
+                                    <span class="frame-label">Điện thoại</span>
+                                    <div class="mockup mobile-mockup"><div class="placeholder-content d-flex w-100 h-100"><i class="fas fa-mobile-alt"></i><span>Dashboard Mobile</span></div></div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Step 3.2 -->
+                    <div class="detail-step">
+                        <span class="step-label">Bước 3.2</span>
+                        <h3 class="step-heading">Xác nhận giá thực tế & Nhận trợ giá 5%</h3>
+                        <p>Khi đơn hàng ở trạng thái hoàn thành, Khách hàng thực hiện nhập số tiền thực tế đã thỏa thuận với Thợ.</p>
+                        <div class="note-box">
+                            <strong>Quyền lợi:</strong> Hệ thống sẽ tính toán khoản trợ giá 5% dựa trên số tiền này để tri ân khách hàng và hỗ trợ phí dịch vụ.
+                        </div>
+                        
+                        <div class="device-gallery">
+                            <div class="row g-3">
+                                <div class="col-lg-7">
+                                    <span class="frame-label">Desktop (PC)</span>
+                                    <div class="mockup pc-mockup"><div class="placeholder-content d-flex w-100 h-100"><i class="fas fa-hand-holding-usd"></i><span>Modal nhập giá PC</span></div></div>
+                                </div>
+                                <div class="col-lg-3 col-6">
+                                    <span class="frame-label">Tablet</span>
+                                    <div class="mockup tablet-mockup"><div class="placeholder-content d-flex w-100 h-100"><i class="fas fa-tablet-alt"></i><span>Modal nhập giá Tablet</span></div></div>
+                                </div>
+                                <div class="col-lg-2 col-6">
+                                    <span class="frame-label">Điện thoại</span>
+                                    <div class="mockup mobile-mockup"><div class="placeholder-content d-flex w-100 h-100"><i class="fas fa-mobile-alt"></i><span>Modal nhập giá Mobile</span></div></div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- SECTION: PROVIDER -->
+                <section id="sec-provider" class="doc-section">
+                    <h2 class="section-title"><i class="fas fa-tools"></i> 4. Hướng dẫn cho Nhà cung cấp</h2>
+                    
+                    <!-- Step 4.1 -->
+                    <div class="detail-step">
+                        <span class="step-label">Bước 4.1</span>
+                        <h3 class="step-heading">Tiếp nhận đơn hàng mới</h3>
+                        <p>Xem thông tin khách hàng, vị trí và sự cố cần xử lý để nhận đơn.</p>
+                        
+                        <div class="device-gallery">
+                            <div class="row g-3">
+                                <div class="col-lg-7">
+                                    <span class="frame-label">Desktop (PC)</span>
+                                    <div class="mockup pc-mockup"><div class="placeholder-content d-flex w-100 h-100"><i class="fas fa-desktop"></i><span>Đơn hàng NCC PC</span></div></div>
+                                </div>
+                                <div class="col-lg-3 col-6">
+                                    <span class="frame-label">Tablet</span>
+                                    <div class="mockup tablet-mockup"><div class="placeholder-content d-flex w-100 h-100"><i class="fas fa-tablet-alt"></i><span>Đơn hàng Tablet</span></div></div>
+                                </div>
+                                <div class="col-lg-2 col-6">
+                                    <span class="frame-label">Điện thoại</span>
+                                    <div class="mockup mobile-mockup"><div class="placeholder-content d-flex w-100 h-100"><i class="fas fa-mobile-alt"></i><span>Đơn hàng Mobile</span></div></div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Step 4.2 -->
+                    <div class="detail-step">
+                        <span class="step-label">Bước 4.2</span>
+                        <h3 class="step-heading">Thực hiện và Cập nhật trạng thái</h3>
+                        <p>Thợ thực hiện sửa chữa và cập nhật trạng thái đơn hàng sang "Đang thực hiện" và "Hoàn thành" trên dashboard của mình.</p>
+                        
+                        <div class="device-gallery">
+                            <div class="row g-3">
+                                <div class="col-lg-7">
+                                    <span class="frame-label">Desktop (PC)</span>
+                                    <div class="mockup pc-mockup"><div class="placeholder-content d-flex w-100 h-100"><i class="fas fa-check-double"></i><span>Màn hình trạng thái PC</span></div></div>
+                                </div>
+                                <div class="col-lg-3 col-6">
+                                    <span class="frame-label">Tablet</span>
+                                    <div class="mockup tablet-mockup"><div class="placeholder-content d-flex w-100 h-100"><i class="fas fa-tablet-alt"></i><span>Màn hình trạng thái Tablet</span></div></div>
+                                </div>
+                                <div class="col-lg-2 col-6">
+                                    <span class="frame-label">Điện thoại</span>
+                                    <div class="mockup mobile-mockup"><div class="placeholder-content d-flex w-100 h-100"><i class="fas fa-mobile-alt"></i><span>Màn hình trạng thái Mobile</span></div></div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- SECTION: ADMIN -->
+                <section id="sec-admin" class="doc-section">
+                    <h2 class="section-title"><i class="fas fa-user-shield"></i> 5. Hướng dẫn cho Admin</h2>
+                    
+                    <!-- Step 5.1 -->
+                    <div class="detail-step">
+                        <span class="step-label">Bước 5.1</span>
+                        <h3 class="step-heading">Quản trị toàn hệ thống</h3>
+                        <p>Theo dõi biểu đồ doanh thu và quản lý danh sách Thợ, Khách hàng toàn quốc.</p>
+                        
+                        <div class="device-gallery">
+                            <div class="row g-3">
+                                <div class="col-lg-7">
+                                    <span class="frame-label">Desktop (PC)</span>
+                                    <div class="mockup pc-mockup"><div class="placeholder-content d-flex w-100 h-100"><i class="fas fa-desktop"></i><span>Admin Dashboard PC</span></div></div>
+                                </div>
+                                <div class="col-lg-3 col-6">
+                                    <span class="frame-label">Tablet</span>
+                                    <div class="mockup tablet-mockup"><div class="placeholder-content d-flex w-100 h-100"><i class="fas fa-tablet-alt"></i><span>Admin Tablet</span></div></div>
+                                </div>
+                                <div class="col-lg-2 col-6">
+                                    <span class="frame-label">Điện thoại</span>
+                                    <div class="mockup mobile-mockup"><div class="placeholder-content d-flex w-100 h-100"><i class="fas fa-mobile-alt"></i><span>Admin Mobile</span></div></div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </section>
+
+            </div>
+        </div>
+    </div>
+
+    <footer>
+        <div class="container-fluid">
+            <h2 class="mb-3" style="font-family: 'Pacifico', cursive; color: white;">Thợ Nhà</h2>
+            <p>Hệ thống kết nối dịch vụ sửa chữa thông minh</p>
+            <p class="small opacity-50 mt-4">&copy; 2026 Dịch Vụ Quanh Ta. All rights reserved.</p>
+        </div>
+    </footer>
+
+    <!-- Bootstrap JS -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>

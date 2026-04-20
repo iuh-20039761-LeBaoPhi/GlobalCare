@@ -72,7 +72,7 @@ async function login() {
             const serviceHomes = {
                 'thonha': root + '/tho-nha/index.html',
                 'thuexe': root + '/thue-xe/index.html',
-                'giatuinhanh': root + '/giat-ui-nhanh/index.html',
+                'giatuinhanh': root + '/dich-vu/giat-ui/giat-ui-nhanh/index.html',
                 'mevabe': root + '/cham-soc-me-va-be/index.html',
                 'nguoibenh': root + '/cham-soc-nguoi-benh/index.html',
                 'nguoigia': root + '/cham-soc-nguoi-gia/index.html',
@@ -116,7 +116,7 @@ document.addEventListener('DOMContentLoaded', async () => {
                 const serviceHomes = {
                     'thonha': root + '/tho-nha/index.html',
                     'thuexe': root + '/thue-xe/index.html',
-                    'giatuinhanh': root + '/giat-ui-nhanh/index.html',
+                    'giatuinhanh': root + '/dich-vu/giat-ui/giat-ui-nhanh/index.html',
                     'mevabe': root + '/cham-soc-me-va-be/index.html',
                     'nguoibenh': root + '/cham-soc-nguoi-benh/index.html',
                     'nguoigia': root + '/cham-soc-nguoi-gia/index.html',
