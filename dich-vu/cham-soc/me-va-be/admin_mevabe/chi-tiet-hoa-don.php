@@ -580,7 +580,7 @@ admin_render_layout_start('Chi Tiết đơn hàng', 'orders', $admin);
     #invoiceJob li {
         counter-increment: job-item;
         display: flex;
-        align-items: flex-start;
+        align-items: center;
         gap: 8px;
         font-size: 13px;
         font-weight: 600;
@@ -604,7 +604,6 @@ admin_render_layout_start('Chi Tiết đơn hàng', 'orders', $admin);
         display: inline-flex;
         align-items: center;
         justify-content: center;
-        margin-top: 1px;
     }
 
     #panelTime {
@@ -803,6 +802,71 @@ admin_render_layout_start('Chi Tiết đơn hàng', 'orders', $admin);
         font-weight: 600;
     }
 
+    /* --- iPad Responsive (Targeting Tablets only) --- */
+    @media (min-width: 769px) and (max-width: 1060px) {
+        .invoice-main {
+            flex-direction: row !important;
+            justify-content: space-between !important;
+            align-items: center !important;
+            gap: 20px !important;
+        }
+
+        .invoice-summary {
+            grid-template-columns: repeat(2, 1fr) !important;
+            gap: 10px !important;
+        }
+
+        .invoice-summary .invoice-item:last-child {
+            grid-column: span 2 !important;
+        }
+
+        .grid, .info-grid, .invoice-extra-grid, .invoice-media-grid, .review-split {
+            grid-template-columns: repeat(2, 1fr) !important;
+            gap: 10px !important;
+        }
+
+        .profile-body {
+            display: flex !important;
+            flex-direction: row !important;
+            align-items: center !important;
+            justify-content: flex-start !important;
+            gap: 20px !important;
+            padding: 12px !important;
+        }
+
+        .profile-main {
+            flex: 1 !important;
+            min-width: 0 !important;
+        }
+
+        .time-line-row {
+            flex-direction: column !important;
+            align-items: flex-start !important;
+            gap: 2px !important;
+            padding: 8px 12px !important;
+        }
+
+        .time-line-row span:last-child {
+            font-size: 11px !important;
+            line-height: 1.2;
+        }
+
+        .invoice-progress-ring {
+            margin: 0 !important;
+            flex-shrink: 0 !important;
+        }
+
+        .invoice-hero {
+            padding: 12px !important;
+        }
+
+        .invoice-item {
+            padding: 8px !important;
+            min-height: auto !important;
+            gap: 6px !important;
+        }
+    }
+
     @media (max-width: 1060px) {
 
         .grid,
@@ -815,13 +879,13 @@ admin_render_layout_start('Chi Tiết đơn hàng', 'orders', $admin);
 
         .invoice-summary {
             grid-template-columns: 1fr;
-            gap: 6px;
+            gap: 2px;
         }
 
         .profile-body {
             grid-template-columns: 1fr 80px;
             align-items: center;
-            gap: 12px;
+            gap: 2px;
         }
 
         .profile-avatar {
@@ -844,6 +908,77 @@ admin_render_layout_start('Chi Tiết đơn hàng', 'orders', $admin);
 
         .invoice-progress-ring {
             margin-inline: auto;
+        }
+    }
+
+    @media (max-width: 768px) {
+        :root {
+            --radius-xl: 4px;
+            --radius-lg: 3px;
+            --radius-md: 2px;
+        }
+
+        .admin-main,
+        .admin-main>main {
+            padding: 2px !important;
+        }
+
+        .modal-card {
+            width: calc(100% - 0px); /* Bám sát cạnh viền */
+            margin: 0px auto !important; /* Căn chỉnh lại margin để sát cạnh */
+            border-radius: var(--radius-md);
+        }
+
+        .topbar { padding: 4px; gap: 4px; }
+        .content { padding: 2px; }
+        .grid { gap: 4px; }
+        .panel { padding: 4px; gap: 4px; }
+        .invoice-hero { padding: 6px; }
+        .invoice-main { gap: 4px; margin-bottom: 2px; }
+        .invoice-headline { gap: 2px; }
+        .invoice-title-line { gap: 4px; }
+        .invoice-summary { gap: 4px; }
+        .invoice-item { padding: 4px; gap: 4px; min-height: auto; }
+        .jobs-header, .jobs-body, .jobs-meta { padding: 4px; }
+        .invoice-extra-grid, .invoice-media-grid { gap: 4px; }
+        .invoice-extra-item, .invoice-media-item { padding: 4px; }
+        .profile-head, .profile-body { padding: 2px; gap: 4px; }
+        .profile-foot { padding: 0 4px 4px; gap: 4px; }
+        .profile-pill { padding: 2px 6px; }
+        .review-split, .review-box, .review-display { gap: 4px; padding: 4px; }
+        th, td { padding: 4px; }
+        .compact-mobile { padding: 2px !important; gap: 4px !important; margin: 2px !important; }
+        
+        .topbar-title {
+            white-space: normal !important;
+            overflow: visible !important;
+            text-overflow: clip !important;
+            line-height: 1.2;
+            font-size: 14px !important;
+        }
+
+        .time-line-row {
+            /* Basic resets to override inline d-flex if needed */
+        }
+
+        @media (max-width: 768px) {
+            .time-line-row {
+                flex-direction: column !important;
+                align-items: flex-start !important;
+                gap: 0 !important;
+                padding: 4px 6px !important;
+            }
+            .time-line-row span:last-child {
+                font-size: 10px !important;
+                word-break: break-all !important;
+            }
+            /* Override profile-body flex adjustment for mobile specifically */
+            .profile-body.compact-mobile {
+                display: flex !important;
+                align-items: center !important;
+                gap: 15px !important;
+                padding: 4px !important;
+            }
         }
     }
 </style>
@@ -896,9 +1031,9 @@ admin_render_layout_start('Chi Tiết đơn hàng', 'orders', $admin);
                                 <div class="invoice-item-content">
                                     <p>Thời gian</p>
                                     <h4 style="font-size: 16px;">
-                                        <?= admin_h(($row['gio_bat_dau_kehoach'] ?? '--:--') . ' - ' . ($row['gio_ket_thuc_kehoach'] ?? '--:--')) ?>
+                                        <?= ($t1 = strtotime($row['gio_bat_dau_kehoach'] ?? '')) ? date('H:i', $t1) : '--:--' ?> - <?= ($t2 = strtotime($row['gio_ket_thuc_kehoach'] ?? '')) ? date('H:i', $t2) : '--:--' ?>
                                     </h4>
-                                    <span><?= admin_h(($row['ngay_bat_dau_kehoach'] ?? '---') . ' -> ' . ($row['ngay_ket_thuc_kehoach'] ?? '---')) ?></span>
+                                    <span><?= ($d1 = strtotime($row['ngay_bat_dau_kehoach'] ?? '')) ? date('d/m/Y', $d1) : '---' ?> -> <?= ($d2 = strtotime($row['ngay_ket_thuc_kehoach'] ?? '')) ? date('d/m/Y', $d2) : '---' ?></span>
                                 </div>
                             </div>
                             <div class="invoice-item">
@@ -959,7 +1094,7 @@ admin_render_layout_start('Chi Tiết đơn hàng', 'orders', $admin);
                     <div class="panel-head">
                         <h2 class="panel-title">Trạng thái, thời gian và tiến độ</h2>
                     </div>
-                    <div style="display:grid;gap:6px;">
+                    <div class="compact-mobile" style="display:grid;gap:6px;">
                         <div class="d-flex justify-content-between align-items-center fw-bold"
                             style="font-size:12px;color:#000;">
                             <span>Tiến độ thực hiện</span>
@@ -984,21 +1119,21 @@ admin_render_layout_start('Chi Tiết đơn hàng', 'orders', $admin);
                         style="border:1px solid #efd3e9;border-radius:8px;overflow:hidden;background:#fff7fe;margin-bottom:8px;">
                         <div
                             style="display:grid;grid-template-columns:repeat(3,1fr);background:#e779c1;color:#000;font-size:11px;font-weight:800;text-align:center;">
-                            <span style="padding:7px 5px;border-right:1px solid rgba(0,0,0,0.05);">Dự kiến BĐ</span>
-                            <span style="padding:7px 5px;border-right:1px solid rgba(0,0,0,0.05);">Dự kiến KT</span>
-                            <span style="padding:7px 5px;">Số ngày</span>
+                             <span class="compact-mobile" style="padding:7px 5px;border-right:1px solid rgba(0,0,0,0.05);">Dự kiến BĐ</span>
+                            <span class="compact-mobile" style="padding:7px 5px;border-right:1px solid rgba(0,0,0,0.05);">Dự kiến KT</span>
+                            <span class="compact-mobile" style="padding:7px 5px;">Số ngày</span>
                         </div>
                         <div
                             style="display:grid;grid-template-columns:repeat(3,1fr);font-size:11px;font-weight:700;text-align:center;">
-                            <span
-                                style="padding:7px 5px;border-right:1px solid #efd3e9; color: #1f3853;"><?= admin_h($row['ngay_bat_dau_kehoach'] ?? '---') ?></span>
-                            <span
-                                style="padding:7px 5px;border-right:1px solid #efd3e9; color: #1f3853;"><?= admin_h($row['ngay_ket_thuc_kehoach'] ?? '---') ?></span>
-                            <span style="padding:7px 5px; color: #1f3853;"><?= $totalDays ?> ngày</span>
+                             <span class="compact-mobile"
+                                style="padding:7px 5px;border-right:1px solid #efd3e9; color: #1f3853;"><?= ($d1 = strtotime($row['ngay_bat_dau_kehoach'] ?? '')) ? date('d/m/Y', $d1) : '---' ?></span>
+                            <span class="compact-mobile"
+                                style="padding:7px 5px;border-right:1px solid #efd3e9; color: #1f3853;"><?= ($d2 = strtotime($row['ngay_ket_thuc_kehoach'] ?? '')) ? date('d/m/Y', $d2) : '---' ?></span>
+                            <span class="compact-mobile" style="padding:7px 5px; color: #1f3853;"><?= $totalDays ?> ngày</span>
                         </div>
                     </div>
 
-                    <div class="d-flex align-items-center flex-wrap" style="gap:8px; margin-bottom: 8px;">
+                    <div class="d-flex align-items-center flex-wrap compact-mobile" style="gap:8px; margin-bottom: 8px;">
                         <span style="font-size:12px;font-weight:800;color:#000000;">Trạng thái:</span>
                         <span class="badge <?= $badgeClass ?>"><?= admin_h($statusText) ?></span>
                     </div>
@@ -1007,36 +1142,34 @@ admin_render_layout_start('Chi Tiết đơn hàng', 'orders', $admin);
                         style="border:1px solid #efd3e9;border-radius:8px;overflow:hidden;background:#fff7fe; margin-bottom: 8px;">
                         <div
                             style="display:grid;grid-template-columns:repeat(2,minmax(0,1fr));background:#e779c1;color:#000000;font-size:12px;font-weight:800;">
-                            <span style="padding:7px 10px;">Thời gian dự kiến</span>
-                            <span style="padding:7px 10px;">Thời gian thực tế</span>
+                             <span class="compact-mobile" style="padding:7px 10px;">Thời gian dự kiến</span>
+                            <span class="compact-mobile" style="padding:7px 10px;">Thời gian thực tế</span>
                         </div>
                         <div style="display:grid;grid-template-columns:repeat(2,minmax(0,1fr));">
-                            <div style="border-right:1px solid #efd3e9;">
-                                <div class="d-flex justify-content-between align-items-center"
-                                    style="gap:8px;padding:7px 10px;font-size:12px;">
+                              <div style="border-right:1px solid #efd3e9;">
+                                <div class="time-line-row compact-mobile" style="display:flex; justify-content: space-between; align-items: center; gap:8px;padding:7px 10px;font-size:12px;">
                                     <span style="color:#000000;font-weight:700;">Bắt đầu</span>
                                     <span
-                                        style="color:#1f3853;font-weight:800;"><?= admin_h($row['gio_bat_dau_kehoach'] ?? '--:--') ?></span>
+                                        style="color:#1f3853;font-weight:800;"><?= ($t1 = strtotime($row['gio_bat_dau_kehoach'] ?? '')) ? date('H:i', $t1) : '--:--' ?></span>
                                 </div>
-                                <div class="d-flex justify-content-between align-items-center"
-                                    style="gap:8px;padding:7px 10px;border-top:1px solid #efd3e9;font-size:12px;">
+                                <div class="time-line-row compact-mobile"
+                                    style="display:flex; justify-content: space-between; align-items: center; gap:8px;padding:7px 10px;border-top:1px solid #efd3e9;font-size:12px;">
                                     <span style="color:#000000;font-weight:700;">Kết thúc</span>
                                     <span
-                                        style="color:#1f3853;font-weight:800;"><?= admin_h($row['gio_ket_thuc_kehoach'] ?? '--:--') ?></span>
+                                        style="color:#1f3853;font-weight:800;"><?= ($t2 = strtotime($row['gio_ket_thuc_kehoach'] ?? '')) ? date('H:i', $t2) : '--:--' ?></span>
                                 </div>
                             </div>
                             <div>
-                                <div class="d-flex justify-content-between align-items-center"
-                                    style="gap:8px;padding:7px 10px;font-size:12px;">
+                                <div class="time-line-row compact-mobile" style="display:flex; justify-content: space-between; align-items: center; gap:8px;padding:7px 10px;font-size:12px;">
                                     <span style="color:#000000;font-weight:700;">Bắt đầu</span>
                                     <span
-                                        style="color:#1f3853;font-weight:800;"><?= admin_h($row['thoigian_batdau_thucte'] ?? '---') ?></span>
+                                        style="color:#1f3853;font-weight:800;"><?= ($tt1 = strtotime($row['thoigian_batdau_thucte'] ?? '')) ? date('d/m/Y H:i:s', $tt1) : '---' ?></span>
                                 </div>
-                                <div class="d-flex justify-content-between align-items-center"
-                                    style="gap:8px;padding:7px 10px;border-top:1px solid #efd3e9;font-size:12px;">
+                                <div class="time-line-row compact-mobile"
+                                    style="display:flex; justify-content: space-between; align-items: center; gap:8px;padding:7px 10px;border-top:1px solid #efd3e9;font-size:12px;">
                                     <span style="color:#000000;font-weight:700;">Kết thúc</span>
                                     <span
-                                        style="color:#1f3853;font-weight:800;"><?= admin_h($row['thoigian_ketthuc_thucte'] ?? '---') ?></span>
+                                        style="color:#1f3853;font-weight:800;"><?= ($tt2 = strtotime($row['thoigian_ketthuc_thucte'] ?? '')) ? date('d/m/Y H:i:s', $tt2) : '---' ?></span>
                                 </div>
                             </div>
                         </div>
@@ -1069,11 +1202,9 @@ admin_render_layout_start('Chi Tiết đơn hàng', 'orders', $admin);
                                             ?>
                                             <tr style="border-bottom: 1px solid #f0d4e3;">
                                                 <td style="padding:5px 8px;font-weight:700;color:#c21178;">Ngày <?= $stt++ ?></td>
-                                                <td style="padding:5px 8px;"><?= admin_h($wh['ngay_lam']) ?></td>
-                                                <td style="padding:5px 8px;">
-                                                    <?= admin_h($wh['start'] !== '' ? $wh['start'] : '---') ?>
-                                                </td>
-                                                <td style="padding:5px 8px;"><?= $endDisplay ?></td>
+                                                <td style="padding:5px 8px;"><?= ($d = strtotime($wh['ngay_lam'] ?? '')) ? date('d/m/Y', $d) : '---' ?></td>
+                                                <td style="padding:5px 8px;"><?= ($s = strtotime($wh['start'] ?? '')) ? date('H:i:s', $s) : '---' ?></td>
+                                                <td style="padding:5px 8px;"><?= ($e = strtotime($wh['end'] ?? '')) ? date('H:i:s', $e) : '---' ?></td>
                                                 <td style="padding:5px 8px;"><?= admin_h($wh['note']) ?></td>
                                             </tr>
                                         <?php endforeach; ?>
@@ -1091,7 +1222,7 @@ admin_render_layout_start('Chi Tiết đơn hàng', 'orders', $admin);
                         <h2 class="profile-title">Khách hàng</h2>
                         <span class="badge success">Khách hàng</span>
                     </div>
-                    <div class="profile-body" style="display: flex; align-items: center; gap: 15px;">
+                    <div class="profile-body compact-mobile" style="padding: 14px; display: grid; grid-template-columns: 88px 1fr; gap: 14px; align-items: start;">
                         <div style="position:relative; width:88px; height:88px; flex-shrink:0;">
                             <span id="avatarCustomerEmpty" style="display:none; position:absolute; inset:0; display:grid; place-items:center; font-size:10px; background:#f0f0f0; border-radius:50%;">---</span>
                             <iframe id="avatarCustomerEl" class="profile-avatar" style="display:none; position:absolute; width:100%; height:100%; border:0; border-radius:50%;" allowfullscreen></iframe>
@@ -1109,9 +1240,6 @@ admin_render_layout_start('Chi Tiết đơn hàng', 'orders', $admin);
                             </p>
                         </div>
                     </div>
-                    <div class="profile-foot">
-                        <span class="profile-pill">Ngày đặt: <?= admin_h($row['ngaydat'] ?? '---') ?></span>
-                    </div>
                 </article>
 
                 <article class="panel" id="panelStaff">
@@ -1120,7 +1248,7 @@ admin_render_layout_start('Chi Tiết đơn hàng', 'orders', $admin);
                         <span
                             class="badge warning"><?= (int) ($row['id_nhacungcap'] ?? 0) > 0 ? 'Đã nhận' : 'Chưa nhận' ?></span>
                     </div>
-                    <div class="profile-body" style="display: flex; align-items: center; gap: 15px;">
+                    <div class="profile-body compact-mobile" style="padding: 14px; display: grid; grid-template-columns: 88px 1fr; gap: 14px; align-items: start;">
                         <div style="position:relative; width:88px; height:88px; flex-shrink:0;">
                             <span id="avatarStaffEmpty" style="display:none; position:absolute; inset:0; display:grid; place-items:center; font-size:10px; background:#f0f0f0; border-radius:50%;">---</span>
                             <iframe id="avatarStaffEl" class="profile-avatar" style="display:none; position:absolute; width:100%; height:100%; border:0; border-radius:50%;" allowfullscreen></iframe>
@@ -1136,7 +1264,7 @@ admin_render_layout_start('Chi Tiết đơn hàng', 'orders', $admin);
                         </div>
                     </div>
                     <div class="profile-foot">
-                        <span class="profile-pill">Nhận việc: <?= admin_h($row['ngaynhan'] ?? '---') ?></span>
+                        <span class="profile-pill">Nhận việc: <?= ($t = strtotime($row['ngaynhan'] ?? '')) ? date('d/m/Y H:i:s', $t) : '---' ?></span>
                     </div>
                 </article>
 
@@ -1154,7 +1282,7 @@ admin_render_layout_start('Chi Tiết đơn hàng', 'orders', $admin);
                                 <p class="field-label">Nội dung</p>
                                 <p class="review-text"><?= admin_h($row['danhgia_khachhang'] ?? 'Chưa có đánh giá') ?></p>
                                 <p class="field-label">Thời gian</p>
-                                <p class="review-time"><?= admin_h($row['thoigian_danhgia_khachhang'] ?? '---') ?></p>
+                                <p class="review-time"><?= ($t = strtotime($row['thoigian_danhgia_khachhang'] ?? '')) ? date('d/m/Y H:i:s', $t) : '---' ?></p>
                                 <p class="field-label">Minh chứng</p>
                                 <div class="invoice-media-item" style="border:0;padding:0;min-height:auto;background:transparent;">
                                     <span class="media-empty-label" id="reviewCustomerMediaEmpty" style="font-size:10px; text-align:left; padding:0;">Chưa có minh chứng</span>
@@ -1170,7 +1298,7 @@ admin_render_layout_start('Chi Tiết đơn hàng', 'orders', $admin);
                                 <p class="field-label">Nội dung</p>
                                 <p class="review-text"><?= admin_h($row['danhgia_nhanvien'] ?? 'Chưa có đánh giá') ?></p>
                                 <p class="field-label">Thời gian</p>
-                                <p class="review-time"><?= admin_h($row['thoigian_danhgia_nhanvien'] ?? '---') ?></p>
+                                <p class="review-time"><?= ($t = strtotime($row['thoigian_danhgia_nhanvien'] ?? '')) ? date('d/m/Y H:i:s', $t) : '---' ?></p>
                                 <p class="field-label">Minh chứng</p>
                                 <div class="invoice-media-item" style="border:0;padding:0;min-height:auto;background:transparent;">
                                     <span class="media-empty-label" id="reviewStaffMediaEmpty" style="font-size:10px; text-align:left; padding:0;">Chưa có minh chứng</span>
