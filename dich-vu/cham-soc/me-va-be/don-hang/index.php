@@ -658,4 +658,5 @@ include 'layout-header.php';
         </div>
     </section>
 </div>
+<script src="../../../../../public/asset/js/dvqt-app.js"></script>
 <?php include 'layout-footer.php'; ?>
