@@ -470,8 +470,8 @@
           if (localAuth && typeof localAuth.getDashboardPath === "function") {
             return localAuth.getDashboardPath(role);
           }
-          if (role === "shipper") return "public/nha-cung-cap/dashboard.html";
-          return "public/khach-hang/dashboard.html";
+          if (role === "shipper") return "public/nha-cung-cap/dashboard-giaohang.html";
+          return "public/khach-hang/dashboard-giaohang.html";
         }
 
         function bindLogoutActions() {

@@ -31,13 +31,12 @@
     "chuyen-nha.html": "services",
     "chuyen-kho-bai.html": "services",
     "chuyen-van-phong.html": "services",
-    "cam-nang.html": "news",
-    "cam-nang-chi-tiet.html": "news",
-    "khao-sat.html": "booking",
-    "dat-lich.html": "booking",
-    "dashboard.html": "account",
-    "danh-sach-don-hang.html": "account",
-    "ho-so.html": "account",
+    "cam-nang-chuyendon.html": "news",
+    "cam-nang-chi-tiet-chuyendon.html": "news",
+    "dat-lich-chuyendon.html": "booking",
+    "dashboard-chuyendon.html": "account",
+    "danh-sach-don-hang-chuyendon.html": "account",
+    "ho-so-chuyendon.html": "account",
   };
 
   function safeParse(raw, fallback) {
@@ -147,8 +146,8 @@
       pricing: `${projectBase}bang-gia-chuyen-don.html`,
       guide: `${projectBase}huong-dan-su-dung-dich-vu-chuyen-don.html`,
       contact: `${projectBase}index.html#contact`,
-      survey: `${projectBase}dat-lich.html`,
-      booking: `${projectBase}dat-lich.html`,
+      survey: `${projectBase}dat-lich-chuyendon.html`,
+      booking: `${projectBase}dat-lich-chuyendon.html`,
       account: buildSharedAuthUrl("dang-nhap.html"),
       login: buildSharedAuthUrl("dang-nhap.html"),
       register: buildSharedAuthUrl("dang-ky.html"),
@@ -156,11 +155,11 @@
       "register-customer": buildSharedAuthUrl("dang-ky.html"),
       "login-provider": buildSharedAuthUrl("dang-nhap.html"),
       "register-provider": buildSharedAuthUrl("dang-ky.html"),
-      policy: `${projectBase}chinh-sach-va-dieu-khoan.html`,
+      policy: `${projectBase}chinh-sach-va-dieu-khoan-chuyendon.html`,
       "moving-house": `${servicesLink}#chuyen-nha`,
       "moving-warehouse": `${servicesLink}#chuyen-kho-bai`,
       "moving-office": `${servicesLink}#chuyen-van-phong`,
-      news: `${projectBase}cam-nang.html`,
+      news: `${projectBase}cam-nang-chuyendon.html`,
       brandLogo: `${publicBase}assets/images/favicon.png`,
 
       "svc-giao-hang-nhanh": `${parentBase}dich-vu/van-tai-logistics/giao-hang-nhanh/dich-vu-giao-hang.html`,
@@ -208,16 +207,16 @@
 
     if (role === "nha-cung-cap") {
       return {
-        dashboard: withAuthParams(`${projectBase}nha-cung-cap/dashboard.html`),
-        orders: withAuthParams(`${projectBase}nha-cung-cap/danh-sach-don-hang.html`),
-        profile: withAuthParams(`${projectBase}nha-cung-cap/ho-so.html`),
+        dashboard: withAuthParams(`${projectBase}nha-cung-cap/dashboard-chuyendon.html`),
+        orders: withAuthParams(`${projectBase}nha-cung-cap/danh-sach-don-hang-chuyendon.html`),
+        profile: withAuthParams(`${projectBase}nha-cung-cap/ho-so-chuyendon.html`),
       };
     }
 
     return {
-      dashboard: withAuthParams(`${projectBase}khach-hang/dashboard.html`),
-      orders: withAuthParams(`${projectBase}khach-hang/danh-sach-don-hang.html`),
-      profile: withAuthParams(`${projectBase}khach-hang/ho-so.html`),
+      dashboard: withAuthParams(`${projectBase}khach-hang/dashboard-chuyendon.html`),
+      orders: withAuthParams(`${projectBase}khach-hang/danh-sach-don-hang-chuyendon.html`),
+      profile: withAuthParams(`${projectBase}khach-hang/ho-so-chuyendon.html`),
     };
   }
 
