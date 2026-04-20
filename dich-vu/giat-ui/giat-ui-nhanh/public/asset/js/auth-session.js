@@ -301,7 +301,28 @@
     });
   }
 
-  getUserFromCookie()
+ // --- START INTEGRATION WITH DVQTApp ---
+  function getAuthenticatedUser() {
+    if (window.DVQTApp && typeof window.DVQTApp.checkSession === "function") {
+      return window.DVQTApp.checkSession().then(function (res) {
+        if (res && res.logged_in) {
+          // Convert DVQTApp profile format to auth-session format
+          return {
+            id: res.id,
+            user_name: res.name,
+            user_tel: res.phone,
+            user_email: res.email,
+            id_dichvu: res.id_dichvu,
+          };
+        }
+        return null;
+      });
+    }
+    return getUserFromCookie();
+  }
+  // --- END INTEGRATION WITH DVQTApp ---
+
+  getAuthenticatedUser()
     .then(function (user) {
       var hasUser = Boolean(user && user.user_tel);
       return applyAuthState(hasUser, user || null);
@@ -309,7 +330,8 @@
     .then(function () {
       bindLogout(getNavNodes().logoutLinks);
     })
-    .catch(function () {
+    .catch(function (err) {
+      console.error("[AuthSession] Init failed:", err);
       applyAuthState(false, null);
       bindLogout(getNavNodes().logoutLinks);
     });
