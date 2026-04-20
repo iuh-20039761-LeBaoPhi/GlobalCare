@@ -1,0 +1,480 @@
+﻿<!doctype html>
+<html lang="vi">
+
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="description"
+    content="Dịch vụ chăm sóc người cao tuổi tại nhà từ hỗ trợ sinh hoạt hằng ngày đến chăm sóc 24/7. Hỗ trợ ăn uống, vệ sinh, di chuyển, theo dõi sinh hoạt và đồng hành tinh thần giúp người già sống an toàn, thoải mái mỗi ngày.">
+  <meta name="keywords"
+    content="chăm sóc người già tại nhà, dịch vụ chăm sóc người cao tuổi, chăm sóc người già 24/7, hỗ trợ sinh hoạt người cao tuổi, chăm sóc người già suy yếu, giúp việc chăm người già tại nhà">
+  <title>Chăm Sóc Người Cao Tuổi & Người Già Đơn Côi</title>
+  <link rel="shortcut icon" type="image/x-icon" href="assets/logong.png" />
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet" />
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
+  <link href="https://fonts.googleapis.com/css2?family=Pacifico&family=Quicksand:wght@500;700&display=swap"
+    rel="stylesheet" />
+  <style>
+    html,
+    body {
+      width: 100%;
+      max-width: 100%;
+      overflow-x: hidden;
+    }
+
+    body {
+      padding-top: 96px;
+    }
+
+    .navbar {
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      z-index: 1050;
+    }
+
+    /* GIỮ header luôn 1 hàng (áp dụng mọi màn hình) */
+    .navbar .container {
+      display: flex;
+      flex-wrap: nowrap !important;
+      align-items: center;
+      min-width: 0;
+    }
+
+    /* ================= MOBILE ONLY ================= */
+    @media (max-width: 991.98px) {
+      body {
+        padding-top: 86px;
+      }
+
+      .navbar {
+        overflow-x: clip;
+      }
+
+      .navbar .container>span {
+        max-width: 34vw;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        font-size: 0.95rem;
+      }
+
+      .navbar-brand img {
+        width: 56px !important;
+        height: 42px !important;
+      }
+
+      /* ÉP menu xuống dưới navbar */
+      .navbar-collapse {
+        position: absolute;
+        top: 100%;
+        left: 0;
+        right: 0;
+        width: auto;
+        background: #fff;
+        z-index: 999;
+        border-radius: 0 0 12px 12px;
+        box-shadow: 0 8px 20px rgba(0, 0, 0, 0.08);
+      }
+
+      /* Khi mở menu */
+      .navbar-collapse.show {
+        display: block;
+      }
+
+      /* UL dọc + căn giữa */
+      .navbar-collapse .navbar-nav {
+        flex-direction: column !important;
+        align-items: center !important;
+        gap: 10px;
+        padding: 15px 0;
+      }
+
+      /* Item */
+      .navbar-collapse .nav-item {
+        width: 100%;
+        text-align: center;
+      }
+
+      /* Link */
+      .navbar-collapse .nav-link {
+        display: block;
+        width: 100%;
+        padding: 10px;
+        font-size: 16px;
+      }
+
+      /* Button */
+      .navbar-collapse .btn {
+        width: 80%;
+        margin-top: 10px;
+      }
+
+      .hero-section img {
+        width: 100% !important;
+        max-width: 340px;
+        height: auto !important;
+      }
+    }
+  </style>
+  <script src="/ga.js"></script>
+  <script type="application/ld+json">
+{
+ "@context": "https://schema.org",
+ "@graph": [
+  {
+   "@type": "LocalBusiness",
+   "@id": "https://dichvuquanhta.vn/#business",
+   "name": "Dịch Vụ Quanh Ta",
+   "url": "https://dichvuquanhta.vn",
+   "telephone": "0775472347"
+  },
+  {
+   "@type": "Service",
+   "name": "Chăm sóc người già",
+   "url": "https://dichvuquanhta.vn/cham-soc-nguoi-gia/",
+   "description": "Dịch vụ chăm sóc người già tại nhà, hỗ trợ sinh hoạt và theo dõi sức khỏe",
+   "areaServed": {
+     "@type": "Place",
+     "name": "TP.HCM"
+   },
+   "provider": {
+     "@id": "https://dichvuquanhta.vn/#business"
+   }
+  },
+  {
+   "@type": "BreadcrumbList",
+   "itemListElement": [
+     {
+       "@type": "ListItem",
+       "position": 1,
+       "name": "Trang chủ",
+       "item": "https://dichvuquanhta.vn"
+     },
+     {
+       "@type": "ListItem",
+       "position": 2,
+       "name": "Chăm sóc người già",
+       "item": "https://dichvuquanhta.vn/cham-soc-nguoi-gia/"
+     }
+   ]
+  }
+ ]
+}
+</script>
+</head>
+
+<body data-nav-active="home" data-nav-active-style="large">
+
+  <div style="font-family: &quot;Quicksand&quot;, sans-serif">
+    <div id="site-header"></div>
+    <section class="hero-section py-5" style="
+          background: linear-gradient(
+            135deg,
+            #f1f8e9 0%,
+            #ffffff 50%,
+            #e3f2fd 100%
+          );
+        ">
+      <div class="container py-lg-5">
+        <div class="row align-items-center">
+          <div class="col-lg-6 text-center text-lg-start mb-5 mb-lg-0">
+            <h1 class="display-3 fw-bold mb-3">
+              Ấm Áp Tuổi Già <br />
+              <span class="text-success" style="font-family: &quot;Roboto&quot;, sans-serif">An Tâm Con Cháu</span>
+            </h1>
+            <p class="lead text-muted mb-4">
+              Dịch vụ chăm sóc người cao tuổi sức yếu, sống một mình. Chúng
+              tôi mang đến sự quan tâm như người thân trong gia đình.
+            </p>
+            <button class="btn text-white rounded-pill btn-lg px-5 py-3" style="background-color: #2e7d32" onmouseover="
+                  this.style.backgroundColor = '#1b5e20';
+                  this.style.transform = 'scale(1.05)';
+                " onmouseout="
+                  this.style.backgroundColor = '#2e7d32';
+                  this.style.transform = 'scale(1)';
+                " onclick="window.location.href = 'lien-he.html'">
+              📞 Liên Hệ Tư Vấn Ngay
+            </button>
+          </div>
+          <div class="col-lg-6 text-center">
+            <img src="assets/bai-viet-tam-ly-nguoi-cao-tuoi-khong-the-tu-cham-soc.png"
+              class="img-fluid rounded-4 shadow-lg" alt="Chăm sóc người già"
+              style="width: 500px; height: 400px; object-fit: cover" />
+          </div>
+        </div>
+      </div>
+    </section>
+    <section class="py-5 bg-light">
+      <div class="container py-5">
+        <h2 class="text-center fw-bold display-5 mb-5">
+          Vì Sao Gia Đình Tin Chọn Dịch Vụ Chăm Sóc Người Cao Tuổi?
+        </h2>
+
+        <div class="row g-4" id="features-grid">
+
+          <!-- 1 -->
+          <div class="col-md-6 col-lg-3 text-center">
+            <div class="p-5 bg-white rounded-4 shadow-sm h-100 hover-lift feature-card">
+              <div class="mb-4 fs-1 text-success">
+                <i class="fas fa-user-check"></i>
+              </div>
+              <h3 class="h5 fw-bold">Người Hỗ Trợ Tận Tâm</h3>
+              <p class="text-muted small mb-0">
+                Nhân sự có kinh nghiệm chăm sóc người lớn tuổi,
+                nhẹ nhàng, kiên nhẫn và trách nhiệm.
+              </p>
+            </div>
+          </div>
+
+          <!-- 2 -->
+          <div class="col-md-6 col-lg-3 text-center">
+            <div class="p-5 bg-white rounded-4 shadow-sm h-100 hover-lift feature-card">
+              <div class="mb-4 fs-1 text-success">
+                <i class="fas fa-heart"></i>
+              </div>
+              <h3 class="h5 fw-bold">Bầu Bạn & Trò Chuyện</h3>
+              <p class="text-muted small mb-0">
+                Đồng hành, trò chuyện, giúp ông bà cảm thấy vui vẻ
+                và bớt cô đơn mỗi ngày.
+              </p>
+            </div>
+          </div>
+
+          <!-- 3 -->
+          <div class="col-md-6 col-lg-3 text-center">
+            <div class="p-5 bg-white rounded-4 shadow-sm h-100 hover-lift feature-card">
+              <div class="mb-4 fs-1 text-success">
+                <i class="fas fa-home"></i>
+              </div>
+              <h3 class="h5 fw-bold">Hỗ Trợ Sinh Hoạt Hằng Ngày</h3>
+              <p class="text-muted small mb-0">
+                Hỗ trợ ăn uống, đi lại, vệ sinh cá nhân
+                và các sinh hoạt thường nhật trong gia đình.
+              </p>
+            </div>
+          </div>
+
+          <!-- 4 -->
+          <div class="col-md-6 col-lg-3 text-center">
+            <div class="p-5 bg-white rounded-4 shadow-sm h-100 hover-lift feature-card">
+              <div class="mb-4 fs-1 text-success">
+                <i class="fas fa-clock"></i>
+              </div>
+              <h3 class="h5 fw-bold">Linh Hoạt Theo Nhu Cầu</h3>
+              <p class="text-muted small mb-0">
+                Dịch vụ theo giờ, theo ca hoặc dài hạn,
+                phù hợp với hoàn cảnh từng gia đình.
+              </p>
+            </div>
+          </div>
+
+        </div>
+      </div>
+    </section>
+
+    <section class="py-5">
+      <div class="container py-5">
+        <h2 class="text-center fw-bold display-5 mb-5">Các Dịch Vụ Chính</h2>
+        <div class="row g-4 mb-5" id="services-grid">
+
+        </div>
+        <div class="text-center">
+          <a href="dich-vu.html" class="btn btn-outline-secondary px-5 rounded-pill fw-bold"
+            style="border-color: #2e7d32; color: #2e7d32">Xem Tất Cả Dịch Vụ</a>
+        </div>
+      </div>
+    </section>
+
+    <section class="py-5 text-white shadow-inner" style="background-color: #2e7d32">
+      <div class="container py-4">
+        <div class="row g-4 text-center">
+          <div class="col-6 col-md-3">
+            <h3 class="display-5 fw-bold">12+</h3>
+            <p class="mb-0 opacity-75">Năm Hoạt Động</p>
+          </div>
+          <div class="col-6 col-md-3">
+            <h3 class="display-5 fw-bold">8k+</h3>
+            <p class="mb-0 opacity-75">Cụ Ông/Bà Tin Tưởng</p>
+          </div>
+          <div class="col-6 col-md-3">
+            <h3 class="display-5 fw-bold">100%</h3>
+            <p class="mb-0 opacity-75">Sự Tận Tâm</p>
+          </div>
+          <div class="col-6 col-md-3">
+            <h3 class="display-5 fw-bold">150+</h3>
+            <p class="mb-0 opacity-75">Điều Dưỡng Viên</p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section class="py-5 text-center text-white" style="background: linear-gradient(135deg, #2fb3a5, #1f8c80);">
+      <div class="container py-5">
+
+        <h2 class="display-5 fw-bold mb-4">
+          Gia Đình Bạn Đang Cần Người Hỗ Trợ Chăm Sóc?
+        </h2>
+
+        <p class="fs-5 mb-4 opacity-90">
+          Chúng tôi luôn sẵn sàng đồng hành cùng gia đình,
+          giúp người thân được chăm sóc chu đáo, an toàn và tận tâm
+          ngay tại nhà hoặc tại bệnh viện.
+        </p>
+
+        <div class="mb-4">
+          <p class="fs-5 mb-3">
+            Bên cạnh dịch vụ chăm sóc Người Già, chúng tôi còn cung cấp:
+          </p>
+
+          <div class="d-flex flex-column gap-2 align-items-center">
+
+            <a href="../me-va-be/index.html" class="fw-bold fs-5 text-warning text-decoration-none">
+              🌸 Chăm sóc Mẹ và Bé tại nhà
+            </a>
+
+            <a href="../nguoi-benh/index.html" class="fw-bold fs-5 text-warning text-decoration-none">
+              🏥 Chăm sóc Người bệnh tại nhà hoặc tại bệnh viện
+            </a>
+
+          </div>
+        </div>
+
+        <div class="mt-4">
+          <button class="btn btn-light btn-lg px-5 rounded-pill shadow fw-bold"
+            onclick="window.location.href = 'lien-he.html'">
+            📞 Liên Hệ Tư Vấn Ngay
+          </button>
+        </div>
+
+      </div>
+    </section>
+
+    <div id="site-footer"></div>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <!-- KRUD API -->
+    <script src="https://api.dvqt.vn/js/krud.js"></script>
+    <script>
+      if (typeof krud === 'undefined') {
+        console.warn('krud chưa load, tạo fallback');
+
+        const KRUD_API_URL = "https://api.dvqt.vn";
+
+        function krud(action, table, data = {}, id = null) {
+          const payload = { action, table, data };
+          if (id !== null) payload.id = id;
+
+          return fetch(KRUD_API_URL + "/krud/", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify(payload)
+          }).then(res => res.json());
+        }
+      }
+    </script>
+    <script>
+      var SERVICES = [];
+
+      function normalizeRows(res) {
+        if (Array.isArray(res)) return res;
+        if (!res || typeof res !== 'object') return [];
+        if (res.error) throw new Error(res.error);
+        if (res.success === false) throw new Error(res.message || 'API trả về lỗi');
+        if (Array.isArray(res.data)) return res.data;
+        if (Array.isArray(res.rows)) return res.rows;
+        if (Array.isArray(res.items)) return res.items;
+        if (Array.isArray(res.result)) return res.result;
+        return [];
+      }
+
+      function renderHomeServiceCards(list) {
+        const servicesGrid = document.getElementById("services-grid");
+        servicesGrid.innerHTML = '';
+
+        if (!list || list.length === 0) {
+          servicesGrid.innerHTML = '<div class="text-center py-5"><p class="text-muted">Không tìm thấy dịch vụ nào.</p></div>';
+          return;
+        }
+
+        // Lấy 4 dịch vụ đầu tiên
+        const homepageServices = list.slice(0, 4);
+
+        homepageServices.forEach(service => {
+          const col = document.createElement("div");
+          col.className = "col-md-6 col-lg-3";
+          const serviceAlt = (service.alt || service.name || "Dich vu cham soc nguoi gia").replace(/"/g, "&quot;");
+
+          const isDriveId = service.image && service.image.indexOf('/') === -1 && service.image.indexOf('.') === -1;
+          let mediaHTML = '';
+
+          if (isDriveId && service.image) {
+            mediaHTML = '<div class="rounded-4 shadow-lg w-100 overflow-hidden position-relative" style="aspect-ratio: 4/3;">' +
+              '<iframe src="https://drive.google.com/file/d/' + encodeURIComponent(service.image) + '/preview" ' +
+              'class="position-absolute w-100 h-100" ' +
+              'style="top:0; left:0; border:none; pointer-events:none; transform: scale(1.45); transform-origin: center;" ' +
+              'scrolling="no" loading="lazy"></iframe>' +
+              '</div>';
+          } else {
+            mediaHTML = '<img src="' + (service.image || '') + '" alt="' + serviceAlt + '" class="img-fluid rounded-4 shadow-lg w-100" style="aspect-ratio: 4/3; object-fit: cover; border: none;">';
+          }
+
+          col.innerHTML = `
+                        <div class="card border-0 shadow-sm h-100 rounded-4 overflow-hidden hover-lift">
+                            ${mediaHTML}
+                            <div class="card-body p-4 text-center">
+                                <h3 class="h5 fw-bold">${service.name}</h3>
+                                <p class="card-text text-muted small">${service.description}</p>
+                            </div>
+                        </div>
+                    `;
+
+          servicesGrid.appendChild(col);
+        });
+      }
+
+      async function loadHomeServices() {
+        try {
+          const res = await fetch('https://api.dvqt.vn/list/', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ table: 'dichvu_nguoigia' })
+          }).then(r => r.json());
+
+          SERVICES = normalizeRows(res);
+
+          if (SERVICES.length === 0) {
+            console.warn('Bảng dichvu_mevabe không có dữ liệu, chuyển sang load services.json');
+            await loadServicesFromJson();
+          } else {
+            renderHomeServiceCards(SERVICES);
+          }
+        } catch (error) {
+          console.error('Lỗi load danh sách dịch vụ từ API:', error);
+          console.warn('Chuyển sang load services.json do lỗi API');
+          await loadServicesFromJson();
+        }
+      }
+
+      async function loadServicesFromJson() {
+        try {
+          const response = await fetch('services.json');
+          SERVICES = await response.json();
+          renderHomeServiceCards(SERVICES);
+        } catch (jsonError) {
+          console.error('Lỗi load services.json:', jsonError);
+          const servicesGrid = document.getElementById("services-grid");
+          if (servicesGrid) {
+            servicesGrid.innerHTML = '<div class="alert alert-warning text-center">Không thể tải danh sách dịch vụ. Vui lòng thử lại sau.</div>';
+          }
+        }
+      }
+
+      document.addEventListener("DOMContentLoaded", loadHomeServices);
+    </script>
+    <script src="JS/shared-layout.js"></script>
+    <script src="JS/user-nav-menu.js"></script>
+  </div>
+</body>
+
+</html>

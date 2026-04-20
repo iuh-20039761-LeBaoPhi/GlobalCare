@@ -1399,7 +1399,24 @@ document.addEventListener('DOMContentLoaded', loadHeader);
                 payload.id_nguoidung = accountResult?.userId || _standaloneSession?.id || null;
                 payload.id_xe = _standaloneSelectedCarId || bookingData.car_id || _standaloneFallbackCarId || null;
 
-                // 3. Gọi API Krud
+                // 3. Tải file media lên Drive (nếu có)
+                let driveIds = [];
+                if (_standaloneMediaFiles && _standaloneMediaFiles.length > 0) {
+                    confirmBtn.innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span>Đang tải dữ liệu đính kèm...';
+                    for (const m of _standaloneMediaFiles) {
+                        try {
+                            const up = await DVQTApp.uploadFile(m.file);
+                            if (up && up.success && up.fileId) {
+                                driveIds.push(up.fileId);
+                            }
+                        } catch (err) {
+                            console.warn('Lỗi upload 1 file media:', err);
+                        }
+                    }
+                }
+
+                // 4. Gọi API Krud
+                payload.hinh_anh = driveIds.join(',');
                 const result = await DVQTKrud.insertRow('datlich_thuexe', payload);
                 
                 if (result) {
