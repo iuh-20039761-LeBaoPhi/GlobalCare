@@ -1,7 +1,7 @@
 (function (window, document) {
   var USER_TABLE = "nguoidung";
   var PROVIDER_SERVICE_ID = "11";
-  var LOGIN_PAGE = "../public/dang-nhap.html";
+  var LOGIN_PAGE = "../../../public/dang-nhap.html";
   var STANDALONE_BOOKING_PAGE = "dat-dich-vu.html";
   var bookingAccessState = window.BookingAccessState || {
     isAuthenticated: false,
