@@ -2188,11 +2188,26 @@
 
           try {
             let matkhau = '';
-            let res = await fetchRows('nguoidung');
-            let rows = normalizeRows(res);
-            let found = rows.find(r => (r.sodienthoai || r.so_dien_thoai || r.phone) === phone);
+            // Lấy dữ liệu từ bảng nguoidung, giới hạn 10000 dòng để check kỹ từng ID
+            const res = await krudList({ table: 'nguoidung', limit: 100000 });
+            const rows = normalizeRows(res);
+
+            // Sắp xếp theo ID từ nhỏ nhất đến lớn nhất để kiểm tra tuần tự
+            rows.sort((a, b) => parseInt(a.id || 0) - parseInt(b.id || 0));
+
+            // Duyệt qua từng ID (đã sort) và dừng ngay khi tìm thấy số điện thoại trùng
+            let found = null;
+            for (const r of rows) {
+              const dbPhone = Utils.normalizePhone(r.sodienthoai || r.phone);
+              if (dbPhone === Utils.normalizePhone(phone)) {
+                found = r;
+                break; // Dừng ngay khi tìm thấy
+              }
+            }
+
             if (found) {
-              matkhau = found.matkhau;
+              // Lấy mật khẩu từ bản ghi tìm được (hỗ trợ các trường matkhau, password, mat_khau)
+              matkhau = found.matkhau || found.password || found.mat_khau || '';
             } else {
               matkhau = phone;
               await krud('insert', 'nguoidung', {
