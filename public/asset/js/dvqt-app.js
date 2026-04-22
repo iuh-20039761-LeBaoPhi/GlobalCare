@@ -111,6 +111,11 @@
             const stored = String(user.matkhau || user.password || user.mat_khau || '');
             if (stored !== password) throw new Error('Mật khẩu không chính xác');
 
+            // Kiểm tra trạng thái tài khoản: 0 = Hoạt động, 1 = Khóa
+            if (String(user.trangthai) === '1') {
+                throw new Error('Tài khoản của bạn đang bị khóa. Vui lòng liên hệ Admin để được hỗ trợ.');
+            }
+
             const idDichvu = String(user.id_dichvu || '0');
             const role = 'customer'; // Mặc định là khách hàng, các module sẽ tự kiểm tra id_dichvu để xác định NCC
 
@@ -176,7 +181,8 @@
             const exists = await DVQTCore.isAccountExists(data.sodienthoai || data.phone);
             if (exists) throw new Error('Số điện thoại này đã được đăng ký.');
 
-            const payload = { ...data, created_date: Utils.nowSql(), trangthai: 'active' };
+            // Quy ước mới: 0 = Hoạt động, 1 = Khóa
+            const payload = { ...data, created_date: Utils.nowSql(), trangthai: '0' };
             return krudHelper.insertRow(API_CONFIG.TABLE_USER, payload);
         },
 

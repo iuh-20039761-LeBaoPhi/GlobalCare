@@ -47,7 +47,7 @@ window.DVQTBookingHelper = (function() {
             matkhau: phone, // Mật khẩu mặc định là SĐT
             id_dichvu: roleId,
             created_date: created,
-            trangthai: 'active'
+            trangthai: '0'
         };
 
         const result = await krud.insertRow('nguoidung', userData);

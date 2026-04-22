@@ -36,12 +36,13 @@
     function mapProviderRow(row) {
         const raw = row || {};
         const normalizeStatus = (status) => {
-            const s = String(status || '').trim().toLowerCase();
-            if (['pending', 'cho_duyet', 'waiting'].includes(s)) return 'pending';
-            if (['active', 'hoat_dong'].includes(s)) return 'active';
-            if (['rejected', 'tu_choi'].includes(s)) return 'rejected';
-            if (['blocked', 'khoa'].includes(s)) return 'blocked';
-            return s || 'pending';
+            const s = String(status || '').trim();
+            // Quy ước chuẩn: 0 = Hoạt động, 1 = Khóa
+            if (s === '0') return 'active';
+            if (s === '1') return 'blocked';
+            // Các trạng thái khác (nếu có trong tương lai)
+            if (['pending', 'rejected'].includes(s)) return s;
+            return 'active'; // Mặc định là 0 nếu không khớp
         };
 
         const ids = String(raw.id_dichvu || '').split(',');
@@ -121,9 +122,9 @@
     function buildActions(p) {
         let btns = `<button class="btn btn-sm btn-light me-1" onclick="providerDetail('${p.id}')" title="Xem chi tiết"><i class="fas fa-eye"></i></button>`;
         if (p.status === 'blocked') {
-            btns += `<button class="btn btn-sm btn-outline-success me-1" onclick="handleProviderAction('${p.id}', 'active')" title="Mở khóa tài khoản"><i class="fas fa-unlock"></i></button>`;
+            btns += `<button class="btn btn-sm btn-outline-success me-1" onclick="handleProviderAction('${p.id}', '0')" title="Mở khóa tài khoản"><i class="fas fa-unlock"></i></button>`;
         } else {
-            btns += `<button class="btn btn-sm btn-outline-danger me-1" onclick="handleProviderAction('${p.id}', 'blocked')" title="Khóa tài khoản"><i class="fas fa-lock"></i></button>`;
+            btns += `<button class="btn btn-sm btn-outline-danger me-1" onclick="handleProviderAction('${p.id}', '1')" title="Khóa tài khoản"><i class="fas fa-lock"></i></button>`;
         }
         return btns;
     }
@@ -196,7 +197,7 @@
         
         const krud = window.DVQTKrud;
         try {
-            const data = { trangthai: status };
+            const data = { trangthai: status }; // status truyền vào lúc này là '0' hoặc '1'
             if (reason) data.lydotuchoi = reason;
             
             await krud.updateRow(PROVIDER_TABLE, id, data);

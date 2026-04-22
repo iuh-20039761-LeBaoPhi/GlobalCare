@@ -160,7 +160,7 @@ async function _bdAutoCreateOrFindAccount(name, phone) {
         matkhau: phone, // Mật khẩu mặc định = SĐT
         id_dichvu: '0', // Mặc định là khách hàng
         created_date: created,
-        trangthai: 'active'
+        trangthai: '0'
     };
 
     const result = await krud.insertRow('nguoidung', userData);

@@ -86,7 +86,7 @@ window.BookingAuthHelper = (function() {
             matkhau: normalizedPhone, // Mật khẩu mặc định là số điện thoại
             id_dichvu: '0', // Quyền mặc định là khách hàng
             created_date: createdAt,
-            trangthai: 'active'
+            trangthai: '0'
         };
 
         const insertRes = await krud('insert', 'nguoidung', userData);
