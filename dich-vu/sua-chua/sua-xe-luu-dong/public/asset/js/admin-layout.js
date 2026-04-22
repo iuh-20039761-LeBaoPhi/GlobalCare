@@ -102,7 +102,8 @@
         .toLowerCase();
       if (!href || href === "#") return;
 
-      if (href === activePath) {
+      // Match exact path or path ending with the filename (to handle prefixes like "admin/")
+      if (href === activePath || href.endsWith("/" + activePath)) {
         item.classList.add("active");
       }
     });

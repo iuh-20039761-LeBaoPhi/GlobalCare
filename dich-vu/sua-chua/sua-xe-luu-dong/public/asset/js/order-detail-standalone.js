@@ -773,7 +773,7 @@
         phone: row.sodienthoai || "",
         email: row.email || "",
         address: row.diachi || "",
-        avatar: row.avatar_kh || "",
+        avatar: row.link_avatar || row.avatar_kh || "",
       },
       provider: {
         id: hasAssignedProvider ? toNumber(row.idnhacungcap) : 0,
@@ -781,7 +781,7 @@
         phone: hasAssignedProvider ? row.sdt_ncc || "" : "",
         email: hasAssignedProvider ? row.email_ncc || "" : "",
         address: hasAssignedProvider ? row.diachi_ncc || "" : "",
-        avatar: hasAssignedProvider ? pickFirstValue([row.avatar_ncc]) : "",
+        avatar: hasAssignedProvider ? pickFirstValue([row.link_avatar, row.avatar_ncc]) : "",
       },
       raw: row,
       anh_id: row.anh_id || "",
@@ -802,7 +802,7 @@
    * @param {string} kind Loại đối tượng.
    * @returns {string[]}
    */
-  function normalizeAvatarCandidates(rawValue, kind) {
+  function normalizeAvatarCandidates(rawValue) {
     var text = String(rawValue == null ? "" : rawValue).trim();
     if (!text) return [];
 
@@ -823,43 +823,18 @@
       return candidates;
     }
 
-    if (text.charAt(0) === "/") {
-      candidates.push(encodedText);
-      return candidates;
-    }
-
-    if (text.indexOf("../") === 0 || text.indexOf("./") === 0) {
+    if (
+      text.charAt(0) === "/" ||
+      text.indexOf("./") === 0 ||
+      text.indexOf("../") === 0
+    ) {
       candidates.push(encodedText);
       return candidates;
     }
 
     candidates.push(encodedText);
-    if (
-      text.indexOf("public/") === 0 ||
-      text.indexOf("asset/") === 0 ||
-      text.indexOf("uploads/") === 0
-    ) {
-      candidates.push(encodedText);
-    }
 
-    if (text.indexOf("/") < 0) {
-      if (kind === "provider") {
-        candidates.push(
-          "public/asset/image/upload/nhacungcap/" + encodeURIComponent(text),
-        );
-      }
-      if (kind === "customer") {
-        candidates.push(
-          "public/asset/image/upload/khachhang/" + encodeURIComponent(text),
-        );
-      }
-      candidates.push("uploads/" + encodeURIComponent(text));
-      candidates.push("public/uploads/" + encodeURIComponent(text));
-    }
-
-    return candidates.filter(function (item, index, list) {
-      return item && list.indexOf(item) === index;
-    });
+    return candidates;
   }
 
   /**
@@ -874,11 +849,32 @@
     if (!node) return;
 
     var fallback = String(fallbackText || "--").trim() || "--";
-    var candidates = normalizeAvatarCandidates(avatarValue, kind);
+    
+    // Kiểm tra nếu là ID Google Drive (thường không có dấu gạch chéo hoặc dấu chấm)
+    var textValue = String(avatarValue || "").trim();
+    var isGDrive = textValue.length > 10 && textValue.indexOf("/") === -1 && textValue.indexOf(".") === -1;
 
     node.classList.remove("has-image");
     node.textContent = fallback;
 
+    if (!textValue) return;
+
+    if (isGDrive) {
+      var iframe = document.createElement("iframe");
+      iframe.src = "https://drive.google.com/file/d/" + textValue + "/preview";
+      iframe.setAttribute("allow", "autoplay");
+      iframe.style.border = "0";
+      iframe.style.width = "100%";
+      iframe.style.height = "100%";
+      iframe.style.display = "block";
+      
+      node.textContent = "";
+      node.appendChild(iframe);
+      node.classList.add("has-image");
+      return;
+    }
+
+    var candidates = normalizeAvatarCandidates(textValue);
     if (!candidates.length) return;
 
     var probe = new Image();

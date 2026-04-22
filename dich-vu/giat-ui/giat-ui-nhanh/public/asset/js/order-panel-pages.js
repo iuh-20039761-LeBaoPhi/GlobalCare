@@ -50,13 +50,13 @@
     return phone;
   }
 
-  function hasOrderLifecycleDates(row) {
-    return (
-      hasDateValue(row && row.ngayhuy) ||
-      hasDateValue(row && row.ngaynhan) ||
-      hasDateValue(row && row.ngayhoanthanh)
-    );
-  }
+  // function hasOrderLifecycleDates(row) {
+  //   return (
+  //     hasDateValue(row && row.ngayhuy) ||
+  //     hasDateValue(row && row.ngaynhan) ||
+  //     hasDateValue(row && row.ngayhoanthanh)
+  //   );
+  // }
 
   function getRole() {
     var role = String(
@@ -2363,7 +2363,7 @@
         if (isDriveId) {
           const url = "https://drive.google.com/file/d/" + item + "/preview";
           const wrapper = document.createElement("div");
-          wrapper.className = "ratio ratio-16x9 mb-2 border rounded overflow-hidden shadow-sm";
+          wrapper.className = "ratio ratio-1x1 mb-2 border rounded overflow-hidden shadow-sm";
           wrapper.innerHTML = `<iframe src="${url}" allow="autoplay" style="border:none;"></iframe>`;
           grid.appendChild(wrapper);
           return;
@@ -2495,7 +2495,7 @@
         formData.append("file", file);
         formData.append("name", "REVIEW_" + Date.now() + "_" + file.name);
 
-        return fetch("../upload.php", {
+        return fetch("upload.php", {
           method: "POST",
           body: formData
         })

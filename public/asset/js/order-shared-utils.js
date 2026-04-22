@@ -176,18 +176,17 @@
       email: order.email || customer.email || customer.user_email || "",
       diachi: order.diachi || customer.diachi || "",
       avatartenfile: pickFirstValue([
-        order.avatartenfile,
+        order.link_avatar,
+        customer.link_avatar,
         order.avatar_kh,
         order.avatar_khachhang,
-        customer.avatartenfile,
-        customer.avatar,
-        customer.avatar_kh,
       ]),
       avatar_kh: pickFirstValue([
+        order.link_avatar,
+        customer.link_avatar,
         order.avatar_kh,
         customer.avatar,
         customer.avatar_kh,
-        customer.avatartenfile,
       ]),
     });
   }
@@ -212,13 +211,14 @@
       email_ncc: order.email_ncc || provider.email || provider.user_email || "",
       diachi_ncc: order.diachi_ncc || provider.diachi || "",
       avatar_ncc: pickFirstValue([
+        order.link_avatar,
+        provider.link_avatar,
         order.avatar_ncc,
         order.avatar_nhacungcap,
         order.provider_avatar,
         order.avatar,
         provider.avatar,
         provider.avatar_ncc,
-        provider.avatartenfile,
       ]),
     });
   }
