@@ -339,7 +339,7 @@ async function regSubmit() {
             link_cccd_truoc: linkCccdTruoc,
             link_cccd_sau: linkCccdSau,
             id_dichvu: idDichvuStr, 
-            trangthai: 'active'
+            trangthai: '0'
         };
 
         btn.innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span>Đang tạo tài khoản...';

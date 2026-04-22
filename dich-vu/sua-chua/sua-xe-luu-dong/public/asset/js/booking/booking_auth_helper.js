@@ -63,6 +63,11 @@ window.BookingAuthHelper = (function() {
             if (serviceIds.includes("8")) {
                 throw new Error("Tài khoản nhà cung cấp không được phép đặt lịch dịch vụ này.");
             }
+
+            // Kiểm tra trạng thái tài khoản (nếu trangthai = 1 thì không cho đăng nhập)
+            if (String(user.trangthai) === '1') {
+                throw new Error("Tài khoản của bạn đã bị khóa hoặc không đủ quyền truy cập.");
+            }
             
             // Tự động ghi nhớ phiên đăng nhập nếu chưa có
             if (!getCookie('dvqt_u')) {
@@ -86,7 +91,7 @@ window.BookingAuthHelper = (function() {
             matkhau: normalizedPhone, // Mật khẩu mặc định là số điện thoại
             id_dichvu: '0', // Quyền mặc định là khách hàng
             created_date: createdAt,
-            trangthai: 'active'
+            trangthai: '0'
         };
 
         const insertRes = await krud('insert', 'nguoidung', userData);

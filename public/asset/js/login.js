@@ -23,6 +23,19 @@ function initTogglePassword() {
 }
 
 /* ============================
+   HELPER: Detect root URL
+   ============================ */
+function getRoot() {
+    if (window.DVQTApp && window.DVQTApp.ROOT_URL !== undefined) return window.DVQTApp.ROOT_URL;
+    const path = window.location.pathname;
+    const idx = path.toLowerCase().indexOf('/public/');
+    if (idx !== -1) return path.substring(0, idx);
+    const parts = path.split('/');
+    if (parts[1] && !parts[1].includes('.') && parts[1] !== 'index.php') return '/' + parts[1];
+    return '';
+}
+
+/* ============================
    LOGIN – Đơn giản hoá
    ============================ */
 async function login() {
@@ -54,15 +67,6 @@ async function login() {
         const urlParams = new URLSearchParams(window.location.search);
         const redirectUrl = urlParams.get('redirect');
         const service = urlParams.get('service');
-        const getRoot = () => {
-            if (window.DVQTApp && window.DVQTApp.ROOT_URL !== undefined) return window.DVQTApp.ROOT_URL;
-            const path = window.location.pathname;
-            const idx = path.toLowerCase().indexOf('/public/');
-            if (idx !== -1) return path.substring(0, idx);
-            const parts = path.split('/');
-            if (parts[1] && !parts[1].includes('.') && parts[1] !== 'index.php') return '/' + parts[1];
-            return '';
-        };
         const root = getRoot();
         let target = root + '/index.html';
 
@@ -102,36 +106,40 @@ async function login() {
    ============================ */
 document.addEventListener('DOMContentLoaded', async () => {
     // Kiểm tra đã đăng nhập chưa từ Cookie (thông qua DVQTApp)
-    if (window.DVQTApp) {
-        const session = await window.DVQTApp.checkSession();
-        if (session && session.logged_in) {
-            const urlParams = new URLSearchParams(window.location.search);
-            const redirectUrl = urlParams.get('redirect');
-            const service = urlParams.get('service');
-            const root = getRoot();
-            let target = root + '/index.html';
-            if (redirectUrl) {
-                target = decodeURIComponent(redirectUrl);
-            } else if (service) {
-                const serviceHomes = {
-                    'thonha': root + '/dich-vu/sua-chua/tho-nha/index.html',
-                    'thuexe': root + '/dich-vu/van-tai-logistics/thue-xe/index.html',
-                    'giatuinhanh': root + '/dich-vu/giat-ui/giat-ui-nhanh/index.html',
-                    'mevabe': root + '/cham-soc-me-va-be/index.html',
-                    'nguoibenh': root + '/cham-soc-nguoi-benh/index.html',
-                    'nguoigia': root + '/cham-soc-nguoi-gia/index.html',
-                    'donvesinh': root + '/dich-vu-don-ve-sinh/index.html',
-                    'vuonnha': root + '/cham-soc-vuon-nha/index.html',
-                    'giaohangnhanh': root + '/giao-hang-nhanh/index.html',
-                    'suaxe': root + '/dich-vu/sua-chua/sua-xe-luu-dong/index.html',
-                    'chuyendon': root + '/dich-vu-chuyen-don/index.html',
-                    'laixeho': root + '/dich-vu-lai-xe-ho/index.html'
-                };
-                target = serviceHomes[service] || target;
+    try {
+        if (window.DVQTApp) {
+            const session = await window.DVQTApp.checkSession();
+            if (session && session.logged_in) {
+                const urlParams = new URLSearchParams(window.location.search);
+                const redirectUrl = urlParams.get('redirect');
+                const service = urlParams.get('service');
+                const root = getRoot();
+                let target = root + '/index.html';
+                if (redirectUrl) {
+                    target = decodeURIComponent(redirectUrl);
+                } else if (service) {
+                    const serviceHomes = {
+                        'thonha': root + '/dich-vu/sua-chua/tho-nha/index.html',
+                        'thuexe': root + '/dich-vu/van-tai-logistics/thue-xe/index.html',
+                        'giatuinhanh': root + '/dich-vu/giat-ui/giat-ui-nhanh/index.html',
+                        'mevabe': root + '/dich-vu/cham-soc/me-va-be/index.html',
+                        'nguoibenh': root + '/dich-vu/cham-soc/nguoi-benh/index.html',
+                        'nguoigia': root + '/dich-vu/cham-soc/nguoi-gia/index.html',
+                        'donvesinh': root + '/dich-vu/ve-sinh/tap-vu-lau-don-ve-sinh/index.html',
+                        'vuonnha': root + '/cham-soc-vuon-nha/index.html',
+                        'giaohangnhanh': root + '/giao-hang-nhanh/index.html',
+                        'suaxe': root + '/dich-vu/sua-chua/sua-xe-luu-dong/index.html',
+                        'chuyendon': root + '/dich-vu-chuyen-don/index.html',
+                        'laixeho': root + '/dich-vu-lai-xe-ho/index.html'
+                    };
+                    target = serviceHomes[service] || target;
+                }
+                window.location.href = target;
+                return;
             }
-            window.location.href = target;
-            return;
         }
+    } catch (e) {
+        console.warn('[login] Session check failed:', e);
     }
 
     initTogglePassword();
@@ -143,3 +151,4 @@ document.addEventListener('DOMContentLoaded', async () => {
         if (e.key === 'Enter') login();
     });
 });
+

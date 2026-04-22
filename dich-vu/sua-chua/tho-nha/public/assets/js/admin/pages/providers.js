@@ -5,6 +5,17 @@
 (function() {
     'use strict';
 
+    function _tnToast(msg, type) {
+        if (typeof type === 'undefined') type = 'success';
+        var d = document.createElement('div');
+        d.className = 'alert alert-' + type + ' shadow-lg position-fixed top-0 start-50 translate-middle-x mt-4';
+        d.style.cssText = 'z-index:99999;border-radius:30px;padding:12px 30px;min-width:280px;max-width:90vw;text-align:center;animation:fadeInDown .3s ease;';
+        var icon = type === 'success' ? 'fa-check-circle' : (type === 'danger' ? 'fa-exclamation-circle' : 'fa-info-circle');
+        d.innerHTML = '<i class="fas ' + icon + ' me-2"></i>' + msg;
+        document.body.appendChild(d);
+        setTimeout(function() { d.style.transition = 'opacity .5s'; d.style.opacity = '0'; setTimeout(function() { d.remove(); }, 500); }, 3500);
+    }
+
     const PROVIDER_TABLE = 'nguoidung';
     let providersData = [];
     let currentStatusFilter = '';
@@ -25,12 +36,13 @@
     function mapProviderRow(row) {
         const raw = row || {};
         const normalizeStatus = (status) => {
-            const s = String(status || '').trim().toLowerCase();
-            if (['pending', 'cho_duyet', 'waiting'].includes(s)) return 'pending';
-            if (['active', 'hoat_dong'].includes(s)) return 'active';
-            if (['rejected', 'tu_choi'].includes(s)) return 'rejected';
-            if (['blocked', 'khoa'].includes(s)) return 'blocked';
-            return s || 'pending';
+            const s = String(status || '').trim();
+            // Quy ước chuẩn: 0 = Hoạt động, 1 = Khóa
+            if (s === '0') return 'active';
+            if (s === '1') return 'blocked';
+            // Các trạng thái khác (nếu có trong tương lai)
+            if (['pending', 'rejected'].includes(s)) return s;
+            return 'active'; // Mặc định là 0 nếu không khớp
         };
 
         const ids = String(raw.id_dichvu || '').split(',');
@@ -110,9 +122,9 @@
     function buildActions(p) {
         let btns = `<button class="btn btn-sm btn-light me-1" onclick="providerDetail('${p.id}')" title="Xem chi tiết"><i class="fas fa-eye"></i></button>`;
         if (p.status === 'blocked') {
-            btns += `<button class="btn btn-sm btn-outline-success me-1" onclick="handleProviderAction('${p.id}', 'active')" title="Mở khóa tài khoản"><i class="fas fa-unlock"></i></button>`;
+            btns += `<button class="btn btn-sm btn-outline-success me-1" onclick="handleProviderAction('${p.id}', '0')" title="Mở khóa tài khoản"><i class="fas fa-unlock"></i></button>`;
         } else {
-            btns += `<button class="btn btn-sm btn-outline-danger me-1" onclick="handleProviderAction('${p.id}', 'blocked')" title="Khóa tài khoản"><i class="fas fa-lock"></i></button>`;
+            btns += `<button class="btn btn-sm btn-outline-danger me-1" onclick="handleProviderAction('${p.id}', '1')" title="Khóa tài khoản"><i class="fas fa-lock"></i></button>`;
         }
         return btns;
     }
@@ -185,13 +197,13 @@
         
         const krud = window.DVQTKrud;
         try {
-            const data = { trangthai: status };
+            const data = { trangthai: status }; // status truyền vào lúc này là '0' hoặc '1'
             if (reason) data.lydotuchoi = reason;
             
             await krud.updateRow(PROVIDER_TABLE, id, data);
             await loadProviders();
         } catch (err) {
-            alert('Lỗi: ' + err.message);
+            _tnToast('Lỗi: ' + err.message, 'danger');
         }
     };
 

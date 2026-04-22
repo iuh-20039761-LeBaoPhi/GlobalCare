@@ -773,7 +773,7 @@
             matkhau: phone,
             id_dichvu: '0',
             created_date: created,
-            trangthai: 'active'
+            trangthai: '0'
         };
 
         const result = await krud.insertRow('nguoidung', userData);

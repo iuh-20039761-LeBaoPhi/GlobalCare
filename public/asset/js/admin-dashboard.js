@@ -72,6 +72,8 @@ document.addEventListener('DOMContentLoaded', async function () {
                 loadServices();
             } else if (targetId === 'quan-ly-phi') {
                 loadFees();
+            } else if (targetId === 'quan-ly-tai-khoan') {
+                loadAccounts();
             }
         });
     });
@@ -381,6 +383,327 @@ document.addEventListener('DOMContentLoaded', async function () {
         }
     }
 
-    // Load dữ liệu khi vào trang
     loadServices();
+
+    // --- QUẢN LÝ TÀI KHOẢN (NGƯỜI DÙNG) ---
+    let allAccounts = [];
+    let servicesMap = {};
+
+    async function loadAccounts() {
+        const tbody = document.getElementById('accountTableBody');
+        const filterSvc = document.getElementById('filterAccountService');
+        
+        try {
+            // Tải danh sách dịch vụ để map tên và fill filter
+            const services = await DVQTKrud.listTable('dichvucungcap', { limit: 100 });
+            servicesMap = {};
+            filterSvc.innerHTML = '<option value="">Tất cả dịch vụ</option><option value="0">Khách hàng (Không DV)</option>';
+            services.forEach(s => {
+                servicesMap[s.id] = s.dichvu;
+                const opt = document.createElement('option');
+                opt.value = s.id;
+                opt.textContent = s.dichvu;
+                filterSvc.appendChild(opt);
+            });
+
+            // Tải danh sách tài khoản
+            const data = await DVQTKrud.listTable('nguoidung', { limit: 5000 });
+            allAccounts = data || [];
+            
+            filterAndRenderAccounts();
+        } catch (e) {
+            tbody.innerHTML = '<tr><td colspan="6" class="text-center text-danger py-4">Lỗi tải dữ liệu tài khoản</td></tr>';
+        }
+    }
+
+    function filterAndRenderAccounts() {
+        const q = document.getElementById('searchAccountInput').value.toLowerCase().trim();
+        const svcId = document.getElementById('filterAccountService').value;
+
+        let filtered = allAccounts;
+
+        if (svcId === "0") {
+            // Lọc khách hàng (id_dichvu là 0, rỗng hoặc null)
+            filtered = filtered.filter(u => {
+                const val = String(u.id_dichvu || "").trim();
+                return val === "" || val === "0";
+            });
+        } else if (svcId) {
+            // Lọc theo NCC của dịch vụ cụ thể
+            filtered = filtered.filter(u => {
+                const ids = String(u.id_dichvu || "").split(',').map(x => x.trim()).filter(x => x !== "" && x !== "0");
+                return ids.includes(svcId);
+            });
+        }
+
+        if (q) {
+            filtered = filtered.filter(u => 
+                (u.hovaten && u.hovaten.toLowerCase().includes(q)) || 
+                (u.sodienthoai && u.sodienthoai.includes(q))
+            );
+        }
+
+        renderAccountTable(filtered);
+    }
+
+    function renderAccountTable(data) {
+        const tbody = document.getElementById('accountTableBody');
+        const mobileContainer = document.getElementById('accountMobileCards');
+
+        if (!data || data.length === 0) {
+            tbody.innerHTML = '<tr><td colspan="4" class="text-center py-4">Không tìm thấy tài khoản nào</td></tr>';
+            if (mobileContainer) mobileContainer.innerHTML = '<p class="text-center w-100 py-3 text-muted">Trống</p>';
+            return;
+        }
+
+        const html = data.map(u => {
+            // Lọc bỏ id=0 hoặc chuỗi rỗng để xác định có phải NCC hay không
+            const svcIds = String(u.id_dichvu || "").split(',').map(x => x.trim()).filter(x => x !== "" && x !== "0");
+            const isNCC = svcIds.length > 0;
+            const svcNames = svcIds.map(id => `<span class="badge bg-info text-dark me-1" style="font-size:10px;">${servicesMap[id] || 'ID:'+id}</span>`).join('');
+            
+            // Quy ước chuẩn: 0 = Hoạt động, 1 = Khóa
+            const isLocked = String(u.trangthai) === '1';
+            let statusBadge = isLocked 
+                ? '<span class="badge bg-danger">Bị khóa</span>' 
+                : '<span class="badge bg-success">Hoạt động</span>';
+
+            return `
+                <tr>
+                    <td>
+                        <div class="fw-bold text-dark">${u.hovaten || 'N/A'}</div>
+                        <div class="small text-muted font-monospace">${u.sodienthoai || '---'}</div>
+                    </td>
+                    <td>
+                        <div class="small fw-600 mb-1">${isNCC ? 'Nhà cung cấp' : 'Khách hàng'}</div>
+                        <div class="d-flex flex-wrap" style="max-width:200px;">${svcNames}</div>
+                    </td>
+                    <td>${statusBadge}</td>
+                    <td class="text-end">
+                        <button class="btn btn-sm btn-light text-primary handle-view-account" data-id="${u.id}" title="Xem chi tiết"><i class="fas fa-eye"></i></button>
+                        <button class="btn btn-sm ${isLocked ? 'btn-outline-success' : 'btn-outline-warning'} handle-lock-account" data-id="${u.id}" data-status="${isLocked ? '0' : '1'}" title="${isLocked ? 'Mở khóa' : 'Khóa tài khoản'}">
+                            <i class="fas ${isLocked ? 'fa-unlock' : 'fa-lock'}"></i>
+                        </button>
+                    </td>
+                </tr>
+            `;
+        }).join('');
+
+        tbody.innerHTML = html;
+
+        if (mobileContainer) {
+            mobileContainer.innerHTML = data.map(u => {
+                const isLocked = String(u.trangthai) === '1';
+                return `
+                    <div class="mobile-data-card">
+                        <div class="card-top">
+                            <span class="card-name">${u.hovaten || 'N/A'}</span>
+                            <span class="badge ${isLocked ? 'bg-danger' : 'bg-success'}">${isLocked ? 'Bị khóa' : 'Hoạt động'}</span>
+                        </div>
+                        <div class="small mb-1">SĐT: ${u.sodienthoai}</div>
+                        <div class="card-actions">
+                             <button class="btn btn-sm btn-light text-primary handle-view-account" data-id="${u.id}"><i class="fas fa-eye me-1"></i>Xem</button>
+                             <button class="btn btn-sm ${isLocked ? 'btn-success' : 'btn-warning'} handle-lock-account" data-id="${u.id}" data-status="${isLocked ? '0' : '1'}">
+                                <i class="fas ${isLocked ? 'fa-unlock' : 'fa-lock'} me-1"></i>${isLocked ? 'Mở' : 'Khóa'}
+                             </button>
+                        </div>
+                    </div>
+                `;
+            }).join('');
+        }
+    }
+
+    // Modal Xem chi tiết
+    let currentAccount = null;
+    const modalDetail = new bootstrap.Modal(document.getElementById('modalAccountDetail'));
+
+    function showAccountDetail(id) {
+        currentAccount = allAccounts.find(u => String(u.id) === String(id));
+        if (!currentAccount) return;
+
+        const u = currentAccount;
+        const svcIds = String(u.id_dichvu || "").split(',').map(x => x.trim()).filter(x => x !== "" && x !== "0");
+        const isLocked = String(u.trangthai) === '1';
+
+        // Helper để render ảnh (hỗ trợ Google Drive ID, Tên file vật lý và icon mặc định)
+        const renderImage = (val, type = 'avatar') => {
+            if (!val) {
+                if (type === 'avatar') return `<img src="asset/image/default-avatar.png" class="rounded-circle border shadow-sm" style="width: 120px; height: 120px; object-fit: cover;">`;
+                return `<i class="fas ${type === 'front' ? 'fa-id-card' : 'fa-id-card'} fa-2x text-muted opacity-25"></i>`;
+            }
+
+            let finalUrl = '';
+            
+            // 1. Nếu là URL trực tiếp (http...)
+            if (val.startsWith('http')) {
+                finalUrl = val;
+            } 
+            // 2. Nếu là ID Drive (không chứa dấu chấm, không chứa gạch chéo)
+            else if (!val.includes('.') && !val.includes('/')) {
+                // Sử dụng iframe preview để ổn định nhất (giống profile.js)
+                const style = type === 'avatar' 
+                    ? 'width: 300%; height: 300%; position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); pointer-events: none;'
+                    : 'width: 180%; height: 180%; position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); pointer-events: none;';
+                const containerStyle = type === 'avatar'
+                    ? 'width: 120px; height: 120px; position:relative; overflow:hidden; border-radius:50%; margin: 0 auto;'
+                    : 'width: 100%; height: 100%; position:relative; overflow:hidden; border-radius:inherit;';
+
+                return `
+                    <div style="${containerStyle}">
+                        <iframe src="https://drive.google.com/file/d/${val}/preview" frameborder="0" scrolling="no" style="${style}"></iframe>
+                        <a href="https://drive.google.com/file/d/${val}/view" target="_blank" style="display:block; position:absolute; inset:0; z-index:10;"></a>
+                    </div>
+                `;
+            }
+            // 3. Nếu là tên file vật lý (có dấu chấm mở rộng tên file)
+            else {
+                // Dò tìm trong thư mục uploads/providers của hệ thống
+                finalUrl = 'uploads/providers/' + val;
+            }
+
+            if (type === 'avatar') {
+                return `<img src="${finalUrl}" class="rounded-circle border shadow-sm" style="width: 120px; height: 120px; object-fit: cover;" onerror="this.src='asset/image/default-avatar.png'">`;
+            } else {
+                return `<img src="${finalUrl}" class="img-fluid" style="height:100%; width:100%; object-fit: contain; cursor: pointer;" onclick="window.open('${finalUrl}')" onerror="this.parentElement.innerHTML='<small class=&quot;text-muted&quot;>Lỗi ảnh</small>'">`;
+            }
+        };
+
+        // Lấy đúng trường dữ liệu (fallback cho nhiều dự án khác nhau)
+        // Ưu tiên các trường tenfile của Thợ Nhà, sau đó là link_ của Profile chung
+        const avatarVal = u.avatartenfile || u.link_avatar || u.avatar || '';
+        const cccdFrontVal = u.cccdmattruoctenfile || u.link_cccd_truoc || u.anh_cccd_truoc || '';
+        const cccdBackVal = u.cccdmatsautenfile || u.link_cccd_sau || u.anh_cccd_sau || '';
+
+        const bodyHtml = `
+            <div class="account-detail-container">
+                <div class="row g-4">
+                    <!-- Sidebar: Profile & Status -->
+                    <div class="col-md-4 text-center border-end">
+                        <div class="position-relative d-inline-block mb-3">
+                            ${renderImage(avatarVal, 'avatar')}
+                            <span class="position-absolute bottom-0 end-0 badge rounded-pill ${isLocked ? 'bg-danger' : 'bg-success'} border border-2 border-white p-2" style="z-index: 11;">
+                                <span class="visually-hidden">Status</span>
+                            </span>
+                        </div>
+                        <h4 class="fw-bold mb-1">${u.hovaten || 'N/A'}</h4>
+                        <p class="text-muted small mb-3">ID: #${u.id}</p>
+                        
+                        <div class="status-box p-2 rounded ${isLocked ? 'bg-danger-subtle text-danger' : 'bg-success-subtle text-success'} fw-bold small mb-3">
+                            <i class="fas ${isLocked ? 'fa-user-slash' : 'fa-user-check'} me-1"></i>
+                            ${isLocked ? 'TÀI KHOẢN ĐANG KHÓA' : 'TÀI KHOẢN HOẠT ĐỘNG'}
+                        </div>
+
+                        <div class="identity-info text-start px-2">
+                            <div class="small text-muted text-uppercase fw-bold mb-1" style="font-size: 10px;">Số CCCD</div>
+                            <div class="fw-bold text-dark border-bottom pb-2 mb-2">${u.cccd || '---'}</div>
+                            
+                            <div class="small text-muted text-uppercase fw-bold mb-1" style="font-size: 10px;">Số điện thoại</div>
+                            <div class="fw-bold text-dark border-bottom pb-2 mb-2">${u.sodienthoai || '---'}</div>
+                        </div>
+                    </div>
+
+                    <!-- Main Info -->
+                    <div class="col-md-8">
+                        <h6 class="fw-bold text-uppercase border-bottom pb-2 mb-3"><i class="fas fa-info-circle me-2"></i>Thông tin chi tiết</h6>
+                        
+                        <div class="row g-3 mb-4">
+                            <div class="col-sm-6">
+                                <label class="small text-muted text-uppercase fw-bold">Email</label>
+                                <div class="text-dark">${u.email || 'N/A'}</div>
+                            </div>
+                            <div class="col-sm-6">
+                                <label class="small text-muted text-uppercase fw-bold">Mật khẩu</label>
+                                <div class="font-monospace text-primary fw-bold">${u.matkhau || '---'}</div>
+                            </div>
+                            <div class="col-12">
+                                <label class="small text-muted text-uppercase fw-bold">Địa chỉ</label>
+                                <div class="text-dark">${u.diachi || 'Chưa cung cấp địa chỉ'}</div>
+                            </div>
+                            <div class="col-12">
+                                <label class="small text-muted text-uppercase fw-bold">Dịch vụ cung cấp</label>
+                                <div class="py-1">
+                                    ${svcIds.map(id => `<span class="badge bg-light text-primary border border-primary-subtle me-1">${servicesMap[id] || id}</span>`).join('') || '<span class="text-muted small italic">Tài khoản khách hàng</span>'}
+                                </div>
+                            </div>
+                        </div>
+
+                        <h6 class="fw-bold text-uppercase border-bottom pb-2 mb-3"><i class="fas fa-id-card me-2"></i>Hình ảnh xác minh (CCCD)</h6>
+                        <div class="row g-2">
+                            <div class="col-6">
+                                <p class="small text-muted text-center mb-1">Mặt trước</p>
+                                <div class="cccd-img-box border rounded overflow-hidden bg-light d-flex align-items-center justify-content-center" style="height: 120px;">
+                                    ${renderImage(cccdFrontVal, 'front')}
+                                </div>
+                            </div>
+                            <div class="col-6">
+                                <p class="small text-muted text-center mb-1">Mặt sau</p>
+                                <div class="cccd-img-box border rounded overflow-hidden bg-light d-flex align-items-center justify-content-center" style="height: 120px;">
+                                    ${renderImage(cccdBackVal, 'back')}
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        `;
+
+        document.getElementById('accountDetailBody').innerHTML = bodyHtml;
+        
+        const lockBtn = document.getElementById('btnToggleLockAccount');
+        if (isLocked) {
+            lockBtn.innerHTML = '<i class="fas fa-unlock me-2"></i>Mở khóa tài khoản';
+            lockBtn.className = 'btn btn-success px-4';
+        } else {
+            lockBtn.innerHTML = '<i class="fas fa-lock me-2"></i>Khóa tài khoản';
+            lockBtn.className = 'btn btn-warning px-4';
+        }
+
+        modalDetail.show();
+    }
+
+    // Toggle Lock từ Modal
+    document.getElementById('btnToggleLockAccount').addEventListener('click', async () => {
+        if (!currentAccount) return;
+        const isLocked = String(currentAccount.trangthai) === '1';
+        const newStatus = isLocked ? '0' : '1';
+        
+        if (confirm(`Bạn có chắc chắn muốn ${isLocked ? 'MỞ KHÓA' : 'KHÓA'} tài khoản này?`)) {
+            try {
+                await DVQTKrud.updateRow('nguoidung', currentAccount.id, { trangthai: newStatus });
+                modalDetail.hide();
+                loadAccounts();
+            } catch (err) { alert('Lỗi: ' + err.message); }
+        }
+    });
+
+    // Event Delegation
+    const accountHandlers = async (e) => {
+        const viewBtn = e.target.closest('.handle-view-account');
+        const lockBtn = e.target.closest('.handle-lock-account');
+
+        if (viewBtn) {
+            showAccountDetail(viewBtn.dataset.id);
+        }
+
+        if (lockBtn) {
+            const id = lockBtn.dataset.id;
+            const newStatus = lockBtn.dataset.status;
+            const action = newStatus === '1' ? 'KHÓA' : 'MỞ KHÓA';
+            
+            if (confirm(`Xác nhận ${action} tài khoản #${id}?`)) {
+                try {
+                    await DVQTKrud.updateRow('nguoidung', id, { trangthai: newStatus });
+                    loadAccounts();
+                } catch (err) { alert('Lỗi: ' + err.message); }
+            }
+        }
+    };
+    document.getElementById('accountTableBody').addEventListener('click', accountHandlers);
+    if (document.getElementById('accountMobileCards')) {
+        document.getElementById('accountMobileCards').addEventListener('click', accountHandlers);
+    }
+
+    // Gắn sự kiện filter & search
+    document.getElementById('filterAccountService').addEventListener('change', filterAndRenderAccounts);
+    document.getElementById('searchAccountInput').addEventListener('input', filterAndRenderAccounts);
 });

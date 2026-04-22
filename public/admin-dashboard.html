@@ -43,6 +43,11 @@
                             <i class="fas fa-route"></i> Quản lý phí di chuyển
                         </a>
                     </li>
+                    <li>
+                        <a href="#" class="nav-link" data-target="quan-ly-tai-khoan">
+                            <i class="fas fa-users-cog"></i> Quản lý tài khoản
+                        </a>
+                    </li>
                 </ul>
             </nav>
             <div class="sidebar-footer">
@@ -164,6 +169,51 @@
                     </div>
                 </section>
 
+                <!-- Tab 4: Quản lý tài khoản -->
+                <section class="content-section" id="sec-quan-ly-tai-khoan">
+                    <div class="section-header">
+                        <div class="d-flex justify-content-between align-items-center flex-wrap gap-3">
+                            <div>
+                                <h2>Quản lý tài khoản (NCC & Khách)</h2>
+                                <p class="text-muted">Xem và quản lý danh sách tài khoản trên toàn hệ thống.</p>
+                            </div>
+                            <div class="d-flex gap-2">
+                                <select class="form-select w-auto" id="filterAccountService">
+                                    <option value="">Tất cả dịch vụ</option>
+                                    <option value="0">Khách hàng (Không DV)</option>
+                                </select>
+                                <div class="input-group w-auto">
+                                    <span class="input-group-text bg-light border-end-0"><i class="fas fa-search text-muted"></i></span>
+                                    <input type="text" class="form-control border-start-0 ps-0" id="searchAccountInput" placeholder="SĐT hoặc Tên...">
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="dvqt-card">
+                        <div class="table-responsive">
+                            <table class="table table-hover dvqt-table text-nowrap mb-0">
+                                <thead>
+                                    <tr>
+                                        <th>Họ tên / SĐT</th>
+                                        <th>Loại tài khoản / Dịch vụ</th>
+                                        <th>Trạng thái</th>
+                                        <th class="text-end">Thao tác</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="accountTableBody">
+                                    <tr>
+                                        <td colspan="4" class="text-center py-5"><i
+                                                class="fas fa-spinner fa-spin fa-2x text-primary mb-3"></i><br>Đang tải
+                                            dữ liệu...</td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                        <div class="mobile-cards-container" id="accountMobileCards"></div>
+                    </div>
+                </section>
+
             </div>
         </main>
     </div>
@@ -222,6 +272,28 @@
                 <div class="modal-footer bg-light border-top-0">
                     <button type="button" class="btn btn-secondary border-0" data-bs-dismiss="modal">Hủy</button>
                     <button type="button" class="btn btn-primary px-4" id="btnSaveFee">Lưu lại</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal Xem chi tiết tài khoản -->
+    <div class="modal fade" id="modalAccountDetail" tabindex="-1">
+        <div class="modal-dialog modal-lg modal-dialog-centered">
+            <div class="modal-content border-0 shadow-lg" style="border-radius: 1.2rem;">
+                <div class="modal-header bg-light border-0 py-3">
+                    <h5 class="modal-title fw-bold text-primary"><i class="fas fa-user-circle me-2"></i>Chi tiết tài khoản
+                    </h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body p-4" id="accountDetailBody">
+                    <!-- Nội dung sẽ được render bằng JS -->
+                </div>
+                <div class="modal-footer bg-light border-0">
+                    <button type="button" class="btn btn-secondary px-4" data-bs-dismiss="modal">Đóng</button>
+                    <button type="button" class="btn btn-warning" id="btnToggleLockAccount">
+                        <i class="fas fa-lock me-2"></i>Khóa tài khoản
+                    </button>
                 </div>
             </div>
         </div>
