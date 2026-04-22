@@ -32,7 +32,8 @@
         try {
             const session = await app.checkSession();
             if (!session || !session.logged_in) {
-                window.location.href = 'dang-nhap.html?service=profile';
+                const currentUrl = encodeURIComponent(window.location.href);
+                window.location.href = `dang-nhap.html?service=profile&redirect=${currentUrl}`;
                 return;
             }
 
@@ -440,7 +441,18 @@
                 
                 if (confirm.isConfirmed) {
                     await app.logout();
-                    window.location.href = '../index.html';
+                    
+                    const urlParams = new URLSearchParams(window.location.search);
+                    const service = urlParams.get('service');
+                    let target = '../index.html';
+                    
+                    if (service === 'thonha') {
+                        target = '../dich-vu/sua-chua/tho-nha/index.html';
+                    } else if (service === 'thuexe') {
+                        target = '../dich-vu/van-tai-logistics/thue-xe/index.html';
+                    }
+                    
+                    window.location.href = target;
                 }
             };
         }
