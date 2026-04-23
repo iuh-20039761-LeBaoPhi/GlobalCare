@@ -1,4 +1,5 @@
 <?php
+// Fallback proxy for legacy flows such as CCCD. Intentionally does not send folderKey.
 header('Content-Type: application/json; charset=utf-8');
 header('Access-Control-Allow-Origin: *');
 header('Access-Control-Allow-Methods: POST, OPTIONS');

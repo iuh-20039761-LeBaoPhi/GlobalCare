@@ -26,6 +26,25 @@ const ThoNhaOrderActions = (() => {
     function init(container, session, callback) {
         if (!container) return;
 
+        const confirmAction = async (title, text, icon = 'question', confirmColor = '#10b981') => {
+            if (window.Swal) {
+                const result = await window.Swal.fire({
+                    title: `<span style="font-size:1.25rem; font-weight:800; color:#1e293b">${title}</span>`,
+                    text: text,
+                    icon: icon,
+                    showCancelButton: true,
+                    confirmButtonColor: confirmColor,
+                    cancelButtonColor: '#94a3b8',
+                    confirmButtonText: 'Đồng ý',
+                    cancelButtonText: 'Bỏ qua',
+                    reverseButtons: true,
+                    customClass: { popup: 'premium-swal-popup' }
+                });
+                return result.isConfirmed;
+            }
+            return confirm(text);
+        };
+
         const actionHandler = async (e, btn) => {
             const action = btn.dataset.action;
             const id = btn.dataset.id;
@@ -40,7 +59,30 @@ const ThoNhaOrderActions = (() => {
                 let payload = {};
                 
                 if (action === 'accept-order') {
-                    if (!confirm('Xác nhận nhận đơn hàng này?')) return;
+                    // Kiểm tra không cho nhận đơn chính mình đặt
+                    if (window.ThoNhaOrderStore) {
+                        const orders = window.ThoNhaOrderStore.getOrders();
+                        const order = orders.find(o => String(o.id) === String(id));
+                        if (order) {
+                            const provPhone = String(session.phone || session.sodienthoai || '').replace(/\D/g, '').slice(-9);
+                            const custPhone = String(order.customer?.phone || order._raw?.sdtkhachhang || '').replace(/\D/g, '').slice(-9);
+                            if (provPhone && custPhone && provPhone === custPhone) {
+                                if (window.Swal) {
+                                    window.Swal.fire({
+                                        title: '<span style="color:#11998e">Thông báo</span>',
+                                        html: 'Bạn không thể tự nhận đơn hàng do chính mình đặt.',
+                                        icon: 'warning',
+                                        confirmButtonColor: '#11998e'
+                                    });
+                                } else {
+                                    alert('Bạn không thể tự nhận đơn hàng do chính mình đặt.');
+                                }
+                                return;
+                            }
+                        }
+                    }
+
+                    if (!(await confirmAction('Xác nhận nhận việc', 'Bạn đồng ý nhận và chịu trách nhiệm thực hiện đơn hàng này?', 'question', '#6366f1'))) return;
                     payload = { 
                         id_nhacungcap: session.id, 
                         tenncc: session.name || session.hovaten, 
@@ -51,7 +93,7 @@ const ThoNhaOrderActions = (() => {
                 } else if (action === 'start-order') {
                     payload = { ngaybatdauthucte: now, ngaythuchienthucte: now };
                 } else if (action === 'complete-order') {
-                    if (!confirm('Xác nhận đã hoàn thành công việc?')) return;
+                    if (!(await confirmAction('Xác nhận hoàn thành', 'Bạn chắc chắn đã hoàn thành mọi hạng mục công việc?', 'success', '#10b981'))) return;
                     payload = { ngayhoanthanhthucte: now };
                 } else if (action === 'open-pricing-modal') {
                     const modalEl = document.getElementById('pricingModal');
@@ -65,11 +107,26 @@ const ThoNhaOrderActions = (() => {
                 } else if (action === 'submit-actual-price') {
                     const price = Number(document.getElementById('inputActualPriceModal').value);
                     if (!price || price <= 0) return _tnToast('Vui lòng nhập giá thực tế.', 'danger');
-                    const sub = Math.round(price * 0.05);
+
+                    btn.disabled = true;
+                    btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i>';
+
+                    let subsidyPercent = 5; // Mặc định 5%
+                    try {
+                        const services = await window.DVQTKrud.listTable('dichvucungcap');
+                        const thoNhaSvc = services.find(s => String(s.id) === '9');
+                        if (thoNhaSvc && thoNhaSvc.tro_gia) {
+                            subsidyPercent = Number(thoNhaSvc.tro_gia);
+                        }
+                    } catch (e) {
+                        console.warn('[ThoNhaActions] Fetch subsidy failed, using fallback 5%');
+                    }
+
+                    const sub = Math.round(price * (subsidyPercent / 100));
                     payload = { chiphithucte: price, sotientrogia: sub, khachthanhtoan: price - sub };
                 } else if (action === 'cancel-order') {
                     const code = btn.dataset.code || id;
-                    if (!confirm(`Bạn có chắc chắn muốn hủy đơn hàng #${code}?`)) return;
+                    if (!(await confirmAction('Hủy đơn hàng', `Bạn có chắc chắn muốn hủy đơn hàng #${code}?`, 'warning', '#f43f5e'))) return;
                     payload = { ngayhuy: now };
                 } else if (action === 'submit-customer-feedback') {
                     const text = document.getElementById('inputCustFeedback')?.value;

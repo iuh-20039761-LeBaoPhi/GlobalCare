@@ -132,6 +132,9 @@ async function _bdInitModalHandlers() {
             _tnToast(orderCode ? `✅ Đặt lịch thành công! Mã đơn: ${orderCode}` : '✅ Đặt lịch thành công!\nChúng tôi sẽ liên hệ lại sớm nhất.', 'success');
             const inst = bootstrap.Modal.getInstance(document.getElementById('bookingModal'));
             if (inst) inst.hide();
+            setTimeout(() => {
+                window.location.href = 'nguoidung/trang-ca-nhan.html';
+            }, 800);
         });
     });
 
@@ -208,7 +211,10 @@ async function _bdOpenModal(mode, prefill) {
             const selEl   = document.getElementById('dichvudachon');
             const priceEl = document.getElementById('giadichvu');
             if (selEl)   selEl.value   = prefill.name  || '';
-            if (priceEl) priceEl.value = prefill.price ? Number(prefill.price).toLocaleString('vi-VN') + 'đ' : '';
+            if (priceEl) {
+                const p = parseInt(prefill.price);
+                priceEl.value = (p > 0) ? p.toLocaleString('vi-VN') + 'đ' : 'Giá thỏa thuận';
+            }
             if (prefill.price) {
                 _bdSetBreakdown(parseInt(prefill.price) || 0, prefill.travelFee || null, prefill.surveyFee || null, prefill.catId || null, prefill.serviceId || null);
             }

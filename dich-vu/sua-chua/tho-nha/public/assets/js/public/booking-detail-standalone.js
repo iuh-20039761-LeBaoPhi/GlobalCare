@@ -117,8 +117,7 @@ async function _bdInitStandalone() {
                     });
                     
                     // Chuyển đến trang quản lý đơn hàng
-                    const root = (window.DVQTApp && window.DVQTApp.ROOT_URL) ? window.DVQTApp.ROOT_URL : '';
-                    window.location.href = root + '/tho-nha/pages/customer/trang-ca-nhan.html';
+                    window.location.href = 'nguoidung/trang-ca-nhan.html';
 
                 } else if (accountResult && accountResult.accountExists) {
                     // SĐT ĐÃ TỒN TẠI → Thông báo, đặt lịch thành công nhưng KHÔNG đăng nhập
@@ -148,8 +147,7 @@ async function _bdInitStandalone() {
                         confirmButtonColor: '#11998e'
                     });
 
-                    const root = (window.DVQTApp && window.DVQTApp.ROOT_URL) ? window.DVQTApp.ROOT_URL : '';
-                    window.location.href = root + '/tho-nha/pages/customer/trang-ca-nhan.html';
+                    window.location.href = 'nguoidung/trang-ca-nhan.html';
                 }
             });
         } catch (err) {
@@ -282,7 +280,7 @@ async function _bdLoadStandaloneServices() {
             cat.items.forEach(item => {
                 const opt = document.createElement('option');
                 opt.value = item.name;
-                opt.textContent = item.name + (item.price ? ` – ${Number(item.price).toLocaleString('vi-VN')}đ` : '');
+                opt.textContent = item.name + (item.price > 0 ? ` – ${Number(item.price).toLocaleString('vi-VN')}đ` : ' – Giá thỏa thuận');
                 subSel && subSel.appendChild(opt);
             });
         }
@@ -296,7 +294,7 @@ async function _bdLoadStandaloneServices() {
             const priceEl = document.getElementById('giadichvu');
             if (!item) { if (priceEl) priceEl.value = ''; _bdHideBreakdown(); return; }
             const price = item.price || 0;
-            if (priceEl) priceEl.value = price > 0 ? Number(price).toLocaleString('vi-VN') + 'đ' : '';
+            if (priceEl) priceEl.value = price > 0 ? Number(price).toLocaleString('vi-VN') + 'đ' : 'Giá thỏa thuận';
             _bdSetBreakdown(price, item.travelFee || mainCat.travelFee || null, item.surveyFee || mainCat.surveyFee || null, mainCat.id, item.id);
         });
     }
