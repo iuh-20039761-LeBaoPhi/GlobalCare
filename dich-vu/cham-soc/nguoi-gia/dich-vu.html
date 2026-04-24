@@ -129,9 +129,27 @@
       }
     }
 
-    /* Các dịch vụ khác (Giữ lại cách hiển thị cũ - Thẻ đứng) */
+    /* Giảm khoảng cách cho các section */
+    section.py-5 {
+      padding-top: 1rem !important;
+      padding-bottom: 1rem !important;
+    }
+
+    /* Triệt tiêu padding thêm của container trên màn hình lớn */
+    section.py-5 .container.py-lg-5,
+    section.py-5 .container.py-lg-4 {
+      padding-top: 0 !important;
+      padding-bottom: 0 !important;
+    }
+
+    /* Làm cho section Khám Phá Dịch Vụ Khác sát với section trên */
     .other-services-section {
       background: #fdfdfd;
+      padding-top: 0 !important;
+    }
+
+    #servicesContainer .row:last-child {
+      margin-bottom: 0 !important;
     }
 
     .other-service-item {
