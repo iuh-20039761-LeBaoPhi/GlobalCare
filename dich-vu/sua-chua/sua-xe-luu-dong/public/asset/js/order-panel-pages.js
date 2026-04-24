@@ -2504,9 +2504,10 @@
         var formData = new FormData();
         formData.append("upload", "1");
         formData.append("file", file);
+        formData.append("folderKey", "28");
         formData.append("name", "REVIEW_" + Date.now() + "_" + file.name);
 
-        return fetch("upload.php", {
+        return fetch("../../../public/upload_to_drive.php", {
           method: "POST",
           body: formData,
         })
