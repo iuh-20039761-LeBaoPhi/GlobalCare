@@ -605,7 +605,7 @@
 
         if (shouldRedirectToOrderListAfterSubmit()) {
           setTimeout(function () {
-            window.location.href = "khachhang/danh-sach-don-hang.html";
+            window.location.href = "nguoidung/danh-sach-don-hang.html";
           }, 900);
         }
 
