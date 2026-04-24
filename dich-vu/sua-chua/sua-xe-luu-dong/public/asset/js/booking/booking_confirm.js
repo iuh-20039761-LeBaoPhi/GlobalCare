@@ -377,9 +377,10 @@
           const uploadOne = async (file) => {
             const fd = new FormData();
             fd.append("file", file);
+            fd.append("folderKey", "28");
             fd.append("name", file.name);
             try {
-              const resp = await fetch("upload.php", {
+              const resp = await fetch("../../../public/upload_to_drive.php", {
                 method: "POST",
                 body: fd,
               });

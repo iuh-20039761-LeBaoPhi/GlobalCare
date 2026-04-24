@@ -536,9 +536,10 @@
             const formData = new FormData();
             formData.append("upload", "1");
             formData.append("file", file);
+            formData.append("folderKey", "31");
             formData.append("name", `${prefix}_${Date.now()}_${file.name}`);
 
-            const res = await fetch("upload.php", {
+            const res = await fetch("../../../public/upload_to_drive.php", {
               method: "POST",
               body: formData,
             });
