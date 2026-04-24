@@ -63,17 +63,6 @@
   display: grid;
 }
 
-.feature-item {
-  padding: 30px 20px;
-  border-radius: 12px;
-  background-color: #f5f7fb;
-  transition: transform 0.3s ease;
-}
-
-.feature-item:hover {
-  transform: translateY(-6px);
-}
-
 .feature-icon {
   font-size: 40px;
   display: inline-block;

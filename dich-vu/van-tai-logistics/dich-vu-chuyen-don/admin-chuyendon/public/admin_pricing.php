@@ -314,6 +314,8 @@ window.__MOVING_PRICING_FALLBACK__ = <?php echo json_encode($services, JSON_UNES
     const vehicleModal = document.getElementById('modal-vehicle-editor');
     const itemModal = document.getElementById('modal-item-editor');
     const sourceBox = document.getElementById('moving-pricing-source');
+    const lastUpdatedBadge = document.getElementById('moving-pricing-last-updated-badge');
+    const lastUpdatedTime = document.getElementById('moving-pricing-last-updated-time');
     const fallbackServices = Array.isArray(window.__MOVING_PRICING_FALLBACK__)
         ? window.__MOVING_PRICING_FALLBACK__
         : [];
@@ -537,11 +539,6 @@ window.__MOVING_PRICING_FALLBACK__ = <?php echo json_encode($services, JSON_UNES
         return true;
     }
 
-    function setBusy(val) {
-        state.isBusy = val;
-        document.body.style.cursor = val ? 'wait' : '';
-    }
-
     function configureItemEditor(viewKey, row = null) {
         const form = document.getElementById('form-item-editor');
         const title = document.getElementById('item-editor-title');
@@ -657,9 +654,17 @@ window.__MOVING_PRICING_FALLBACK__ = <?php echo json_encode($services, JSON_UNES
             try {
                 const res = await window.adminApi.saveMovingPricingVehicle(data, { id: data.id });
                 if (res) {
+                    const savedRow = await resolveSavedVehicleRow(data);
+                    if (savedRow) {
+                        applyState(
+                            upsertCollectionRow(state.vehicles, savedRow, window.adminApi.getMovingPricingVehicleKey),
+                            state.items
+                        );
+                    } else {
+                        await refreshData({ allowBootstrap: false, exportAfterLoad: false });
+                    }
                     modalManager.close();
-                    await refreshData({ allowBootstrap: false, exportAfterLoad: true });
-                    showSuccess('Đã lưu dữ liệu xe thành công.');
+                    await finalizePricingMutation('Đã lưu dữ liệu xe thành công.');
                 }
             } catch (e) {
                 alert('Lỗi: ' + e.message);
@@ -685,9 +690,17 @@ window.__MOVING_PRICING_FALLBACK__ = <?php echo json_encode($services, JSON_UNES
             try {
                 const res = await window.adminApi.saveMovingPricingItem(data, { id: data.id });
                 if (res) {
+                    const savedRow = await resolveSavedItemRow(data);
+                    if (savedRow) {
+                        applyState(
+                            state.vehicles,
+                            upsertCollectionRow(state.items, savedRow, window.adminApi.getMovingPricingItemKey)
+                        );
+                    } else {
+                        await refreshData({ allowBootstrap: false, exportAfterLoad: false });
+                    }
                     modalManager.close();
-                    await refreshData({ allowBootstrap: false, exportAfterLoad: true });
-                    showSuccess('Đã lưu hạng mục thành công.');
+                    await finalizePricingMutation('Đã lưu hạng mục thành công.');
                 }
             } catch (e) {
                 alert('Lỗi: ' + e.message);
@@ -701,8 +714,11 @@ window.__MOVING_PRICING_FALLBACK__ = <?php echo json_encode($services, JSON_UNES
             setBusy(true);
             try {
                 await window.adminApi.deleteMovingPricingVehicle(id);
-                await refreshData({ allowBootstrap: false, exportAfterLoad: true });
-                showSuccess('Đã xóa loại xe.');
+                applyState(
+                    state.vehicles.filter((row) => String(row?.id || '') !== String(id)),
+                    state.items
+                );
+                await finalizePricingMutation('Đã xóa loại xe.');
             } catch (e) {
                 alert('Lỗi: ' + e.message);
             } finally {
@@ -715,8 +731,11 @@ window.__MOVING_PRICING_FALLBACK__ = <?php echo json_encode($services, JSON_UNES
             setBusy(true);
             try {
                 await window.adminApi.deleteMovingPricingItem(id);
-                await refreshData({ allowBootstrap: false, exportAfterLoad: true });
-                showSuccess('Đã xóa hạng mục.');
+                applyState(
+                    state.vehicles,
+                    state.items.filter((row) => String(row?.id || '') !== String(id))
+                );
+                await finalizePricingMutation('Đã xóa hạng mục.');
             } catch (e) {
                 alert('Lỗi: ' + e.message);
             } finally {
@@ -754,13 +773,150 @@ window.__MOVING_PRICING_FALLBACK__ = <?php echo json_encode($services, JSON_UNES
 
     const fallbackRows = buildFallbackRows(fallbackServices);
 
+    function setSourceStatus(message) {
+        if (sourceBox) {
+            sourceBox.textContent = message;
+        }
+    }
+
+    function updateLastUpdatedBadge(rawValue) {
+        if (!lastUpdatedBadge || !lastUpdatedTime) {
+            return;
+        }
+
+        const parsed = new Date(rawValue || '');
+        if (!Number.isFinite(parsed.getTime())) {
+            lastUpdatedBadge.style.display = 'none';
+            lastUpdatedBadge.removeAttribute('title');
+            lastUpdatedTime.textContent = '--:--';
+            return;
+        }
+
+        lastUpdatedTime.textContent = parsed.toLocaleTimeString('vi-VN', {
+            hour: '2-digit',
+            minute: '2-digit'
+        });
+        lastUpdatedBadge.title = parsed.toLocaleString('vi-VN');
+        lastUpdatedBadge.style.display = 'inline-flex';
+    }
+
+    function showMessage(msg, type = 'success', durationMs = 3000) {
+        const msgBox = document.getElementById('moving-pricing-message');
+        if (!msgBox) {
+            return;
+        }
+
+        msgBox.textContent = msg;
+        msgBox.className = `flash ${type === 'success' ? 'flash-success' : 'flash-error'}`;
+        msgBox.style.display = 'block';
+        window.clearTimeout(showMessage.hideTimer);
+        showMessage.hideTimer = window.setTimeout(() => {
+            msgBox.style.display = 'none';
+        }, durationMs);
+    }
+
+    function buildVehicleDraft(row = {}) {
+        return {
+            id: String(row?.id || '').trim(),
+            id_dich_vu: String(row?.id_dich_vu || '').trim(),
+            slug_xe: String(row?.slug_xe || '').trim(),
+            ten_xe: String(row?.ten_xe || '').trim(),
+            gia_mo_cua: toNumber(row?.gia_mo_cua),
+            don_gia_km_6_15: toNumber(row?.don_gia_km_6_15),
+            don_gia_km_16_30: toNumber(row?.don_gia_km_16_30),
+            don_gia_km_31_tro_len: toNumber(row?.don_gia_km_31_tro_len),
+            gia_moi_km_form: toNumber(row?.gia_moi_km_form),
+            gia_moi_km_duong_dai_form: toNumber(row?.gia_moi_km_duong_dai_form),
+            phi_toi_thieu_form: toNumber(row?.phi_toi_thieu_form)
+        };
+    }
+
+    function buildItemDraft(row = {}) {
+        return {
+            id: String(row?.id || '').trim(),
+            id_dich_vu: String(row?.id_dich_vu || '').trim(),
+            nhom: String(row?.nhom || '').trim(),
+            slug_muc: String(row?.slug_muc || '').trim(),
+            ten_muc: String(row?.ten_muc || '').trim(),
+            don_gia: toNumber(row?.don_gia)
+        };
+    }
+
+    function upsertCollectionRow(collection, nextRow, keyResolver) {
+        const nextId = String(nextRow?.id || '').trim();
+        const nextKey = typeof keyResolver === 'function' ? keyResolver(nextRow) : '';
+        let hasMatch = false;
+
+        const updatedRows = (Array.isArray(collection) ? collection : []).map((row) => {
+            const currentId = String(row?.id || '').trim();
+            const currentKey = typeof keyResolver === 'function' ? keyResolver(row) : '';
+            if ((nextId && currentId === nextId) || (nextKey && currentKey === nextKey)) {
+                hasMatch = true;
+                return { ...row, ...nextRow };
+            }
+            return row;
+        });
+
+        if (!hasMatch) {
+            updatedRows.push(nextRow);
+        }
+
+        return updatedRows;
+    }
+
+    async function resolveSavedVehicleRow(rawRow) {
+        const draft = buildVehicleDraft(rawRow);
+        const nowIso = new Date().toISOString();
+        if (draft.id) {
+            const currentRow = state.vehicles.find((row) => String(row?.id || '') === draft.id);
+            return {
+                ...(currentRow || {}),
+                ...draft,
+                updated_at: nowIso
+            };
+        }
+
+        const targetKey = window.adminApi.getMovingPricingVehicleKey(draft);
+        const rows = await window.adminApi.listMovingPricingVehicles(draft.id_dich_vu);
+        return rows.find((row) => window.adminApi.getMovingPricingVehicleKey(row) === targetKey) || null;
+    }
+
+    async function resolveSavedItemRow(rawRow) {
+        const draft = buildItemDraft(rawRow);
+        const nowIso = new Date().toISOString();
+        if (draft.id) {
+            const currentRow = state.items.find((row) => String(row?.id || '') === draft.id);
+            return {
+                ...(currentRow || {}),
+                ...draft,
+                updated_at: nowIso
+            };
+        }
+
+        const targetKey = window.adminApi.getMovingPricingItemKey(draft);
+        const rows = await window.adminApi.listMovingPricingItems(draft.id_dich_vu);
+        return rows.find((row) => window.adminApi.getMovingPricingItemKey(row) === targetKey) || null;
+    }
+
+    async function finalizePricingMutation(successMessage) {
+        try {
+            await triggerExport();
+            setSourceStatus('Dữ liệu đang đồng bộ trực tiếp với KRUD và JSON public đã được cập nhật.');
+            showMessage(successMessage);
+        } catch (error) {
+            console.error('Export error', error);
+            setSourceStatus('Đã lưu vào KRUD nhưng export JSON public thất bại: ' + error.message);
+            showMessage(`${successMessage} Tuy nhiên export JSON public thất bại: ${error.message}`, 'error', 9000);
+        }
+    }
+
     async function refreshData(options = {}) {
         const allowBootstrap = options.allowBootstrap !== false;
         const exportAfterLoad = options.exportAfterLoad === true;
         let shouldExportAfterCleanup = false;
         let shouldReloadAfterBackfill = false;
 
-        if (sourceBox) sourceBox.textContent = 'Đang đồng bộ dữ liệu...';
+        setSourceStatus('Đang đồng bộ dữ liệu...');
 
         try {
             await window.adminApi.ensureMovingPricingTables();
@@ -817,55 +973,70 @@ window.__MOVING_PRICING_FALLBACK__ = <?php echo json_encode($services, JSON_UNES
                     await triggerExport();
                 }
 
-                if (sourceBox) {
-                    sourceBox.textContent = shouldReloadAfterBackfill
+                setSourceStatus(
+                    shouldReloadAfterBackfill
                         ? 'Đã bổ sung các dòng còn thiếu từ JSON fallback vào KRUD.'
                         : hasKrudData
                         ? 'Dữ liệu đang đồng bộ trực tiếp với KRUD.'
-                        : 'Đã nạp dữ liệu JSON vào KRUD để bắt đầu quản trị.';
-                }
+                        : 'Đã nạp dữ liệu JSON vào KRUD để bắt đầu quản trị.'
+                );
                 return;
             }
 
             applyState(fallbackRows.vehicles, fallbackRows.items);
-            if (sourceBox) {
-                sourceBox.textContent = fallbackRows.vehicles.length || fallbackRows.items.length
+            setSourceStatus(
+                fallbackRows.vehicles.length || fallbackRows.items.length
                     ? 'KRUD chưa có dữ liệu, đang hiển thị tạm từ JSON fallback.'
-                    : 'Không tìm thấy dữ liệu bảng giá.';
-            }
+                    : 'Không tìm thấy dữ liệu bảng giá.'
+            );
         } catch (e) {
             console.error('Refresh error', e);
             applyState(fallbackRows.vehicles, fallbackRows.items);
-            if (sourceBox) sourceBox.textContent = 'Lỗi đồng bộ: ' + e.message;
+            setSourceStatus('Lỗi đồng bộ: ' + e.message);
         }
     }
 
     async function triggerExport() {
-        try {
-            await fetch('../api/pricing_export.php', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ vehicleRows: state.vehicles, itemRows: state.items })
-            });
-        } catch (e) {
-            console.error('Export error', e);
-        }
-    }
+        const response = await fetch('../api/pricing_export.php', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ vehicleRows: state.vehicles, itemRows: state.items })
+        });
+        const raw = await response.text();
+        let payload = null;
 
-    function showSuccess(msg) {
-        const msgBox = document.getElementById('moving-pricing-message');
-        if (msgBox) {
-            msgBox.textContent = msg;
-            msgBox.className = 'flash flash-success';
-            msgBox.style.display = 'block';
-            setTimeout(() => { msgBox.style.display = 'none'; }, 3000);
+        try {
+            payload = raw ? JSON.parse(raw) : null;
+        } catch (error) {
+            payload = null;
         }
+
+        if (!response.ok) {
+            throw new Error(
+                payload?.message ||
+                `Không export được bang-gia-minh-bach.json (HTTP ${response.status}).`
+            );
+        }
+
+        if (!payload || typeof payload !== 'object') {
+            throw new Error('API export trả về dữ liệu không hợp lệ.');
+        }
+
+        if (payload.success === false) {
+            throw new Error(payload.message || 'Không export được bang-gia-minh-bach.json.');
+        }
+
+        updateLastUpdatedBadge(payload.updated_at || '');
+        return payload;
     }
 
     function setBusy(val) {
         state.isBusy = val;
+        document.body.style.cursor = val ? 'wait' : '';
         document.querySelectorAll('button').forEach(btn => btn.disabled = val);
-        if (sourceBox && val) sourceBox.textContent = 'Đang xử lý...';
+        if (val) {
+            setSourceStatus('Đang xử lý...');
+        }
     }
 
     function renderAll() {
@@ -949,12 +1120,7 @@ window.__MOVING_PRICING_FALLBACK__ = <?php echo json_encode($services, JSON_UNES
 
     // --- Init ---
     document.addEventListener('DOMContentLoaded', () => {
-        if (fallbackRows.vehicles.length || fallbackRows.items.length) {
-            applyState(fallbackRows.vehicles, fallbackRows.items);
-            if (sourceBox) {
-                sourceBox.textContent = 'Đang hiển thị dữ liệu từ JSON fallback và kiểm tra KRUD...';
-            }
-        }
+        setSourceStatus('Đang nạp dữ liệu từ KRUD...');
         refreshData().then(() => {
             if (window.__ADMIN_PRICING_TABS__) {
                 window.__ADMIN_PRICING_TABS__.init();

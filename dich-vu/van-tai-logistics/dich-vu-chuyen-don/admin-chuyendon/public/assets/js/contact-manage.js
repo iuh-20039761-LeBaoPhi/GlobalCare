@@ -1,6 +1,4 @@
 (function (window, document) {
-    const MOVING_SERVICE_KEYWORDS = ["chuyendon", "chuyen don", "chuyển dọn", "chuyen_nha", "chuyển nhà"];
-
     function normalizeText(value) {
         return window.adminApi?.normalizeText ? window.adminApi.normalizeText(value) : String(value || "").replace(/\s+/g, " ").trim();
     }
@@ -27,15 +25,6 @@
             return { label: "Đang xử lý", icon: "fa-spinner", className: "status-1" };
         }
         return { label: "Mới nhận", icon: "fa-envelope-open-text", className: "status-0" };
-    }
-
-    function isMovingRelated(row) {
-        const serviceMeta = [row.service_key, row.service_name].map((value) => normalizeLowerText(value)).join(" ");
-        if (!serviceMeta) {
-            return true;
-        }
-
-        return MOVING_SERVICE_KEYWORDS.some((keyword) => serviceMeta.includes(keyword));
     }
 
     function renderSummary(rows) {
@@ -160,7 +149,7 @@
                 maxPages: 8,
                 sort: { id: "desc" },
             });
-            const filteredRows = rows.filter((row) => isMovingRelated(row));
+            const filteredRows = rows.filter((row) => window.adminApi.isMovingRelatedContact(row));
             renderSummary(filteredRows);
             renderRows(filteredRows);
         } catch (error) {

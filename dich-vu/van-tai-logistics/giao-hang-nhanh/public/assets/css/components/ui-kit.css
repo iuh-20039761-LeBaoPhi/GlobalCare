@@ -1,11 +1,6 @@
 /* ===== UI KIT (Tables, Badges, Alerts, Timeline) ===== */
 
 /* TABLES */
-.pricing-table-wrapper {
-  overflow-x: auto;
-  margin-top: 40px;
-}
-
 .pricing-table {
   width: 100%;
   max-width: 900px;

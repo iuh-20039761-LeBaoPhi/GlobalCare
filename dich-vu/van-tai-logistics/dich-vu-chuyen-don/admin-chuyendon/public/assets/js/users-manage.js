@@ -110,7 +110,7 @@ const userManager = (function () {
         const movingRole = window.adminApi?.resolveMovingRole ? window.adminApi.resolveMovingRole(row) : "customer";
         const status = resolveStatus(row?.trangthai);
         const serviceIds = splitServiceIds(row?.id_dichvu || "0");
-        return {
+        const normalizedUser = {
             ...row,
             moving_role: movingRole,
             hovaten: normalizeText(row?.hovaten || row?.name || ""),
@@ -130,8 +130,10 @@ const userManager = (function () {
             resolved_status: status,
             status_meta: getStatusMeta(status),
             service_ids: serviceIds,
-            verification_complete: hasVerificationComplete(row),
         };
+
+        normalizedUser.verification_complete = hasVerificationComplete(normalizedUser);
+        return normalizedUser;
     }
 
     function renderSkeleton(container, count) {

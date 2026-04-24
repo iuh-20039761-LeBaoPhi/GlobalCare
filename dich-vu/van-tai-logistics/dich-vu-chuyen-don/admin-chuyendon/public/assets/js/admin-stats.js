@@ -43,18 +43,8 @@
         return map[normalizeText(value)] || normalizeText(value) || "Khác";
     }
 
-    function isMovingRelatedContact(row) {
-        const serviceMeta = [row?.service_key, row?.service_name]
-            .map((value) => normalizeText(value).toLowerCase())
-            .join(" ");
-        if (!serviceMeta) {
-            return true;
-        }
-        return ["chuyendon", "chuyen don", "chuyển dọn", "chuyen_nha", "chuyển nhà"].some((keyword) => serviceMeta.includes(keyword));
-    }
-
     function buildKpis(orders, providers, contacts) {
-        const movingContacts = contacts.filter(isMovingRelatedContact);
+        const movingContacts = contacts.filter((row) => window.adminApi.isMovingRelatedContact(row));
         const overdue = orders.filter((order) => window.adminApi.isOrderOverdue(order)).length;
         const active = orders.filter((order) => !window.adminApi.isOrderCompleted(order) && !window.adminApi.isOrderCancelled(order)).length;
         const revenue = orders.reduce((sum, order) => {
@@ -65,7 +55,7 @@
         }, 0);
         const pendingProviders = providers.filter((user) => {
             const status = normalizeText(user.trangthai).toLowerCase();
-            const hasDocs = normalizeText(user.link_avatar) && normalizeText(user.link_cccd_truoc) && normalizeText(user.link_cccd_sau);
+            const hasDocs = window.adminApi.hasCompleteProviderDocs(user);
             return status === "pending" || !hasDocs;
         }).length;
         const newContacts = movingContacts.filter((row) => Number(row.status || 0) === 0).length;
@@ -240,12 +230,12 @@
 
     function renderAlerts(orders, providers, contacts) {
         const container = document.getElementById("alertsContent");
-        const movingContacts = contacts.filter(isMovingRelatedContact);
+        const movingContacts = contacts.filter((row) => window.adminApi.isMovingRelatedContact(row));
         const overdueOrders = orders.filter((order) => window.adminApi.isOrderOverdue(order));
         const lowRatings = orders.filter((order) => Number(order.customer_rating || 0) > 0 && Number(order.customer_rating || 0) <= 3);
         const pendingProviders = providers.filter((user) => {
             const status = normalizeText(user.trangthai).toLowerCase();
-            const hasDocs = normalizeText(user.link_avatar) && normalizeText(user.link_cccd_truoc) && normalizeText(user.link_cccd_sau);
+            const hasDocs = window.adminApi.hasCompleteProviderDocs(user);
             return status === "pending" || !hasDocs;
         });
         const newContacts = movingContacts.filter((row) => Number(row.status || 0) === 0);

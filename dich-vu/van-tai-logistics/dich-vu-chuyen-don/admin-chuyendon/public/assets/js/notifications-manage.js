@@ -13,17 +13,10 @@
     }
 
     function buildOrderCode(order) {
-        return normalizeText(order.ma_yeu_cau_noi_bo || order.id || "");
-    }
-
-    function isMovingRelatedContact(row) {
-        const serviceMeta = [row?.service_key, row?.service_name]
-            .map((value) => normalizeText(value).toLowerCase())
-            .join(" ");
-        if (!serviceMeta) {
-            return true;
+        if (window.adminApi?.getOrderDisplayCode) {
+            return window.adminApi.getOrderDisplayCode(order);
         }
-        return ["chuyendon", "chuyen don", "chuyển dọn", "chuyen_nha", "chuyển nhà"].some((keyword) => serviceMeta.includes(keyword));
+        return normalizeText(order.ma_yeu_cau_noi_bo || order.id || "");
     }
 
     function buildNotifications(orders, providers, contacts) {
@@ -40,7 +33,7 @@
         });
 
         providers.forEach((provider) => {
-            const hasDocs = normalizeText(provider.link_avatar) && normalizeText(provider.link_cccd_truoc) && normalizeText(provider.link_cccd_sau);
+            const hasDocs = window.adminApi.hasCompleteProviderDocs(provider);
             const status = normalizeText(provider.trangthai).toLowerCase();
             if (status === "pending" || !hasDocs) {
                 notifications.push({
@@ -66,7 +59,7 @@
             });
 
         contacts
-            .filter((row) => isMovingRelatedContact(row))
+            .filter((row) => window.adminApi.isMovingRelatedContact(row))
             .filter((row) => Number(row.status || 0) === 0)
             .forEach((row) => {
                 notifications.push({

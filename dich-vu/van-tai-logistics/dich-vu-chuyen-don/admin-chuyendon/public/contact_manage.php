@@ -150,7 +150,7 @@ require_once __DIR__ . '/../includes/header_admin.php';
     <div class="section-header">
         <div>
             <h2>Danh sách yêu cầu hỗ trợ</h2>
-            <p>Mặc định đọc bảng `lien_he` dùng chung; nếu có field dịch vụ thì admin sẽ ưu tiên các yêu cầu liên quan chuyển dọn.</p>
+            <p>Đọc bảng `lien_he` dùng chung nhưng chỉ hiển thị các bản ghi đã gắn service của chuyển dọn để tránh lẫn ticket dịch vụ khác.</p>
         </div>
         <button class="btn btn-outline" type="button" onclick="window.contactManager?.loadContacts()">
             <i class="fas fa-rotate"></i>Tải lại

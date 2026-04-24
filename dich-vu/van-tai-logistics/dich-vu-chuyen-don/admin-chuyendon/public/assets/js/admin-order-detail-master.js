@@ -84,7 +84,7 @@ const adminOrderMasterModule = (function (window, document) {
     const milestones = getMilestones(detail);
     const status = normalizeLowerText(order.trang_thai || "");
     if (milestones.cancelledAt || ["cancelled", "huy", "da_huy"].includes(status)) return "cancelled";
-    if (milestones.completedAt || ["completed", "hoan_tat", "success"].includes(status)) return "completed";
+    if (milestones.completedAt || ["completed", "hoan_tat", "success", "da_xac_nhan", "xac_nhan", "confirmed"].includes(status)) return "completed";
     if (milestones.startedAt) return "shipping";
     if (milestones.acceptedAt) return "accepted";
     return "pending";

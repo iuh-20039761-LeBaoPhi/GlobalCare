@@ -4,10 +4,6 @@
   const initializedRoots = new WeakSet();
   let globalEventsBound = false;
 
-  function getCore() {
-    return window.GiaoHangNhanhCore || {};
-  }
-
   function closeAllDropdowns(root = document) {
     root.querySelectorAll(".has-submenu").forEach((item) => {
       item.classList.remove("open");
