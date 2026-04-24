@@ -173,6 +173,48 @@
         return nowMs - createdMs >= 120 * 60 * 1000;
     }
 
+    function hasCompleteProviderDocs(row) {
+        return !!(
+            normalizeText(row?.link_avatar || row?.avatar_link) &&
+            normalizeText(row?.link_cccd_truoc || row?.cccd_front_link) &&
+            normalizeText(row?.link_cccd_sau || row?.cccd_back_link)
+        );
+    }
+
+    function isMovingRelatedContact(row) {
+        const serviceMeta = [row?.service_key, row?.service_name]
+            .map((value) => normalizeLowerText(value))
+            .filter(Boolean)
+            .join(" ");
+
+        if (!serviceMeta) {
+            return false;
+        }
+
+        return ["chuyendon", "chuyen don", "chuyển dọn", "chuyen_nha", "chuyển nhà"].some((keyword) => serviceMeta.includes(keyword));
+    }
+
+    function getOrderDisplayCode(order) {
+        const explicitCode = normalizeText(order?.ma_yeu_cau_noi_bo);
+        if (explicitCode) {
+            return explicitCode;
+        }
+
+        const numericId = Number(order?.id || 0);
+        const createdAt = new Date(order?.created_at || Date.now());
+        if (!Number.isFinite(numericId) || Number.isNaN(createdAt.getTime())) {
+            return normalizeText(order?.id || "");
+        }
+
+        const dateCode = [
+            createdAt.getFullYear(),
+            String(createdAt.getMonth() + 1).padStart(2, "0"),
+            String(createdAt.getDate()).padStart(2, "0"),
+        ].join("");
+
+        return `CDL-${dateCode}-${String(Math.abs(Math.trunc(numericId))).padStart(6, "0")}`;
+    }
+
     async function ensureKrud() {
         if (typeof window.krud === "function" && typeof window.krudList === "function") {
             return true;
@@ -181,10 +223,65 @@
         return new Promise((resolve, reject) => {
             const script = document.createElement("script");
             script.src = KRUD_URL;
-            script.onload = () => resolve(true);
+            script.onload = () => {
+                if (typeof window.krud === "function" && typeof window.krudList === "function") {
+                    resolve(true);
+                    return;
+                }
+                reject(new Error("Thu vien KRUD da tai xong nhung khong khoi tao day du."));
+            };
             script.onerror = () => reject(new Error("Khong the tai thu vien KRUD tu server."));
             document.head.appendChild(script);
         });
+    }
+
+    function extractErrorMessage(error, fallbackMessage) {
+        const candidates = [
+            error?.message,
+            error?.responseJSON?.message,
+            error?.responseJSON?.error,
+            error?.error,
+            error?.details,
+            typeof error === "string" ? error : "",
+        ];
+
+        for (const candidate of candidates) {
+            const normalized = normalizeText(candidate);
+            if (normalized) {
+                return normalized;
+            }
+        }
+
+        return fallbackMessage;
+    }
+
+    async function invokeKrudListSafe(tableName, options = {}, fallbackMessage = "") {
+        await ensureKrud();
+
+        try {
+            return await window.krudList({ table: tableName, ...options });
+        } catch (error) {
+            throw new Error(extractErrorMessage(
+                error,
+                fallbackMessage || `Khong the tai du lieu bang ${tableName}.`
+            ));
+        }
+    }
+
+    async function invokeKrudSafe(action, tableName, payload, id, fallbackMessage = "") {
+        await ensureKrud();
+
+        try {
+            if (typeof id === "undefined") {
+                return await window.krud(action, tableName, payload);
+            }
+            return await window.krud(action, tableName, payload, id);
+        } catch (error) {
+            throw new Error(extractErrorMessage(
+                error,
+                fallbackMessage || `Khong the ${action} du lieu bang ${tableName}.`
+            ));
+        }
     }
 
     function sanitizeMovingPricingVehicleRow(row = {}) {
@@ -230,26 +327,30 @@
         isOrderCompleted,
         isOrderCancelled,
         isOrderOverdue,
+        hasCompleteProviderDocs,
+        isMovingRelatedContact,
+        getOrderDisplayCode,
 
         list: async (tableName, options = {}) => {
-            await ensureKrud();
-            const result = await window.krudList({ table: tableName, ...options });
+            const result = await invokeKrudListSafe(
+                tableName,
+                options,
+                `Khong the tai danh sach bang ${tableName}.`
+            );
             return normalizeKrudRows(extractRows(result));
         },
 
         listAll: async (tableName, options = {}) => {
-            await ensureKrud();
             const limit = Number(options.limit || 200);
             const maxPages = Number(options.maxPages || 20);
             const rows = [];
 
             for (let page = 1; page <= maxPages; page += 1) {
-                const result = await window.krudList({
-                    table: tableName,
+                const result = await invokeKrudListSafe(tableName, {
                     ...options,
                     page,
                     limit,
-                });
+                }, `Khong the tai danh sach bang ${tableName} o trang ${page}.`);
                 const batch = normalizeKrudRows(extractRows(result));
                 if (!batch.length) {
                     break;
@@ -264,30 +365,47 @@
         },
 
         get: async (tableName, id) => {
-            await ensureKrud();
-            const result = await window.krudList({ table: tableName, id });
+            const result = await invokeKrudListSafe(
+                tableName,
+                { id },
+                `Khong the tai chi tiet bang ${tableName}.`
+            );
             const rows = normalizeKrudRows(extractRows(result));
             return rows[0] || null;
         },
 
         insert: async (tableName, data) => {
-            await ensureKrud();
-            return window.krud("insert", tableName, data);
+            return invokeKrudSafe(
+                "insert",
+                tableName,
+                data,
+                undefined,
+                `Khong the them du lieu vao bang ${tableName}.`
+            );
         },
 
         update: async (tableName, data, id) => {
-            await ensureKrud();
-            return window.krud("update", tableName, data, id);
+            return invokeKrudSafe(
+                "update",
+                tableName,
+                data,
+                id,
+                `Khong the cap nhat du lieu bang ${tableName}.`
+            );
         },
 
         delete: async (tableName, id) => {
-            await ensureKrud();
-            return window.krud("delete", tableName, { id });
+            return invokeKrudSafe(
+                "delete",
+                tableName,
+                { id },
+                undefined,
+                `Khong the xoa du lieu bang ${tableName}.`
+            );
         },
 
         ensureNguoidungTable: async () => {
-            await ensureKrud();
-            return window.krud("ensure", USERS_TABLE, [
+            return invokeKrudSafe("ensure", USERS_TABLE, [
                 { name: "hovaten", type: "text" },
                 { name: "sodienthoai", type: "text" },
                 { name: "email", type: "text" },
@@ -306,12 +424,11 @@
                 { name: "dia_chi_doanh_nghiep", type: "text" },
                 { name: "loai_phuong_tien", type: "text" },
                 { name: "note_admin", type: "text" },
-            ]);
+            ], undefined, `Khong the khoi tao bang ${USERS_TABLE}.`);
         },
 
         ensureOrdersTable: async () => {
-            await ensureKrud();
-            return window.krud("ensure", ORDERS_TABLE, [
+            return invokeKrudSafe("ensure", ORDERS_TABLE, [
                 { name: "ma_yeu_cau_noi_bo", type: "text" },
                 { name: "ho_ten", type: "text" },
                 { name: "so_dien_thoai", type: "text" },
@@ -356,12 +473,11 @@
                 { name: "customer_feedback_video_dinh_kem", type: "text" },
                 { name: "created_at", type: "text" },
                 { name: "updated_at", type: "text" },
-            ]);
+            ], undefined, `Khong the khoi tao bang ${ORDERS_TABLE}.`);
         },
 
         ensureContactTable: async () => {
-            await ensureKrud();
-            return window.krud("ensure", CONTACT_TABLE, [
+            return invokeKrudSafe("ensure", CONTACT_TABLE, [
                 { name: "name", type: "text" },
                 { name: "email", type: "text" },
                 { name: "phone", type: "text" },
@@ -373,13 +489,11 @@
                 { name: "note_admin", type: "text" },
                 { name: "created_at", type: "text" },
                 { name: "updated_at", type: "text" },
-            ]);
+            ], undefined, `Khong the khoi tao bang ${CONTACT_TABLE}.`);
         },
 
         ensureMovingPricingTables: async () => {
-            await ensureKrud();
-
-            await window.krud("ensure", "bang_gia_chuyen_don_xe", [
+            await invokeKrudSafe("ensure", "bang_gia_chuyen_don_xe", [
                 { name: "id_dich_vu", type: "text" },
                 { name: "slug_xe", type: "text" },
                 { name: "ten_xe", type: "text" },
@@ -390,15 +504,15 @@
                 { name: "gia_moi_km_form", type: "number" },
                 { name: "gia_moi_km_duong_dai_form", type: "number" },
                 { name: "phi_toi_thieu_form", type: "number" },
-            ]);
+            ], undefined, "Khong the khoi tao bang bang_gia_chuyen_don_xe.");
 
-            return window.krud("ensure", "bang_gia_chuyen_don_muc", [
+            return invokeKrudSafe("ensure", "bang_gia_chuyen_don_muc", [
                 { name: "id_dich_vu", type: "text" },
                 { name: "nhom", type: "text" },
                 { name: "slug_muc", type: "text" },
                 { name: "ten_muc", type: "text" },
                 { name: "don_gia", type: "number" },
-            ]);
+            ], undefined, "Khong the khoi tao bang bang_gia_chuyen_don_muc.");
         },
 
         listProviders: async () => {

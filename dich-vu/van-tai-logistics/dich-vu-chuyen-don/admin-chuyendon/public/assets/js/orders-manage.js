@@ -117,24 +117,11 @@ const orderManager = (function () {
     }
 
     function buildDisplayCode(order) {
-        const explicitCode = normalizeText(order?.ma_yeu_cau_noi_bo);
-        if (explicitCode) {
-            return explicitCode;
+        if (window.adminApi?.getOrderDisplayCode) {
+            return window.adminApi.getOrderDisplayCode(order);
         }
 
-        const numericId = Number(order?.id || 0);
-        const createdAt = new Date(order?.created_at || Date.now());
-        if (!Number.isFinite(numericId) || Number.isNaN(createdAt.getTime())) {
-            return normalizeText(order?.id || "");
-        }
-
-        const dateCode = [
-            createdAt.getFullYear(),
-            String(createdAt.getMonth() + 1).padStart(2, "0"),
-            String(createdAt.getDate()).padStart(2, "0"),
-        ].join("");
-
-        return `CDL-${dateCode}-${String(Math.abs(Math.trunc(numericId))).padStart(6, "0")}`;
+        return normalizeText(order?.ma_yeu_cau_noi_bo || order?.id || "");
     }
 
     function getServiceLabel(value) {

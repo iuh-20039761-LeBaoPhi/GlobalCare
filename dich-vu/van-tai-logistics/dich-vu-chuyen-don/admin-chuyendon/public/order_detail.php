@@ -2,6 +2,8 @@
 require_once __DIR__ . '/../includes/bootstrap.php';
 moving_admin_require_login();
 
+$orderCodeTitle = moving_admin_escape((string) ($_GET['madonhang'] ?? ''));
+
 /**
  * Trang Chi tiết Đơn hàng "Siêu Nhúng" (Master Standalone)
  * - Tái tạo 100% giao diện dự án gốc.
@@ -14,7 +16,7 @@ moving_admin_require_login();
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Chi tiết đơn hàng #<?php echo $_GET['madonhang'] ?? ''; ?> | Admin Chuyển Dọn</title>
+    <title>Chi tiết đơn hàng #<?php echo $orderCodeTitle; ?> | Admin Chuyển Dọn</title>
     
     <!-- Shared Project Styles (Bắt buộc) -->
     <link rel="stylesheet" href="../../public/assets/css/styles.css">

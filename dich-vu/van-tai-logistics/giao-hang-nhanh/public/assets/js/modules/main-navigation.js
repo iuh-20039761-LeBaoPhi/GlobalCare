@@ -4,10 +4,6 @@
   const initializedRoots = new WeakSet();
   let globalEventsBound = false;
 
-  function getCore() {
-    return window.GiaoHangNhanhCore || {};
-  }
-
   function getLocalSession() {
     if (window.GiaoHangNhanhLocalAuth?.getSession) {
       return window.GiaoHangNhanhLocalAuth.getSession();

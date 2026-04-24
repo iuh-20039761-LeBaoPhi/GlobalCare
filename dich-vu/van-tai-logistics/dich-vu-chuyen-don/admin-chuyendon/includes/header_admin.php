@@ -27,6 +27,7 @@ $currentPage = basename($_SERVER['PHP_SELF'] ?? '');
             <a href="admin_pricing.php" class="<?php echo $currentPage === 'admin_pricing.php' ? 'is-active' : ''; ?>">Bảng giá</a>
             <a href="contact_manage.php" class="<?php echo $currentPage === 'contact_manage.php' ? 'is-active' : ''; ?>">Liên hệ</a>
             <a href="articles_manage.php" class="<?php echo $currentPage === 'articles_manage.php' ? 'is-active' : ''; ?>">Cẩm nang</a>
+            <a href="admin_guide.php" class="<?php echo $currentPage === 'admin_guide.php' ? 'is-active' : ''; ?>">Hướng dẫn</a>
             <a href="admin_profile.php" class="<?php echo $currentPage === 'admin_profile.php' ? 'is-active' : ''; ?>">Cấu hình</a>
         </nav>
 

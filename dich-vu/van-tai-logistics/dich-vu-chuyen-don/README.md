@@ -6,7 +6,7 @@ Website riêng cho dịch vụ chuyển dọn trong hệ sinh thái `Dịch Vụ
 - Chuyển văn phòng công ty
 - Chuyển kho bãi
 
-Project hiện đã đi qua giai đoạn landing/form cơ bản và đang có thêm các luồng portal sau đăng nhập cho `khách hàng` và `nhà cung cấp`. Luồng đặt lịch đang lưu vào KRUD, đồng bộ Google Sheets, và menu đăng nhập / đăng ký đã dùng form chung của `Dịch Vụ Quanh Ta`.
+Project hiện đã đi qua giai đoạn landing/form cơ bản và đang có thêm các luồng portal sau đăng nhập cho `khách hàng` và `nhà cung cấp`. Luồng đặt lịch đang lưu vào KRUD, đồng bộ Google Sheets, menu đăng nhập / đăng ký đã dùng form chung của `Dịch Vụ Quanh Ta`, và cụm admin chuyển dọn đã vận hành theo hướng `PHP session + KRUD + cấu hình local`.
 
 ## Phạm vi hiện tại
 
@@ -19,21 +19,30 @@ Project hiện đã đi qua giai đoạn landing/form cơ bản và đang có th
 - Trang đặt lịch riêng
 - Portal khách hàng sau đăng nhập
 - Portal nhà cung cấp sau đăng nhập
-- Cụm admin riêng cho chuyển dọn theo hướng PHP session + JSON local
+- Cụm admin riêng cho chuyển dọn theo hướng PHP session + KRUD + cấu hình local
 
 ## Cấu trúc thư mục
 
 ```text
 dich-vu-chuyen-don/
 ├── admin-chuyendon/
+│   ├── api/
 │   ├── config/
 │   ├── data/
 │   ├── includes/
 │   └── public/
+│       ├── index.php
 │       ├── login.php
+│       ├── logout.php
+│       ├── admin_stats.php
 │       ├── users_manage.php
 │       ├── orders_manage.php
+│       ├── order_detail.php
 │       ├── admin_pricing.php
+│       ├── contact_manage.php
+│       ├── articles_manage.php
+│       ├── notifications.php
+│       ├── admin_guide.php
 │       └── admin_profile.php
 ├── index.html
 ├── dich-vu-chuyen-don.html
@@ -58,6 +67,7 @@ dich-vu-chuyen-don/
 │   └── footer.html
 ├── upload.php
 └── public/
+    ├── upload_settings.php
     ├── trang/
     │   ├── dich-vu/
     │   │   ├── chuyen-nha.html
@@ -109,9 +119,15 @@ dich-vu-chuyen-don/
 | `bang-gia-chuyen-don.html`                     | Trang bảng giá tham khảo và minh bạch thông tin                 |
 | `dat-lich-chuyendon.html`                                | Trang đặt lịch riêng                                            |
 | `admin-chuyendon/public/login.php`             | Đăng nhập admin chuyển dọn                                      |
+| `admin-chuyendon/public/admin_stats.php`       | Dashboard admin: KPI, cảnh báo hồ sơ, đơn mới, liên hệ mới      |
 | `admin-chuyendon/public/users_manage.php`      | Quản lý người dùng                                              |
 | `admin-chuyendon/public/orders_manage.php`     | Quản lý đơn hàng                                                |
+| `admin-chuyendon/public/order_detail.php`      | Chi tiết đơn hàng trong admin                                   |
 | `admin-chuyendon/public/admin_pricing.php`     | Quản lý bảng giá                                                |
+| `admin-chuyendon/public/contact_manage.php`    | Quản lý liên hệ gắn với dịch vụ chuyển dọn                      |
+| `admin-chuyendon/public/articles_manage.php`   | Quản lý bài viết/cẩm nang                                       |
+| `admin-chuyendon/public/notifications.php`     | Tổng hợp thông báo/cảnh báo vận hành                            |
+| `admin-chuyendon/public/admin_guide.php`       | Hướng dẫn vận hành admin chuyển dọn                             |
 | `admin-chuyendon/public/admin_profile.php`     | Cấu hình dung lượng upload tối đa                               |
 | `khach-hang/dashboard-chuyendon.html`                    | Dashboard khách hàng sau đăng nhập                              |
 | `khach-hang/danh-sach-don-hang-chuyendon.html`           | Danh sách đơn hàng của khách hàng                               |
@@ -137,12 +153,24 @@ dich-vu-chuyen-don/
 
 - Cụm admin mới nằm tại [admin-chuyendon](e:\Thực tập Keri\Task\GlobalCare\dich-vu-chuyen-don\admin-chuyendon)
 - Hướng triển khai bám theo `giao-hang-nhanh`: có `login`, `session`, `includes`, `config`, `public`
-- Dữ liệu hiện lưu bằng JSON nội bộ trong thư mục `data/` để dễ mang theo khi copy cả project
-- 3 màn hình chính:
-  - [users_manage.php](e:\Thực tập Keri\Task\GlobalCare\dich-vu-chuyen-don\admin-chuyendon\public\users_manage.php)
-  - [orders_manage.php](e:\Thực tập Keri\Task\GlobalCare\dich-vu-chuyen-don\admin-chuyendon\public\orders_manage.php)
-  - [admin_pricing.php](e:\Thực tập Keri\Task\GlobalCare\dich-vu-chuyen-don\admin-chuyendon\public\admin_pricing.php)
-  - [admin_profile.php](e:\Thực tập Keri\Task\GlobalCare\dich-vu-chuyen-don\admin-chuyendon\public\admin_profile.php)
+- Dữ liệu vận hành admin hiện đọc/ghi chủ yếu qua KRUD dùng chung:
+  - `nguoidung`
+  - `dich_vu_chuyen_don_dat_lich`
+  - `lien_he`
+  - các bảng giá/chính sách liên quan
+- Thư mục `data/` vẫn được giữ cho một số dữ liệu nội bộ/fallback và cấu hình local để dễ mang theo khi copy cả project
+- Các màn hình đang có:
+  - [admin_stats.php](e:\Thực tập Keri\Task\GlobalCare\dich-vu-chuyen-don\admin-chuyendon\public\admin_stats.php): dashboard KPI, cảnh báo hồ sơ, đơn mới, contact mới
+  - [users_manage.php](e:\Thực tập Keri\Task\GlobalCare\dich-vu-chuyen-don\admin-chuyendon\public\users_manage.php): quản lý khách hàng và nhà cung cấp
+  - [orders_manage.php](e:\Thực tập Keri\Task\GlobalCare\dich-vu-chuyen-don\admin-chuyendon\public\orders_manage.php): danh sách đơn, cập nhật trạng thái, mở chi tiết
+  - [order_detail.php](e:\Thực tập Keri\Task\GlobalCare\dich-vu-chuyen-don\admin-chuyendon\public\order_detail.php): chi tiết một đơn trong admin
+  - [admin_pricing.php](e:\Thực tập Keri\Task\GlobalCare\dich-vu-chuyen-don\admin-chuyendon\public\admin_pricing.php): quản lý bảng giá và phụ phí
+  - [contact_manage.php](e:\Thực tập Keri\Task\GlobalCare\dich-vu-chuyen-don\admin-chuyendon\public\contact_manage.php): inbox liên hệ của riêng dịch vụ chuyển dọn
+  - [articles_manage.php](e:\Thực tập Keri\Task\GlobalCare\dich-vu-chuyen-don\admin-chuyendon\public\articles_manage.php): quản lý cẩm nang
+  - [notifications.php](e:\Thực tập Keri\Task\GlobalCare\dich-vu-chuyen-don\admin-chuyendon\public\notifications.php): tổng hợp cảnh báo vận hành
+  - [admin_guide.php](e:\Thực tập Keri\Task\GlobalCare\dich-vu-chuyen-don\admin-chuyendon\public\admin_guide.php): tài liệu hướng dẫn vận hành cho đội admin
+  - [admin_profile.php](e:\Thực tập Keri\Task\GlobalCare\dich-vu-chuyen-don\admin-chuyendon\public\admin_profile.php): cấu hình upload tối đa
+- JS admin dùng wrapper [admin-api.js](e:\Thực tập Keri\Task\GlobalCare\dich-vu-chuyen-don\admin-chuyendon\public\assets\js\admin-api.js) để gọi KRUD, chuẩn hóa filter dùng chung và gom lỗi `try/catch` theo một chuẩn thống nhất
 - Tài khoản mặc định:
   - `admin01`
   - `0901234569`
@@ -178,7 +206,10 @@ Chưa có:
 - `CCCD` trước/sau hiện chưa có tuyến upload riêng để map folder riêng; vẫn đi fallback [public/upload_to_drive.php](e:\Thực tập Keri\Task\GlobalCare\dich-vu-chuyen-don\public\upload_to_drive.php)
 - Nếu sau này phát sinh luồng upload ảnh dịch vụ riêng cho chuyển dọn thì dùng đúng `folderKey = 12`
 - Không tự ý sửa Apps Script Google Drive / Google Sheet để ép đổi folder cho `CCCD`
-- Dung lượng file upload tối đa được cấu hình từ [admin_profile.php](e:\Thực tập Keri\Task\GlobalCare\dich-vu-chuyen-don\admin-chuyendon\public\admin_profile.php) và frontend sẽ chặn file vượt ngưỡng trước khi gửi request
+- Dung lượng file upload tối đa được cấu hình từ [admin_profile.php](e:\Thực tập Keri\Task\GlobalCare\dich-vu-chuyen-don\admin-chuyendon\public\admin_profile.php)
+- `admin_profile.php` ghi cấu hình qua [admin-chuyendon/api/settings.php](e:\Thực tập Keri\Task\GlobalCare\dich-vu-chuyen-don\admin-chuyendon\api\settings.php)
+- Frontend/public đọc ngưỡng hiện hành qua [public/upload_settings.php](e:\Thực tập Keri\Task\GlobalCare\dich-vu-chuyen-don\public\upload_settings.php)
+- Frontend sẽ chặn file vượt ngưỡng trước khi gửi request upload
 
 ## Tài khoản / phiên người dùng
 
@@ -240,6 +271,11 @@ Chưa có:
 - Khu khách hàng đang chạy các thao tác thực: xem đơn, lọc đơn, xem chi tiết, hủy đơn, đánh giá, cập nhật hồ sơ, đổi mật khẩu
 - Khu nhà cung cấp đang chạy các thao tác thực: xem việc, nhận đơn, bắt đầu triển khai, hoàn tất, cập nhật ghi chú
 - Đơn chờ quá `120 phút` mà chưa có nhà cung cấp nhận sẽ bị tự hủy theo cơ chế lazy sweep hiện tại
+- Admin chuyển dọn hiện đã có dashboard, notifications, contact inbox, quản lý cẩm nang, chi tiết đơn và cấu hình upload
+- Filter `liên hệ` trong admin chỉ lấy các bản ghi được gắn đúng service chuyển dọn, tránh lẫn dữ liệu dịch vụ khác
+- Logic kiểm tra hồ sơ nhà cung cấp đã được đồng bộ giữa `users`, `dashboard` và `notifications`, kể cả dữ liệu alias/legacy như `avatar_link`, `cccd_front_link`, `cccd_back_link`
+- Mã đơn hiển thị và nhận diện trạng thái hoàn tất đã được đồng bộ giữa danh sách đơn, thông báo và trang chi tiết đơn
+- Tầng `adminApi` đã được bọc `try/catch` để chuẩn hóa lỗi KRUD/API, đặc biệt cho các thao tác list/get/insert/update/delete và ensure table
 
 ## Liên hệ
 

@@ -53,7 +53,7 @@ require_once __DIR__ . '/../includes/header_admin.php';
         const input = document.getElementById('max_upload_mb');
         const statusEl = document.getElementById('upload-settings-status');
         const submitBtn = document.getElementById('upload-settings-submit');
-        const endpoint = 'api/settings.php';
+        const endpoint = '../api/settings.php';
 
         if (!form || !input || !statusEl || !submitBtn) {
             return;
@@ -74,19 +74,56 @@ require_once __DIR__ . '/../includes/header_admin.php';
                         : '1px solid rgba(37, 99, 235, 0.22)';
         }
 
+        async function requestSettings(method, body, fallbackMessage) {
+            let response;
+            let rawText = '';
+            let payload = null;
+
+            try {
+                response = await fetch(endpoint, {
+                    method,
+                    headers: {
+                        Accept: 'application/json',
+                        ...(body ? { 'Content-Type': 'application/json' } : {})
+                    },
+                    ...(body ? { body: JSON.stringify(body) } : {})
+                });
+            } catch (error) {
+                throw new Error(error?.message || fallbackMessage);
+            }
+
+            try {
+                rawText = await response.text();
+            } catch (error) {
+                throw new Error(`Không thể đọc phản hồi API (HTTP ${response.status}).`);
+            }
+
+            if (rawText) {
+                try {
+                    payload = JSON.parse(rawText);
+                } catch (error) {
+                    payload = null;
+                }
+            }
+
+            if (!response.ok) {
+                throw new Error(
+                    payload?.message ||
+                    `API cấu hình upload trả lỗi HTTP ${response.status}.`
+                );
+            }
+
+            if (!payload || payload?.success !== true) {
+                throw new Error(payload?.message || fallbackMessage);
+            }
+
+            return payload;
+        }
+
         async function loadSettings() {
             setStatus('Đang tải cấu hình upload...', 'info');
             try {
-                const response = await fetch(endpoint, {
-                    headers: {
-                        Accept: 'application/json'
-                    }
-                });
-                const payload = await response.json();
-                if (!response.ok || !payload?.success) {
-                    throw new Error(payload?.message || 'Không thể tải cấu hình upload.');
-                }
-
+                const payload = await requestSettings('GET', null, 'Không thể tải cấu hình upload.');
                 const nextValue = Number(payload?.data?.settings?.max_upload_mb || 25);
                 input.value = Number.isFinite(nextValue) && nextValue > 0 ? String(nextValue) : '25';
                 setStatus('', 'info');
@@ -103,23 +140,11 @@ require_once __DIR__ . '/../includes/header_admin.php';
             setStatus('Đang lưu cấu hình upload...', 'info');
 
             try {
-                const response = await fetch(endpoint, {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                        Accept: 'application/json'
-                    },
-                    body: JSON.stringify({
-                        settings: {
-                            max_upload_mb: maxUploadMb
-                        }
-                    })
-                });
-                const payload = await response.json();
-                if (!response.ok || !payload?.success) {
-                    throw new Error(payload?.message || 'Không thể lưu cấu hình upload.');
-                }
-
+                await requestSettings('POST', {
+                    settings: {
+                        max_upload_mb: maxUploadMb
+                    }
+                }, 'Không thể lưu cấu hình upload.');
                 input.value = String(maxUploadMb);
                 setStatus('Đã cập nhật dung lượng file upload tối đa.', 'success');
             } catch (error) {
