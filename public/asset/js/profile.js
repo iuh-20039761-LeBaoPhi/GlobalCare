@@ -621,17 +621,17 @@
             this.innerHTML = '<i class="fas fa-check-circle me-1"></i> Cập nhật dịch vụ';
         };
 
-        // Delete Account
+        // Delete Account (Soft Delete via Status change 0 -> 1)
         document.getElementById('btnDeleteAccount').onclick = async function () {
             const { value: confirmPhone } = await Swal.fire({
                 title: 'Xác nhận xóa tài khoản',
-                html: `<div class="text-start">Hành động này <b>không thể hoàn tác</b>. Vui lòng nhập số điện thoại <b>${currentUser.sodienthoai}</b> để xác nhận xóa.</div>`,
+                html: `<div class="text-start">Tài khoản của bạn sẽ bị <b>vô hiệu hóa</b> và không thể đăng nhập. Vui lòng nhập số điện thoại <b>${currentUser.sodienthoai}</b> để xác nhận.</div>`,
                 input: 'text',
                 inputPlaceholder: 'Nhập SĐT của bạn...',
                 showCancelButton: true,
                 confirmButtonColor: '#ef4444',
-                confirmButtonText: 'Xóa vĩnh viễn',
-                cancelButtonText: 'Hủy nút',
+                confirmButtonText: 'Xác nhận xóa',
+                cancelButtonText: 'Hủy bỏ',
                 inputValidator: (value) => {
                     if (value !== currentUser.sodienthoai) {
                         return 'Số điện thoại không khớp!';
@@ -641,22 +641,23 @@
 
             if (confirmPhone) {
                 Swal.fire({
-                    title: 'Đang xóa...',
+                    title: 'Đang xử lý...',
                     allowOutsideClick: false,
                     didOpen: () => Swal.showLoading()
                 });
 
                 try {
-                    const res = await krud.deleteRow('nguoidung', currentUser.id);
+                    // Đổi giá trị trong field trangthai từ 0 (Hoạt động) thành 1 (Khóa/Xóa logic)
+                    const res = await krud.updateRow('nguoidung', currentUser.id, { trangthai: '1' });
                     if (res) {
                         await app.logout();
-                        await Swal.fire('Đã xóa', 'Tài khoản của bạn đã được xóa hoàn toàn.', 'success');
+                        await Swal.fire('Thành công', 'Tài khoản của bạn đã được xóa khỏi hệ thống.', 'success');
                         window.location.href = '../index.html';
                     } else {
-                        throw new Error('Xóa thất bại');
+                        throw new Error('Cập nhật thất bại');
                     }
                 } catch (err) {
-                    Swal.fire('Lỗi', 'Không thể xóa tài khoản lúc này. Vui lòng liên hệ Admin.', 'error');
+                    Swal.fire('Lỗi', 'Không thể thực hiện lúc này. Vui lòng liên hệ Admin.', 'error');
                 }
             }
         };
