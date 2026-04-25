@@ -125,71 +125,163 @@ const customerHistoryModule = (function (window, document) {
     const params = new URLSearchParams(window.location.search);
     const initialKeyword = String(params.get("search") || "").trim();
     const initialStatus = normalizeStatusFilterValue(params.get("status") || "all");
+    let currentTab = "all";
     let currentPage = normalizePageNumber(params.get("page"), 1);
 
+    function deriveTabKey(item) {
+      const statusValue = normalizeStatusFilterValue(
+        getStatusMeta(item)?.status_class || "all",
+      );
+      if (statusValue === "moi") return "pending";
+      if (statusValue === "da-nhan" || statusValue === "dang-trien-khai") return "shipping";
+      if (statusValue === "da-hoan-thanh") return "done";
+      if (statusValue === "da-huy") return "cancel";
+      return "all";
+    }
+
+    if (initialStatus === "moi") currentTab = "pending";
+    if (initialStatus === "da-nhan" || initialStatus === "dang-trien-khai") currentTab = "shipping";
+    if (initialStatus === "da-hoan-thanh") currentTab = "done";
+    if (initialStatus === "da-huy") currentTab = "cancel";
+
     root.innerHTML = `
-      <div class="customer-portal-shell customer-portal-shell--simple">
-        <section class="customer-panel customer-orders-panel">
-          <div class="customer-panel-head">
-            <div>
-              <p class="customer-section-kicker">Đơn hàng của tôi</p>
-              <h2>Tìm và lọc đơn hàng của tôi</h2>
-              <p class="customer-panel-subtext">${escapeHtml(String(items.length))} đơn trong tài khoản hiện tại</p>
+      <div class="mv-orders-shell">
+        <div class="mb-4 mv-orders-stats mv-orders-stats--4">
+          <div class="mv-orders-stat-cell">
+            <div class="card border-0 shadow-sm p-3 p-md-4 h-100 mv-orders-stat-card">
+              <div class="d-flex align-items-center gap-3">
+                <div class="flex-shrink-0 rounded-3 d-flex align-items-center justify-content-center bg-primary bg-opacity-10 text-primary mv-orders-stat-icon">
+                  <i class="fas fa-file-invoice fa-lg"></i>
+                </div>
+                <div class="overflow-hidden">
+                  <div class="h4 fw-bold mb-0" id="stat-total">0</div>
+                  <div class="text-muted small fw-semibold text-nowrap">
+                    <span class="mv-orders-stat-label-full">Tổng đơn</span>
+                    <span class="mv-orders-stat-label-short">Tổng</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+          <div class="mv-orders-stat-cell">
+            <div class="card border-0 shadow-sm p-3 p-md-4 h-100 mv-orders-stat-card">
+              <div class="d-flex align-items-center gap-3">
+                <div class="flex-shrink-0 rounded-3 d-flex align-items-center justify-content-center bg-warning bg-opacity-10 text-warning mv-orders-stat-icon">
+                  <i class="fas fa-spinner fa-lg"></i>
+                </div>
+                <div class="overflow-hidden">
+                  <div class="h4 fw-bold mb-0" id="stat-pending">0</div>
+                  <div class="text-muted small fw-semibold text-nowrap">
+                    <span class="mv-orders-stat-label-full">Chờ xử lý</span>
+                    <span class="mv-orders-stat-label-short">Chờ</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+          <div class="mv-orders-stat-cell">
+            <div class="card border-0 shadow-sm p-3 p-md-4 h-100 mv-orders-stat-card">
+              <div class="d-flex align-items-center gap-3">
+                <div class="flex-shrink-0 rounded-3 d-flex align-items-center justify-content-center bg-success bg-opacity-10 text-success mv-orders-stat-icon">
+                  <i class="fas fa-check-double fa-lg"></i>
+                </div>
+                <div class="overflow-hidden">
+                  <div class="h4 fw-bold mb-0" id="stat-success">0</div>
+                  <div class="text-muted small fw-semibold text-nowrap">
+                    <span class="mv-orders-stat-label-full">Hoàn thành</span>
+                    <span class="mv-orders-stat-label-short">Xong</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+          <div class="mv-orders-stat-cell">
+            <div class="card border-0 shadow-sm p-3 p-md-4 h-100 mv-orders-stat-card">
+              <div class="d-flex align-items-center gap-3">
+                <div class="flex-shrink-0 rounded-3 d-flex align-items-center justify-content-center bg-danger bg-opacity-10 text-danger mv-orders-stat-icon">
+                  <i class="fas fa-ban fa-lg"></i>
+                </div>
+                <div class="overflow-hidden">
+                  <div class="h4 fw-bold mb-0" id="stat-fail">0</div>
+                  <div class="text-muted small fw-semibold text-nowrap">
+                    <span class="mv-orders-stat-label-full">Đã hủy</span>
+                    <span class="mv-orders-stat-label-short">Hủy</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="card border-0 shadow-sm mv-orders-main-card">
+          <div class="card-header bg-white py-3 border-0">
+            <div class="mv-orders-toolbar">
+              <div>
+                <h5 class="fw-bold mb-1">Đơn hàng của tôi</h5>
+                <p class="text-muted small mb-0">Theo dõi toàn bộ lịch sử chuyển dọn</p>
+              </div>
+              <div class="d-flex flex-column flex-sm-row gap-2">
+                <div class="input-group mv-orders-search">
+                  <span class="input-group-text bg-light border-0"><i class="fas fa-search text-muted small"></i></span>
+                  <input type="text" class="form-control bg-light border-0 small mv-orders-search-input" id="orderSearchInput" value="${escapeHtml(initialKeyword)}" placeholder="Mã đơn, dịch vụ, địa chỉ..." />
+                </div>
+                <button class="btn btn-primary px-4 fw-semibold shadow-sm mv-orders-reload-btn" type="button" id="customer-history-reload">
+                  <i class="fas fa-sync-alt me-2"></i>Tải lại
+                </button>
+              </div>
+            </div>
+
+            <div class="mv-orders-tabs-wrap">
+              <ul class="nav nav-pills nav-fill bg-light p-1 flex-column flex-md-row gap-1 w-100 mv-orders-tabs">
+                <li class="nav-item"><a class="nav-link fw-bold ${currentTab === "all" ? "active" : ""}" href="#" id="tabAll" data-tab="all">Tất cả <span class="badge bg-secondary ms-1" id="countAll">0</span></a></li>
+                <li class="nav-item"><a class="nav-link fw-bold ${currentTab === "pending" ? "active" : ""}" href="#" id="tabPending" data-tab="pending">Chờ xử lý <span class="badge bg-warning text-dark ms-1" id="countPending">0</span></a></li>
+                <li class="nav-item"><a class="nav-link fw-bold ${currentTab === "shipping" ? "active" : ""}" href="#" id="tabShipping" data-tab="shipping">Đang xử lý <span class="badge bg-primary ms-1" id="countShipping">0</span></a></li>
+                <li class="nav-item"><a class="nav-link fw-bold ${currentTab === "done" ? "active" : ""}" href="#" id="tabDone" data-tab="done">Hoàn thành <span class="badge bg-success ms-1" id="countDone">0</span></a></li>
+                <li class="nav-item"><a class="nav-link fw-bold ${currentTab === "cancel" ? "active" : ""}" href="#" id="tabCancel" data-tab="cancel">Đã hủy <span class="badge bg-danger ms-1" id="countCancel">0</span></a></li>
+              </ul>
             </div>
           </div>
 
-          <form class="customer-filter-form customer-filter-form-compact customer-filter-form-orders" id="customer-history-filter-form">
-            <label class="customer-filter-field-search">
-              <span>Tìm nhanh</span>
-              <input id="bo-loc-tu-khoa-lich-su" type="search" value="${escapeHtml(initialKeyword)}" placeholder="Mã đơn, dịch vụ, địa chỉ..." />
-            </label>
-            <label class="customer-filter-field-status">
-              <span>Trạng thái</span>
-              <select id="bo-loc-trang-thai-lich-su">
-                <option value="all" ${initialStatus === "all" ? "selected" : ""}>Tất cả</option>
-                <option value="moi" ${initialStatus === "moi" ? "selected" : ""}>Mới tiếp nhận</option>
-                <option value="da-nhan" ${initialStatus === "da-nhan" ? "selected" : ""}>Đã nhận đơn</option>
-                <option value="dang-trien-khai" ${initialStatus === "dang-trien-khai" ? "selected" : ""}>Đang triển khai</option>
-                <option value="da-hoan-thanh" ${initialStatus === "da-hoan-thanh" ? "selected" : ""}>Đã hoàn thành</option>
-                <option value="da-huy" ${initialStatus === "da-huy" ? "selected" : ""}>Đã hủy</option>
-              </select>
-            </label>
-            <div class="customer-inline-actions customer-filter-actions">
-              <button class="customer-btn customer-btn-primary" type="submit">Lọc</button>
-              <button class="customer-btn customer-btn-ghost customer-btn-sm" type="button" id="customer-history-reset">Đặt lại</button>
+          <div class="card-body p-0">
+            <div class="table-responsive d-none d-md-block mv-orders-table-wrap">
+              <table class="table align-middle mb-0 mv-orders-table">
+                <thead class="bg-light text-muted small text-uppercase">
+                  <tr>
+                    <th class="ps-4 mv-orders-col-code">Mã đơn / Dịch vụ</th>
+                    <th class="mv-orders-col-route">Địa chỉ đi → đến</th>
+                    <th class="mv-orders-col-time">Lịch thực hiện</th>
+                    <th class="mv-orders-col-fee">Tạm tính</th>
+                    <th class="mv-orders-col-status">Trạng thái</th>
+                    <th class="pe-4 text-end mv-orders-col-actions">Hành động</th>
+                  </tr>
+                </thead>
+                <tbody id="customer-history-table-body"></tbody>
+              </table>
             </div>
-          </form>
 
-          <div class="customer-active-filters" id="customer-history-active-filters">
-            <span class="customer-active-filters-note">Đang hiển thị toàn bộ đơn hàng.</span>
-          </div>
+            <div id="customer-history-mobile-list" class="d-block d-md-none p-2 mv-orders-mobile-list"></div>
 
-          <div class="customer-panel-head">
-            <div>
-              <p class="customer-section-kicker">Danh sách</p>
-              <h2>Đơn đang hiển thị</h2>
-              <p class="customer-panel-subtext" id="customer-history-result-text">Đang tải dữ liệu đơn hàng...</p>
+            <div id="customer-history-empty" class="text-center py-5 d-none mv-orders-empty">
+              <i class="fas fa-box-open fa-4x text-light mb-4 d-block"></i>
+              <h6 class="fw-bold">Chưa có đơn hàng nào!</h6>
+              <p class="text-muted small">Bạn chưa tạo đơn chuyển dọn nào trên hệ thống.</p>
+              <a href="${escapeHtml(getProjectUrl("dat-lich-chuyendon.html"))}" class="btn btn-primary rounded-pill px-4 mt-2 fw-bold shadow-sm">Đặt đơn ngay</a>
             </div>
-            <div class="customer-inline-actions">
+
+            <div class="mv-orders-pagination" id="customer-history-pagination-wrap" hidden>
+              <p class="mv-orders-pagination-summary" id="customer-history-pagination-summary"></p>
+              <div class="mv-orders-pagination-controls" id="customer-history-pagination"></div>
             </div>
           </div>
-
-          <div class="customer-list customer-list-history" id="customer-history-list"></div>
-          <div class="customer-pagination-wrap" id="customer-history-pagination-wrap" hidden>
-            <p class="customer-pagination-summary" id="customer-history-pagination-summary"></p>
-            <div class="customer-pagination" id="customer-history-pagination"></div>
-          </div>
-        </section>
+        </div>
       </div>
     `;
 
-    const filterForm = root.querySelector("#customer-history-filter-form");
-    const keywordInput = root.querySelector("#bo-loc-tu-khoa-lich-su");
-    const statusSelect = root.querySelector("#bo-loc-trang-thai-lich-su");
-    const resetButton = root.querySelector("#customer-history-reset");
-    const listNode = root.querySelector("#customer-history-list");
-    const resultNode = root.querySelector("#customer-history-result-text");
-    const activeFiltersNode = root.querySelector("#customer-history-active-filters");
+    const keywordInput = root.querySelector("#orderSearchInput");
+    const reloadButton = root.querySelector("#customer-history-reload");
+    const tableBodyNode = root.querySelector("#customer-history-table-body");
+    const mobileListNode = root.querySelector("#customer-history-mobile-list");
+    const emptyNode = root.querySelector("#customer-history-empty");
     const paginationWrapNode = root.querySelector("#customer-history-pagination-wrap");
     const paginationSummaryNode = root.querySelector("#customer-history-pagination-summary");
     const paginationNode = root.querySelector("#customer-history-pagination");
@@ -197,7 +289,12 @@ const customerHistoryModule = (function (window, document) {
     function syncFilterUrl() {
       const url = new URL(window.location.href);
       const nextKeyword = String(keywordInput?.value || "").trim();
-      const nextStatus = String(statusSelect?.value || "all").trim();
+      let nextStatus = "all";
+
+      if (currentTab === "pending") nextStatus = "moi";
+      if (currentTab === "shipping") nextStatus = "dang-trien-khai";
+      if (currentTab === "done") nextStatus = "da-hoan-thanh";
+      if (currentTab === "cancel") nextStatus = "da-huy";
 
       if (nextKeyword) {
         url.searchParams.set("search", nextKeyword);
@@ -210,8 +307,6 @@ const customerHistoryModule = (function (window, document) {
       } else {
         url.searchParams.delete("status");
       }
-
-      url.searchParams.delete("survey");
       if (currentPage > 1) {
         url.searchParams.set("page", String(currentPage));
       } else {
@@ -222,11 +317,9 @@ const customerHistoryModule = (function (window, document) {
 
     function renderList() {
       const keyword = String(keywordInput?.value || "").trim().toLowerCase();
-      const status = normalizeStatusFilterValue(statusSelect?.value || "all");
 
       const filtered = items.filter((item) => {
-        const statusMeta = getStatusMeta(item);
-        if (status !== "all" && statusMeta.status_class !== status) return false;
+        if (currentTab !== "all" && deriveTabKey(item) !== currentTab) return false;
 
         if (!keyword) return true;
         const haystack = [
@@ -259,103 +352,99 @@ const customerHistoryModule = (function (window, document) {
       const startLabel = totalItems ? startIndex + 1 : 0;
       const endLabel = totalItems ? startIndex + paginatedItems.length : 0;
 
-      resultNode.textContent = totalItems
-        ? `Hiển thị ${startLabel}-${endLabel} trên ${totalItems} đơn hàng. Trang ${currentPage}/${totalPages}.`
-        : "Không tìm thấy đơn hàng nào khớp với điều kiện lọc.";
+      root.querySelector("#stat-total").textContent = String(items.length);
+      root.querySelector("#stat-pending").textContent = String(
+        items.filter((item) => ["pending", "shipping"].includes(deriveTabKey(item))).length,
+      );
+      root.querySelector("#stat-success").textContent = String(
+        items.filter((item) => deriveTabKey(item) === "done").length,
+      );
+      root.querySelector("#stat-fail").textContent = String(
+        items.filter((item) => deriveTabKey(item) === "cancel").length,
+      );
 
-      const activeFilters = [];
-      if (keyword) {
-        activeFilters.push({
-          key: "keyword",
-          label: `Từ khóa: ${keywordInput.value.trim()}`,
-        });
-      }
-      if (status === "moi") {
-        activeFilters.push({ key: "status", label: "Trạng thái: Mới tiếp nhận" });
-      }
-      if (status === "da-nhan") {
-        activeFilters.push({ key: "status", label: "Trạng thái: Đã nhận đơn" });
-      }
-      if (status === "dang-trien-khai") {
-        activeFilters.push({ key: "status", label: "Trạng thái: Đang triển khai" });
-      }
-      if (status === "da-hoan-thanh") {
-        activeFilters.push({ key: "status", label: "Trạng thái: Đã hoàn thành" });
-      }
-      if (status === "da-huy") {
-        activeFilters.push({ key: "status", label: "Trạng thái: Đã hủy" });
-      }
+      root.querySelector("#countAll").textContent = String(items.length);
+      root.querySelector("#countPending").textContent = String(
+        items.filter((item) => deriveTabKey(item) === "pending").length,
+      );
+      root.querySelector("#countShipping").textContent = String(
+        items.filter((item) => deriveTabKey(item) === "shipping").length,
+      );
+      root.querySelector("#countDone").textContent = String(
+        items.filter((item) => deriveTabKey(item) === "done").length,
+      );
+      root.querySelector("#countCancel").textContent = String(
+        items.filter((item) => deriveTabKey(item) === "cancel").length,
+      );
 
-      activeFiltersNode.innerHTML = activeFilters.length
-        ? activeFilters
-            .map(
-              (item) =>
-                `<button type="button" class="customer-active-filter-text" data-remove-filter="${escapeHtml(
-                  item.key,
-                )}" aria-label="${escapeHtml(`Bỏ ${item.label}`)}">
-                  <span>${escapeHtml(item.label)}</span>
-                  <i class="fas fa-xmark" aria-hidden="true"></i>
-                </button>`,
-            )
-            .join("")
-        : '<span class="customer-active-filters-note">Đang hiển thị toàn bộ đơn hàng.</span>';
+      root.querySelectorAll(".mv-orders-tabs .nav-link").forEach((link) => {
+        link.classList.toggle(
+          "active",
+          String(link.getAttribute("data-tab") || "") === currentTab,
+        );
+      });
 
       if (!filtered.length) {
-        listNode.innerHTML = `
-          <div class="customer-empty-state">
-            <i class="fas fa-folder-open"></i>
-            <p>Không có kết quả phù hợp. Thử đổi từ khóa hoặc mở rộng bộ lọc.</p>
-          </div>
-        `;
+        tableBodyNode.innerHTML = `<tr><td colspan="6" class="text-center py-5 text-muted">Không có đơn phù hợp.</td></tr>`;
+        mobileListNode.innerHTML = `<div class="text-center text-muted p-4 small">Không có đơn phù hợp.</div>`;
+        emptyNode.classList.remove("d-none");
         paginationWrapNode.hidden = true;
         paginationNode.innerHTML = "";
         paginationSummaryNode.textContent = "";
         return;
       }
+      emptyNode.classList.add("d-none");
 
-      listNode.innerHTML = paginatedItems
+      tableBodyNode.innerHTML = paginatedItems
         .map(
           (item) => {
             const statusMeta = getStatusMeta(item);
             return `
-            <article class="customer-order-card customer-order-card-history">
-              <div class="customer-order-topline">
-                <div class="customer-order-heading">
-                  <p class="customer-order-recipient">${escapeHtml(item.service_label || item.title || "--")}</p>
-                  <div class="customer-order-heading-meta">
-                    <p class="customer-order-code">${escapeHtml(item.code || "--")}</p>
-                    <span class="customer-status-badge status-${escapeHtml(
-                      statusMeta.badge_class,
-                    )}">${escapeHtml(statusMeta.status_text)}</span>
-                  </div>
-                  <p class="customer-order-dest">${escapeHtml(getRouteSummary(item))}</p>
-                </div>
-                <div class="customer-order-side">
-                  <div class="customer-order-price-block">
-                    <span class="customer-order-price-label">Tạm tính</span>
-                    <strong class="customer-order-price">${escapeHtml(formatCurrency(item.estimated_amount))}</strong>
-                  </div>
-                  <div class="customer-order-actions customer-order-actions-compact">
-                    ${
-                      item.type === "dat-lich"
-                        ? `<a class="customer-btn customer-btn-primary" href="${escapeHtml(
-                            getOrderDetailUrl(item.remote_id || item.code || ""),
-                          )}">Xem chi tiết</a>`
-                        : `<a class="customer-btn customer-btn-primary" href="${escapeHtml(
-                            getProjectUrl("khach-hang/danh-sach-don-hang-chuyendon.html"),
-                          )}">Mở đơn hàng</a>`
-                    }
-                  </div>
-                </div>
-              </div>
-              <div class="customer-order-meta customer-order-meta-compact customer-order-meta-history">
-                <span><b>Khảo sát</b><span class="customer-order-meta-value">${escapeHtml(item.survey_first ? "Có" : "Không")}</span></span>
-                <span><b>Tạo</b><span class="customer-order-meta-value">${escapeHtml(formatDateTime(item.created_at || ""))}</span></span>
-              </div>
-            </article>
+            <tr>
+              <td class="ps-4">
+                <div class="fw-bold text-dark small">${escapeHtml(item.code || "--")}</div>
+                <div class="small text-muted">${escapeHtml(item.service_label || item.title || "--")}</div>
+              </td>
+              <td>
+                <div class="small text-truncate mv-orders-address-line" title="${escapeHtml(item.from_address || "--")}">${escapeHtml(item.from_address || "--")}</div>
+                <div class="small text-muted text-truncate mv-orders-address-destination" title="${escapeHtml(item.to_address || "--")}"><i class="fas fa-arrow-down fa-xs me-1"></i>${escapeHtml(item.to_address || "--")}</div>
+              </td>
+              <td><div class="small text-dark">${escapeHtml(item.schedule_label || "--")}</div></td>
+              <td class="fw-bold text-primary">${escapeHtml(formatCurrency(item.estimated_amount))}</td>
+              <td><span class="badge bg-opacity-10 px-3 py-2 rounded-pill status-${escapeHtml(statusMeta.badge_class)}">${escapeHtml(statusMeta.status_text)}</span></td>
+              <td class="pe-4 text-end">
+                <a class="btn btn-sm btn-light border rounded-2 shadow-sm" href="${escapeHtml(getOrderDetailUrl(item.remote_id || item.code || ""))}">Chi tiết</a>
+              </td>
+            </tr>
           `;
           },
         )
+        .join("");
+
+      mobileListNode.innerHTML = paginatedItems
+        .map((item) => {
+          const statusMeta = getStatusMeta(item);
+          return `
+            <div class="card mv-orders-mobile-card mb-2">
+              <div class="card-body">
+                <div class="d-flex justify-content-between align-items-start mb-2">
+                  <div>
+                    <div class="fw-bold small text-dark">${escapeHtml(item.code || "--")}</div>
+                    <div class="small text-muted">${escapeHtml(item.service_label || item.title || "--")}</div>
+                  </div>
+                  <span class="badge bg-opacity-10 px-2 py-1 rounded-pill mv-orders-mobile-badge status-${escapeHtml(statusMeta.badge_class)}">${escapeHtml(statusMeta.status_text)}</span>
+                </div>
+                <div class="small mb-2 pt-2 border-top">
+                  <div class="d-flex justify-content-between gap-2 mb-1"><span class="text-muted">Lộ trình</span><strong class="text-end mv-orders-mobile-value">${escapeHtml(getRouteSummary(item))}</strong></div>
+                  <div class="d-flex justify-content-between gap-2 mb-1"><span class="text-muted">Lịch</span><strong class="text-end mv-orders-mobile-value">${escapeHtml(item.schedule_label || "--")}</strong></div>
+                  <div class="d-flex justify-content-between gap-2 mb-1"><span class="text-muted">Khảo sát</span><strong class="text-end mv-orders-mobile-value">${escapeHtml(item.survey_first ? "Có" : "Không")}</strong></div>
+                  <div class="d-flex justify-content-between gap-2 text-primary"><span>Tạm tính</span><strong class="text-end mv-orders-mobile-value">${escapeHtml(formatCurrency(item.estimated_amount))}</strong></div>
+                </div>
+                <a class="btn btn-sm btn-light border w-100 fw-bold" href="${escapeHtml(getOrderDetailUrl(item.remote_id || item.code || ""))}"><i class="fas fa-eye me-2 text-primary"></i>Xem chi tiết</a>
+              </div>
+            </div>
+          `;
+        })
         .join("");
 
       if (totalPages <= 1) {
@@ -393,40 +482,35 @@ const customerHistoryModule = (function (window, document) {
       `;
     }
 
-    filterForm?.addEventListener("submit", function (event) {
+    keywordInput?.addEventListener("input", function () {
+      currentPage = 1;
+      syncFilterUrl();
+      renderList();
+    });
+
+    root.querySelector(".mv-orders-tabs")?.addEventListener("click", function (event) {
+      const tab = event.target.closest("[data-tab]");
+      if (!tab) return;
       event.preventDefault();
+      currentTab = String(tab.getAttribute("data-tab") || "all").trim() || "all";
       currentPage = 1;
       syncFilterUrl();
       renderList();
     });
 
-    resetButton?.addEventListener("click", function () {
-      if (keywordInput) keywordInput.value = "";
-      if (statusSelect) statusSelect.value = "all";
-      currentPage = 1;
-      syncFilterUrl();
-      renderList();
-    });
-
-    activeFiltersNode?.addEventListener("click", function (event) {
-      const button = event.target.closest("[data-remove-filter]");
-      if (!button) return;
-
-      const filterKey = String(
-        button.getAttribute("data-remove-filter") || "",
-      ).trim();
-
-      if (filterKey === "keyword" && keywordInput) {
-        keywordInput.value = "";
+    reloadButton?.addEventListener("click", async function () {
+      const button = reloadButton;
+      button.disabled = true;
+      button.innerHTML = '<i class="fas fa-sync-alt me-2 fa-spin"></i>Tải lại';
+      try {
+        const result = await store.fetchHistory?.();
+        renderHistory(result || null);
+      } catch (error) {
+        console.error("Cannot reload customer history store:", error);
+      } finally {
+        button.disabled = false;
+        button.innerHTML = '<i class="fas fa-sync-alt me-2"></i>Tải lại';
       }
-
-      if (filterKey === "status" && statusSelect) {
-        statusSelect.value = "all";
-      }
-
-      currentPage = 1;
-      syncFilterUrl();
-      renderList();
     });
 
     paginationNode?.addEventListener("click", function (event) {

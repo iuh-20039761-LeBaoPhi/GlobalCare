@@ -1,4 +1,4 @@
-import { getKrudInsertFn } from "./api/krud-client.js";
+import { getKrudInsertFn, getKrudUpdateFn } from "./api/krud-client.js";
 
 class FastGoBookingApiClient {
   constructor(options) {
@@ -27,6 +27,10 @@ class FastGoBookingApiClient {
 
   getInsertFn() {
     return getKrudInsertFn();
+  }
+
+  getUpdateFn() {
+    return getKrudUpdateFn();
   }
 
   extractRemoteId(result) {
@@ -83,6 +87,24 @@ class FastGoBookingApiClient {
     };
   }
 
+  async updateBooking(id, payload) {
+    const updateFn = this.getUpdateFn();
+    if (!updateFn) {
+      throw new Error("Không tìm thấy API KRUD để cập nhật yêu cầu đặt lịch.");
+    }
+
+    if (!id) {
+      throw new Error("Thiếu mã bản ghi để cập nhật.");
+    }
+
+    const nextPayload = {
+      ...payload,
+      updated_at: new Date().toISOString(),
+    };
+
+    return Promise.resolve(updateFn(this.bookingTableName, nextPayload, id));
+  }
+
   async syncGoogleSheet(sheetPayload) {
     if (typeof window.saveToGoogleSheet !== "function") {
       throw new Error("driveUtil.js chưa được nạp.");
@@ -112,3 +134,4 @@ const bookingApi = new FastGoBookingApiClient();
 
 export { FastGoBookingApiClient, bookingApi };
 export default bookingApi;
+

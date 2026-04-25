@@ -1452,14 +1452,35 @@
     const currentPath = String(window.location.pathname || "")
       .replace(/\\/g, "/")
       .toLowerCase();
+    const explicitViewer = normalizeText(params.get("viewer") || "").toLowerCase();
+    const referrerPath = (() => {
+      try {
+        return String(new URL(document.referrer || "", window.location.href).pathname || "")
+          .replace(/\\/g, "/")
+          .toLowerCase();
+      } catch (error) {
+        return "";
+      }
+    })();
+
+    if (explicitViewer === "customer" || explicitViewer === "shipper" || explicitViewer === "public") {
+      return explicitViewer;
+    }
 
     if (currentPath.includes("/public/khach-hang/")) return "customer";
     if (currentPath.includes("/public/nha-cung-cap/")) return "shipper";
 
+    if (referrerPath.includes("/public/khach-hang/")) return "customer";
+    if (referrerPath.includes("/public/nha-cung-cap/")) return "shipper";
+
+    const sessionRole = normalizeText(
+      session?.role || session?.vai_tro || "",
+    ).toLowerCase();
+    if (sessionRole === "shipper") return "shipper";
+    if (sessionRole === "customer") return "customer";
+
     if (session) return "customer";
-    return (
-      normalizeText(params.get("viewer") || "public").toLowerCase() || "public"
-    );
+    return "public";
   }
 
   function syncDisplayUrl(identifier, viewer) {
@@ -1621,7 +1642,14 @@
     const list = Array.from(files || []).filter(Boolean);
     if (!list.length) return [];
 
-    const normalizedOrderRef = normalizeText(orderRef || "");
+    let normalizedOrderRef = normalizeText(orderRef || "");
+    if (normalizedOrderRef.includes("-")) {
+      normalizedOrderRef = normalizedOrderRef.split("-").pop();
+    }
+    if (/^\d+$/.test(normalizedOrderRef)) {
+      normalizedOrderRef = normalizedOrderRef.padStart(7, "0");
+    }
+
     if (!normalizedOrderRef) {
       throw new Error("Không tìm thấy mã đơn để tải media lên Google Drive.");
     }
@@ -1630,12 +1658,46 @@
       throw new Error("Không tìm thấy helper upload Google Drive.");
     }
 
+    const timestamp = (() => {
+      const now = new Date();
+      const pad = (v) => String(v).padStart(2, "0");
+      return (
+        now.getFullYear() +
+        pad(now.getMonth() + 1) +
+        pad(now.getDate()) +
+        "_" +
+        pad(now.getHours()) +
+        pad(now.getMinutes()) +
+        pad(now.getSeconds())
+      );
+    })();
+
+    const nameBuilder = (file) => {
+      const originalName = String(file?.name || "").trim();
+      const nameWithoutExt = originalName.replace(/\.[^/.]+$/, "");
+      const extension = originalName.split(".").pop().toLowerCase();
+      const sanitizedName = nameWithoutExt
+        .toLowerCase()
+        .replace(/[^a-z0-9]+/g, "-")
+        .replace(/^-+|-+$/g, "");
+
+      return `${normalizedOrderRef}_giao_hang_nhanh_${timestamp}_${sanitizedName}.${extension}`;
+    };
+
     const uploadOptions =
       mediaType === "feedback"
-        ? { proxyFile: "khach-hang/upload.php", uploadKind: "order_media" }
+        ? {
+            proxyFile: "khach-hang/upload.php",
+            uploadKind: "order_media",
+            nameBuilder,
+          }
         : mediaType === "shipper"
-          ? { proxyFile: "nha-cung-cap/upload.php", uploadKind: "order_media" }
-          : {};
+          ? {
+              proxyFile: "nha-cung-cap/upload.php",
+              uploadKind: "order_media",
+              nameBuilder,
+            }
+          : { nameBuilder };
 
     return (await core.uploadFilesToDrive(list, uploadOptions)).map((item) => ({
       id: normalizeText(item.id || item.fileId || ""),
@@ -1664,12 +1726,17 @@
       : [];
     const podCandidate = reports.find((item) => {
       const extension = getMediaExtension(item);
-      return isImageExtension(extension) && hasPreviewableUrl(item?.url || "");
+      const targetUrl = normalizeText(
+        item?.view_url || item?.url || item?.download_url || "",
+      );
+      return isImageExtension(extension) && hasPreviewableUrl(targetUrl);
     });
 
     if (!podCandidate) return normalized;
 
-    order.pod_image = normalizeText(podCandidate.url || "");
+    order.pod_image = normalizeText(
+      podCandidate.view_url || podCandidate.url || podCandidate.download_url || "",
+    );
     return {
       ...normalized,
       order,
@@ -1678,14 +1745,31 @@
 
   function getMediaItems(detail) {
     const order = detail.order || {};
-    const items = [];
+    const reports = Array.isArray(detail.provider?.shipper_reports)
+      ? detail.provider.shipper_reports
+      : [];
+    const seenUrls = new Set();
+    const items = reports
+      .map((item, index) => {
+        const url = normalizeText(
+          item?.view_url || item?.url || item?.download_url || "",
+        );
+        if (!hasPreviewableUrl(url) || seenUrls.has(url)) return null;
+        seenUrls.add(url);
+        return {
+          url,
+          name: normalizeText(item?.name || "") || `Bằng chứng giao hàng ${index + 1}`,
+          extension: getMediaExtension(item) || url.split(".").pop() || "",
+        };
+      })
+      .filter(Boolean);
 
-    if (normalizeText(order.pod_image)) {
-      const url = normalizeText(order.pod_image);
+    const legacyPodUrl = normalizeText(order.pod_image);
+    if (legacyPodUrl && !seenUrls.has(legacyPodUrl)) {
       items.push({
-        url,
+        url: legacyPodUrl,
         name: "Bằng chứng giao hàng",
-        extension: url.split(".").pop() || "jpg",
+        extension: legacyPodUrl.split(".").pop() || "jpg",
       });
     }
 
@@ -1695,7 +1779,7 @@
   function renderMedia(detail) {
     const items = getMediaItems(detail);
     if (!items.length) {
-      return '<div class="standalone-order-muted">Chưa có ảnh POD cho đơn hàng này.</div>';
+      return '<div class="standalone-order-muted">Chưa có ảnh/video POD cho đơn hàng này.</div>';
     }
 
     return `<div class="standalone-order-media-grid">${items

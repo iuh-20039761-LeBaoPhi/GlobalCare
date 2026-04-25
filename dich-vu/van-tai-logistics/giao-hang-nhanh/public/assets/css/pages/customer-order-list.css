@@ -1,0 +1,321 @@
+body[data-customer-page="orders"] {
+  background:
+    radial-gradient(circle at top left, rgba(10, 42, 102, 0.08), transparent 28%),
+    linear-gradient(180deg, #f6f9ff 0%, #eef4ff 100%);
+}
+
+body[data-customer-page="orders"] .customer-portal-page-main {
+  padding: 22px 0 48px;
+}
+
+.ghn-orders-shell {
+  display: grid;
+  gap: 24px;
+}
+
+.ghn-orders-stats {
+  display: grid;
+  gap: 16px;
+  margin-bottom: 24px !important;
+}
+
+.ghn-orders-stats--4 {
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+}
+
+.ghn-orders-stat-cell {
+  min-width: 0;
+}
+
+.ghn-orders-stat-label-short {
+  display: none;
+}
+
+.ghn-orders-stats .ghn-orders-stat-card,
+.ghn-orders-main-card {
+  border: 1px solid rgba(209, 220, 243, 0.9);
+  border-radius: 24px !important;
+  background: rgba(255, 255, 255, 0.96);
+  box-shadow: 0 18px 46px rgba(15, 23, 42, 0.08);
+}
+
+.ghn-orders-stats .ghn-orders-stat-card {
+  position: relative;
+  overflow: hidden;
+}
+
+.ghn-orders-stats .ghn-orders-stat-card::before {
+  content: "";
+  position: absolute;
+  inset: 0 auto auto 0;
+  width: 100%;
+  height: 4px;
+  background: linear-gradient(90deg, #0a2a66 0%, #ff7a00 100%);
+}
+
+.ghn-orders-stat-icon {
+  width: 54px;
+  height: 54px;
+}
+
+.ghn-orders-main-card {
+  overflow: hidden;
+}
+
+.ghn-orders-main-card .card-header {
+  padding: 22px 24px 20px !important;
+  background:
+    radial-gradient(circle at top right, rgba(255, 122, 0, 0.12), transparent 28%),
+    linear-gradient(180deg, rgba(248, 250, 255, 0.98) 0%, rgba(255, 255, 255, 0.98) 100%) !important;
+}
+
+.ghn-orders-toolbar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  margin-bottom: 18px;
+}
+
+.ghn-orders-toolbar h5 {
+  color: #0a2a66;
+  font-size: 1.22rem;
+}
+
+.ghn-orders-toolbar p {
+  color: #64748b !important;
+}
+
+.ghn-orders-search {
+  min-width: 260px;
+  border-radius: 999px;
+  overflow: hidden;
+  border: 1px solid #d8e2f4;
+  background: #f8fbff;
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.9);
+}
+
+.ghn-orders-search .input-group-text,
+.ghn-orders-search .form-control {
+  background: transparent !important;
+  border: 0 !important;
+}
+
+.ghn-orders-search .input-group-text {
+  padding-left: 16px;
+  color: #6b7280;
+}
+
+.ghn-orders-search-input {
+  min-height: 46px;
+  padding-right: 16px;
+  color: #0f172a;
+  font-size: 0.85rem;
+}
+
+.ghn-orders-search-input:focus {
+  box-shadow: none;
+}
+
+.ghn-orders-reload-btn {
+  min-height: 46px;
+  border-radius: 999px;
+  border: 0;
+  white-space: nowrap;
+  font-size: 0.85rem;
+  background: linear-gradient(135deg, #0a2a66 0%, #123b87 100%);
+  box-shadow: 0 12px 24px rgba(10, 42, 102, 0.2);
+}
+
+.ghn-orders-tabs-wrap {
+  margin-top: 0.5rem;
+  padding: 0 0.25rem;
+}
+
+.ghn-orders-tabs {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: stretch;
+  list-style: none;
+  margin: 0;
+  padding: 6px !important;
+  border: 1px solid #e2e8f0;
+  border-radius: 16px !important;
+  background: #f8fbff !important;
+  gap: 6px !important;
+  font-size: 0.82rem;
+}
+
+.ghn-orders-tabs .nav-item {
+  list-style: none;
+}
+
+.ghn-orders-tabs .nav-link {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  border-radius: 12px !important;
+  color: #475569;
+  padding: 10px 14px;
+  transition: all 0.2s ease;
+}
+
+.ghn-orders-tabs .nav-link:hover {
+  background: rgba(255, 255, 255, 0.78);
+  color: #0a2a66;
+}
+
+.ghn-orders-tabs .nav-link.active {
+  color: #0a2a66;
+  background: #fff;
+  box-shadow: 0 10px 24px rgba(148, 163, 184, 0.18);
+}
+
+.ghn-orders-tabs .badge {
+  border-radius: 999px;
+  padding: 0.4em 0.6em;
+}
+
+.ghn-orders-table-wrap {
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.98) 0%, rgba(247, 250, 255, 0.98) 100%);
+}
+
+.ghn-orders-table {
+  table-layout: fixed;
+}
+
+.ghn-orders-col-code {
+  width: 28%;
+}
+
+.ghn-orders-col-route {
+  width: 25%;
+}
+
+.ghn-orders-col-time {
+  width: 15%;
+}
+
+.ghn-orders-col-fee {
+  width: 12%;
+}
+
+.ghn-orders-col-status,
+.ghn-orders-col-actions {
+  width: 10%;
+}
+
+.ghn-orders-table-wrap table thead th {
+  padding-top: 16px;
+  padding-bottom: 16px;
+  border-bottom-color: #e2e8f0;
+  background: #f8fbff !important;
+  color: #64748b !important;
+  letter-spacing: 0.06em;
+}
+
+.ghn-orders-table-wrap table tbody td {
+  padding-top: 18px;
+  padding-bottom: 18px;
+  border-color: #edf2f7;
+}
+
+.ghn-orders-table-wrap table tbody tr {
+  transition: background-color 0.18s ease;
+}
+
+.ghn-orders-table-wrap table tbody tr:hover {
+  background: rgba(248, 251, 255, 0.9);
+}
+
+.ghn-orders-address-line {
+  max-width: 180px;
+}
+
+.ghn-orders-address-destination {
+  max-width: 180px;
+}
+
+.ghn-orders-mobile-list {
+  padding: 14px !important;
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.98) 0%, rgba(247, 250, 255, 0.98) 100%);
+}
+
+.ghn-orders-mobile-card {
+  border: 1px solid #dbe5f5 !important;
+  border-radius: 18px !important;
+  box-shadow: 0 12px 28px rgba(15, 23, 42, 0.08) !important;
+}
+
+.ghn-orders-mobile-card .card-body {
+  padding: 16px !important;
+}
+
+.ghn-orders-mobile-badge {
+  font-size: 10px;
+}
+
+.ghn-orders-mobile-value {
+  max-width: 60%;
+}
+
+.ghn-orders-mobile-list .btn-light {
+  min-height: 42px;
+  border-radius: 12px;
+  border-color: #d9e2f2 !important;
+  background: #f8fbff;
+}
+
+.ghn-orders-empty {
+  padding: 36px 24px !important;
+  background: linear-gradient(180deg, rgba(248, 250, 255, 0.94) 0%, rgba(255, 255, 255, 0.94) 100%);
+}
+
+.ghn-orders-empty i {
+  color: #c7d2e5 !important;
+}
+
+@media (max-width: 768px) {
+  .ghn-orders-stats,
+  .ghn-orders-stats--4 {
+    grid-template-columns: 1fr;
+  }
+
+  .ghn-orders-stat-label-full {
+    display: none;
+  }
+
+  .ghn-orders-stat-label-short {
+    display: inline;
+  }
+
+  .ghn-orders-toolbar {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .ghn-orders-search {
+    min-width: 100%;
+  }
+
+  .ghn-orders-main-card .card-header {
+    padding: 18px 16px 16px !important;
+  }
+
+  .ghn-orders-toolbar h5 {
+    font-size: 1rem;
+  }
+
+  .ghn-orders-tabs {
+    flex-direction: column;
+  }
+
+  .ghn-orders-table th:nth-child(3),
+  .ghn-orders-table td:nth-child(3),
+  .ghn-orders-table th:nth-child(4),
+  .ghn-orders-table td:nth-child(4) {
+    display: none;
+  }
+}

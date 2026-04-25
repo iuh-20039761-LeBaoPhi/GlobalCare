@@ -3,389 +3,177 @@ require_once __DIR__ . '/../includes/bootstrap.php';
 moving_admin_require_login();
 
 $pageTitle = 'Điều phối đơn hàng | Admin Chuyển Dọn';
+$extraStylesheets = [
+    'https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css',
+    'assets/css/orders-manage.css',
+];
 require_once __DIR__ . '/../includes/header_admin.php';
 ?>
 
-<style>
-    .operations-grid {
-        display: grid;
-        grid-template-columns: repeat(4, minmax(0, 1fr));
-        gap: 20px;
-        margin-bottom: 32px;
-    }
-
-    .ops-card {
-        background: white;
-        border: 1px solid var(--line);
-        border-radius: var(--radius-lg);
-        padding: 22px 24px;
-        box-shadow: var(--shadow-premium);
-    }
-
-    .ops-card span {
-        display: block;
-        font-size: 12px;
-        font-weight: 800;
-        letter-spacing: 0.05em;
-        text-transform: uppercase;
-        color: var(--slate-light);
-    }
-
-    .ops-card strong {
-        display: block;
-        margin-top: 10px;
-        font-size: 30px;
-        font-weight: 900;
-        color: var(--slate);
-    }
-
-    .ops-card p {
-        margin: 8px 0 0;
-        color: var(--slate-light);
-        font-size: 13px;
-        line-height: 1.5;
-    }
-
-    .order-meta-stack {
-        display: flex;
-        flex-wrap: wrap;
-        gap: 6px;
-        margin-top: 8px;
-    }
-
-    .order-chip {
-        display: inline-flex;
-        align-items: center;
-        gap: 6px;
-        padding: 4px 10px;
-        border-radius: 999px;
-        background: var(--slate-soft);
-        border: 1px solid var(--line);
-        font-size: 11px;
-        font-weight: 700;
-        color: var(--slate);
-    }
-
-    .order-chip.is-danger {
-        background: rgba(239, 68, 68, 0.1);
-        border-color: rgba(239, 68, 68, 0.18);
-        color: #b91c1c;
-    }
-
-    .order-chip.is-warning {
-        background: rgba(245, 158, 11, 0.12);
-        border-color: rgba(245, 158, 11, 0.22);
-        color: #92400e;
-    }
-
-    .order-chip.is-success {
-        background: rgba(16, 185, 129, 0.12);
-        border-color: rgba(16, 185, 129, 0.22);
-        color: #166534;
-    }
-
-    .order-chip.is-info {
-        background: rgba(14, 165, 233, 0.1);
-        border-color: rgba(14, 165, 233, 0.18);
-        color: #0f766e;
-    }
-
-    .order-actions {
-        display: flex;
-        gap: 8px;
-        flex-wrap: wrap;
-    }
-
-    .order-actions .btn {
-        min-width: 42px;
-        padding: 10px 12px;
-    }
-
-    .modal.modal-wide {
-        width: min(1120px, 100%);
-        max-height: calc(100vh - 48px);
-        display: flex;
-        flex-direction: column;
-    }
-
-    .modal.modal-wide .modal-body {
-        overflow: auto;
-        padding-bottom: 16px;
-    }
-
-    .modal-section {
-        margin-bottom: 28px;
-        padding: 22px;
-        border: 1px solid var(--line);
-        border-radius: 18px;
-        background: #fff;
-    }
-
-    .modal-section h4 {
-        margin: 0 0 8px;
-        font-size: 16px;
-        font-weight: 800;
-        color: var(--slate);
-    }
-
-    .modal-section p {
-        margin: 0 0 18px;
-        color: var(--slate-light);
-        font-size: 13px;
-        line-height: 1.6;
-    }
-
-    .json-preview,
-    .media-preview-list {
-        border: 1px dashed var(--line);
-        border-radius: 14px;
-        background: var(--slate-soft);
-        padding: 14px 16px;
-        min-height: 56px;
-    }
-
-    .json-preview code {
-        display: block;
-        white-space: pre-wrap;
-        word-break: break-word;
-        font-size: 12px;
-        line-height: 1.6;
-        color: var(--slate);
-        font-family: Consolas, Monaco, monospace;
-    }
-
-    .media-preview-list {
-        display: grid;
-        gap: 10px;
-    }
-
-    .media-link {
-        display: flex;
-        justify-content: space-between;
-        gap: 16px;
-        padding: 12px 14px;
-        border-radius: 12px;
-        background: white;
-        border: 1px solid var(--line);
-        text-decoration: none;
-        color: var(--slate);
-        font-size: 13px;
-        font-weight: 600;
-    }
-
-    .media-link:hover {
-        border-color: var(--primary);
-        color: var(--primary-deep);
-    }
-
-    .feedback-box {
-        display: grid;
-        grid-template-columns: 150px 1fr;
-        gap: 16px;
-        align-items: start;
-    }
-
-    .feedback-score {
-        padding: 18px;
-        border-radius: 16px;
-        background: var(--primary-soft);
-        border: 1px solid rgba(194, 122, 77, 0.16);
-        text-align: center;
-    }
-
-    .feedback-score strong {
-        display: block;
-        font-size: 32px;
-        font-weight: 900;
-        color: var(--primary-deep);
-    }
-
-    .feedback-note {
-        padding: 16px;
-        border-radius: 16px;
-        background: var(--slate-soft);
-        border: 1px solid var(--line);
-        white-space: pre-wrap;
-        color: var(--slate);
-        line-height: 1.6;
-        min-height: 92px;
-    }
-
-    .field-note {
-        margin-top: 8px;
-        color: var(--slate-light);
-        font-size: 12px;
-        line-height: 1.5;
-    }
-
-    @media (max-width: 1180px) {
-        .operations-grid {
-            grid-template-columns: repeat(2, minmax(0, 1fr));
-        }
-    }
-
-    @media (max-width: 768px) {
-        .operations-grid {
-            grid-template-columns: 1fr;
-        }
-
-        .feedback-box {
-            grid-template-columns: 1fr;
-        }
-    }
-</style>
-
-<section class="hero-card">
-    <div>
-        <h1>Điều phối đơn hàng chuyển dọn</h1>
-        <p>Đồng bộ đầy đủ đơn từ hệ thống đặt lịch, gán nhà cung cấp, theo dõi mốc xử lý, phản hồi khách hàng và cảnh báo SLA trên cùng một màn quản trị.</p>
-    </div>
-    <div class="hero-actions" style="display:flex; gap:12px; flex-wrap:wrap;">
-        <a href="admin_stats.php" class="btn btn-outline">
-            <i class="fas fa-chart-line"></i>Dashboard
-        </a>
-        <button class="btn btn-primary" type="button" onclick="orderManager.showOrderModal()">
-            <i class="fas fa-plus"></i>Tạo đơn nội bộ
-        </button>
-    </div>
-</section>
-
-<section class="operations-grid">
-    <article class="ops-card">
-        <span>Tổng đơn</span>
-        <strong id="statsTotalOrders">0</strong>
-        <p>Tất cả yêu cầu đã đồng bộ từ bảng đặt lịch chuyển dọn.</p>
-    </article>
-    <article class="ops-card">
-        <span>Đang mở</span>
-        <strong id="statsOpenOrders">0</strong>
-        <p>Đơn mới, đã nhận hoặc đang triển khai chưa kết thúc.</p>
-    </article>
-    <article class="ops-card">
-        <span>Quá SLA 120 phút</span>
-        <strong id="statsLateOrders">0</strong>
-        <p>Đơn còn chờ nhận quá 120 phút và cần điều phối ngay.</p>
-    </article>
-    <article class="ops-card">
-        <span>Tổng dự kiến</span>
-        <strong id="statsTotalValue">0 ₫</strong>
-        <p>Tổng tạm tính các đơn chưa hủy để theo dõi doanh thu dự kiến.</p>
-    </article>
-</section>
-
-<section class="panel">
-    <div class="section-header">
+<div class="cd-admin-orders-page">
+    <div class="page-header cd-admin-orders-page-header">
         <div>
-            <h2>Danh sách đơn hàng</h2>
-            <p>Lọc theo nhà cung cấp, khảo sát, đánh giá và cảnh báo đơn quá thời gian chờ nhận.</p>
+            <h2 class="page-title">Điều phối đơn hàng</h2>
+            <p class="cd-admin-orders-page-copy">Đồng bộ yêu cầu đặt lịch, điều phối nhà cung cấp và theo dõi toàn bộ vòng đời xử lý trên một màn quản trị.</p>
         </div>
-        <button class="btn btn-outline" type="button" onclick="orderManager.fetchOrders()">
-            <i class="fas fa-rotate"></i>Tải lại
-        </button>
+        <div class="cd-admin-orders-page-actions">
+            <a href="admin_stats.php" class="back-link cd-admin-orders-back-link"><i class="fa-solid fa-arrow-left"></i> Dashboard</a>
+            <button class="btn btn-primary cd-admin-orders-create-btn" type="button" onclick="orderManager.showOrderModal()">
+                <i class="fas fa-plus"></i>Tạo đơn nội bộ
+            </button>
+        </div>
     </div>
 
-    <div class="premium-toolbar">
-        <div class="input-icon-group" style="flex: 2;">
-            <label class="label">Tìm kiếm</label>
-            <div style="position: relative;">
-                <i class="fas fa-search"></i>
-                <input type="text" class="input" id="orderSearchInput" placeholder="Mã đơn, khách hàng, SĐT, công ty, địa chỉ..." oninput="orderManager.handleSearch(this.value)">
+    <div class="cd-admin-orders-stats">
+        <div class="cd-admin-orders-stat-cell">
+            <div class="admin-card cd-admin-stat-card p-3 p-md-4 h-100">
+                <div class="d-flex align-items-center gap-3">
+                    <div class="flex-shrink-0 rounded-3 d-flex align-items-center justify-content-center bg-primary bg-opacity-10 text-primary cd-admin-stat-icon">
+                        <i class="fas fa-file-invoice fa-lg"></i>
+                    </div>
+                    <div>
+                        <div class="h4 fw-bold mb-0" id="statsTotalOrders">0</div>
+                        <div class="text-muted small fw-semibold">
+                            <span class="cd-admin-stat-label-full">Tổng đơn</span>
+                            <span class="cd-admin-stat-label-short">Tổng</span>
+                        </div>
+                    </div>
+                </div>
             </div>
         </div>
-
-        <div class="input-icon-group">
-            <label class="label">Trạng thái</label>
-            <div style="position: relative;">
-                <i class="fas fa-filter"></i>
-                <select class="select" id="statusFilter" onchange="orderManager.handleFilterChange()">
-                    <option value="">Tất cả</option>
-                    <option value="pending">Mới tiếp nhận</option>
-                    <option value="accepted">Đã nhận đơn</option>
-                    <option value="shipping">Đang triển khai</option>
-                    <option value="completed">Đã hoàn thành</option>
-                    <option value="cancelled">Đã hủy</option>
-                </select>
+        <div class="cd-admin-orders-stat-cell">
+            <div class="admin-card cd-admin-stat-card p-3 p-md-4 h-100">
+                <div class="d-flex align-items-center gap-3">
+                    <div class="flex-shrink-0 rounded-3 d-flex align-items-center justify-content-center bg-warning bg-opacity-10 text-warning cd-admin-stat-icon">
+                        <i class="fas fa-spinner fa-lg"></i>
+                    </div>
+                    <div>
+                        <div class="h4 fw-bold mb-0" id="statsNewOrders">0</div>
+                        <div class="text-muted small fw-semibold">
+                            <span class="cd-admin-stat-label-full">Mới tiếp nhận</span>
+                            <span class="cd-admin-stat-label-short">Mới</span>
+                        </div>
+                    </div>
+                </div>
             </div>
         </div>
-
-        <div class="input-icon-group">
-            <label class="label">Dịch vụ</label>
-            <div style="position: relative;">
-                <i class="fas fa-truck-loading"></i>
-                <select class="select" id="serviceFilter" onchange="orderManager.handleFilterChange()">
-                    <option value="">Tất cả</option>
-                    <option value="chuyen-nha">Chuyển nhà</option>
-                    <option value="van-phong">Chuyển văn phòng</option>
-                    <option value="kho-bai">Chuyển kho bãi</option>
-                </select>
+        <div class="cd-admin-orders-stat-cell">
+            <div class="admin-card cd-admin-stat-card p-3 p-md-4 h-100">
+                <div class="d-flex align-items-center gap-3">
+                    <div class="flex-shrink-0 rounded-3 d-flex align-items-center justify-content-center bg-info bg-opacity-10 text-info cd-admin-stat-icon">
+                        <i class="fas fa-truck-moving fa-lg"></i>
+                    </div>
+                    <div>
+                        <div class="h4 fw-bold mb-0" id="statsActiveOrders">0</div>
+                        <div class="text-muted small fw-semibold">
+                            <span class="cd-admin-stat-label-full">Đang triển khai</span>
+                            <span class="cd-admin-stat-label-short">Đang</span>
+                        </div>
+                    </div>
+                </div>
             </div>
         </div>
-
-        <div class="input-icon-group">
-            <label class="label">Nhà cung cấp</label>
-            <div style="position: relative;">
-                <i class="fas fa-user-tie"></i>
-                <select class="select" id="providerFilter" onchange="orderManager.handleFilterChange()">
-                    <option value="">Tất cả</option>
-                </select>
+        <div class="cd-admin-orders-stat-cell">
+            <div class="admin-card cd-admin-stat-card p-3 p-md-4 h-100">
+                <div class="d-flex align-items-center gap-3">
+                    <div class="flex-shrink-0 rounded-3 d-flex align-items-center justify-content-center bg-success bg-opacity-10 text-success cd-admin-stat-icon">
+                        <i class="fas fa-check-double fa-lg"></i>
+                    </div>
+                    <div>
+                        <div class="h4 fw-bold mb-0" id="statsCompletedOrders">0</div>
+                        <div class="text-muted small fw-semibold">
+                            <span class="cd-admin-stat-label-full">Hoàn thành</span>
+                            <span class="cd-admin-stat-label-short">Xong</span>
+                        </div>
+                    </div>
+                </div>
             </div>
         </div>
-
-        <div class="input-icon-group">
-            <label class="label">Khảo sát trước</label>
-            <div style="position: relative;">
-                <i class="fas fa-clipboard-check"></i>
-                <select class="select" id="surveyFilter" onchange="orderManager.handleFilterChange()">
-                    <option value="">Tất cả</option>
-                    <option value="yes">Có</option>
-                    <option value="no">Không</option>
-                </select>
+        <div class="cd-admin-orders-stat-cell">
+            <div class="admin-card cd-admin-stat-card p-3 p-md-4 h-100">
+                <div class="d-flex align-items-center gap-3">
+                    <div class="flex-shrink-0 rounded-3 d-flex align-items-center justify-content-center bg-danger bg-opacity-10 text-danger cd-admin-stat-icon">
+                        <i class="fas fa-ban fa-lg"></i>
+                    </div>
+                    <div>
+                        <div class="h4 fw-bold mb-0" id="statsCancelledOrders">0</div>
+                        <div class="text-muted small fw-semibold">
+                            <span class="cd-admin-stat-label-full">Đã hủy</span>
+                            <span class="cd-admin-stat-label-short">Hủy</span>
+                        </div>
+                    </div>
+                </div>
             </div>
         </div>
-
-        <div class="input-icon-group">
-            <label class="label">Cảnh báo</label>
-            <div style="position: relative;">
-                <i class="fas fa-triangle-exclamation"></i>
-                <select class="select" id="alertFilter" onchange="orderManager.handleFilterChange()">
-                    <option value="">Tất cả</option>
-                    <option value="late">Quá SLA 120 phút</option>
-                    <option value="cancelled">Đã hủy</option>
-                </select>
-            </div>
-        </div>
-
-        <div class="input-icon-group">
-            <label class="label">Đánh giá khách</label>
-            <div style="position: relative;">
-                <i class="fas fa-star"></i>
-                <select class="select" id="feedbackFilter" onchange="orderManager.handleFilterChange()">
-                    <option value="">Tất cả</option>
-                    <option value="has-feedback">Có đánh giá</option>
-                    <option value="low-rating">Từ 3 sao trở xuống</option>
-                </select>
-            </div>
-        </div>
-
-        <div id="filterChips" class="filter-chips"></div>
     </div>
 
-    <div class="table-wrap">
-        <table>
-            <thead>
-                <tr>
-                    <th>Mã đơn & khách hàng</th>
-                    <th>Dịch vụ & lịch</th>
-                    <th>Điều phối</th>
-                    <th>Giá trị</th>
-                    <th>Trạng thái</th>
-                    <th>Thao tác</th>
-                </tr>
-            </thead>
-            <tbody id="orderListBody"></tbody>
-        </table>
+    <div class="admin-card cd-admin-orders-main">
+        <div class="cd-admin-orders-main-header">
+            <div class="cd-admin-orders-toolbar">
+                <div>
+                    <h5 class="fw-bold mb-1 cd-admin-orders-heading">Danh sách đơn hàng</h5>
+                    <p class="text-muted small mb-0 cd-admin-orders-summary">Lọc theo nhà cung cấp, khảo sát, đánh giá và cảnh báo đơn quá thời gian chờ nhận.</p>
+                </div>
+                <div class="d-flex flex-sm-row gap-2 flex-wrap">
+                    <div class="input-group order-search-wrap cd-admin-orders-search">
+                        <span class="input-group-text bg-light border-0"><i class="fas fa-search text-muted small"></i></span>
+                        <input type="text" class="form-control bg-light border-0 cd-admin-orders-search-input" id="orderSearchInput" placeholder="Mã đơn, khách hàng, SĐT, địa chỉ..." oninput="orderManager.handleSearch(this.value)">
+                    </div>
+                    <button class="btn btn-primary rounded-pill px-4 fw-semibold shadow-sm cd-admin-orders-reload-btn" type="button" onclick="orderManager.fetchOrders()">
+                        <i class="fas fa-sync-alt me-2"></i>Tải lại
+                    </button>
+                </div>
+            </div>
+
+            <div class="mt-2">
+                <ul class="nav nav-pills nav-fill order-tabs cd-admin-orders-tabs bg-light p-1 flex-column flex-md-row gap-1 w-100">
+                    <li class="nav-item">
+                        <a class="nav-link active fw-bold" href="#" id="tab-all" onclick="orderManager.handleTabFilter(''); return false;">
+                            Tất cả <span class="badge bg-secondary ms-1" id="count-all">0</span>
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link fw-bold" href="#" id="tab-pending" onclick="orderManager.handleTabFilter('pending'); return false;">
+                            Mới tiếp nhận <span class="badge bg-warning text-dark ms-1" id="count-pending">0</span>
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link fw-bold" href="#" id="tab-active" onclick="orderManager.handleTabFilter('active'); return false;">
+                            Đang triển khai <span class="badge bg-primary ms-1" id="count-active">0</span>
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link fw-bold" href="#" id="tab-completed" onclick="orderManager.handleTabFilter('completed'); return false;">
+                            Hoàn thành <span class="badge bg-success ms-1" id="count-completed">0</span>
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link fw-bold" href="#" id="tab-cancelled" onclick="orderManager.handleTabFilter('cancelled'); return false;">
+                            Đã hủy <span class="badge bg-danger ms-1" id="count-cancelled">0</span>
+                        </a>
+                    </li>
+                </ul>
+                <div id="filterChips" class="filter-chips orders-filter-chips"></div>
+            </div>
+        </div>
+
+        <div class="table-wrap cd-admin-orders-table">
+            <table class="table align-middle mb-0 cd-admin-orders-table-grid">
+                <thead class="bg-light text-muted small text-uppercase">
+                    <tr>
+                        <th class="cd-admin-orders-col-code">Mã đơn & khách hàng</th>
+                        <th class="cd-admin-orders-col-service">Dịch vụ & lịch</th>
+                        <th class="cd-admin-orders-col-provider">Điều phối</th>
+                        <th class="cd-admin-orders-col-fee">Giá trị</th>
+                        <th class="cd-admin-orders-col-status">Trạng thái</th>
+                        <th class="cd-admin-orders-col-actions">Thao tác</th>
+                    </tr>
+                </thead>
+                <tbody id="orderListBody"></tbody>
+            </table>
+        </div>
     </div>
-</section>
+</div>
 
 <div class="modal-overlay" id="orderModal">
     <div class="modal modal-wide">
@@ -569,7 +357,7 @@ require_once __DIR__ . '/../includes/header_admin.php';
                             <div class="feedback-box">
                                 <div class="feedback-score">
                                     <strong id="feedbackScore">0/5</strong>
-                                    <span style="font-size:12px; color:var(--slate-light); font-weight:700;">Đánh giá</span>
+                                    <span class="feedback-score-label">Đánh giá</span>
                                 </div>
                                 <div class="feedback-note" id="feedbackNote">Chưa có phản hồi từ khách hàng.</div>
                             </div>
@@ -579,7 +367,17 @@ require_once __DIR__ . '/../includes/header_admin.php';
                             <div id="feedbackMediaPreview" class="media-preview-list"></div>
                         </div>
                         <div class="field span-full">
-                            <label class="label">provider_report / ghi chú hiện trường</label>
+                            <label class="label">Báo cáo nhà cung cấp</label>
+                            <div class="feedback-box">
+                                <div class="feedback-score">
+                                    <strong id="providerReportStatus">Chưa có</strong>
+                                    <span class="feedback-score-label">Báo cáo</span>
+                                </div>
+                                <div class="feedback-note" id="providerReportNote">Chưa có báo cáo từ nhà cung cấp.</div>
+                            </div>
+                        </div>
+                        <div class="field span-full">
+                            <label class="label">Ảnh / video báo cáo NCC</label>
                             <div id="providerMediaPreview" class="media-preview-list"></div>
                         </div>
                     </div>
@@ -595,25 +393,25 @@ require_once __DIR__ . '/../includes/header_admin.php';
     </div>
 </div>
 
-<div class="modal-overlay" id="confirmDeleteModal" style="z-index: 1100;">
-    <div class="modal" style="max-width: 420px;">
+<div class="modal-overlay modal-overlay-delete" id="confirmDeleteModal">
+    <div class="modal modal-delete-confirm">
         <div class="modal-header">
             <h3>Xóa đơn hàng?</h3>
             <button class="btn-delete-small" type="button" onclick="orderManager.closeDeleteModal()"><i class="fas fa-times"></i></button>
         </div>
         <div class="modal-body">
-            <p style="margin:0; color:var(--slate-light); line-height:1.7;">Thao tác này chỉ nên dùng với đơn thử nghiệm hoặc dữ liệu nhập sai hoàn toàn. Với đơn thực tế, ưu tiên chuyển trạng thái sang hủy để giữ lịch sử vận hành.</p>
+            <p class="delete-confirm-copy">Thao tác này chỉ nên dùng với đơn thử nghiệm hoặc dữ liệu nhập sai hoàn toàn. Với đơn thực tế, ưu tiên chuyển trạng thái sang hủy để giữ lịch sử vận hành.</p>
         </div>
         <div class="modal-footer">
             <button class="btn btn-outline" type="button" onclick="orderManager.closeDeleteModal()">Hủy</button>
-            <button class="btn btn-primary" type="button" id="confirmDeleteBtn" style="background:var(--danger); box-shadow:none;">
+            <button class="btn btn-primary btn-danger-flat" type="button" id="confirmDeleteBtn">
                 <i class="fas fa-trash-alt"></i>Xóa vĩnh viễn
             </button>
         </div>
     </div>
 </div>
 
-<div class="toast-container" id="toastContainer" style="position: fixed; top: 100px; right: 24px; display: grid; gap: 12px; z-index: 1300;"></div>
+<div class="toast-container orders-toast-container" id="toastContainer"></div>
 
 <script src="assets/js/admin-api.js"></script>
 <script src="assets/js/orders-manage.js"></script>

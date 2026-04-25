@@ -8,7 +8,8 @@ import {
 } from "./main-booking-shared.js";
 
 const customerInvoiceDetailModule = (function (window, document) {
-  if (window.__fastGoCustomerInvoiceDetailLoaded) return window.__fastGoCustomerInvoiceDetailModule || null;
+  if (window.__fastGoCustomerInvoiceDetailLoaded)
+    return window.__fastGoCustomerInvoiceDetailModule || null;
   window.__fastGoCustomerInvoiceDetailLoaded = true;
 
   const body = document.body;
@@ -20,8 +21,7 @@ const customerInvoiceDetailModule = (function (window, document) {
   const root = document.getElementById("customer-invoice-detail-root");
   if (!root || !store) return;
   let inlineFeedbackTimer = 0;
-  const DEFAULT_CANCEL_REASON =
-    "Khách hàng chủ động hủy yêu cầu chuyển dọn.";
+  const DEFAULT_CANCEL_REASON = "Khách hàng chủ động hủy yêu cầu chuyển dọn.";
   let cancelReasonDraft = DEFAULT_CANCEL_REASON;
 
   function escapeHtml(value) {
@@ -62,7 +62,8 @@ const customerInvoiceDetailModule = (function (window, document) {
   function redirectToMatchingDetail(role, orderCode) {
     const normalizedRole = normalizeText(role).toLowerCase();
     const targetOrderCode =
-      normalizeText(orderCode) || normalizeText(core.getOrderIdentifierFromUrl?.() || "");
+      normalizeText(orderCode) ||
+      normalizeText(core.getOrderIdentifierFromUrl?.() || "");
     if (!targetOrderCode) {
       redirectToLogin();
       return;
@@ -123,12 +124,14 @@ const customerInvoiceDetailModule = (function (window, document) {
   }
 
   function getStatusMeta(invoice) {
-    return store.getBookingDisplayStatus?.(invoice?.raw_row || invoice) || {
-      key: "pending",
-      status_class: "moi",
-      status_text: "Mới tiếp nhận",
-      badge_class: "pending",
-    };
+    return (
+      store.getBookingDisplayStatus?.(invoice?.raw_row || invoice) || {
+        key: "pending",
+        status_class: "moi",
+        status_text: "Mới tiếp nhận",
+        badge_class: "pending",
+      }
+    );
   }
 
   function extractTimeTokens(value) {
@@ -152,7 +155,9 @@ const customerInvoiceDetailModule = (function (window, document) {
 
   function resolveInvoiceScheduleStartMs(invoice) {
     const rawRow =
-      invoice?.raw_row && typeof invoice.raw_row === "object" ? invoice.raw_row : {};
+      invoice?.raw_row && typeof invoice.raw_row === "object"
+        ? invoice.raw_row
+        : {};
     const scheduleDate = normalizeText(
       rawRow?.ngay_thuc_hien || invoice?.schedule_date || "",
     );
@@ -311,7 +316,9 @@ const customerInvoiceDetailModule = (function (window, document) {
 
   function renderHeroStat(label, value, note, options = {}) {
     const className = normalizeText(options.className || "");
-    const safeValue = options.valueHtml ? value || "--" : escapeHtml(value || "--");
+    const safeValue = options.valueHtml
+      ? value || "--"
+      : escapeHtml(value || "--");
     const safeNote = options.noteHtml ? note || "--" : escapeHtml(note || "--");
     const valueTag = options.valueTag || "strong";
 
@@ -349,7 +356,8 @@ const customerInvoiceDetailModule = (function (window, document) {
           return;
         }
 
-        cancelReasonDraft = String(reason || "").trim() || DEFAULT_CANCEL_REASON;
+        cancelReasonDraft =
+          String(reason || "").trim() || DEFAULT_CANCEL_REASON;
         resolve(cancelReasonDraft);
         return;
       }
@@ -474,8 +482,9 @@ const customerInvoiceDetailModule = (function (window, document) {
       const normalized = normalizeText(item).toLowerCase();
       if (!normalized) return false;
       return !(
-        /phương án xe|phuong an xe|loại xe|loai xe|xe tải|xe tai/.test(normalized) ||
-        /khảo sát trước|khao sat truoc/.test(normalized)
+        /phương án xe|phuong an xe|loại xe|loai xe|xe tải|xe tai/.test(
+          normalized,
+        ) || /khảo sát trước|khao sat truoc/.test(normalized)
       );
     });
   }
@@ -512,8 +521,12 @@ const customerInvoiceDetailModule = (function (window, document) {
       const resolved = core.getDriveResolvedUrls(normalized);
       return {
         fileId: normalizeText(resolved?.fileId || ""),
-        url: normalizeText(resolved?.downloadUrl || resolved?.url || normalized),
-        viewUrl: normalizeText(resolved?.viewUrl || resolved?.url || normalized),
+        url: normalizeText(
+          resolved?.downloadUrl || resolved?.url || normalized,
+        ),
+        viewUrl: normalizeText(
+          resolved?.viewUrl || resolved?.url || normalized,
+        ),
         thumbnailUrl: normalizeText(
           resolved?.thumbnailUrl || resolved?.url || normalized,
         ),
@@ -587,7 +600,10 @@ const customerInvoiceDetailModule = (function (window, document) {
     const merged = [];
     const seen = new Set();
 
-    [...(Array.isArray(existingValues) ? existingValues : []), ...(Array.isArray(nextValues) ? nextValues : [])]
+    [
+      ...(Array.isArray(existingValues) ? existingValues : []),
+      ...(Array.isArray(nextValues) ? nextValues : []),
+    ]
       .map((item) => normalizeText(item))
       .filter(Boolean)
       .forEach((item) => {
@@ -628,7 +644,8 @@ const customerInvoiceDetailModule = (function (window, document) {
     const removeName = options.removeName || "remove_attachment_indexes[]";
     const removeButtonLabel = options.removeButtonLabel || "Xóa media";
     const removedLabel = options.removedLabel || "Sẽ xóa khi lưu";
-    const labelPrefix = options.labelPrefix || (type === "video" ? "Video" : "Ảnh");
+    const labelPrefix =
+      options.labelPrefix || (type === "video" ? "Video" : "Ảnh");
 
     return `
       <div class="standalone-order-media-grid">
@@ -636,7 +653,8 @@ const customerInvoiceDetailModule = (function (window, document) {
           .map((item) => {
             const attachmentHref = getAttachmentHref(item.value);
             const previewUrl = getAttachmentPreviewUrl(item.value, type);
-            const attachmentName = getAttachmentFileName(item.value) || item.value;
+            const attachmentName =
+              getAttachmentFileName(item.value) || item.value;
             const mediaPreview =
               type === "image" && previewUrl
                 ? `<img src="${escapeHtml(previewUrl)}" alt="${escapeHtml(`${labelPrefix} ${item.index + 1}`)}" />`
@@ -720,20 +738,20 @@ const customerInvoiceDetailModule = (function (window, document) {
       options?.emptyMessage ||
       "Chưa có tài liệu hiện trường nào được gửi kèm cho yêu cầu này.";
     const mediaItems = [
-      ...((Array.isArray(imageItems) ? imageItems : [])
+      ...(Array.isArray(imageItems) ? imageItems : [])
         .filter(Boolean)
         .map((item, index) => ({
           type: "image",
           label: `${imageLabelPrefix} ${index + 1}`,
           value: item,
-        }))),
-      ...((Array.isArray(videoItems) ? videoItems : [])
+        })),
+      ...(Array.isArray(videoItems) ? videoItems : [])
         .filter(Boolean)
         .map((item, index) => ({
           type: "video",
           label: `${videoLabelPrefix} ${index + 1}`,
           value: item,
-        }))),
+        })),
     ];
 
     if (!mediaItems.length) {
@@ -745,22 +763,21 @@ const customerInvoiceDetailModule = (function (window, document) {
     return `
       <div class="standalone-order-media-grid">
         ${mediaItems
-          .map(
-            (item) => {
-              const attachmentValue = normalizeText(item.value);
-              const attachmentName =
-                getAttachmentFileName(attachmentValue) || attachmentValue;
-              const attachmentHref = getAttachmentHref(attachmentValue);
-              const previewUrl = getAttachmentPreviewUrl(
-                attachmentValue,
-                item.type,
-              );
-              const mediaPreview =
-                item.type === "image" && previewUrl
-                  ? `<img src="${escapeHtml(previewUrl)}" alt="${escapeHtml(item.label)}" />`
-                  : item.type === "video" && previewUrl
-                    ? `<video src="${escapeHtml(previewUrl)}" controls preload="metadata"></video>`
-                    : `<div class="standalone-order-item-icon">
+          .map((item) => {
+            const attachmentValue = normalizeText(item.value);
+            const attachmentName =
+              getAttachmentFileName(attachmentValue) || attachmentValue;
+            const attachmentHref = getAttachmentHref(attachmentValue);
+            const previewUrl = getAttachmentPreviewUrl(
+              attachmentValue,
+              item.type,
+            );
+            const mediaPreview =
+              item.type === "image" && previewUrl
+                ? `<img src="${escapeHtml(previewUrl)}" alt="${escapeHtml(item.label)}" />`
+                : item.type === "video" && previewUrl
+                  ? `<video src="${escapeHtml(previewUrl)}" controls preload="metadata"></video>`
+                  : `<div class="standalone-order-item-icon">
                         <i class="${escapeHtml(
                           item.type === "video"
                             ? "fa-solid fa-video"
@@ -768,7 +785,7 @@ const customerInvoiceDetailModule = (function (window, document) {
                         )}"></i>
                       </div>`;
 
-              return `
+            return `
               <div class="standalone-order-media-item">
                 ${mediaPreview}
                 <div class="standalone-order-media-actions">
@@ -785,8 +802,7 @@ const customerInvoiceDetailModule = (function (window, document) {
                 </div>
               </div>
             `;
-            },
-          )
+          })
           .join("")}
       </div>
     `;
@@ -814,21 +830,26 @@ const customerInvoiceDetailModule = (function (window, document) {
   }
 
   function renderPricingRows(invoice) {
-    const fallbackRows = [renderInfoRow("Chi tiết phí", "Chưa có bảng tạm tính chi tiết")];
-    const breakdown = getRenderableBookingPricingRows(invoice?.pricing_breakdown, {
-      excludeLabelPatterns: [/loai xe|xe tai|binh thuong/i],
-    });
+    const fallbackRows = [
+      renderInfoRow("Chi tiết phí", "Chưa có bảng tạm tính chi tiết"),
+    ];
+    const breakdown = getRenderableBookingPricingRows(
+      invoice?.pricing_breakdown,
+      {
+        excludeLabelPatterns: [/loai xe|xe tai|binh thuong/i],
+      },
+    );
 
     if (!breakdown.length) {
       return fallbackRows.join("");
     }
 
     const rows = breakdown.map((item, index) =>
-        renderInfoRow(
-          item.label || `Hạng mục ${index + 1}`,
-          item.amount || formatCurrency(item.amount_value || 0),
-        ),
-      );
+      renderInfoRow(
+        item.label || `Hạng mục ${index + 1}`,
+        item.amount || formatCurrency(item.amount_value || 0),
+      ),
+    );
 
     if (!rows.length) {
       return fallbackRows.join("");
@@ -850,7 +871,10 @@ const customerInvoiceDetailModule = (function (window, document) {
 
     if (isExpiredPending) {
       entries.push({
-        time: invoice.schedule_label || invoice.schedule_date || "Quá thời gian thực hiện",
+        time:
+          invoice.schedule_label ||
+          invoice.schedule_date ||
+          "Quá thời gian thực hiện",
         title: "Yêu cầu tự hủy",
         note: "Đơn đã quá thời gian thực hiện nhưng chưa được xử lý nên hệ thống tự động hủy.",
       });
@@ -886,7 +910,8 @@ const customerInvoiceDetailModule = (function (window, document) {
       statusMeta.key === "cancelled"
     ) {
       entries.push({
-        time: invoice?.cancelled_at || invoice?.updated_at || invoice?.created_at,
+        time:
+          invoice?.cancelled_at || invoice?.updated_at || invoice?.created_at,
         title: "Yêu cầu bị hủy",
         note: "Đơn hàng đã được đánh dấu hủy trên hệ thống.",
       });
@@ -930,10 +955,12 @@ const customerInvoiceDetailModule = (function (window, document) {
       <span class="standalone-order-rating-stars" aria-label="${escapeHtml(
         `${safeRating}/5 sao`,
       )}">
-        ${Array.from({ length: 5 }, (_, index) =>
-          `<i class="${escapeHtml(
-            index < safeRating ? "fa-solid fa-star" : "fa-regular fa-star",
-          )}"></i>`,
+        ${Array.from(
+          { length: 5 },
+          (_, index) =>
+            `<i class="${escapeHtml(
+              index < safeRating ? "fa-solid fa-star" : "fa-regular fa-star",
+            )}"></i>`,
         ).join("")}
       </span>
     `;
@@ -992,17 +1019,17 @@ const customerInvoiceDetailModule = (function (window, document) {
     return `
       <details class="standalone-order-fold">
         <summary class="standalone-order-fold-summary">
-          <span>Ghi chú NCC</span>
-          <small>${escapeHtml(providerNote ? "Đã cập nhật" : "Chưa có ghi chú")}</small>
+          <span>Báo cáo nhà cung cấp</span>
+          <small>${escapeHtml(providerNote ? "Đã gửi" : "Chưa có")}</small>
         </summary>
         <section class="standalone-order-block standalone-order-block-fold">
           <article class="standalone-order-subcard">
             <div class="standalone-order-subcard-head">
-              <strong>Ghi chú</strong>
-              ${providerNote ? `<span class="standalone-order-chip">${escapeHtml("Đã cập nhật")}</span>` : ""}
+              <strong>Báo cáo nhà cung cấp</strong>
+              ${providerNote ? `<span class="standalone-order-chip">${escapeHtml("Đã gửi")}</span>` : ""}
             </div>
             <p class="standalone-order-note-text">${escapeHtml(
-              providerNote || "Chưa có ghi chú",
+              providerNote || "Chưa có báo cáo từ nhà cung cấp.",
             )}</p>
             ${renderAttachmentGallery(
               providerReportImageAttachments,
@@ -1010,7 +1037,7 @@ const customerInvoiceDetailModule = (function (window, document) {
               {
                 imageLabelPrefix: "Ảnh báo cáo",
                 videoLabelPrefix: "Video báo cáo",
-                emptyMessage: "Chưa có ảnh/video.",
+                emptyMessage: "Chưa có ảnh/video báo cáo.",
               },
             )}
           </article>
@@ -1070,7 +1097,11 @@ const customerInvoiceDetailModule = (function (window, document) {
         <summary class="standalone-order-fold-summary">
           <span>Phản hồi khách hàng</span>
           <small>${escapeHtml(
-            safeRating > 0 ? `${safeRating}/5 sao` : canSubmit ? "Sẵn sàng" : "Chưa mở",
+            safeRating > 0
+              ? `${safeRating}/5 sao`
+              : canSubmit
+                ? "Sẵn sàng"
+                : "Chưa mở",
           )}</small>
         </summary>
         <section class="standalone-order-block standalone-order-block-fold">
@@ -1167,7 +1198,7 @@ const customerInvoiceDetailModule = (function (window, document) {
             message ||
               "Mã yêu cầu không hợp lệ, không thuộc tài khoản hiện tại hoặc dữ liệu đặt lịch chưa có trong nguồn đang dùng.",
           )}</p>
-          <div class="standalone-order-inline-actions" style="justify-content:center; margin-top:18px;">
+          <div class="standalone-order-inline-actions standalone-order-inline-actions-centered">
             <a class="customer-btn customer-btn-primary" href="${escapeHtml(
               getProjectUrl("khach-hang/danh-sach-don-hang-chuyendon.html"),
             )}">Quay lại danh sách đơn hàng</a>
@@ -1175,6 +1206,15 @@ const customerInvoiceDetailModule = (function (window, document) {
         </div>
       </div>
     `;
+  }
+
+  function applyProgressRings(scope) {
+    (scope || document)
+      .querySelectorAll(".standalone-order-progress-ring[data-progress]")
+      .forEach((node) => {
+        const value = Number(node.getAttribute("data-progress") || 0);
+        node.style.setProperty("--progress", `${value}%`);
+      });
   }
 
   function renderInvoice(data) {
@@ -1202,6 +1242,13 @@ const customerInvoiceDetailModule = (function (window, document) {
     );
     const completedTimeLabel = formatDateTime(invoice?.completed_at || "");
     const scheduleSummary = buildScheduleSummary(invoice);
+    const shouldShowScheduleSummary = Boolean(
+      scheduleSummary &&
+      !isCancelled &&
+      !isCompleted &&
+      !normalizeText(invoice?.accepted_at || "") &&
+      !normalizeText(invoice?.started_at || ""),
+    );
     root.innerHTML = `
       <div class="standalone-order-layout">
         <section class="standalone-order-unified-card">
@@ -1251,7 +1298,7 @@ const customerInvoiceDetailModule = (function (window, document) {
                     <div class="standalone-order-hero-side-progress">
                       <div class="standalone-order-progress-ring status-${escapeHtml(
                         progressMeta.tone,
-                      )}" style="--progress:${escapeHtml(String(progressMeta.percent))}%;">
+                      )}" data-progress="${escapeHtml(String(progressMeta.percent))}">
                         <div class="standalone-order-progress-ring-core">
                           <strong>${escapeHtml(String(progressMeta.percent))}%</strong>
                           <span>Tiến độ</span>
@@ -1260,7 +1307,11 @@ const customerInvoiceDetailModule = (function (window, document) {
                       <div class="standalone-order-progress-info">
                         <p class="standalone-order-progress-label">Trạng thái đơn hàng</p>
                         <div class="standalone-order-progress-status-row">${statusBadge}</div>
-                        <time>Thực hiện: ${escapeHtml(scheduleSummary)}</time>
+                        ${
+                          shouldShowScheduleSummary
+                            ? `<time>Thực hiện: ${escapeHtml(scheduleSummary)}</time>`
+                            : ""
+                        }
                         ${
                           isCancelled
                             ? `<time>Hủy lúc ${escapeHtml(cancelledTimeLabel)}</time>`
@@ -1286,7 +1337,9 @@ const customerInvoiceDetailModule = (function (window, document) {
                         : ""
                     }
                     <a class="customer-btn customer-btn-ghost" href="${escapeHtml(
-                      getProjectUrl("khach-hang/danh-sach-don-hang-chuyendon.html"),
+                      getProjectUrl(
+                        "khach-hang/danh-sach-don-hang-chuyendon.html",
+                      ),
                     )}">Về lịch sử đơn</a>
                   </div>
                   ${renderHeroRouteCard(invoice)}
@@ -1438,6 +1491,7 @@ const customerInvoiceDetailModule = (function (window, document) {
         </section>
       </div>
     `;
+    applyProgressRings(root);
 
     root
       .querySelector("[data-invoice-cancel]")
@@ -1502,15 +1556,52 @@ const customerInvoiceDetailModule = (function (window, document) {
           const videoFiles = collectFiles(
             form.querySelector('input[name="customer_feedback_video"]'),
           );
+          const orderId = normalizeText(
+            invoice?.remote_id || invoice?.id || "",
+          );
+          const padNumber = (v) => String(v).padStart(2, "0");
+          const timestamp = (() => {
+            const now = new Date();
+            return (
+              now.getFullYear() +
+              padNumber(now.getMonth() + 1) +
+              padNumber(now.getDate()) +
+              "_" +
+              padNumber(now.getHours()) +
+              padNumber(now.getMinutes()) +
+              padNumber(now.getSeconds())
+            );
+          })();
+
+          const nameBuilder = (file) => {
+            let rawId = String(orderId || "").trim();
+            if (rawId.includes("-")) {
+              rawId = rawId.split("-").pop();
+            }
+            const finalId = rawId.length > 0 ? rawId.padStart(7, "0") : rawId;
+            const originalName = String(file?.name || "").trim();
+            const nameWithoutExt = originalName.replace(/\.[^/.]+$/, "");
+            const extension = originalName.split(".").pop().toLowerCase();
+            const sanitizedName = nameWithoutExt
+              .toLowerCase()
+              .replace(/[^a-z0-9]+/g, "-")
+              .replace(/^-+|-+$/g, "");
+
+            return `${finalId}_dich_vu_chuyen_don_${timestamp}_${sanitizedName}.${extension}`;
+          };
+
           let mediaWarning = "";
           let uploadedImageLinks = [];
           let uploadedVideoLinks = [];
           if (imageFiles.length) {
             try {
-              uploadedImageLinks = (await core.uploadFilesToDrive(imageFiles, {
-                proxyFile: "khach-hang/upload.php",
-                uploadKind: "order_media",
-              }))
+              uploadedImageLinks = (
+                await core.uploadFilesToDrive(imageFiles, {
+                  proxyFile: "khach-hang/upload.php",
+                  uploadKind: "order_media",
+                  nameBuilder,
+                })
+              )
                 .map((item) =>
                   normalizeText(item?.url || item?.download_url || ""),
                 )
@@ -1523,10 +1614,13 @@ const customerInvoiceDetailModule = (function (window, document) {
           }
           if (videoFiles.length) {
             try {
-              uploadedVideoLinks = (await core.uploadFilesToDrive(videoFiles, {
-                proxyFile: "khach-hang/upload.php",
-                uploadKind: "order_media",
-              }))
+              uploadedVideoLinks = (
+                await core.uploadFilesToDrive(videoFiles, {
+                  proxyFile: "khach-hang/upload.php",
+                  uploadKind: "order_media",
+                  nameBuilder,
+                })
+              )
                 .map((item) =>
                   normalizeText(item?.url || item?.download_url || ""),
                 )
@@ -1536,7 +1630,9 @@ const customerInvoiceDetailModule = (function (window, document) {
               mediaWarning = [
                 mediaWarning,
                 "Video đánh giá chưa được tải lên Google Drive; nội dung đánh giá vẫn được lưu.",
-              ].filter(Boolean).join(" ");
+              ]
+                .filter(Boolean)
+                .join(" ");
             }
           }
           const baseImageAttachments = filterAttachmentValuesByIndexes(
@@ -1557,15 +1653,18 @@ const customerInvoiceDetailModule = (function (window, document) {
           );
           let result = null;
           try {
-            result = await store.saveBookingFeedback?.({
-              id: invoice.remote_id || "",
-              code: invoice.code || "",
-            }, {
-              customer_rating: formData.get("customer_rating") || 0,
-              customer_feedback: formData.get("customer_feedback") || "",
-              customer_feedback_image_attachments: mergedImageAttachments,
-              customer_feedback_video_attachments: mergedVideoAttachments,
-            });
+            result = await store.saveBookingFeedback?.(
+              {
+                id: invoice.remote_id || "",
+                code: invoice.code || "",
+              },
+              {
+                customer_rating: formData.get("customer_rating") || 0,
+                customer_feedback: formData.get("customer_feedback") || "",
+                customer_feedback_image_attachments: mergedImageAttachments,
+                customer_feedback_video_attachments: mergedVideoAttachments,
+              },
+            );
           } catch (krudError) {
             console.error("Cannot save customer feedback to KRUD:", krudError);
             throw new Error(
@@ -1581,7 +1680,10 @@ const customerInvoiceDetailModule = (function (window, document) {
             mediaWarning ? "warning" : "success",
           );
         } catch (error) {
-          core.notify(error?.message || "Không thể lưu đánh giá ở thời điểm hiện tại.", "error");
+          core.notify(
+            error?.message || "Không thể lưu đánh giá ở thời điểm hiện tại.",
+            "error",
+          );
         } finally {
           const form = event.currentTarget;
           const submitButton =
@@ -1619,7 +1721,9 @@ const customerInvoiceDetailModule = (function (window, document) {
     });
 
     root.querySelectorAll("[data-rating-input]").forEach((ratingRoot) => {
-      const hiddenInput = ratingRoot.querySelector('input[name="customer_rating"]');
+      const hiddenInput = ratingRoot.querySelector(
+        'input[name="customer_rating"]',
+      );
       const captionNode = ratingRoot.querySelector("[data-rating-caption]");
       const buttons = Array.from(
         ratingRoot.querySelectorAll("[data-rating-value]"),
@@ -1679,10 +1783,11 @@ const customerInvoiceDetailModule = (function (window, document) {
   }
 
   (async function bootstrapInvoiceDetail() {
-    const auth = core.getOrderDetailAccessCredentials?.() || core.getUrlAuthCredentials?.() || {
-      username: "",
-      password: "",
-    };
+    const auth = core.getOrderDetailAccessCredentials?.() ||
+      core.getUrlAuthCredentials?.() || {
+        username: "",
+        password: "",
+      };
     await store.autoAuthFromUrlCredentials?.(auth);
 
     const orderCode = core.getOrderIdentifierFromUrl?.() || "";
@@ -1726,5 +1831,3 @@ const customerInvoiceDetailModule = (function (window, document) {
 })(window, document);
 
 export default customerInvoiceDetailModule;
-
-

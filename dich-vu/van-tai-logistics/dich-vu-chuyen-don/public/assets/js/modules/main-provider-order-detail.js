@@ -224,7 +224,7 @@ const providerOrderDetailModule = (function (window, document) {
     const refresh = () => {
       const files = Array.from(input.files || []);
       output.textContent = files.length
-        ? `Đã chọn: ${files.map((file) => file.name).join(", ")}`
+        ? `Đã chọn: ${files.length} tệp`
         : emptyText;
     };
 
@@ -1008,6 +1008,15 @@ const providerOrderDetailModule = (function (window, document) {
     `;
   }
 
+  function applyProgressRings(scope) {
+    (scope || document)
+      .querySelectorAll(".standalone-order-progress-ring[data-progress]")
+      .forEach((node) => {
+        const value = Number(node.getAttribute("data-progress") || 0);
+        node.style.setProperty("--progress", `${value}%`);
+      });
+  }
+
   function renderProviderNoteBlock(detail) {
     const note = normalizeText(detail?.order?.provider_note || "");
     const providerReportImageAttachments = Array.isArray(
@@ -1028,40 +1037,42 @@ const providerOrderDetailModule = (function (window, document) {
       ? "Cập nhật tiến độ, vấn đề hiện trường hoặc lưu ý cần khách hàng theo dõi."
       : milestones.cancelledAt
         ? "Đơn đã hủy nên không thể cập nhật thêm."
-        : "Chỉ có thể thêm ghi chú sau khi đơn đã được nhận.";
+        : "Chỉ có thể thêm báo cáo sau khi đơn đã được nhận.";
+    const hasReportContent =
+      !!note ||
+      providerReportImageAttachments.length > 0 ||
+      providerReportVideoAttachments.length > 0;
+    const statusText = canEditNote
+      ? hasReportContent
+        ? "Đang cập nhật"
+        : "Sẵn sàng"
+      : hasReportContent
+        ? "Đã gửi"
+        : "Chưa có";
 
     return `
-      <section class="standalone-order-block">
+      <details class="standalone-order-fold">
+        <summary class="standalone-order-fold-summary">
+          <span>Báo cáo nhà cung cấp</span>
+          <small>${escapeHtml(statusText)}</small>
+        </summary>
+        <section class="standalone-order-block standalone-order-block-fold">
         <div class="standalone-order-block-header">
           <p class="standalone-order-block-kicker">Báo cáo</p>
-          <h2>Ghi chú NCC</h2>
+          <h2>Báo cáo nhà cung cấp</h2>
         </div>
-        <div class="standalone-order-side-stack standalone-order-review-layout">
+        <div class="standalone-order-side-stack standalone-order-review-layout standalone-order-review-layout-inline">
           <article class="standalone-order-subcard">
             <div class="standalone-order-subcard-head">
-              <strong>Ghi chú</strong>
-            </div>
-            <p class="standalone-order-note-text">${escapeHtml(note || "Chưa có ghi chú")}</p>
-            ${canEditNote ? "" : renderAttachmentGallery(
-              providerReportImageAttachments,
-              providerReportVideoAttachments,
-              {
-                imageLabelPrefix: "Ảnh báo cáo",
-                videoLabelPrefix: "Video báo cáo",
-                emptyMessage: "Chưa có ảnh/video.",
-              },
-            )}
-          </article>
-          <article class="standalone-order-subcard">
-            <div class="standalone-order-subcard-head">
-              <strong>Cập nhật</strong>
+              <strong>${escapeHtml(canEditNote ? "Cập nhật báo cáo" : "Báo cáo nhà cung cấp")}</strong>
+              <span class="standalone-order-chip">${escapeHtml(statusText)}</span>
             </div>
             ${
               canEditNote
                 ? `
                   <form class="standalone-order-form" data-provider-note-form>
                     <label class="standalone-order-field">
-                      <span>Ghi chú xử lý</span>
+                      <span>Nội dung báo cáo</span>
                       <textarea name="provider_note" rows="5" placeholder="${escapeHtml(helperText)}">${escapeHtml(note)}</textarea>
                     </label>
                     <div class="standalone-order-upload-grid">
@@ -1105,19 +1116,27 @@ const providerOrderDetailModule = (function (window, document) {
                       </div>
                     </div>
                     <div class="standalone-order-inline-actions">
-                      <button class="customer-btn customer-btn-primary" type="submit">Lưu ghi chú NCC</button>
+                      <button class="customer-btn customer-btn-primary" type="submit">Lưu báo cáo NCC</button>
                     </div>
                   </form>
                 `
-                : `<div class="standalone-order-note-panel">
-                    <p>${escapeHtml(
-                      note ? "Chỉ xem" : helperText,
-                    )}</p>
-                  </div>`
+                : `
+                  <p class="standalone-order-note-text">${escapeHtml(note || helperText)}</p>
+                  ${renderAttachmentGallery(
+                    providerReportImageAttachments,
+                    providerReportVideoAttachments,
+                    {
+                      imageLabelPrefix: "Ảnh báo cáo",
+                      videoLabelPrefix: "Video báo cáo",
+                      emptyMessage: "Chưa có ảnh/video báo cáo.",
+                    },
+                  )}
+                `
             }
           </article>
         </div>
       </section>
+      </details>
     `;
   }
 
@@ -1136,6 +1155,13 @@ const providerOrderDetailModule = (function (window, document) {
       milestones.completedAt || order.completed_at || "",
     );
     const scheduleSummary = buildScheduleSummary(order);
+    const shouldShowScheduleSummary = Boolean(
+      scheduleSummary &&
+        !isCancelled &&
+        !isCompleted &&
+        !milestones.acceptedAt &&
+        !milestones.startedAt,
+    );
     currentDetailSignature = getDetailRenderSignature(detail);
 
     root.innerHTML = `
@@ -1183,7 +1209,7 @@ const providerOrderDetailModule = (function (window, document) {
                     <div class="standalone-order-hero-side-progress">
                       <div class="standalone-order-progress-ring status-${escapeHtml(
                         progressMeta.tone,
-                      )}" style="--progress:${escapeHtml(String(progressMeta.percent))}%;">
+                      )}" data-progress="${escapeHtml(String(progressMeta.percent))}">
                         <div class="standalone-order-progress-ring-core">
                           <strong>${escapeHtml(String(progressMeta.percent))}%</strong>
                           <span>Tiến độ</span>
@@ -1192,7 +1218,11 @@ const providerOrderDetailModule = (function (window, document) {
                       <div class="standalone-order-progress-info">
                         <p class="standalone-order-progress-label">Trạng thái đơn hàng</p>
                         <div class="standalone-order-progress-status-row">${statusBadge}</div>
-                        <time>Thực hiện: ${escapeHtml(scheduleSummary)}</time>
+                        ${
+                          shouldShowScheduleSummary
+                            ? `<time>Thực hiện: ${escapeHtml(scheduleSummary)}</time>`
+                            : ""
+                        }
                         ${
                           isCancelled
                             ? `<time>Hủy lúc ${escapeHtml(cancelledTimeLabel)}</time>`
@@ -1350,6 +1380,7 @@ const providerOrderDetailModule = (function (window, document) {
         </section>
       </div>
     `;
+    applyProgressRings(root);
 
     root.querySelectorAll("[data-order-action]").forEach((button) => {
       button.addEventListener("click", async function () {
@@ -1397,6 +1428,38 @@ const providerOrderDetailModule = (function (window, document) {
         const videoFiles = collectFiles(
           form.querySelector('input[name="provider_note_video"]'),
         );
+        const orderId = normalizeText(detail?.order?.id || "");
+        const padNumber = (v) => String(v).padStart(2, "0");
+        const timestamp = (() => {
+          const now = new Date();
+          return (
+            now.getFullYear() +
+            padNumber(now.getMonth() + 1) +
+            padNumber(now.getDate()) +
+            "_" +
+            padNumber(now.getHours()) +
+            padNumber(now.getMinutes()) +
+            padNumber(now.getSeconds())
+          );
+        })();
+
+        const nameBuilder = (file) => {
+          let rawId = String(orderId || "").trim();
+          if (rawId.includes("-")) {
+            rawId = rawId.split("-").pop();
+          }
+          const finalId = rawId.length > 0 ? rawId.padStart(7, "0") : rawId;
+          const originalName = String(file?.name || "").trim();
+          const nameWithoutExt = originalName.replace(/\.[^/.]+$/, "");
+          const extension = originalName.split(".").pop().toLowerCase();
+          const sanitizedName = nameWithoutExt
+            .toLowerCase()
+            .replace(/[^a-z0-9]+/g, "-")
+            .replace(/^-+|-+$/g, "");
+
+          return `${finalId}_dich_vu_chuyen_don_${timestamp}_${sanitizedName}.${extension}`;
+        };
+
         let mediaWarning = "";
         let uploadedImageLinks = [];
         let uploadedVideoLinks = [];
@@ -1405,6 +1468,7 @@ const providerOrderDetailModule = (function (window, document) {
             uploadedImageLinks = (await core.uploadFilesToDrive(imageFiles, {
               proxyFile: "nha-cung-cap/upload.php",
               uploadKind: "order_media",
+              nameBuilder,
             }))
               .map((item) =>
                 normalizeText(item?.url || item?.download_url || ""),
@@ -1413,7 +1477,7 @@ const providerOrderDetailModule = (function (window, document) {
           } catch (error) {
             console.error("Cannot upload provider report images:", error);
             mediaWarning =
-              "Ảnh báo cáo chưa được tải lên Google Drive; ghi chú vẫn được lưu.";
+              "Ảnh báo cáo chưa được tải lên Google Drive; báo cáo vẫn được lưu.";
           }
         }
         if (videoFiles.length) {
@@ -1421,6 +1485,7 @@ const providerOrderDetailModule = (function (window, document) {
             uploadedVideoLinks = (await core.uploadFilesToDrive(videoFiles, {
               proxyFile: "nha-cung-cap/upload.php",
               uploadKind: "order_media",
+              nameBuilder,
             }))
               .map((item) =>
                 normalizeText(item?.url || item?.download_url || ""),
@@ -1430,7 +1495,7 @@ const providerOrderDetailModule = (function (window, document) {
             console.error("Cannot upload provider report videos:", error);
             mediaWarning = [
               mediaWarning,
-              "Video báo cáo chưa được tải lên Google Drive; ghi chú vẫn được lưu.",
+              "Video báo cáo chưa được tải lên Google Drive; báo cáo vẫn được lưu.",
             ].filter(Boolean).join(" ");
           }
         }
@@ -1462,14 +1527,14 @@ const providerOrderDetailModule = (function (window, document) {
           console.error("Cannot save provider note to KRUD:", krudError);
           throw new Error(
             uploadedImageLinks.length || uploadedVideoLinks.length
-              ? "Ảnh/video có thể đã tải lên Google Drive, nhưng ghi chú chưa được lưu vào hệ thống."
+              ? "Ảnh/video có thể đã tải lên Google Drive, nhưng báo cáo chưa được lưu vào hệ thống."
               : krudError?.message ||
-                  "Không thể lưu ghi chú nhà cung cấp vào hệ thống lúc này.",
+                  "Không thể lưu báo cáo nhà cung cấp vào hệ thống lúc này.",
           );
         }
         const nextRow = await fetchBookingRowByCode(order.code || "");
         if (!nextRow) {
-          throw new Error("Không thể tải lại đơn hàng sau khi lưu ghi chú.");
+          throw new Error("Không thể tải lại đơn hàng sau khi lưu báo cáo.");
         }
         render(normalizeDetail(nextRow));
         core.notify(
@@ -1478,14 +1543,14 @@ const providerOrderDetailModule = (function (window, document) {
         );
       } catch (error) {
         console.error("Cannot save provider note:", error);
-        core.notify(error?.message || "Không thể lưu ghi chú nhà cung cấp lúc này.", "error");
+        core.notify(error?.message || "Không thể lưu báo cáo nhà cung cấp lúc này.", "error");
       } finally {
         const form = event.currentTarget;
         const submitButton =
           form.querySelector('button[type="submit"]') || null;
         if (submitButton) {
           submitButton.disabled = false;
-          submitButton.textContent = "Lưu ghi chú NCC";
+          submitButton.textContent = "Lưu báo cáo NCC";
         }
       }
     });

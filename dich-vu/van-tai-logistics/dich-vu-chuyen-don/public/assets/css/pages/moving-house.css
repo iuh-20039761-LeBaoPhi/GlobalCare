@@ -1771,6 +1771,50 @@ body[data-page="provider-jobs"] .customer-order-actions-compact .customer-btn {
   font-size: 12px;
 }
 
+body[data-page="customer-history"] .customer-orders-panel,
+body[data-page="provider-jobs"] .customer-orders-panel {
+  border-radius: 18px;
+  box-shadow: 0 12px 28px rgba(10, 42, 102, 0.05);
+  padding: 18px;
+}
+
+body[data-page="customer-history"] .customer-panel-head,
+body[data-page="provider-jobs"] .customer-panel-head {
+  margin-bottom: 14px;
+  gap: 14px;
+}
+
+body[data-page="customer-history"] .customer-panel-subtext,
+body[data-page="provider-jobs"] .customer-panel-subtext {
+  font-size: 13px;
+  line-height: 1.4;
+}
+
+body[data-page="customer-history"] .customer-filter-form-orders-shared,
+body[data-page="provider-jobs"] .customer-filter-form-orders-shared {
+  grid-template-columns: minmax(0, 1.5fr) minmax(180px, 0.7fr) minmax(180px, 0.7fr) auto;
+  align-items: end;
+}
+
+body[data-page="customer-history"] .customer-filter-form-orders-shared label,
+body[data-page="provider-jobs"] .customer-filter-form-orders-shared label {
+  gap: 6px;
+}
+
+body[data-page="customer-history"] .customer-filter-form-orders-shared input,
+body[data-page="customer-history"] .customer-filter-form-orders-shared select,
+body[data-page="provider-jobs"] .customer-filter-form-orders-shared input,
+body[data-page="provider-jobs"] .customer-filter-form-orders-shared select {
+  padding: 10px 12px;
+  border-radius: 10px;
+  background: #ffffff;
+}
+
+body[data-page="customer-history"] .customer-empty-state,
+body[data-page="provider-jobs"] .customer-empty-state {
+  gap: 12px;
+}
+
 body[data-page="provider-jobs"] .customer-filter-form {
   gap: 10px;
   margin-bottom: 0;
@@ -1890,6 +1934,27 @@ body[data-page="provider-profile"] .customer-form-group {
 }
 
 @media (max-width: 860px) {
+  body[data-page="customer-history"] .customer-filter-form-orders-shared {
+    grid-template-columns: minmax(0, 1fr) minmax(180px, 0.8fr) auto;
+  }
+
+  body[data-page="customer-history"] .customer-filter-form-orders-shared .customer-filter-field-search {
+    grid-column: 1 / -1;
+  }
+
+  body[data-page="customer-history"] .customer-filter-form-orders-shared .customer-filter-field-survey {
+    grid-column: 1 / 2;
+  }
+
+  body[data-page="customer-history"] .customer-filter-form-orders-shared .customer-filter-field-status {
+    grid-column: 2 / 3;
+  }
+
+  body[data-page="customer-history"] .customer-filter-form-orders-shared .customer-filter-actions {
+    grid-column: 3 / 4;
+    justify-content: flex-end;
+  }
+
   body[data-page="provider-jobs"] .provider-filter-form-jobs {
     grid-template-columns: minmax(0, 1fr) minmax(180px, 0.8fr) auto;
   }
@@ -1935,6 +2000,32 @@ body[data-page="provider-profile"] .customer-form-group {
   body[data-page="provider-jobs"] .customer-panel,
   body[data-page="provider-profile"] .customer-profile-card {
     padding: 16px;
+  }
+
+  body[data-page="customer-history"] .customer-filter-form-orders-shared {
+    grid-template-columns: minmax(0, 1.45fr) minmax(104px, 0.8fr) minmax(104px, 0.8fr);
+    align-items: end;
+  }
+
+  body[data-page="customer-history"] .customer-filter-form-orders-shared .customer-filter-field-search {
+    grid-column: 1 / 2;
+  }
+
+  body[data-page="customer-history"] .customer-filter-form-orders-shared .customer-filter-field-survey {
+    grid-column: 2 / 3;
+  }
+
+  body[data-page="customer-history"] .customer-filter-form-orders-shared .customer-filter-field-status {
+    grid-column: 3 / 4;
+  }
+
+  body[data-page="customer-history"] .customer-filter-form-orders-shared .customer-filter-actions {
+    grid-column: 1 / -1;
+    justify-content: flex-start;
+  }
+
+  body[data-page="customer-history"] .customer-filter-form-orders-shared label span {
+    font-size: 11px;
   }
 
   body[data-page="provider-jobs"] .provider-filter-form-jobs {

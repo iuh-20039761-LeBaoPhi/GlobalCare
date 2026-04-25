@@ -1,0 +1,73 @@
+body.admin-order-detail-page {
+    margin: 0;
+    padding: 0;
+    background: #f8fafc;
+}
+
+.admin-back-bar {
+    background: #1e293b;
+    color: #fff;
+    padding: 10px 20px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 12px;
+    position: sticky;
+    top: 0;
+    z-index: 9999;
+    font-family: "Be Vietnam Pro", sans-serif;
+    font-size: 14px;
+}
+
+.admin-back-btn {
+    background: rgba(255, 255, 255, 0.1);
+    color: #fff;
+    text-decoration: none;
+    padding: 6px 15px;
+    border-radius: 6px;
+    transition: all 0.2s;
+    display: inline-flex;
+    align-items: center;
+}
+
+.admin-back-btn:hover {
+    background: rgba(255, 255, 255, 0.2);
+}
+
+.admin-order-detail-page .standalone-order-shell {
+    padding-top: 0 !important;
+}
+
+.admin-order-detail-page .standalone-order-layout {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 20px;
+}
+
+.admin-standalone-topbar {
+    background: linear-gradient(135deg, #1e293b, #334155);
+    color: #fff;
+}
+
+.admin-standalone-topbar .standalone-order-topbar-title {
+    color: #fff;
+}
+
+.admin-detail-chip-group {
+    margin-top: 10px;
+}
+
+.admin-detail-star {
+    color: #f59e0b;
+}
+
+@media (max-width: 768px) {
+    .admin-back-bar {
+        flex-direction: column;
+        align-items: flex-start;
+    }
+
+    .admin-order-detail-page .standalone-order-layout {
+        padding: 16px;
+    }
+}

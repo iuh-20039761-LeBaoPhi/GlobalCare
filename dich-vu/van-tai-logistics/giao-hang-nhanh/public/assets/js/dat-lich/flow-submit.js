@@ -22,6 +22,9 @@ function chon_tuy_chon(groupId, btn) {
   document.getElementById(inputId).value = btn.dataset.val;
 }
 
+let reviewUploadObjectUrls = [];
+let uploadSelectionObjectUrls = [];
+
 function chuyen_den_buoc(step) {
   if (step < 1 || step > 5) return;
   for (let i = 1; i <= 5; i++) {
@@ -98,7 +101,10 @@ function xac_thuc_buoc_2() {
       return false;
     }
     if (!it.ten_hang) {
-      hien_thi_loi(2, `Vui lòng nhập tên hàng cụ thể cho kiện hàng thứ ${i + 1}.`);
+      hien_thi_loi(
+        2,
+        `Vui lòng nhập tên hàng cụ thể cho kiện hàng thứ ${i + 1}.`,
+      );
       return false;
     }
     if ((it.so_luong || 0) <= 0) {
@@ -155,17 +161,17 @@ function xac_thuc_buoc_3() {
   const parsedPickupSlot =
     findPickupSlotOptionByValue(pSlot) || parsePickupSlotInput(pSlot);
   if (!parsedPickupSlot) {
-    hien_thi_loi(3, "Khung giờ lấy hàng không hợp lệ. Vui lòng nhập theo dạng HH:mm - HH:mm.");
+    hien_thi_loi(
+      3,
+      "Khung giờ lấy hàng không hợp lệ. Vui lòng nhập theo dạng HH:mm - HH:mm.",
+    );
     return false;
   }
 
   const pickupStartMinutes = timeTextToMinutes(parsedPickupSlot.start);
   const pickupEndMinutes = timeTextToMinutes(parsedPickupSlot.end);
   if (pickupEndMinutes <= pickupStartMinutes) {
-    hien_thi_loi(
-      3,
-      "Khung giờ phải kết thúc sau giờ bắt đầu trong cùng ngày.",
-    );
+    hien_thi_loi(3, "Khung giờ phải kết thúc sau giờ bắt đầu trong cùng ngày.");
     return false;
   }
 
@@ -186,7 +192,10 @@ function xac_thuc_buoc_3() {
     const now = getCurrentDateTime();
 
     if (!pickupRange) {
-      hien_thi_loi(3, "Khung giờ lấy hàng không hợp lệ. Vui lòng nhập theo dạng HH:mm - HH:mm.");
+      hien_thi_loi(
+        3,
+        "Khung giờ lấy hàng không hợp lệ. Vui lòng nhập theo dạng HH:mm - HH:mm.",
+      );
       return false;
     }
 
@@ -314,13 +323,19 @@ function getSelectedUploadFiles() {
   return [
     {
       type: "image",
-      file: document.getElementById("hinh_anh_hang_hoa")?.files?.[0] || null,
+      files: Array.from(
+        document.getElementById("hinh_anh_hang_hoa")?.files || [],
+      ),
     },
     {
       type: "video",
-      file: document.getElementById("video_hang_hoa")?.files?.[0] || null,
+      files: Array.from(document.getElementById("video_hang_hoa")?.files || []),
     },
-  ].filter((entry) => entry.file);
+  ].flatMap((group) =>
+    group.files
+      .filter((file) => file instanceof File)
+      .map((file) => ({ type: group.type, file })),
+  );
 }
 
 function clearReviewUploadObjectUrls() {
@@ -332,6 +347,77 @@ function clearReviewUploadObjectUrls() {
     }
   });
   reviewUploadObjectUrls = [];
+}
+
+function clearUploadSelectionObjectUrls() {
+  uploadSelectionObjectUrls.forEach((url) => {
+    try {
+      URL.revokeObjectURL(url);
+    } catch (error) {
+      console.warn("Không thể giải phóng URL tạm của phần xem trước:", error);
+    }
+  });
+  uploadSelectionObjectUrls = [];
+}
+
+function renderUploadSelectionPreview(type, files) {
+  const previewId =
+    type === "video" ? "xem_truoc_video_hang_hoa" : "xem_truoc_anh_hang_hoa";
+  const metaId =
+    type === "video" ? "thong_tin_tai_len_video" : "thong_tin_tai_len_anh";
+  const preview = document.getElementById(previewId);
+  const meta = document.getElementById(metaId);
+  if (!preview) return;
+
+  const mediaLabel = type === "video" ? "video" : "ảnh";
+  preview.innerHTML = "";
+
+  if (!files.length) {
+    preview.style.display = "none";
+    if (meta) {
+      meta.hidden = false;
+      meta.textContent =
+        type === "video"
+          ? "Chưa có video nào được chọn."
+          : "Chưa có ảnh nào được chọn.";
+    }
+    return;
+  }
+
+  files.forEach((file) => {
+    const objectUrl = URL.createObjectURL(file);
+    uploadSelectionObjectUrls.push(objectUrl);
+
+    const card = document.createElement("figure");
+    card.className = "upload-preview-card";
+    card.innerHTML =
+      type === "video"
+        ? `<video controls preload="metadata" src="${objectUrl}"></video>`
+        : `<img src="${objectUrl}" alt="${mediaLabel} gói hàng đã chọn" />`;
+    preview.appendChild(card);
+  });
+
+  preview.style.display = "grid";
+  if (meta) {
+    meta.hidden = false;
+    meta.textContent = `Đã chọn ${files.length} ${mediaLabel}.`;
+  }
+}
+
+function renderSelectedUploadPreviews() {
+  clearUploadSelectionObjectUrls();
+  renderUploadSelectionPreview(
+    "image",
+    Array.from(
+      document.getElementById("hinh_anh_hang_hoa")?.files || [],
+    ).filter((file) => file instanceof File),
+  );
+  renderUploadSelectionPreview(
+    "video",
+    Array.from(document.getElementById("video_hang_hoa")?.files || []).filter(
+      (file) => file instanceof File,
+    ),
+  );
 }
 
 function hien_thi_tai_len_xac_nhan() {
@@ -357,20 +443,8 @@ function hien_thi_tai_len_xac_nhan() {
     card.className = "review-upload-card";
     card.innerHTML =
       entry.type === "video"
-        ? `
-          <video class="review-upload-thumb" controls preload="metadata" src="${objectUrl}"></video>
-          <div class="review-upload-meta">
-            <strong>${escapeHtml(entry.file.name)}</strong>
-            <span>Video • ${Math.round(entry.file.size / 1024)} KB</span>
-          </div>
-        `
-        : `
-          <img class="review-upload-thumb" src="${objectUrl}" alt="${escapeHtml(entry.file.name)}" />
-          <div class="review-upload-meta">
-            <strong>${escapeHtml(entry.file.name)}</strong>
-            <span>Ảnh • ${Math.round(entry.file.size / 1024)} KB</span>
-          </div>
-        `;
+        ? `<video class="review-upload-thumb" controls preload="metadata" src="${objectUrl}"></video>`
+        : `<img class="review-upload-thumb" src="${objectUrl}" alt="${escapeHtml(entry.file.name)}" />`;
     host.appendChild(card);
   });
 }
@@ -385,7 +459,9 @@ function clearBookingSuccessRedirectTimer() {
 }
 
 function buildBookingSuccessRedirectUrl() {
-  return resolveProjectHtmlUrl("public/khach-hang/danh-sach-don-hang-giaohang.html");
+  return resolveProjectHtmlUrl(
+    "public/khach-hang/danh-sach-don-hang-giaohang.html",
+  );
 }
 
 function renderSubmitSuccessState(orderCode, messageHtml) {
@@ -527,29 +603,7 @@ function chuan_hoa_chi_tiet_gia_cuoc_da_luu(chiTiet = {}) {
 }
 
 function xem_truoc_tai_len(type) {
-  const inputId = type === "video" ? "video_hang_hoa" : "hinh_anh_hang_hoa";
-  const previewId =
-    type === "video" ? "xem_truoc_video_hang_hoa" : "xem_truoc_anh_hang_hoa";
-  const metaId =
-    type === "video" ? "thong_tin_tai_len_video" : "thong_tin_tai_len_anh";
-  const file = document.getElementById(inputId).files[0];
-  if (!file) return;
-  const preview = document.getElementById(previewId);
-  document.getElementById(metaId).textContent =
-    `${file.name} • ${Math.round(file.size / 1024)} KB`;
-
-  if (type === "video") {
-    preview.src = URL.createObjectURL(file);
-    preview.style.display = "block";
-    return;
-  }
-
-  const reader = new FileReader();
-  reader.onload = (e) => {
-    preview.src = e.target.result;
-    preview.style.display = "block";
-  };
-  reader.readAsDataURL(file);
+  renderSelectedUploadPreviews();
 
   if (lay_buoc_hien_tai() >= 5) {
     hien_thi_tai_len_xac_nhan();
@@ -561,7 +615,11 @@ function buildMediaSheetLinks(items = []) {
   return (Array.isArray(items) ? items : [])
     .map((item) =>
       String(
-        item?.view_url || item?.viewUrl || item?.download_url || item?.url || "",
+        item?.view_url ||
+          item?.viewUrl ||
+          item?.download_url ||
+          item?.url ||
+          "",
       ).trim(),
     )
     .filter(Boolean)
@@ -579,12 +637,6 @@ async function uploadBookingMedia(orderCode) {
     throw new Error("Thiếu helper upload Google Drive cho Giao Hàng Nhanh.");
   }
 
-  const safeToken = (value, fallback = "unknown") =>
-    String(value == null ? "" : value)
-      .trim()
-      .toLowerCase()
-      .replace(/[^a-z0-9]+/g, "_")
-      .replace(/^_+|_+$/g, "") || fallback;
   const padNumber = (value) => String(value).padStart(2, "0");
   const timestamp = (() => {
     const now = new Date();
@@ -598,24 +650,48 @@ async function uploadBookingMedia(orderCode) {
       padNumber(now.getSeconds())
     );
   })();
-  const bookingRef = safeToken(orderCode || "temp");
 
-  return uploadFn(files, {
+  const nameBuilder = (file) => {
+    let rawId = String(orderCode || "").trim();
+    if (rawId.includes("-")) {
+      rawId = rawId.split("-").pop();
+    }
+    const finalId = rawId.length > 0 ? rawId.padStart(7, "0") : rawId;
+    const originalName = String(file?.name || "").trim();
+    const nameWithoutExt = originalName.replace(/\.[^/.]+$/, "");
+    const extension = originalName.split(".").pop().toLowerCase();
+    const sanitizedName = nameWithoutExt
+      .toLowerCase()
+      .replace(/[^a-z0-9]+/g, "-")
+      .replace(/^-+|-+$/g, "");
+
+    return `${finalId}_giao_hang_nhanh_${timestamp}_${sanitizedName}.${extension}`;
+  };
+
+  const uploadOptions = {
     proxyFile: "upload.php",
     uploadKind: "order_media",
-    nameBuilder(file, index) {
-      const originalName = String(file?.name || "").trim();
-      const extMatch = originalName.match(/(\.[a-z0-9]+)$/i);
-      const extension = extMatch ? extMatch[1].toLowerCase() : "";
-      const mediaType =
-        String(file?.type || "").toLowerCase().indexOf("video/") === 0
-          ? "video"
-          : "photo";
-      return `booking_giaohang_${bookingRef}_${mediaType}_${timestamp}_${String(
-        index + 1,
-      ).padStart(2, "0")}${extension}`;
-    },
-  });
+    nameBuilder,
+  };
+
+  try {
+    const uploaded = await uploadFn(files, uploadOptions);
+    const links = uploaded
+      .map((item) => item?.url || item?.download_url || "")
+      .filter(Boolean);
+
+    if (links.length > 0) {
+      await GiaoHangNhanhCore.apiRequest("giao_hang_nhanh_dat_lich", "PATCH", {
+        id: orderCode,
+        anh_dinh_kem: links.join(" | "),
+      });
+    }
+
+    return links;
+  } catch (error) {
+    console.error("Lỗi upload media đặt lịch:", error);
+    throw error;
+  }
 }
 
 function buildBookingSheetPayload(payload, orderCode, attachments = []) {
@@ -689,7 +765,11 @@ function saveBookingSheetPayload(sheetPayload) {
 }
 
 function saveBookingToGoogleSheet(payload, orderCode, attachments = []) {
-  const sheetPayload = buildBookingSheetPayload(payload, orderCode, attachments);
+  const sheetPayload = buildBookingSheetPayload(
+    payload,
+    orderCode,
+    attachments,
+  );
   return saveBookingSheetPayload(sheetPayload);
 }
 
@@ -707,14 +787,19 @@ async function ensureBookingCustomerAccount(payload) {
   });
 }
 
-function buildBookingSubmitSuccessMessage(accountSetup, googleSheetWarning = "") {
+function buildBookingSubmitSuccessMessage(
+  accountSetup,
+  googleSheetWarning = "",
+) {
   let message =
     "Đơn hàng đã được tạo thành công. Bạn có thể theo dõi đơn ngay trong tài khoản của mình.";
 
   if (accountSetup?.status === "created") {
-    message += " Tài khoản khách hàng đã được tạo tự động từ thông tin người gửi.";
+    message +=
+      " Tài khoản khách hàng đã được tạo tự động từ thông tin người gửi.";
   } else if (accountSetup?.status === "existing") {
-    message += " Số điện thoại người gửi đã được liên kết với tài khoản có sẵn.";
+    message +=
+      " Số điện thoại người gửi đã được liên kết với tài khoản có sẵn.";
   }
 
   return `${message}${googleSheetWarning}`;
@@ -762,7 +847,10 @@ async function gui_don_hang() {
         );
       }
     } catch (uploadError) {
-      console.warn("Không thể tải media booking lên Google Drive:", uploadError);
+      console.warn(
+        "Không thể tải media booking lên Google Drive:",
+        uploadError,
+      );
       mediaWarning =
         " Media đính kèm chưa được tải lên Google Drive; bạn có thể bổ sung lại sau trong chi tiết đơn hàng.";
     }

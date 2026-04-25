@@ -263,6 +263,15 @@ const providerJobsModule = (function (window, document) {
     return String(item?.route || "Chưa có lộ trình").trim();
   }
 
+  function deriveTabKey(item) {
+    const statusValue = normalizeStatusFilterValue(item?.statusValue || "all");
+    if (statusValue === "moi") return "pending";
+    if (statusValue === "da-nhan" || statusValue === "dang-trien-khai") return "shipping";
+    if (statusValue === "da-hoan-thanh") return "done";
+    if (statusValue === "da-huy") return "cancel";
+    return "all";
+  }
+
   function renderJobs(data) {
     const role = store.getSavedRole();
     const canUseProviderPortal =
@@ -280,81 +289,183 @@ const providerJobsModule = (function (window, document) {
     const initialSurvey = String(params.get("survey") || "all").trim();
     const initialStatus = normalizeStatusFilterValue(params.get("status") || "all");
     let currentPage = normalizePageNumber(params.get("page"), 1);
+    let currentTab = "all";
+
+    if (initialStatus === "moi") currentTab = "pending";
+    if (initialStatus === "da-nhan" || initialStatus === "dang-trien-khai") currentTab = "shipping";
+    if (initialStatus === "da-hoan-thanh") currentTab = "done";
+    if (initialStatus === "da-huy") currentTab = "cancel";
 
     root.innerHTML = `
-      <div class="customer-portal-shell customer-portal-shell--simple">
-        <section class="customer-panel customer-orders-panel provider-jobs-panel">
-          <div class="customer-panel-head">
-            <div>
-              <p class="customer-section-kicker">Đơn hàng của khách</p>
-              <h2>Tìm và lọc đơn hàng của khách</h2>
-              <p class="customer-panel-subtext">${escapeHtml(
-                String(items.length),
-              )} đơn hàng đang thuộc nhà cung cấp hiện tại</p>
+      <div class="mv-orders-shell">
+        <div class="mb-4 mv-orders-stats mv-orders-stats--5">
+          <div class="mv-orders-stat-cell">
+            <div class="card border-0 shadow-sm p-3 p-md-4 h-100 mv-orders-stat-card">
+              <div class="d-flex align-items-center gap-3">
+                <div class="flex-shrink-0 rounded-3 d-flex align-items-center justify-content-center bg-primary bg-opacity-10 text-primary mv-orders-stat-icon">
+                  <i class="fas fa-file-invoice fa-lg"></i>
+                </div>
+                <div class="overflow-hidden">
+                  <div class="h4 fw-bold mb-0" id="stat-total">0</div>
+                  <div class="text-muted small fw-semibold text-nowrap">
+                    <span class="mv-orders-stat-label-full">Tổng đơn</span>
+                    <span class="mv-orders-stat-label-short">Tổng</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+          <div class="mv-orders-stat-cell">
+            <div class="card border-0 shadow-sm p-3 p-md-4 h-100 mv-orders-stat-card">
+              <div class="d-flex align-items-center gap-3">
+                <div class="flex-shrink-0 rounded-3 d-flex align-items-center justify-content-center bg-warning bg-opacity-10 text-warning mv-orders-stat-icon">
+                  <i class="fas fa-spinner fa-lg"></i>
+                </div>
+                <div class="overflow-hidden">
+                  <div class="h4 fw-bold mb-0" id="stat-pending">0</div>
+                  <div class="text-muted small fw-semibold text-nowrap">
+                    <span class="mv-orders-stat-label-full">Chờ xử lý</span>
+                    <span class="mv-orders-stat-label-short">Chờ</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+          <div class="mv-orders-stat-cell">
+            <div class="card border-0 shadow-sm p-3 p-md-4 h-100 mv-orders-stat-card">
+              <div class="d-flex align-items-center gap-3">
+                <div class="flex-shrink-0 rounded-3 d-flex align-items-center justify-content-center bg-primary bg-opacity-10 text-primary mv-orders-stat-icon">
+                  <i class="fas fa-truck-loading fa-lg"></i>
+                </div>
+                <div class="overflow-hidden">
+                  <div class="h4 fw-bold mb-0" id="stat-shipping">0</div>
+                  <div class="text-muted small fw-semibold text-nowrap">
+                    <span class="mv-orders-stat-label-full">Đang xử lý</span>
+                    <span class="mv-orders-stat-label-short">Giao</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+          <div class="mv-orders-stat-cell">
+            <div class="card border-0 shadow-sm p-3 p-md-4 h-100 mv-orders-stat-card">
+              <div class="d-flex align-items-center gap-3">
+                <div class="flex-shrink-0 rounded-3 d-flex align-items-center justify-content-center bg-success bg-opacity-10 text-success mv-orders-stat-icon">
+                  <i class="fas fa-check-double fa-lg"></i>
+                </div>
+                <div class="overflow-hidden">
+                  <div class="h4 fw-bold mb-0" id="stat-success">0</div>
+                  <div class="text-muted small fw-semibold text-nowrap">
+                    <span class="mv-orders-stat-label-full">Hoàn thành</span>
+                    <span class="mv-orders-stat-label-short">Xong</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+          <div class="mv-orders-stat-cell">
+            <div class="card border-0 shadow-sm p-3 p-md-4 h-100 mv-orders-stat-card">
+              <div class="d-flex align-items-center gap-3">
+                <div class="flex-shrink-0 rounded-3 d-flex align-items-center justify-content-center bg-danger bg-opacity-10 text-danger mv-orders-stat-icon">
+                  <i class="fas fa-ban fa-lg"></i>
+                </div>
+                <div class="overflow-hidden">
+                  <div class="h4 fw-bold mb-0" id="stat-fail">0</div>
+                  <div class="text-muted small fw-semibold text-nowrap">
+                    <span class="mv-orders-stat-label-full">Đã hủy</span>
+                    <span class="mv-orders-stat-label-short">Hủy</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="card border-0 shadow-sm mv-orders-main-card">
+          <div class="card-header bg-white py-3 border-0">
+            <div class="mv-orders-toolbar">
+              <div>
+                <h5 class="fw-bold mb-1">Đơn hàng của khách</h5>
+                <p class="text-muted small mb-0">Theo dõi và xử lý các đơn chuyển dọn đã giao cho bạn</p>
+              </div>
+              <div class="d-flex flex-column flex-sm-row gap-2">
+                <div class="input-group mv-orders-search">
+                  <span class="input-group-text bg-light border-0"><i class="fas fa-search text-muted small"></i></span>
+                  <input type="text" class="form-control bg-light border-0 small mv-orders-search-input" id="provider-job-keyword" value="${escapeHtml(
+                    initialKeyword,
+                  )}" placeholder="Mã đơn, dịch vụ, khách, địa chỉ..." />
+                </div>
+                <button class="btn btn-primary px-4 fw-semibold shadow-sm mv-orders-reload-btn" type="button" id="provider-jobs-reload">
+                  <i class="fas fa-sync-alt me-2"></i>Tải lại
+                </button>
+              </div>
+            </div>
+
+            <div class="mv-orders-tabs-wrap">
+              <ul class="nav nav-pills nav-fill bg-light p-1 flex-column flex-md-row gap-1 w-100 mv-orders-tabs">
+                <li class="nav-item"><a class="nav-link fw-bold ${currentTab === "all" ? "active" : ""}" href="#" data-tab="all">Tất cả <span class="badge bg-secondary ms-1" id="countAll">0</span></a></li>
+                <li class="nav-item"><a class="nav-link fw-bold ${currentTab === "pending" ? "active" : ""}" href="#" data-tab="pending">Chờ xử lý <span class="badge bg-warning text-dark ms-1" id="countPending">0</span></a></li>
+                <li class="nav-item"><a class="nav-link fw-bold ${currentTab === "shipping" ? "active" : ""}" href="#" data-tab="shipping">Đang xử lý <span class="badge bg-primary ms-1" id="countShipping">0</span></a></li>
+                <li class="nav-item"><a class="nav-link fw-bold ${currentTab === "done" ? "active" : ""}" href="#" data-tab="done">Hoàn thành <span class="badge bg-success ms-1" id="countDone">0</span></a></li>
+                <li class="nav-item"><a class="nav-link fw-bold ${currentTab === "cancel" ? "active" : ""}" href="#" data-tab="cancel">Đã hủy <span class="badge bg-danger ms-1" id="countCancel">0</span></a></li>
+              </ul>
+            </div>
+
+            <div class="mv-orders-inline-filters">
+              <label class="mv-orders-inline-filter" for="provider-job-survey-filter">
+                <span>Khảo sát trước</span>
+                <select id="provider-job-survey-filter">
+                  <option value="all" ${initialSurvey === "all" ? "selected" : ""}>Tất cả</option>
+                  <option value="co-khao-sat" ${initialSurvey === "co-khao-sat" ? "selected" : ""}>Có</option>
+                  <option value="khong-khao-sat" ${initialSurvey === "khong-khao-sat" ? "selected" : ""}>Không</option>
+                </select>
+              </label>
+              <button class="btn btn-light mv-orders-secondary-btn" type="button" id="provider-jobs-reset">Đặt lại</button>
             </div>
           </div>
 
-          <form class="customer-filter-form customer-filter-form-compact customer-filter-form-orders provider-filter-form-jobs" id="provider-jobs-filter-form">
-            <label class="provider-filter-field-search">
-              <span>Tìm nhanh</span>
-              <input id="provider-job-keyword" type="search" value="${escapeHtml(
-                initialKeyword,
-              )}" placeholder="Mã đơn, dịch vụ, khách, địa chỉ..." />
-            </label>
-            <label class="provider-filter-field-survey">
-              <span>Khảo sát trước</span>
-              <select id="provider-job-survey-filter">
-                <option value="all" ${initialSurvey === "all" ? "selected" : ""}>Tất cả</option>
-                <option value="co-khao-sat" ${initialSurvey === "co-khao-sat" ? "selected" : ""}>Có</option>
-                <option value="khong-khao-sat" ${initialSurvey === "khong-khao-sat" ? "selected" : ""}>Không</option>
-              </select>
-            </label>
-            <label class="provider-filter-field-status">
-              <span>Trạng thái</span>
-              <select id="provider-job-status-filter">
-                <option value="all" ${initialStatus === "all" ? "selected" : ""}>Tất cả</option>
-                <option value="moi" ${initialStatus === "moi" ? "selected" : ""}>Mới tiếp nhận</option>
-                <option value="da-nhan" ${initialStatus === "da-nhan" ? "selected" : ""}>Đã nhận đơn</option>
-                <option value="dang-trien-khai" ${initialStatus === "dang-trien-khai" ? "selected" : ""}>Đang triển khai</option>
-                <option value="da-hoan-thanh" ${initialStatus === "da-hoan-thanh" ? "selected" : ""}>Đã hoàn thành</option>
-                <option value="da-huy" ${initialStatus === "da-huy" ? "selected" : ""}>Đã hủy</option>
-              </select>
-            </label>
-            <div class="customer-inline-actions customer-filter-actions">
-              <button class="customer-btn customer-btn-primary" type="submit">Lọc</button>
-              <button class="customer-btn customer-btn-ghost customer-btn-sm" type="button" id="provider-jobs-reset">Đặt lại</button>
+          <div class="card-body p-0">
+            <div class="table-responsive d-none d-md-block mv-orders-table-wrap">
+              <table class="table align-middle mb-0 mv-orders-table">
+                <thead class="bg-light text-muted small text-uppercase">
+                  <tr>
+                    <th class="ps-4 mv-orders-col-code">Mã đơn / Dịch vụ</th>
+                    <th class="mv-orders-col-route">Địa chỉ đi → đến</th>
+                    <th class="mv-orders-col-customer">Lịch / Khách hàng</th>
+                    <th class="mv-orders-col-fee">Tạm tính</th>
+                    <th class="mv-orders-col-status">Trạng thái</th>
+                    <th class="pe-4 text-end mv-orders-col-actions">Hành động</th>
+                  </tr>
+                </thead>
+                <tbody id="provider-job-table-body"></tbody>
+              </table>
             </div>
-          </form>
 
-          <div class="customer-active-filters" id="provider-jobs-active-filters">
-            <span class="customer-active-filters-note">Đang hiển thị toàn bộ yêu cầu.</span>
-          </div>
+            <div id="provider-job-mobile-list" class="d-block d-md-none p-2 mv-orders-mobile-list"></div>
 
-          <div class="customer-panel-head">
-            <div>
-              <p class="customer-section-kicker">Danh sách</p>
-              <h2>Đơn hàng của khách</h2>
-              <p class="customer-panel-subtext" id="provider-job-result-text">Đang tải dữ liệu đơn hàng...</p>
+            <div id="provider-jobs-empty" class="text-center py-5 d-none mv-orders-empty">
+              <i class="fas fa-folder-open fa-4x text-light mb-4 d-block"></i>
+              <h6 class="fw-bold">Không có đơn hàng phù hợp</h6>
+              <p class="text-muted small mb-3">Thử đổi từ khóa, tab trạng thái hoặc bộ lọc khảo sát trước.</p>
+              <button class="btn btn-primary rounded-pill px-4 fw-bold shadow-sm" type="button" id="provider-jobs-empty-reset">Đặt lại bộ lọc</button>
+            </div>
+
+            <div class="mv-orders-pagination" id="provider-jobs-pagination-wrap" hidden>
+              <p class="mv-orders-pagination-summary" id="provider-jobs-pagination-summary"></p>
+              <div class="mv-orders-pagination-controls" id="provider-jobs-pagination"></div>
             </div>
           </div>
-
-          <div class="customer-list customer-list-history" id="provider-job-list"></div>
-          <div class="customer-pagination-wrap" id="provider-jobs-pagination-wrap" hidden>
-            <p class="customer-pagination-summary" id="provider-jobs-pagination-summary"></p>
-            <div class="customer-pagination" id="provider-jobs-pagination"></div>
-          </div>
-        </section>
+        </div>
       </div>
     `;
 
-    const filterForm = root.querySelector("#provider-jobs-filter-form");
     const keywordInput = root.querySelector("#provider-job-keyword");
     const surveySelect = root.querySelector("#provider-job-survey-filter");
-    const statusSelect = root.querySelector("#provider-job-status-filter");
     const resetButton = root.querySelector("#provider-jobs-reset");
-    const listNode = root.querySelector("#provider-job-list");
-    const resultNode = root.querySelector("#provider-job-result-text");
-    const activeFiltersNode = root.querySelector("#provider-jobs-active-filters");
+    const reloadButton = root.querySelector("#provider-jobs-reload");
+    const tableBodyNode = root.querySelector("#provider-job-table-body");
+    const mobileListNode = root.querySelector("#provider-job-mobile-list");
+    const emptyNode = root.querySelector("#provider-jobs-empty");
     const paginationWrapNode = root.querySelector("#provider-jobs-pagination-wrap");
     const paginationSummaryNode = root.querySelector("#provider-jobs-pagination-summary");
     const paginationNode = root.querySelector("#provider-jobs-pagination");
@@ -363,7 +474,6 @@ const providerJobsModule = (function (window, document) {
       const url = new URL(window.location.href);
       const nextKeyword = String(keywordInput?.value || "").trim();
       const nextSurvey = String(surveySelect?.value || "all").trim();
-      const nextStatus = String(statusSelect?.value || "all").trim();
 
       if (nextKeyword) {
         url.searchParams.set("search", nextKeyword);
@@ -377,8 +487,14 @@ const providerJobsModule = (function (window, document) {
         url.searchParams.delete("survey");
       }
 
-      if (nextStatus !== "all") {
-        url.searchParams.set("status", nextStatus);
+      if (currentTab === "pending") {
+        url.searchParams.set("status", "moi");
+      } else if (currentTab === "shipping") {
+        url.searchParams.set("status", "dang-trien-khai");
+      } else if (currentTab === "done") {
+        url.searchParams.set("status", "da-hoan-thanh");
+      } else if (currentTab === "cancel") {
+        url.searchParams.set("status", "da-huy");
       } else {
         url.searchParams.delete("status");
       }
@@ -395,12 +511,11 @@ const providerJobsModule = (function (window, document) {
     function renderList() {
       const keyword = normalizeLowerText(keywordInput?.value || "");
       const survey = String(surveySelect?.value || "all").trim();
-      const status = normalizeStatusFilterValue(statusSelect?.value || "all");
 
       const filtered = items.filter((item) => {
         if (survey === "co-khao-sat" && !item.surveyFirst) return false;
         if (survey === "khong-khao-sat" && item.surveyFirst) return false;
-        if (status !== "all" && item.statusValue !== status) return false;
+        if (currentTab !== "all" && deriveTabKey(item) !== currentTab) return false;
 
         if (!keyword) return true;
         const haystack = [
@@ -428,118 +543,123 @@ const providerJobsModule = (function (window, document) {
 
       const startIndex = totalItems ? (currentPage - 1) * ITEMS_PER_PAGE : 0;
       const paginatedItems = filtered.slice(startIndex, startIndex + ITEMS_PER_PAGE);
-      const startLabel = totalItems ? startIndex + 1 : 0;
-      const endLabel = totalItems ? startIndex + paginatedItems.length : 0;
 
-      resultNode.textContent = totalItems
-        ? `Hiển thị ${startLabel}-${endLabel} trên ${totalItems} yêu cầu. Trang ${currentPage}/${totalPages}.`
-        : "Không tìm thấy yêu cầu nào khớp với điều kiện lọc.";
-
-      const activeFilters = [];
-      if (keyword) {
-        activeFilters.push({
-          key: "keyword",
-          label: `Từ khóa: ${keywordInput.value.trim()}`,
-        });
-      }
-      if (survey === "co-khao-sat") {
-        activeFilters.push({ key: "survey", label: "Khảo sát trước: Có" });
-      }
-      if (survey === "khong-khao-sat") {
-        activeFilters.push({ key: "survey", label: "Khảo sát trước: Không" });
-      }
-      if (status === "moi") {
-        activeFilters.push({ key: "status", label: "Trạng thái: Mới tiếp nhận" });
-      }
-      if (status === "da-nhan") {
-        activeFilters.push({ key: "status", label: "Trạng thái: Đã nhận đơn" });
-      }
-      if (status === "dang-trien-khai") {
-        activeFilters.push({ key: "status", label: "Trạng thái: Đang triển khai" });
-      }
-      if (status === "da-hoan-thanh") {
-        activeFilters.push({ key: "status", label: "Trạng thái: Đã hoàn thành" });
-      }
-      if (status === "da-huy") {
-        activeFilters.push({ key: "status", label: "Trạng thái: Đã hủy" });
-      }
-
-      activeFiltersNode.innerHTML = activeFilters.length
-        ? activeFilters
-            .map(
-              (item) =>
-                `<button type="button" class="customer-active-filter-text" data-remove-filter="${escapeHtml(
-                  item.key,
-                )}" aria-label="${escapeHtml(`Bỏ ${item.label}`)}">
-                  <span>${escapeHtml(item.label)}</span>
-                  <i class="fas fa-xmark" aria-hidden="true"></i>
-                </button>`,
-            )
-            .join("")
-        : '<span class="customer-active-filters-note">Đang hiển thị toàn bộ yêu cầu.</span>';
+      root.querySelector("#stat-total").textContent = String(items.length);
+      root.querySelector("#stat-pending").textContent = String(
+        items.filter((item) => deriveTabKey(item) === "pending").length,
+      );
+      root.querySelector("#stat-shipping").textContent = String(
+        items.filter((item) => deriveTabKey(item) === "shipping").length,
+      );
+      root.querySelector("#stat-success").textContent = String(
+        items.filter((item) => deriveTabKey(item) === "done").length,
+      );
+      root.querySelector("#stat-fail").textContent = String(
+        items.filter((item) => deriveTabKey(item) === "cancel").length,
+      );
+      root.querySelector("#countAll").textContent = String(items.length);
+      root.querySelector("#countPending").textContent = String(
+        items.filter((item) => deriveTabKey(item) === "pending").length,
+      );
+      root.querySelector("#countShipping").textContent = String(
+        items.filter((item) => deriveTabKey(item) === "shipping").length,
+      );
+      root.querySelector("#countDone").textContent = String(
+        items.filter((item) => deriveTabKey(item) === "done").length,
+      );
+      root.querySelector("#countCancel").textContent = String(
+        items.filter((item) => deriveTabKey(item) === "cancel").length,
+      );
+      root.querySelectorAll(".mv-orders-tabs .nav-link").forEach((tabNode) => {
+        tabNode.classList.toggle(
+          "active",
+          String(tabNode.getAttribute("data-tab") || "") === currentTab,
+        );
+      });
 
       if (!filtered.length) {
-        listNode.innerHTML = `
-          <div class="customer-empty-state">
-            <i class="fas fa-folder-open"></i>
-            <p>Không có yêu cầu phù hợp với bộ lọc hiện tại.</p>
-            <button class="customer-btn customer-btn-primary" type="button" id="provider-jobs-empty-reset">Đặt lại bộ lọc</button>
-          </div>
-        `;
-        root
-          .querySelector("#provider-jobs-empty-reset")
-          ?.addEventListener("click", function () {
-            if (keywordInput) keywordInput.value = "";
-            if (surveySelect) surveySelect.value = "all";
-            if (statusSelect) statusSelect.value = "all";
-            currentPage = 1;
-            syncFilterUrl();
-            renderList();
-          });
+        if (tableBodyNode) {
+          tableBodyNode.innerHTML = `
+            <tr>
+              <td colspan="6" class="text-center py-5 text-muted">Không có đơn hàng phù hợp với bộ lọc hiện tại.</td>
+            </tr>
+          `;
+        }
+        if (mobileListNode) {
+          mobileListNode.innerHTML = `
+            <div class="text-center py-4 text-muted small">Không có đơn hàng phù hợp với bộ lọc hiện tại.</div>
+          `;
+        }
+        emptyNode?.classList.remove("d-none");
         paginationWrapNode.hidden = true;
         paginationNode.innerHTML = "";
         paginationSummaryNode.textContent = "";
         return;
       }
 
-      listNode.innerHTML = paginatedItems
-        .map(
-          (item) => `
-            <article class="customer-order-card customer-order-card-history">
-              <div class="customer-order-topline">
-                <div class="customer-order-heading">
-                  <p class="customer-order-recipient">${escapeHtml(item.serviceLabel || "Yêu cầu chuyển dọn")}</p>
-                  <div class="customer-order-heading-meta">
-                    <p class="customer-order-code">${escapeHtml(item.code || "--")}</p>
-                    <span class="customer-status-badge status-${escapeHtml(
-                      item.statusClass,
-                    )}">${escapeHtml(item.statusText || "Mới tiếp nhận")}</span>
+      emptyNode?.classList.add("d-none");
+
+      if (tableBodyNode) {
+        tableBodyNode.innerHTML = paginatedItems
+          .map(
+            (item) => `
+              <tr>
+                <td class="ps-4">
+                  <div class="fw-bold">${escapeHtml(item.code || "--")}</div>
+                  <div class="small text-muted mt-1">${escapeHtml(item.serviceLabel || "Yêu cầu chuyển dọn")}</div>
+                </td>
+                <td>
+                  <div class="small">${escapeHtml(getRouteSummary(item))}</div>
+                </td>
+                <td>
+                  <div class="small fw-semibold">${escapeHtml(item.scheduleLabel || "--")}</div>
+                  <div class="small text-muted mt-1">${escapeHtml(item.contactName || "--")}</div>
+                  <div class="small text-muted">${escapeHtml(item.contactPhone || "--")}</div>
+                  <div class="small text-muted">${escapeHtml(item.surveyFirst ? "Khảo sát trước: Có" : "Khảo sát trước: Không")}</div>
+                </td>
+                <td class="fw-bold text-primary">${escapeHtml(formatCurrency(item.estimatedAmount))}</td>
+                <td><span class="badge bg-opacity-10 px-3 py-2 rounded-pill status-${escapeHtml(item.statusClass)}">${escapeHtml(item.statusText || "Mới tiếp nhận")}</span></td>
+                <td class="pe-4 text-end">
+                  <a class="btn btn-sm btn-light border rounded-2 shadow-sm" href="${escapeHtml(
+                    getOrderDetailUrl(item.id || item.code || ""),
+                  )}">Chi tiết</a>
+                </td>
+              </tr>
+            `,
+          )
+          .join("");
+      }
+
+      if (mobileListNode) {
+        mobileListNode.innerHTML = paginatedItems
+          .map(
+            (item) => `
+              <div class="card border-0 shadow-sm mb-3 mv-orders-mobile-card">
+                <div class="card-body">
+                  <div class="d-flex align-items-start justify-content-between gap-3 mb-3">
+                    <div>
+                      <div class="fw-bold">${escapeHtml(item.code || "--")}</div>
+                      <div class="small text-muted mt-1">${escapeHtml(item.serviceLabel || "Yêu cầu chuyển dọn")}</div>
+                    </div>
+                    <span class="badge bg-opacity-10 px-2 py-1 rounded-pill mv-orders-mobile-badge status-${escapeHtml(item.statusClass)}">${escapeHtml(item.statusText || "Mới tiếp nhận")}</span>
                   </div>
-                  <p class="customer-order-dest">${escapeHtml(getRouteSummary(item))}</p>
-                </div>
-                <div class="customer-order-side">
-                  <div class="customer-order-price-block">
-                    <span class="customer-order-price-label">Tạm tính</span>
-                    <strong class="customer-order-price">${escapeHtml(formatCurrency(item.estimatedAmount))}</strong>
+                  <div class="small text-muted mb-2">${escapeHtml(getRouteSummary(item))}</div>
+                  <div class="d-grid gap-2 small">
+                    <div class="d-flex justify-content-between gap-2"><span class="text-muted">Lịch</span><strong class="text-end mv-orders-mobile-value">${escapeHtml(item.scheduleLabel || "--")}</strong></div>
+                    <div class="d-flex justify-content-between gap-2"><span class="text-muted">Khách hàng</span><strong class="text-end mv-orders-mobile-value">${escapeHtml(item.contactName || "--")}</strong></div>
+                    <div class="d-flex justify-content-between gap-2"><span class="text-muted">Số điện thoại</span><strong class="text-end mv-orders-mobile-value">${escapeHtml(item.contactPhone || "--")}</strong></div>
+                    <div class="d-flex justify-content-between gap-2"><span class="text-muted">Khảo sát</span><strong class="text-end mv-orders-mobile-value">${escapeHtml(item.surveyFirst ? "Có" : "Không")}</strong></div>
+                    <div class="d-flex justify-content-between gap-2 text-primary"><span>Tạm tính</span><strong class="text-end mv-orders-mobile-value">${escapeHtml(formatCurrency(item.estimatedAmount))}</strong></div>
                   </div>
-                  <div class="customer-order-actions customer-order-actions-compact">
-                    <a class="customer-btn customer-btn-primary" href="${escapeHtml(
-                      getOrderDetailUrl(item.id || item.code || ""),
-                    )}">Xem chi tiết</a>
-                  </div>
+                  <a class="btn btn-sm btn-light border w-100 fw-bold mt-3" href="${escapeHtml(
+                    getOrderDetailUrl(item.id || item.code || ""),
+                  )}"><i class="fas fa-eye me-2 text-primary"></i>Xem chi tiết</a>
                 </div>
               </div>
-              <div class="customer-order-meta customer-order-meta-compact customer-order-meta-history">
-                <span><b>Khách hàng</b><span class="customer-order-meta-value">${escapeHtml(item.contactName || "--")}</span></span>
-                <span><b>Số điện thoại</b><span class="customer-order-meta-value">${escapeHtml(item.contactPhone || "--")}</span></span>
-                <span><b>Khảo sát</b><span class="customer-order-meta-value">${escapeHtml(item.surveyFirst ? "Có" : "Không")}</span></span>
-                <span><b>Lịch</b><span class="customer-order-meta-value">${escapeHtml(item.scheduleLabel || "--")}</span></span>
-                <span><b>Tạo lúc</b><span class="customer-order-meta-value">${escapeHtml(formatDateTime(item.createdAt))}</span></span>
-              </div>
-            </article>
-          `,
-        )
-        .join("");
+            `,
+          )
+          .join("");
+      }
 
       if (totalPages <= 1) {
         paginationWrapNode.hidden = true;
@@ -549,7 +669,7 @@ const providerJobsModule = (function (window, document) {
       }
 
       paginationWrapNode.hidden = false;
-      paginationSummaryNode.textContent = `Trang ${currentPage}/${totalPages} • ${totalItems} yêu cầu`;
+      paginationSummaryNode.textContent = `Trang ${currentPage}/${totalPages} • ${totalItems} đơn hàng`;
       const paginationModel = buildPaginationModel(currentPage, totalPages);
       paginationNode.innerHTML = `
         ${
@@ -576,8 +696,13 @@ const providerJobsModule = (function (window, document) {
       `;
     }
 
-    filterForm?.addEventListener("submit", function (event) {
-      event.preventDefault();
+    keywordInput?.addEventListener("input", function () {
+      currentPage = 1;
+      syncFilterUrl();
+      renderList();
+    });
+
+    surveySelect?.addEventListener("change", function () {
       currentPage = 1;
       syncFilterUrl();
       renderList();
@@ -586,35 +711,37 @@ const providerJobsModule = (function (window, document) {
     resetButton?.addEventListener("click", function () {
       if (keywordInput) keywordInput.value = "";
       if (surveySelect) surveySelect.value = "all";
-      if (statusSelect) statusSelect.value = "all";
+      currentTab = "all";
       currentPage = 1;
       syncFilterUrl();
       renderList();
     });
 
-    activeFiltersNode?.addEventListener("click", function (event) {
-      const button = event.target.closest("[data-remove-filter]");
-      if (!button) return;
-
-      const filterKey = String(
-        button.getAttribute("data-remove-filter") || "",
-      ).trim();
-
-      if (filterKey === "keyword" && keywordInput) {
-        keywordInput.value = "";
-      }
-
-      if (filterKey === "survey" && surveySelect) {
-        surveySelect.value = "all";
-      }
-
-      if (filterKey === "status" && statusSelect) {
-        statusSelect.value = "all";
-      }
-
+    root.querySelector("#provider-jobs-empty-reset")?.addEventListener("click", function () {
+      if (keywordInput) keywordInput.value = "";
+      if (surveySelect) surveySelect.value = "all";
+      currentTab = "all";
       currentPage = 1;
       syncFilterUrl();
       renderList();
+    });
+
+    root.querySelector(".mv-orders-tabs")?.addEventListener("click", function (event) {
+      const tabLink = event.target.closest("[data-tab]");
+      if (!tabLink) return;
+      event.preventDefault();
+      const nextTab = String(tabLink.getAttribute("data-tab") || "").trim() || "all";
+      if (nextTab === currentTab) return;
+      currentTab = nextTab;
+      currentPage = 1;
+      syncFilterUrl();
+      renderList();
+    });
+
+    reloadButton?.addEventListener("click", async function () {
+      persistCurrentFiltersToUrl();
+      const nextItems = await fetchBookings();
+      renderJobs({ items: nextItems, profile: data?.profile || null });
     });
 
     paginationNode?.addEventListener("click", function (event) {
@@ -633,6 +760,15 @@ const providerJobsModule = (function (window, document) {
       syncFilterUrl();
       renderList();
       root.scrollIntoView({ behavior: "smooth", block: "start" });
+    });
+
+    root.querySelector(".mv-orders-inline-filters")?.addEventListener("keydown", function (event) {
+      if (event.key !== "Enter") return;
+      if (event.target !== keywordInput) return;
+      event.preventDefault();
+      currentPage = 1;
+      syncFilterUrl();
+      renderList();
     });
 
     renderList();

@@ -19,7 +19,6 @@ let selectedService = null;
 let deliveryMode = "scheduled";
 let reorderContext = null;
 let weatherQuoteState = null;
-let reviewUploadObjectUrls = [];
 let isResolvingPickupLocation = false;
 let recalculateDistanceRequestToken = 0;
 const BOOKING_DRAFT_STORAGE_KEY = "ghn_booking_login_resume_v1";

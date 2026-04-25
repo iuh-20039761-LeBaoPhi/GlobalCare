@@ -40,7 +40,7 @@ function revokePreviewUrl(preview) {
       mutedVideo = false,
       cardClassName = "the-media-xac-nhan-dat-lich",
       maxItems = 0,
-      compactLabel = false,
+      showMeta = false,
     } = options;
 
     revokePreviewUrlsIn(grid);
@@ -58,28 +58,30 @@ function revokePreviewUrl(preview) {
     const cardsHtml = visibleItems
       .map(({ file, kind }, index) => {
         const objectUrl = window.URL.createObjectURL(file);
-        const escapedName = core.escapeHtml(file.name);
-        const labelText = compactLabel
-          ? `${kind === "video" ? "Video" : "Ảnh"} ${index + 1}`
-          : escapedName;
+        const labelText = `${kind === "video" ? "Video" : "Ảnh"} ${index + 1}`;
         const media =
           kind === "video"
             ? `<video ${videoControls ? "controls " : ""}${mutedVideo ? "muted playsinline " : ""}preload="metadata" src="${objectUrl}" data-object-url="${objectUrl}"></video>`
-            : `<img src="${objectUrl}" alt="${escapedName}" data-object-url="${objectUrl}" />`;
+            : `<img src="${objectUrl}" alt="${core.escapeHtml(labelText)}" data-object-url="${objectUrl}" />`;
+        const metaHtml = showMeta
+          ? `
+            <div class="meta-media-xac-nhan-dat-lich">
+              <strong>${labelText}</strong>
+              <span>${kind === "video" ? "Video" : "Ảnh"} đính kèm ${index + 1}</span>
+            </div>
+          `
+          : "";
 
         return `
           <article class="${cardClassName}">
             ${media}
-            <div class="meta-media-xac-nhan-dat-lich">
-              <strong title="${escapedName}">${labelText}</strong>
-              <span>${kind === "video" ? "Video" : "Ảnh"} đính kèm ${index + 1}</span>
-            </div>
+            ${metaHtml}
           </article>
         `;
       })
       .join("");
 
-    const overflowCardHtml = remainingCount
+    const overflowCardHtml = remainingCount && showMeta
       ? `
           <article class="${cardClassName} the-media-xac-nhan-dat-lich--more">
             <div class="the-media-xac-nhan-dat-lich__them">+${remainingCount}</div>
@@ -115,6 +117,7 @@ function revokePreviewUrl(preview) {
         mutedVideo: true,
         cardClassName:
           "the-media-xac-nhan-dat-lich the-media-xac-nhan-dat-lich--upload",
+        showMeta: false,
       });
 
       if (previewEmpty) previewEmpty.hidden = items.length > 0;
@@ -182,7 +185,7 @@ function revokePreviewUrl(preview) {
       mutedVideo: false,
       cardClassName: "the-media-xac-nhan-dat-lich",
       maxItems: 4,
-      compactLabel: true,
+      showMeta: false,
     });
   }
 
@@ -200,18 +203,13 @@ function revokePreviewUrl(preview) {
         input.addEventListener("change", function () {
           const total = input.files ? input.files.length : 0;
           if (!total) {
+            output.hidden = false;
             output.textContent = emptyText;
             updateFilePreview(core, scope, input);
             return;
           }
 
-          if (total === 1) {
-            output.textContent = input.files[0].name;
-            updateFilePreview(core, scope, input);
-            return;
-          }
-
-          output.textContent = `${total} tệp đã được chọn`;
+          output.hidden = true;
           updateFilePreview(core, scope, input);
         });
       });

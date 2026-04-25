@@ -175,6 +175,17 @@ const adminOrderMasterModule = (function (window, document) {
     `).join("")}</div>`;
   }
 
+  function renderMediaGallery(items, emptyText) {
+    const media = Array.isArray(items) ? items.filter((item) => String(item?.val || "").trim()) : [];
+    if (!media.length) return `<div class="standalone-order-note-panel"><p>${escapeHtml(emptyText)}</p></div>`;
+    return `<div class="standalone-order-media-grid">${media.map((item) => `
+      <div class="standalone-order-media-item">
+        <div class="standalone-order-item-icon"><i class="fa-solid ${escapeHtml(item.icon)}"></i></div>
+        <strong>${escapeHtml(item.label)}</strong><span>${escapeHtml(item.val)}</span>
+      </div>
+    `).join("")}</div>`;
+  }
+
   function renderTimeline(detail) {
     const order = detail.order;
     const m = getMilestones(detail);
@@ -197,15 +208,51 @@ const adminOrderMasterModule = (function (window, document) {
     return `
       <section class="standalone-order-block">
         <div class="standalone-order-block-header"><p class="standalone-order-block-kicker">Đánh giá</p><h2>Phản hồi khách hàng</h2></div>
-        <div class="standalone-order-side-stack standalone-order-review-layout">
+        <div class="standalone-order-side-stack standalone-order-review-layout standalone-order-review-layout-inline">
           <article class="standalone-order-subcard">
             <div class="standalone-order-subcard-head"><strong>Xếp hạng</strong><span class="standalone-order-chip">${rating}/5 sao</span></div>
-            <div class="standalone-order-note-panel"><p>${Array.from({length:5}, (_,i) => `<i class="${i < rating ? 'fa-solid' : 'fa-regular'} fa-star" style="color:#f59e0b"></i>`).join("")}</p></div>
+            <div class="standalone-order-note-panel"><p>${Array.from({length:5}, (_,i) => `<i class="${i < rating ? 'fa-solid' : 'fa-regular'} fa-star admin-detail-star"></i>`).join("")}</p></div>
             <p class="standalone-order-note-text">${escapeHtml(order.customer_feedback || "Chưa có phản hồi từ khách.")}</p>
+            ${renderMediaGallery([
+              ...order.customer_feedback_image_attachments.map((val, index) => ({ icon: "fa-image", label: `Ảnh phản hồi ${index + 1}`, val })),
+              ...order.customer_feedback_video_attachments.map((val, index) => ({ icon: "fa-video", label: `Video phản hồi ${index + 1}`, val }))
+            ], "Chưa có ảnh/video phản hồi.")}
           </article>
         </div>
       </section>
     `;
+  }
+
+  function renderProviderReportBlock(detail) {
+    const order = detail.order;
+    const hasReport = Boolean(
+      normalizeText(order.provider_note || "") ||
+      order.provider_report_image_attachments.length ||
+      order.provider_report_video_attachments.length
+    );
+
+    return `
+      <section class="standalone-order-block">
+        <div class="standalone-order-block-header"><p class="standalone-order-block-kicker">Báo cáo</p><h2>Báo cáo nhà cung cấp</h2></div>
+        <div class="standalone-order-side-stack standalone-order-review-layout standalone-order-review-layout-inline">
+          <article class="standalone-order-subcard">
+            <div class="standalone-order-subcard-head"><strong>Báo cáo nhà cung cấp</strong><span class="standalone-order-chip">${hasReport ? "Đã gửi" : "Chưa có"}</span></div>
+            <p class="standalone-order-note-text">${escapeHtml(order.provider_note || "Chưa có báo cáo từ nhà cung cấp.")}</p>
+            ${renderMediaGallery([
+              ...order.provider_report_image_attachments.map((val, index) => ({ icon: "fa-image", label: `Ảnh báo cáo ${index + 1}`, val })),
+              ...order.provider_report_video_attachments.map((val, index) => ({ icon: "fa-video", label: `Video báo cáo ${index + 1}`, val }))
+            ], "Chưa có ảnh/video báo cáo.")}
+          </article>
+        </div>
+      </section>
+    `;
+  }
+
+  function applyProgressRing(scope, selector = ".standalone-order-progress-ring[data-progress]") {
+    (scope || document).querySelectorAll(selector).forEach((node) => {
+      const value = Number(node.getAttribute("data-progress") || 0);
+      node.style.setProperty("--progress", `${value}%`);
+    });
   }
 
   function render(detail) {
@@ -216,9 +263,9 @@ const adminOrderMasterModule = (function (window, document) {
     root.innerHTML = `
       <div class="standalone-order-layout">
         <section class="standalone-order-unified-card">
-          <div class="standalone-order-topbar" style="background: linear-gradient(135deg, #1e293b, #334155); color:white;">
+          <div class="standalone-order-topbar admin-standalone-topbar">
             <div class="standalone-order-topbar-center">
-              <h2 class="standalone-order-topbar-title" style="color:white;">Chi tiết yêu cầu hệ thống</h2>
+              <h2 class="standalone-order-topbar-title">Chi tiết yêu cầu hệ thống</h2>
             </div>
           </div>
 
@@ -231,7 +278,7 @@ const adminOrderMasterModule = (function (window, document) {
                   <p class="standalone-order-card-subtitle">${order.service_label}</p>
                 </div>
                 <div class="standalone-order-hero-side-progress">
-                    <div class="standalone-order-progress-ring status-${prog.tone}" style="--progress:${prog.percent}%;">
+                    <div class="standalone-order-progress-ring status-${prog.tone}" data-progress="${prog.percent}">
                       <div class="standalone-order-progress-ring-core"><strong>${prog.percent}%</strong><span>Tiến độ</span></div>
                     </div>
                 </div>
@@ -279,7 +326,7 @@ const adminOrderMasterModule = (function (window, document) {
                     <div class="standalone-order-note-panel"><p>${escapeHtml(order.note || "Không có ghi chú.")}</p></div>
                     <div class="standalone-order-side-stack">
                         <div><small>Điều kiện tiếp cận:</small>${renderChipList(order.access_conditions, "Trống")}</div>
-                        <div style="margin-top:10px;"><small>Hạng mục chi tiết:</small>${renderChipList(order.service_details, "Trống")}</div>
+                        <div class="admin-detail-chip-group"><small>Hạng mục chi tiết:</small>${renderChipList(order.service_details, "Trống")}</div>
                     </div>
                   </div>
                </div>
@@ -294,10 +341,12 @@ const adminOrderMasterModule = (function (window, document) {
             </section>
             
             ${renderFeedbackBlock(detail)}
+            ${renderProviderReportBlock(detail)}
           </div>
         </section>
       </div>
     `;
+    applyProgressRing(root);
   }
 
   function normalizeDetail(row) {
@@ -332,7 +381,12 @@ const adminOrderMasterModule = (function (window, document) {
         video_attachments: splitPipeValues(row.video_dinh_kem),
         provider_owner_name: row.provider_name || row.provider_owner_name || "Chưa có",
         customer_feedback: row.customer_feedback,
-        customer_rating: row.customer_rating
+        customer_rating: row.customer_rating,
+        customer_feedback_image_attachments: splitPipeValues(row.customer_feedback_anh_dinh_kem || row.customer_feedback_image_attachments),
+        customer_feedback_video_attachments: splitPipeValues(row.customer_feedback_video_dinh_kem || row.customer_feedback_video_attachments),
+        provider_note: row.provider_note,
+        provider_report_image_attachments: splitPipeValues(row.provider_report_anh_dinh_kem || row.provider_note_anh_dinh_kem || row.provider_report_image_attachments),
+        provider_report_video_attachments: splitPipeValues(row.provider_report_video_dinh_kem || row.provider_note_video_dinh_kem || row.provider_report_video_attachments)
       }
     };
   }

@@ -661,7 +661,7 @@
         <div class="standalone-order-block-header">
           <h2>Phản hồi khách hàng</h2>
         </div>
-        <div class="standalone-order-side-stack standalone-order-review-layout standalone-order-review-layout-inline">
+        <div class="standalone-order-side-stack standalone-order-review-layout-inline">
           <article class="standalone-order-subcard">
             <div class="standalone-order-subcard-head">
               <strong>${canSubmit ? "Đánh giá dịch vụ" : "Phản hồi khách hàng"}</strong>
@@ -728,34 +728,44 @@
       const order = detail.order || {};
       const provider = detail.provider || {};
       const canSubmit = canSubmitShipperNote(detail, viewer);
+      const milestones = getMilestones(detail?.order || {});
       const reports = Array.isArray(provider.shipper_reports)
         ? provider.shipper_reports
         : [];
       const reportMediaGroups = groupMediaByKind(reports);
+      const hasReport = hasShipperNoteContent(detail);
+      const helperText = canSubmit
+        ? "Cập nhật tiến độ, vấn đề hiện trường hoặc lưu ý khi giao hàng."
+        : milestones.cancelledAt
+          ? "Đơn đã hủy nên không thể cập nhật thêm."
+          : viewer === "shipper"
+            ? "Chỉ có thể thêm báo cáo sau khi đơn đã được nhận."
+            : "Chưa có báo cáo từ nhà cung cấp.";
+      const statusText = canSubmit
+        ? hasReport
+          ? "Đang cập nhật"
+          : "Sẵn sàng"
+        : hasReport
+          ? "Đã gửi"
+          : "Chưa có";
 
       return `
       <section class="standalone-order-block">
         <div class="standalone-order-block-header">
-          <h2>Ghi chú NCC</h2>
+          <h2>Báo cáo nhà cung cấp</h2>
         </div>
-        <div class="standalone-order-side-stack standalone-order-review-layout">
+        <div class="standalone-order-side-stack standalone-order-review-layout-inline">
           <article class="standalone-order-subcard">
             <div class="standalone-order-subcard-head">
-              <strong>Ghi chú</strong>
-            </div>
-            <p class="standalone-order-note-text">${escapeHtml(order.shipper_note || "Chưa có ghi chú")}</p>
-            ${canSubmit ? "" : renderAttachmentGallery(reports, "Chưa có ảnh/video.")}
-          </article>
-          <article class="standalone-order-subcard">
-            <div class="standalone-order-subcard-head">
-              <strong>Cập nhật</strong>
+              <strong>${canSubmit ? "Cập nhật báo cáo" : "Báo cáo nhà cung cấp"}</strong>
+              <span class="standalone-order-chip">${escapeHtml(statusText)}</span>
             </div>
             ${
               canSubmit
                 ? `<form id="standalone-shipper-note-form" class="standalone-order-form">
                     <label class="standalone-order-field">
-                      <span>Ghi chú xử lý</span>
-                      <textarea name="shipper_note" rows="5" placeholder="Cập nhật tiến độ, vấn đề hiện trường hoặc lưu ý khi giao hàng.">${escapeHtml(order.shipper_note || "")}</textarea>
+                      <span>Nội dung báo cáo</span>
+                      <textarea name="shipper_note" rows="5" placeholder="${escapeHtml(helperText)}">${escapeHtml(order.shipper_note || "")}</textarea>
                     </label>
                     <div class="standalone-order-upload-grid">
                       <div class="standalone-order-upload-zone standalone-order-upload-zone-image">
@@ -779,18 +789,15 @@
                     </div>
                     ${renderAttachmentGallery(reportMediaGroups.other, "", { removable: true, removeName: "remove_shipper_report_indexes[]", removeButtonLabel: "Xóa media báo cáo", removedLabel: "Sẽ xóa khi lưu", hideEmpty: true })}
                     <div class="standalone-order-inline-actions">
-                      <button class="customer-btn customer-btn-primary" type="submit">Lưu ghi chú NCC</button>
+                      <button class="customer-btn customer-btn-primary" type="submit">Lưu báo cáo NCC</button>
                     </div>
                   </form>`
-                : `<div class="standalone-order-note-panel">
-                    <p>${escapeHtml(
-                      viewer === "shipper"
-                        ? "Chỉ có thể thêm ghi chú sau khi đơn đã được nhận."
-                        : hasShipperNoteContent(detail)
-                          ? "Chỉ xem"
-                          : "Chưa có ghi chú",
+                : `
+                    <p class="standalone-order-note-text">${escapeHtml(
+                      order.shipper_note || helperText,
                     )}</p>
-                  </div>`
+                    ${renderAttachmentGallery(reports, "Chưa có ảnh/video báo cáo.")}
+                  `
             }
           </article>
         </div>
@@ -871,6 +878,13 @@
           ),
       );
       const pickupScheduleLabel = buildPickupScheduleLabel(order, serviceMeta);
+      const shouldShowPickupSchedule = Boolean(
+        pickupScheduleLabel &&
+          !isCancelled &&
+          !isCompleted &&
+          !milestones.acceptedAt &&
+          !milestones.startedAt,
+      );
       const cancelledTimeLabel = isCancelled
         ? formatDateTime(
             milestones.cancelledAt || order.cancelled_at || order.updated_at,
@@ -960,7 +974,11 @@
                       <div class="standalone-order-progress-info">
                         <p class="standalone-order-progress-label">Trạng thái đơn hàng</p>
                         <div class="standalone-order-progress-status-row">${statusBadge}</div>
-                        <time>Lấy hàng: ${escapeHtml(pickupScheduleLabel)}</time>
+                        ${
+                          shouldShowPickupSchedule
+                            ? `<time>Lấy hàng: ${escapeHtml(pickupScheduleLabel)}</time>`
+                            : ""
+                        }
                         ${
                           cancelledTimeLabel
                             ? `<time>Hủy lúc ${escapeHtml(cancelledTimeLabel)}</time>`

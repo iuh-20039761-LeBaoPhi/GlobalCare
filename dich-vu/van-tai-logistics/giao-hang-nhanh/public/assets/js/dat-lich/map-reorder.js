@@ -462,13 +462,15 @@ function resetUploadsAfterDraftRestore(hadUploads) {
   if (imageMeta) imageMeta.textContent = restoreMessage;
   if (videoMeta) videoMeta.textContent = restoreMessage;
   if (imagePreview) {
-    imagePreview.src = "";
+    imagePreview.innerHTML = "";
     imagePreview.style.display = "none";
   }
   if (videoPreview) {
-    videoPreview.removeAttribute("src");
-    videoPreview.load();
+    videoPreview.innerHTML = "";
     videoPreview.style.display = "none";
+  }
+  if (typeof clearUploadSelectionObjectUrls === "function") {
+    clearUploadSelectionObjectUrls();
   }
   hien_thi_tai_len_xac_nhan();
 }

@@ -5,24 +5,395 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Đơn hàng của tôi | Giao Hàng Nhanh</title>
     <link rel="icon" type="image/x-icon" href="../assets/images/favicon.ico" />
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" />
     <link rel="stylesheet" href="../assets/css/styles.css" />
-    <link
-      rel="stylesheet"
-      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"
-    />
-      <script src="/ga.js"></script>
+    <link rel="stylesheet" href="../assets/css/pages/customer-order-list.css" />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
+    <script src="/ga.js"></script>
   </head>
   <body data-customer-page="orders">
     <div id="site-header"></div>
     <main class="customer-portal-page-main">
-      <div class="container" id="customer-shell"></div>
+      <div class="container py-4 ghn-orders-shell" id="customer-shell">
+
+        <!-- ===== STAT CARDS ===== -->
+        <div class="mb-4 ghn-orders-stats ghn-orders-stats--4" id="stat-row">
+          <div class="ghn-orders-stat-cell">
+            <div class="card border-0 shadow-sm p-3 p-md-4 h-100 ghn-orders-stat-card">
+              <div class="d-flex align-items-center gap-3">
+                <div class="flex-shrink-0 rounded-3 d-flex align-items-center justify-content-center bg-primary bg-opacity-10 text-primary ghn-orders-stat-icon">
+                  <i class="fas fa-file-invoice fa-lg"></i>
+                </div>
+                <div class="overflow-hidden">
+                  <div class="h4 fw-bold mb-0" id="stat-total">0</div>
+                  <div class="text-muted small fw-semibold text-nowrap">
+                    <span class="ghn-orders-stat-label-full">Tổng đơn</span>
+                    <span class="ghn-orders-stat-label-short">Tổng</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+          <div class="ghn-orders-stat-cell">
+            <div class="card border-0 shadow-sm p-3 p-md-4 h-100 ghn-orders-stat-card">
+              <div class="d-flex align-items-center gap-3">
+                <div class="flex-shrink-0 rounded-3 d-flex align-items-center justify-content-center bg-warning bg-opacity-10 text-warning ghn-orders-stat-icon">
+                  <i class="fas fa-spinner fa-lg"></i>
+                </div>
+                <div class="overflow-hidden">
+                  <div class="h4 fw-bold mb-0" id="stat-pending">0</div>
+                  <div class="text-muted small fw-semibold text-nowrap">
+                    <span class="ghn-orders-stat-label-full">Chờ xử lý</span>
+                    <span class="ghn-orders-stat-label-short">Chờ</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+          <div class="ghn-orders-stat-cell">
+            <div class="card border-0 shadow-sm p-3 p-md-4 h-100 ghn-orders-stat-card">
+              <div class="d-flex align-items-center gap-3">
+                <div class="flex-shrink-0 rounded-3 d-flex align-items-center justify-content-center bg-success bg-opacity-10 text-success ghn-orders-stat-icon">
+                  <i class="fas fa-check-double fa-lg"></i>
+                </div>
+                <div class="overflow-hidden">
+                  <div class="h4 fw-bold mb-0" id="stat-success">0</div>
+                  <div class="text-muted small fw-semibold text-nowrap">
+                    <span class="ghn-orders-stat-label-full">Hoàn thành</span>
+                    <span class="ghn-orders-stat-label-short">Xong</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+          <div class="ghn-orders-stat-cell">
+            <div class="card border-0 shadow-sm p-3 p-md-4 h-100 ghn-orders-stat-card">
+              <div class="d-flex align-items-center gap-3">
+                <div class="flex-shrink-0 rounded-3 d-flex align-items-center justify-content-center bg-danger bg-opacity-10 text-danger ghn-orders-stat-icon">
+                  <i class="fas fa-ban fa-lg"></i>
+                </div>
+                <div class="overflow-hidden">
+                  <div class="h4 fw-bold mb-0" id="stat-fail">0</div>
+                  <div class="text-muted small fw-semibold text-nowrap">
+                    <span class="ghn-orders-stat-label-full">Đã hủy</span>
+                    <span class="ghn-orders-stat-label-short">Hủy</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- ===== MAIN CARD ===== -->
+        <div class="card border-0 shadow-sm ghn-orders-main-card">
+          <div class="card-header bg-white py-3 border-0">
+            <!-- Tiêu đề + Search + Tải lại -->
+            <div class="ghn-orders-toolbar">
+              <div>
+                <h5 class="fw-bold mb-1">Đơn hàng của tôi</h5>
+                <p class="text-muted small mb-0">Theo dõi toàn bộ lịch sử giao hàng</p>
+              </div>
+              <div class="d-flex flex-column flex-sm-row gap-2">
+                <div class="input-group ghn-orders-search">
+                  <span class="input-group-text bg-light border-0"><i class="fas fa-search text-muted small"></i></span>
+                  <input type="text" class="form-control bg-light border-0 small ghn-orders-search-input" placeholder="Mã đơn, địa chỉ..." id="orderSearchInput" oninput="filterOrders()">
+                </div>
+                <button class="btn btn-primary px-4 fw-semibold shadow-sm ghn-orders-reload-btn" onclick="loadMyOrders()">
+                  <i class="fas fa-sync-alt me-2"></i>Tải lại
+                </button>
+              </div>
+            </div>
+
+            <!-- Status Tabs -->
+            <div class="ghn-orders-tabs-wrap">
+              <ul class="nav nav-pills nav-fill bg-light p-1 flex-column flex-md-row gap-1 w-100 ghn-orders-tabs">
+                <li class="nav-item">
+                  <a class="nav-link active fw-bold" href="#" id="tabAll" onclick="switchTab('all');return false;">
+                    Tất cả <span class="badge bg-secondary ms-1" id="countAll">0</span>
+                  </a>
+                </li>
+                <li class="nav-item">
+                  <a class="nav-link fw-bold" href="#" id="tabPending" onclick="switchTab('pending');return false;">
+                    Chờ xử lý <span class="badge bg-warning text-dark ms-1" id="countPending">0</span>
+                  </a>
+                </li>
+                <li class="nav-item">
+                  <a class="nav-link fw-bold" href="#" id="tabShipping" onclick="switchTab('shipping');return false;">
+                    Đang giao <span class="badge bg-primary ms-1" id="countShipping">0</span>
+                  </a>
+                </li>
+                <li class="nav-item">
+                  <a class="nav-link fw-bold" href="#" id="tabDone" onclick="switchTab('done');return false;">
+                    Hoàn thành <span class="badge bg-success ms-1" id="countDone">0</span>
+                  </a>
+                </li>
+                <li class="nav-item">
+                  <a class="nav-link fw-bold" href="#" id="tabCancel" onclick="switchTab('cancel');return false;">
+                    Đã hủy <span class="badge bg-danger ms-1" id="countCancel">0</span>
+                  </a>
+                </li>
+              </ul>
+            </div>
+          </div>
+
+          <div class="card-body p-0">
+            <!-- Desktop Table -->
+            <div class="table-responsive d-none d-md-block ghn-orders-table-wrap">
+              <table class="table align-middle mb-0 ghn-orders-table">
+                <thead class="bg-light text-muted small text-uppercase">
+                  <tr>
+                    <th class="ps-4 ghn-orders-col-code">Mã đơn / Dịch vụ</th>
+                    <th class="ghn-orders-col-route">Địa chỉ lấy → Giao</th>
+                    <th class="ghn-orders-col-time">Thời gian lấy</th>
+                    <th class="ghn-orders-col-fee">Cước ship</th>
+                    <th class="ghn-orders-col-status">Trạng thái</th>
+                    <th class="pe-4 text-end ghn-orders-col-actions">Hành động</th>
+                  </tr>
+                </thead>
+                <tbody id="orderTableBody">
+                  <tr><td colspan="6" class="text-center py-5"><div class="spinner-border text-primary spinner-border-sm me-2"></div>Đang tải...</td></tr>
+                </tbody>
+              </table>
+            </div>
+
+            <!-- Mobile Cards -->
+            <div id="orderMobileList" class="d-block d-md-none p-2 ghn-orders-mobile-list"></div>
+
+            <!-- Empty State -->
+            <div id="orderEmpty" class="text-center py-5 d-none ghn-orders-empty">
+              <i class="fas fa-box-open fa-4x text-light mb-4 d-block"></i>
+              <h6 class="fw-bold">Chưa có đơn hàng nào!</h6>
+              <p class="text-muted small">Bạn chưa đặt đơn giao hàng nào trên hệ thống.</p>
+              <a href="../../dat-lich-giao-hang-nhanh.html" class="btn btn-primary rounded-pill px-4 mt-2 fw-bold shadow-sm">Đặt đơn ngay</a>
+            </div>
+          </div>
+        </div>
+
+      </div><!-- /container -->
     </main>
     <div id="site-footer"></div>
+
     <script src="../assets/js/shared-layout.js"></script>
     <script src="../assets/js/local-auth.js"></script>
     <script src="https://api.dvqt.vn/js/krud.js"></script>
     <script src="../assets/js/main-core.js"></script>
     <script src="../assets/js/modules/main-navigation.js"></script>
-    <script src="../assets/js/customer-portal.js"></script>
+
+    <script>
+    (function () {
+      'use strict';
+      const TABLE = 'giaohangnhanh_dat_lich';
+      let allOrders = [];
+      let currentTab = 'all';
+
+      /* ── Helpers ── */
+      function esc(v) {
+        return String(v ?? '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+      }
+      function fmtMoney(v) { return Number(v || 0).toLocaleString('vi-VN') + 'đ'; }
+      function fmtDate(v) {
+        if (!v) return '--';
+        const d = new Date(v);
+        return isNaN(d) ? esc(v) : d.toLocaleDateString('vi-VN');
+      }
+      function normalizeText(v) { return String(v || '').replace(/\s+/g,' ').trim(); }
+
+      /* ── Trạng thái ── */
+      function deriveStatus(o) {
+        if (normalizeText(o.ngayhuy)) return 'cancel';
+        if (normalizeText(o.ngayhoanthanhthucte)) return 'done';
+        if (normalizeText(o.ngaybatdauthucte || o.thoidiemnhandon || o.ngaynhan)) return 'shipping';
+        const s = String(o.trang_thai || o.status || '').toLowerCase();
+        if (['cancelled','canceled','da_huy'].includes(s)) return 'cancel';
+        if (['completed','success','delivered'].includes(s)) return 'done';
+        if (['shipping','in_transit'].includes(s)) return 'shipping';
+        return 'pending';
+      }
+
+      const STATUS_META = {
+        pending:  { label: 'Chờ xử lý',  cls: 'bg-warning text-warning' },
+        shipping: { label: 'Đang giao',  cls: 'bg-primary text-primary' },
+        done:     { label: 'Hoàn thành', cls: 'bg-success text-success' },
+        cancel:   { label: 'Đã hủy',     cls: 'bg-danger text-danger'   },
+      };
+
+      function badge(status) {
+        const m = STATUS_META[status] || STATUS_META.pending;
+        return `<span class="badge ${m.cls} bg-opacity-10 px-3 py-2 rounded-pill">${m.label}</span>`;
+      }
+
+      /* ── Tab đếm ── */
+      function updateTabCounts() {
+        document.getElementById('countAll').textContent     = allOrders.length;
+        document.getElementById('countPending').textContent = allOrders.filter(o => deriveStatus(o) === 'pending').length;
+        document.getElementById('countShipping').textContent= allOrders.filter(o => deriveStatus(o) === 'shipping').length;
+        document.getElementById('countDone').textContent    = allOrders.filter(o => deriveStatus(o) === 'done').length;
+        document.getElementById('countCancel').textContent  = allOrders.filter(o => deriveStatus(o) === 'cancel').length;
+      }
+
+      /* ── Stat cards ── */
+      function updateStats() {
+        document.getElementById('stat-total').textContent   = allOrders.length;
+        document.getElementById('stat-pending').textContent = allOrders.filter(o => ['pending','shipping'].includes(deriveStatus(o))).length;
+        document.getElementById('stat-success').textContent = allOrders.filter(o => deriveStatus(o) === 'done').length;
+        document.getElementById('stat-fail').textContent    = allOrders.filter(o => deriveStatus(o) === 'cancel').length;
+      }
+
+      /* ── Render ── */
+      function renderTable(list) {
+        const tbody = document.getElementById('orderTableBody');
+        const mob   = document.getElementById('orderMobileList');
+        const empty = document.getElementById('orderEmpty');
+
+        if (!list.length) {
+          tbody.innerHTML = `<tr><td colspan="6" class="text-center py-5 text-muted">Không có đơn phù hợp.</td></tr>`;
+          mob.innerHTML   = `<div class="text-center text-muted p-4 small">Không có đơn phù hợp.</div>`;
+          empty.classList.remove('d-none');
+          return;
+        }
+        empty.classList.add('d-none');
+
+        /* Desktop rows */
+        tbody.innerHTML = list.map(o => {
+          const st  = deriveStatus(o);
+          const code = normalizeText(o.ma_don_hang_noi_bo || o.order_code || o.ma_don_hang || '');
+          const disp = code || `#${String(o.id).padStart(7,'0')}`;
+          const svc  = esc(normalizeText(o.ten_dich_vu || o.dich_vu || ''));
+          const from = esc(normalizeText(o.dia_chi_lay_hang || ''));
+          const to   = esc(normalizeText(o.dia_chi_giao_hang || ''));
+          const date = fmtDate(o.ngay_lay_hang || o.created_at);
+          const fee  = fmtMoney(o.tong_cuoc || o.shipping_fee);
+          const detailUrl = `chi-tiet-don-hang-giaohang.html?viewer=customer&madonhang=${encodeURIComponent(code || o.id)}`;
+          return `<tr>
+            <td class="ps-4">
+              <div class="fw-bold text-dark small">${esc(disp)}</div>
+              <div class="small text-muted">${svc || '<span class="text-muted">--</span>'}</div>
+            </td>
+            <td>
+              <div class="small text-truncate ghn-orders-address-line" title="${from}">${from || '--'}</div>
+              <div class="small text-muted text-truncate ghn-orders-address-destination" title="${to}"><i class="fas fa-arrow-down fa-xs me-1"></i>${to || '--'}</div>
+            </td>
+            <td><div class="small text-dark">${date}</div></td>
+            <td class="fw-bold text-primary">${fee}</td>
+            <td>${badge(st)}</td>
+            <td class="pe-4 text-end">
+              <a href="${detailUrl}" class="btn btn-sm btn-light rounded-circle shadow-sm"><i class="fas fa-eye text-primary"></i></a>
+            </td>
+          </tr>`;
+        }).join('');
+
+        /* Mobile cards */
+        mob.innerHTML = list.map(o => {
+          const st   = deriveStatus(o);
+          const m    = STATUS_META[st] || STATUS_META.pending;
+          const code = normalizeText(o.ma_don_hang_noi_bo || o.order_code || o.ma_don_hang || '');
+          const disp = code || `#${String(o.id).padStart(7,'0')}`;
+          const from = esc(normalizeText(o.dia_chi_lay_hang || ''));
+          const to   = esc(normalizeText(o.dia_chi_giao_hang || ''));
+          const fee  = fmtMoney(o.tong_cuoc || o.shipping_fee);
+          const date = fmtDate(o.ngay_lay_hang || o.created_at);
+          const detailUrl = `chi-tiet-don-hang-giaohang.html?viewer=customer&madonhang=${encodeURIComponent(code || o.id)}`;
+          return `<div class="card mb-3 border-0 shadow-sm ghn-orders-mobile-card">
+            <div class="card-body p-3">
+              <div class="d-flex justify-content-between align-items-start mb-2">
+                <div class="fw-bold text-primary small">${esc(disp)}</div>
+                <span class="badge ${m.cls} bg-opacity-10 px-2 py-1 rounded-pill ghn-orders-mobile-badge">${m.label}</span>
+              </div>
+              <div class="small mb-2 pt-2 border-top">
+                <div class="d-flex justify-content-between mb-1"><span class="text-muted">Lấy hàng:</span> <strong class="text-end text-dark ghn-orders-mobile-value">${from || '--'}</strong></div>
+                <div class="d-flex justify-content-between mb-1"><span class="text-muted">Giao đến:</span> <strong class="text-end text-dark ghn-orders-mobile-value">${to || '--'}</strong></div>
+                <div class="d-flex justify-content-between mb-1"><span class="text-muted">Ngày:</span> <strong>${date}</strong></div>
+                <div class="d-flex justify-content-between text-primary"><span class="text-muted">Cước ship:</span> <strong>${fee}</strong></div>
+              </div>
+              <a href="${detailUrl}" class="btn btn-sm btn-light border w-100 fw-bold"><i class="fas fa-eye me-2 text-primary"></i>Xem chi tiết</a>
+            </div>
+          </div>`;
+        }).join('');
+      }
+
+      /* ── Filter ── */
+      window.filterOrders = function () {
+        const q = (document.getElementById('orderSearchInput')?.value || '').toLowerCase().trim();
+        let list = allOrders;
+
+        if (currentTab !== 'all') {
+          list = list.filter(o => deriveStatus(o) === currentTab);
+        }
+        if (q) {
+          list = list.filter(o => {
+            const code = String(o.ma_don_hang_noi_bo || o.order_code || o.id || '').toLowerCase();
+            const from = String(o.dia_chi_lay_hang || '').toLowerCase();
+            const to   = String(o.dia_chi_giao_hang || '').toLowerCase();
+            return code.includes(q) || from.includes(q) || to.includes(q);
+          });
+        }
+        renderTable(list);
+      };
+
+      /* ── Switch Tab ── */
+      window.switchTab = function (tab) {
+        currentTab = tab;
+        const tabMap = { all:'tabAll', pending:'tabPending', shipping:'tabShipping', done:'tabDone', cancel:'tabCancel' };
+        document.querySelectorAll('.card-header .nav-link').forEach(el => el.classList.remove('active'));
+        if (tabMap[tab]) document.getElementById(tabMap[tab])?.classList.add('active');
+        filterOrders();
+      };
+
+      /* ── Load ── */
+      window.loadMyOrders = async function () {
+        const tbody = document.getElementById('orderTableBody');
+        const mob   = document.getElementById('orderMobileList');
+        tbody.innerHTML = `<tr><td colspan="6" class="text-center py-5"><div class="spinner-border text-primary spinner-border-sm me-2"></div>Đang tải...</td></tr>`;
+        mob.innerHTML   = '';
+
+        try {
+          /* Lấy session */
+          let session = null;
+          if (window.GiaoHangNhanhLocalAuth?.getSession) {
+            session = window.GiaoHangNhanhLocalAuth.getSession();
+          } else if (window._dvqt_session_cache) {
+            session = window._dvqt_session_cache;
+          }
+          if (!session) throw new Error('Vui lòng đăng nhập để xem đơn hàng.');
+
+          /* Lấy tất cả đơn → lọc theo customer */
+          let rows = [];
+          if (typeof window.DVQTKrud?.listTable === 'function') {
+            rows = await window.DVQTKrud.listTable(TABLE) || [];
+          } else if (typeof window.krudList === 'function') {
+            const res = await window.krudList({ table: TABLE, page: 1, limit: 500 });
+            rows = Array.isArray(res) ? res : (res?.data || res?.items || []);
+          } else if (typeof window.crud === 'function') {
+            rows = await window.crud('list', TABLE, { p: 1, limit: 500 });
+          }
+          if (!Array.isArray(rows)) rows = [];
+
+          const sessionId    = String(session.id || '');
+          const sessionPhone = String(session.phone || session.so_dien_thoai || '').replace(/\D/g,'');
+
+          allOrders = rows.filter(o => {
+            const byId    = sessionId && String(o.customer_id || o.id_nguoidung || '').trim() === sessionId;
+            const byPhone = sessionPhone && String(o.so_dien_thoai_nguoi_gui || o.nguoi_gui_so_dien_thoai || '').replace(/\D/g,'') === sessionPhone;
+            return byId || byPhone;
+          }).reverse();
+
+          updateStats();
+          updateTabCounts();
+          filterOrders();
+
+          if (!allOrders.length) {
+            document.getElementById('orderEmpty').classList.remove('d-none');
+          }
+        } catch (err) {
+          document.getElementById('orderTableBody').innerHTML =
+            `<tr><td colspan="6" class="text-center py-4 text-danger">${esc(err.message || 'Lỗi tải dữ liệu')}</td></tr>`;
+        }
+      };
+
+      /* Khởi động */
+      loadMyOrders();
+    })();
+    </script>
+
   </body>
 </html>

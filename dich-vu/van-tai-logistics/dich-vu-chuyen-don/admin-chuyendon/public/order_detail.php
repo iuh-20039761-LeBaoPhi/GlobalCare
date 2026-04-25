@@ -20,52 +20,10 @@ $orderCodeTitle = moving_admin_escape((string) ($_GET['madonhang'] ?? ''));
     
     <!-- Shared Project Styles (Bắt buộc) -->
     <link rel="stylesheet" href="../../public/assets/css/styles.css">
+    <link rel="stylesheet" href="assets/css/order-detail-admin.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    
-    <style>
-        /* Standalone Admin Overrides */
-        body { margin: 0; padding: 0; background: #f8fafc; }
-        
-        .admin-back-bar {
-            background: #1e293b;
-            color: white;
-            padding: 10px 20px;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            position: sticky;
-            top: 0;
-            z-index: 9999;
-            font-family: 'Inter', sans-serif;
-            font-size: 14px;
-        }
-        
-        .admin-back-btn {
-            background: rgba(255,255,255,0.1);
-            color: white;
-            text-decoration: none;
-            padding: 6px 15px;
-            border-radius: 6px;
-            transition: all 0.2s;
-            display: flex;
-            align-items: center;
-        }
-        
-        .admin-back-btn:hover { background: rgba(255,255,255,0.2); }
-        
-        .standalone-order-shell {
-            padding-top: 0 !important;
-        }
-
-        /* Đảm bảo trang chiếm toàn màn hình */
-        .standalone-order-layout {
-            max-width: 1200px;
-            margin: 0 auto;
-            padding: 20px;
-        }
-    </style>
 </head>
-<body class="standalone-order-page" data-page="provider-order-detail">
+<body class="standalone-order-page admin-order-detail-page" data-page="provider-order-detail">
     
     <!-- Thanh điều hướng Admin tối giản -->
     <div class="admin-back-bar">

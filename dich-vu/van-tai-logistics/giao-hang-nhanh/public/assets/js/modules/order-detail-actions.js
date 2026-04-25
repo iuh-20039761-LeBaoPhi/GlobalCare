@@ -51,7 +51,6 @@
 
         host.innerHTML = `
           <span class="standalone-order-upload-preview">${previewHtml}</span>
-          <span class="standalone-order-upload-count">${countText}</span>
         `;
         host.querySelectorAll("video").forEach((video) => {
           video.addEventListener("click", (event) => event.stopPropagation());
@@ -266,7 +265,7 @@
             } catch (uploadError) {
               console.warn("Cannot upload shipper report media:", uploadError);
               mediaWarning =
-                "Ảnh/video báo cáo chưa được tải lên Drive; phần ghi chú vẫn được lưu.";
+                "Ảnh/video báo cáo chưa được tải lên Drive; báo cáo vẫn được lưu.";
             }
           }
 
@@ -285,19 +284,19 @@
             console.warn("Cannot persist shipper note detail:", persistError);
             throw new Error(
               mediaWarning
-                ? `${mediaWarning} Đồng thời chưa lưu được ghi chú vào hệ thống.`
-                : "Không thể lưu ghi chú nhà cung cấp vào hệ thống lúc này.",
+                ? `${mediaWarning} Đồng thời chưa lưu được báo cáo vào hệ thống.`
+                : "Không thể lưu báo cáo nhà cung cấp vào hệ thống lúc này.",
             );
           }
           showToast(
-            mediaWarning || "Đã lưu ghi chú nhà cung cấp.",
+            mediaWarning || "Đã lưu báo cáo nhà cung cấp.",
             mediaWarning ? "warning" : "success",
           );
           rerender(getCurrentDetail(), getCurrentViewer(), getCurrentSession());
         } catch (error) {
           console.error("Cannot save shipper note:", error);
           showToast(
-            error?.message || "Không thể lưu ghi chú nhà cung cấp lúc này.",
+            error?.message || "Không thể lưu báo cáo nhà cung cấp lúc này.",
             "error",
           );
         } finally {

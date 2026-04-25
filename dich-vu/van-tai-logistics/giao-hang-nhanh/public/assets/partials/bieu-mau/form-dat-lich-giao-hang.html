@@ -265,10 +265,15 @@
           capture="environment"
           id="hinh_anh_hang_hoa"
           name="hinh_anh_hang_hoa"
+          multiple
           style="display: none"
           onchange="xem_truoc_tai_len('anh')"
         />
-        <img id="xem_truoc_anh_hang_hoa" src="" alt="Xem trước ảnh gói hàng" />
+        <div
+          id="xem_truoc_anh_hang_hoa"
+          class="upload-preview-grid"
+          aria-label="Danh sách ảnh gói hàng đã chọn"
+        ></div>
         <div class="upload-meta" id="thong_tin_tai_len_anh">
           Chưa có ảnh nào được chọn.
         </div>
@@ -285,14 +290,15 @@
           capture="environment"
           id="video_hang_hoa"
           name="video_hang_hoa"
+          multiple
           style="display: none"
           onchange="xem_truoc_tai_len('video')"
         />
-        <video
+        <div
           id="xem_truoc_video_hang_hoa"
-          controls
-          preload="metadata"
-        ></video>
+          class="upload-preview-grid"
+          aria-label="Danh sách video gói hàng đã chọn"
+        ></div>
         <div class="upload-meta" id="thong_tin_tai_len_video">
           Chưa có video nào được chọn.
         </div>

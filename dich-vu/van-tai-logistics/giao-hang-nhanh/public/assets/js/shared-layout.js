@@ -356,11 +356,6 @@
   function buildAccountMenuItems(accountLinks) {
     const items = [
       {
-        href: accountLinks.customer.dashboard,
-        icon: "fas fa-chart-line",
-        label: "Tổng quan đặt đơn",
-      },
-      {
         href: accountLinks.customer.orders,
         icon: "fas fa-box",
         label: "Đơn hàng của tôi",
@@ -377,11 +372,6 @@
 
     if (accountLinks.canReceiveOrders) {
       items.push(
-        {
-          href: accountLinks.provider.dashboard,
-          icon: "fas fa-truck-ramp-box",
-          label: "Tổng quan nhận đơn",
-        },
         {
           href: accountLinks.provider.orders,
           icon: "fas fa-clipboard-list",

@@ -48,6 +48,13 @@ const orderManager = (function () {
             .replace(/'/g, "&#39;");
     }
 
+    function setTextContent(id, value) {
+        const node = document.getElementById(id);
+        if (node) {
+            node.textContent = String(value ?? "");
+        }
+    }
+
     function formatMoney(value) {
         const amount = Number(value || 0);
         return new Intl.NumberFormat("vi-VN", {
@@ -77,6 +84,77 @@ const orderManager = (function () {
             month: "2-digit",
             year: "numeric",
         });
+    }
+
+    function getStartOfTodayMs() {
+        const now = new Date();
+        return new Date(now.getFullYear(), now.getMonth(), now.getDate()).getTime();
+    }
+
+    function getStartOfTomorrowMs() {
+        const startOfTodayMs = getStartOfTodayMs();
+        return startOfTodayMs + 24 * 60 * 60 * 1000;
+    }
+
+    function getOrderCreatedMs(row) {
+        const raw = normalizeText(row?.created_at || row?.created_date || "");
+        if (!raw) {
+            return 0;
+        }
+        const date = new Date(raw);
+        return Number.isNaN(date.getTime()) ? 0 : date.getTime();
+    }
+
+    function compareOrdersByCreatedDesc(left, right) {
+        const leftCreatedMs = getOrderCreatedMs(left);
+        const rightCreatedMs = getOrderCreatedMs(right);
+        if (rightCreatedMs !== leftCreatedMs) {
+            return rightCreatedMs - leftCreatedMs;
+        }
+
+        const leftId = Number(left?.id || 0);
+        const rightId = Number(right?.id || 0);
+        return rightId - leftId;
+    }
+
+    function isOrderCreatedToday(row) {
+        const createdMs = getOrderCreatedMs(row);
+        if (!createdMs) {
+            return false;
+        }
+        return createdMs >= getStartOfTodayMs() && createdMs < getStartOfTomorrowMs();
+    }
+
+    async function fetchTodayOrders() {
+        const limit = 100;
+        const maxPages = 10;
+        const todayOrders = [];
+        const startOfTodayMs = getStartOfTodayMs();
+
+        for (let page = 1; page <= maxPages; page += 1) {
+            const batch = await window.adminApi.list(window.adminApi.ORDERS_TABLE, {
+                page,
+                limit,
+                sort: { created_at: "desc", id: "desc" },
+            });
+            if (!batch.length) {
+                break;
+            }
+
+            const todaysBatch = batch.filter(isOrderCreatedToday);
+            todayOrders.push(...todaysBatch);
+
+            const hasOlderOrders = batch.some((row) => {
+                const createdMs = getOrderCreatedMs(row);
+                return createdMs > 0 && createdMs < startOfTodayMs;
+            });
+
+            if (hasOlderOrders || batch.length < limit) {
+                break;
+            }
+        }
+
+        return todayOrders.sort(compareOrdersByCreatedDesc);
     }
 
     function toDateInputValue(value) {
@@ -207,12 +285,12 @@ const orderManager = (function () {
         for (let index = 0; index < count; index += 1) {
             html += `
                 <tr>
-                    <td><div class="skeleton" style="width: 120px;"></div><div class="skeleton" style="width: 180px; margin-top: 8px;"></div></td>
-                    <td><div class="skeleton" style="width: 140px;"></div><div class="skeleton" style="width: 100px; margin-top: 8px;"></div></td>
-                    <td><div class="skeleton" style="width: 160px;"></div></td>
-                    <td><div class="skeleton" style="width: 90px;"></div></td>
-                    <td><div class="skeleton" style="width: 110px;"></div></td>
-                    <td><div class="skeleton" style="width: 140px;"></div></td>
+                    <td><div class="skeleton orders-skeleton orders-skeleton-code"></div><div class="skeleton orders-skeleton orders-skeleton-name"></div></td>
+                    <td><div class="skeleton orders-skeleton orders-skeleton-service"></div><div class="skeleton orders-skeleton orders-skeleton-meta"></div></td>
+                    <td><div class="skeleton orders-skeleton orders-skeleton-provider"></div></td>
+                    <td><div class="skeleton orders-skeleton orders-skeleton-amount"></div></td>
+                    <td><div class="skeleton orders-skeleton orders-skeleton-status"></div></td>
+                    <td><div class="skeleton orders-skeleton orders-skeleton-actions"></div></td>
                 </tr>
             `;
         }
@@ -249,11 +327,7 @@ const orderManager = (function () {
 
             const [providers, orders] = await Promise.all([
                 window.adminApi.listProviders(),
-                window.adminApi.listAll(window.adminApi.ORDERS_TABLE, {
-                    sort: { id: "desc" },
-                    limit: 200,
-                    maxPages: 15,
-                }),
+                fetchTodayOrders(),
             ]);
 
             state.providers = providers
@@ -265,30 +339,36 @@ const orderManager = (function () {
             state.providerMap = new Map(state.providers.map((provider) => [String(provider.id), provider]));
             populateProviderSelects();
 
-            state.allOrders = orders.map(normalizeOrder);
+            state.allOrders = orders
+                .map(normalizeOrder)
+                .sort(compareOrdersByCreatedDesc);
             updateStats();
             applyFilters();
         } catch (error) {
-            tbody.innerHTML = `<tr><td colspan="6" style="text-align:center; padding:40px; color:var(--danger);">${escapeHtml(error?.message || "Không thể tải dữ liệu đơn hàng.")}</td></tr>`;
+            tbody.innerHTML = `<tr><td colspan="6" class="orders-table-message-row orders-table-message-row-danger">${escapeHtml(error?.message || "Không thể tải dữ liệu đơn hàng.")}</td></tr>`;
             showToast(error?.message || "Không thể tải dữ liệu đơn hàng.", "danger");
         }
     }
 
     function updateStats() {
         const totalOrders = state.allOrders.length;
-        const openOrders = state.allOrders.filter((order) => !["completed", "cancelled"].includes(order.status_meta.key)).length;
-        const lateOrders = state.allOrders.filter((order) => order.overdue).length;
-        const totalValue = state.allOrders.reduce((sum, order) => {
-            if (order.status_meta.key === "cancelled") {
-                return sum;
-            }
-            return sum + Number(order.tong_tam_tinh || order.tong_tien || 0);
-        }, 0);
+        const newOrders = state.allOrders.filter((order) => order.status_meta.key === "pending").length;
+        const activeOrders = state.allOrders.filter((order) => ["accepted", "shipping"].includes(order.status_meta.key)).length;
+        const completedOrders = state.allOrders.filter((order) => order.status_meta.key === "completed").length;
+        const cancelledOrders = state.allOrders.filter((order) => order.status_meta.key === "cancelled").length;
 
-        document.getElementById("statsTotalOrders").textContent = String(totalOrders);
-        document.getElementById("statsOpenOrders").textContent = String(openOrders);
-        document.getElementById("statsLateOrders").textContent = String(lateOrders);
-        document.getElementById("statsTotalValue").textContent = formatMoney(totalValue);
+        setTextContent("statsTotalOrders", totalOrders);
+        setTextContent("statsNewOrders", newOrders);
+        setTextContent("statsActiveOrders", activeOrders);
+        setTextContent("statsCompletedOrders", completedOrders);
+        setTextContent("statsCancelledOrders", cancelledOrders);
+
+        // Update tab badges if they exist
+        setTextContent("count-all", totalOrders);
+        setTextContent("count-pending", newOrders);
+        setTextContent("count-active", activeOrders);
+        setTextContent("count-completed", completedOrders);
+        setTextContent("count-cancelled", cancelledOrders);
     }
 
     function renderFilterChips() {
@@ -348,8 +428,12 @@ const orderManager = (function () {
                 }
             }
 
-            if (state.filters.status && order.status_meta.key !== state.filters.status) {
-                return false;
+            if (state.filters.status) {
+                if (state.filters.status === 'active') {
+                    if (!["accepted", "shipping"].includes(order.status_meta.key)) return false;
+                } else if (order.status_meta.key !== state.filters.status) {
+                    return false;
+                }
             }
             if (state.filters.service && normalizeText(order.loai_dich_vu) !== state.filters.service) {
                 return false;
@@ -386,7 +470,7 @@ const orderManager = (function () {
     function renderTable() {
         const tbody = document.getElementById("orderListBody");
         if (!state.filteredOrders.length) {
-            tbody.innerHTML = '<tr><td colspan="6" style="text-align:center; padding:40px; color:var(--slate-light);">Không có đơn hàng phù hợp bộ lọc hiện tại.</td></tr>';
+            tbody.innerHTML = '<tr><td colspan="6" class="orders-table-message-row">Không có đơn hàng phù hợp bộ lọc hiện tại.</td></tr>';
             return;
         }
 
@@ -406,28 +490,28 @@ const orderManager = (function () {
             return `
                 <tr>
                     <td data-label="Mã đơn & khách hàng">
-                        <div style="font-weight:900; color:var(--primary-deep);">${escapeHtml(order.display_code)}</div>
-                        <div style="margin-top:6px; font-size:15px; font-weight:700;">${escapeHtml(order.ho_ten || "--")}</div>
-                        <div style="font-size:12px; color:var(--slate-light);">${escapeHtml(order.so_dien_thoai || "--")} • ${escapeHtml(order.customer_email || "Không có email")}</div>
+                        <div class="orders-cell-code">${escapeHtml(order.display_code)}</div>
+                        <div class="orders-cell-title">${escapeHtml(order.ho_ten || "--")}</div>
+                        <div class="orders-cell-meta">${escapeHtml(order.so_dien_thoai || "--")} • ${escapeHtml(order.customer_email || "Không có email")}</div>
                         <div class="order-meta-stack">${chips}</div>
                     </td>
                     <td data-label="Dịch vụ & lịch">
-                        <div style="font-weight:700;">${escapeHtml(order.service_label)}</div>
-                        <div style="font-size:12px; color:var(--slate-light); margin-top:6px;">${escapeHtml(schedule)}</div>
-                        <div style="font-size:12px; color:var(--slate-light); margin-top:6px;">${escapeHtml(order.dia_chi_di || "--")} → ${escapeHtml(order.dia_chi_den || "--")}</div>
+                        <div class="orders-cell-title orders-cell-title-service">${escapeHtml(order.service_label)}</div>
+                        <div class="orders-cell-meta orders-cell-meta-spaced">${escapeHtml(schedule)}</div>
+                        <div class="orders-cell-meta orders-cell-meta-spaced">${escapeHtml(order.dia_chi_di || "--")} → ${escapeHtml(order.dia_chi_den || "--")}</div>
                     </td>
                     <td data-label="Điều phối">
-                        <div style="font-weight:700;">${escapeHtml(providerName)}</div>
-                        <div style="font-size:12px; color:var(--slate-light); margin-top:6px;">Nhận: ${escapeHtml(formatDate(order.accepted_at, true))}</div>
-                        <div style="font-size:12px; color:var(--slate-light); margin-top:4px;">Bắt đầu: ${escapeHtml(formatDate(order.started_at, true))}</div>
+                        <div class="orders-cell-title orders-cell-title-provider">${escapeHtml(providerName)}</div>
+                        <div class="orders-cell-meta orders-cell-meta-spaced">Nhận: ${escapeHtml(formatDate(order.accepted_at, true))}</div>
+                        <div class="orders-cell-meta orders-cell-meta-subtle">Bắt đầu: ${escapeHtml(formatDate(order.started_at, true))}</div>
                     </td>
                     <td data-label="Giá trị">
-                        <div style="font-weight:900; font-size:15px;">${escapeHtml(formatMoney(pricingValue))}</div>
-                        <div style="font-size:12px; color:var(--slate-light); margin-top:6px;">Chốt cuối: ${escapeHtml(formatMoney(order.tong_tien || 0))}</div>
+                        <div class="orders-cell-amount">${escapeHtml(formatMoney(pricingValue))}</div>
+                        <div class="orders-cell-meta orders-cell-meta-spaced">Chốt cuối: ${escapeHtml(formatMoney(order.tong_tien || 0))}</div>
                     </td>
                     <td data-label="Trạng thái">
-                        <span class="badge" style="background:${escapeHtml(order.status_meta.color)}; color:#fff;">${escapeHtml(order.status_meta.label)}</span>
-                        <div style="font-size:12px; color:var(--slate-light); margin-top:8px;">Tạo lúc ${escapeHtml(formatDate(order.created_at, true))}</div>
+                        <span class="badge order-status-badge order-status-badge--${escapeHtml(order.status_meta.key)}">${escapeHtml(order.status_meta.label)}</span>
+                        <div class="orders-cell-meta orders-cell-meta-top-gap">Tạo lúc ${escapeHtml(formatDate(order.created_at, true))}</div>
                     </td>
                     <td data-label="Thao tác">
                         <div class="order-actions">
@@ -438,7 +522,7 @@ const orderManager = (function () {
                                 <i class="fas fa-pen-to-square"></i>
                             </button>
                             <button type="button" class="btn btn-outline" onclick="orderManager.handleDelete('${escapeHtml(order.id)}')" title="Xóa">
-                                <i class="fas fa-trash-alt" style="color:var(--danger);"></i>
+                                <i class="fas fa-trash-alt order-action-icon-danger"></i>
                             </button>
                         </div>
                     </td>
@@ -455,7 +539,7 @@ const orderManager = (function () {
 
         const list = Array.isArray(items) ? items.filter(Boolean) : [];
         if (!list.length) {
-            container.innerHTML = `<div style="color:var(--slate-light); font-size:13px;">${escapeHtml(emptyText)}</div>`;
+            container.innerHTML = `<div class="media-preview-empty">${escapeHtml(emptyText)}</div>`;
             return;
         }
 
@@ -479,6 +563,21 @@ const orderManager = (function () {
         }
         if (note) {
             note.textContent = normalizeText(order?.customer_feedback) || "Chưa có phản hồi từ khách hàng.";
+        }
+    }
+
+    function setProviderReportPreview(order) {
+        const status = document.getElementById("providerReportStatus");
+        const note = document.getElementById("providerReportNote");
+        const providerNote = normalizeText(order?.provider_note);
+        const hasMedia = Boolean((order?.provider_images || []).length || (order?.provider_videos || []).length);
+        const hasReport = Boolean(providerNote || hasMedia);
+
+        if (status) {
+            status.textContent = hasReport ? "Đã gửi" : "Chưa có";
+        }
+        if (note) {
+            note.textContent = providerNote || "Chưa có báo cáo từ nhà cung cấp.";
         }
     }
 
@@ -533,6 +632,7 @@ const orderManager = (function () {
         renderMediaPreview("feedbackMediaPreview", [...(order?.feedback_images || []), ...(order?.feedback_videos || [])], "Chưa có media feedback.");
         renderMediaPreview("providerMediaPreview", [...(order?.provider_images || []), ...(order?.provider_videos || [])], "Chưa có media hiện trường từ nhà cung cấp.");
         setFeedbackPreview(order || {});
+        setProviderReportPreview(order || {});
 
         document.getElementById("orderModal").style.display = "flex";
     }
@@ -676,12 +776,31 @@ const orderManager = (function () {
     }
 
     function handleFilterChange() {
-        state.filters.status = document.getElementById("statusFilter").value;
-        state.filters.service = document.getElementById("serviceFilter").value;
-        state.filters.provider = document.getElementById("providerFilter").value;
-        state.filters.survey = document.getElementById("surveyFilter").value;
-        state.filters.alert = document.getElementById("alertFilter").value;
-        state.filters.feedback = document.getElementById("feedbackFilter").value;
+        state.filters.status = document.getElementById("statusFilter") ? document.getElementById("statusFilter").value : "";
+        state.filters.service = document.getElementById("serviceFilter") ? document.getElementById("serviceFilter").value : "";
+        state.filters.provider = document.getElementById("providerFilter") ? document.getElementById("providerFilter").value : "";
+        state.filters.survey = document.getElementById("surveyFilter") ? document.getElementById("surveyFilter").value : "";
+        state.filters.alert = document.getElementById("alertFilter") ? document.getElementById("alertFilter").value : "";
+        state.filters.feedback = document.getElementById("feedbackFilter") ? document.getElementById("feedbackFilter").value : "";
+        applyFilters();
+    }
+
+    function handleTabFilter(statusKey) {
+        state.filters.status = statusKey;
+        document.querySelectorAll(".nav-pills .order-chip--tab").forEach((el) => {
+            el.classList.remove("order-chip--tab-active");
+        });
+        
+        let activeId = 'tab-all';
+        if (statusKey === 'pending') activeId = 'tab-pending';
+        if (statusKey === 'active') activeId = 'tab-active';
+        if (statusKey === 'completed') activeId = 'tab-completed';
+        if (statusKey === 'cancelled') activeId = 'tab-cancelled';
+        
+        const activeTab = document.getElementById(activeId);
+        if (activeTab) {
+            activeTab.classList.add("order-chip--tab-active");
+        }
         applyFilters();
     }
 
@@ -745,10 +864,8 @@ const orderManager = (function () {
         }
         const toast = document.createElement("div");
         toast.className = `toast toast-${type}`;
-        const color = type === "danger" ? "var(--danger)" : "var(--success)";
         const icon = type === "danger" ? "fa-circle-exclamation" : "fa-circle-check";
-        toast.style.borderLeft = `4px solid ${color}`;
-        toast.innerHTML = `<i class="fas ${icon}" style="color:${color};"></i><span>${escapeHtml(message)}</span>`;
+        toast.innerHTML = `<i class="fas ${icon} toast-icon"></i><span>${escapeHtml(message)}</span>`;
         container.appendChild(toast);
         setTimeout(() => {
             toast.style.opacity = "0";
@@ -763,6 +880,7 @@ const orderManager = (function () {
         fetchOrders,
         handleSearch,
         handleFilterChange,
+        handleTabFilter,
         clearFilter,
         showOrderModal,
         closeModal,

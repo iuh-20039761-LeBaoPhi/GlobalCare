@@ -1910,13 +1910,47 @@ const customerPortalStoreModule = (function (window) {
     const avatarFile = payload?.avatar_file;
     const cccdFrontFile = payload?.cccd_front_file;
     const cccdBackFile = payload?.cccd_back_file;
+    const safeToken = (value, fallback = "unknown") =>
+      String(value == null ? "" : value)
+        .trim()
+        .toLowerCase()
+        .replace(/[^a-z0-9]+/g, "_")
+        .replace(/^_+|_+$/g, "") || fallback;
+    const padNumber = (value) => String(value).padStart(2, "0");
+    const timestamp = (() => {
+      const now = new Date();
+      return (
+        now.getFullYear() +
+        padNumber(now.getMonth() + 1) +
+        padNumber(now.getDate()) +
+        "_" +
+        padNumber(now.getHours()) +
+        padNumber(now.getMinutes()) +
+        padNumber(now.getSeconds())
+      );
+    })();
+    const savedRole = getSavedRole() || "khach-hang";
+    const profileRole = savedRole === "nha-cung-cap" ? "provider" : "customer";
+    const profileRef = safeToken(
+      currentIdentity.id ||
+        payload?.sodienthoai ||
+        currentIdentity.sodienthoai ||
+        "guest",
+      "guest",
+    );
+    const buildProfileFileName = (file, assetType) => {
+      const originalName = String(file?.name || "").trim();
+      const extMatch = originalName.match(/(\.[a-z0-9]+)$/i);
+      const extension = extMatch ? extMatch[1].toLowerCase() : "";
+      return `profile_chuyendon_${profileRole}_${profileRef}_${assetType}_${timestamp}${extension}`;
+    };
 
     if (avatarFile instanceof File && avatarFile.size) {
       try {
         const uploadedAvatar = await core.uploadFileToDrive(avatarFile, {
-          name: avatarFile.name,
+          name: buildProfileFileName(avatarFile, "avatar"),
           proxyFile:
-            getSavedRole() === "nha-cung-cap"
+            savedRole === "nha-cung-cap"
               ? "nha-cung-cap/upload.php"
               : "khach-hang/upload.php",
           uploadKind: "avatar",
@@ -1933,9 +1967,9 @@ const customerPortalStoreModule = (function (window) {
     if (cccdFrontFile instanceof File && cccdFrontFile.size) {
       try {
         const uploadedFront = await core.uploadFileToDrive(cccdFrontFile, {
-          name: cccdFrontFile.name,
+          name: buildProfileFileName(cccdFrontFile, "cccd_front"),
           proxyFile:
-            getSavedRole() === "nha-cung-cap"
+            savedRole === "nha-cung-cap"
               ? "nha-cung-cap/upload.php"
               : "khach-hang/upload.php",
           uploadKind: "cccd",
@@ -1952,9 +1986,9 @@ const customerPortalStoreModule = (function (window) {
     if (cccdBackFile instanceof File && cccdBackFile.size) {
       try {
         const uploadedBack = await core.uploadFileToDrive(cccdBackFile, {
-          name: cccdBackFile.name,
+          name: buildProfileFileName(cccdBackFile, "cccd_back"),
           proxyFile:
-            getSavedRole() === "nha-cung-cap"
+            savedRole === "nha-cung-cap"
               ? "nha-cung-cap/upload.php"
               : "khach-hang/upload.php",
           uploadKind: "cccd",

@@ -332,18 +332,10 @@ const partialPaths = {
     );
   }
 
-  async function uploadSelectedBookingMedia(scope) {
+  async function uploadSelectedBookingMedia(scope, orderId = "temp") {
     const warnings = [];
     const imageFiles = getSelectedMediaFiles(scope, "#tep-anh-dat-lich");
     const videoFiles = getSelectedMediaFiles(scope, "#tep-video-dat-lich");
-    const form = scope.querySelector("form[data-loai-bieu-mau='dat-lich']");
-    const formData = form ? new FormData(form) : new FormData();
-    const safeToken = (value, fallback = "unknown") =>
-      String(value == null ? "" : value)
-        .trim()
-        .toLowerCase()
-        .replace(/[^a-z0-9]+/g, "_")
-        .replace(/^_+|_+$/g, "") || fallback;
     const padNumber = (value) => String(value).padStart(2, "0");
     const timestamp = (() => {
       const now = new Date();
@@ -357,19 +349,22 @@ const partialPaths = {
         padNumber(now.getSeconds())
       );
     })();
-    const bookingRef = safeToken(
-      `${formData.get("so_dien_thoai") || "guest"}_${
-        formData.get("ngay_thuc_hien") || "nodate"
-      }`,
-      "temp",
-    );
-    const buildBookingFileName = (mediaType) => (file, index) => {
+
+    const buildBookingFileName = (mediaType) => (file) => {
       const originalName = String(file?.name || "").trim();
-      const extMatch = originalName.match(/(\.[a-z0-9]+)$/i);
-      const extension = extMatch ? extMatch[1].toLowerCase() : "";
-      return `booking_chuyendon_${bookingRef}_${mediaType}_${timestamp}_${String(
-        index + 1,
-      ).padStart(2, "0")}${extension}`;
+      const nameWithoutExt = originalName.replace(/\.[^/.]+$/, "");
+      const extension = originalName.split(".").pop().toLowerCase();
+      const sanitizedName = nameWithoutExt
+        .toLowerCase()
+        .replace(/[^a-z0-9]+/g, "-")
+        .replace(/^-+|-+$/g, "");
+
+      let rawId = String(orderId || "").trim();
+      if (rawId.includes("-")) {
+        rawId = rawId.split("-").pop();
+      }
+      const finalId = rawId.length > 0 ? rawId.padStart(7, "0") : rawId;
+      return `${finalId}_dich_vu_chuyen_don_${timestamp}_${sanitizedName}.${extension}`;
     };
 
     if (!imageFiles.length && !videoFiles.length) {
@@ -660,34 +655,52 @@ const partialPaths = {
       );
     }
 
+    // 1. Create booking record first with temporary empty media
+    const initialPayload = getBookingPayload(scope, portalStore, {
+      imageLinks: [],
+      videoLinks: [],
+    });
+    const bookingResult = await bookingApi.createBooking(initialPayload);
+    const remoteId = bookingResult.remoteId;
+
+    if (!remoteId) {
+      throw new Error("Không thể nhận diện mã bản ghi sau khi tạo đơn.");
+    }
+
+    // 2. Upload media with the obtained ID
     let mediaUploadResult = {
       imageLinks: [],
       videoLinks: [],
       warnings: [],
     };
+
     try {
-      mediaUploadResult = await uploadSelectedBookingMedia(scope);
+      mediaUploadResult = await uploadSelectedBookingMedia(scope, remoteId);
     } catch (mediaError) {
       console.error("Không thể xử lý media đặt lịch chuyển dọn:", mediaError);
       mediaUploadResult.warnings.push(
         "Media đính kèm chưa được tải lên Google Drive.",
       );
     }
-    const payload = getBookingPayload(scope, portalStore, mediaUploadResult);
-    let bookingResult = null;
-    try {
-      bookingResult = await bookingApi.createBooking(payload);
-    } catch (krudError) {
-      console.error("Không thể lưu yêu cầu đặt lịch chuyển dọn vào KRUD:", krudError);
-      const uploadedMediaBeforeKrudError =
-        mediaUploadResult.imageLinks.length || mediaUploadResult.videoLinks.length;
-      throw new Error(
-        uploadedMediaBeforeKrudError
-          ? "Media có thể đã tải lên Google Drive, nhưng yêu cầu chưa được lưu vào KRUD."
-          : krudError?.message ||
-              "Không thể lưu yêu cầu đặt lịch vào KRUD lúc này.",
-      );
+
+    // 3. Update the record with media links if they exist
+    if (
+      mediaUploadResult.imageLinks.length > 0 ||
+      mediaUploadResult.videoLinks.length > 0
+    ) {
+      try {
+        await bookingApi.updateBooking(remoteId, {
+          anh_dinh_kem: mediaUploadResult.imageLinks.join(" | "),
+          video_dinh_kem: mediaUploadResult.videoLinks.join(" | "),
+        });
+      } catch (updateError) {
+        console.error("Không thể cập nhật link media vào bản ghi:", updateError);
+        mediaUploadResult.warnings.push(
+          "Media đã tải lên Drive nhưng không thể lưu link vào hệ thống.",
+        );
+      }
     }
+
     return {
       ...bookingResult,
       accountSetup,

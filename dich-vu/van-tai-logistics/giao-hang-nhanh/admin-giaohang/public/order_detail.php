@@ -16,262 +16,8 @@ $requestedId = trim((string) ($_GET['id'] ?? ''));
     <title>Chi tiết đơn hàng | Admin</title>
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <link rel="stylesheet" href="assets/css/admin.css?v=<?php echo time(); ?>">
+    <link rel="stylesheet" href="assets/css/admin/order-detail.css?v=<?php echo time(); ?>">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
-    <style>
-        .detail-shell {
-            display: grid;
-            gap: 24px;
-        }
-
-        .detail-hero,
-        .detail-card {
-            background: #fff;
-            border: 1px solid #dbe7ff;
-            border-radius: 24px;
-            box-shadow: 0 18px 40px rgba(15, 23, 42, 0.05);
-        }
-
-        .detail-hero {
-            padding: 24px;
-            color: #fff;
-            background:
-                radial-gradient(circle at top right, rgba(255, 122, 0, 0.18), transparent 24%),
-                linear-gradient(135deg, #08214f 0%, #0a2a66 62%, #123b87 100%);
-        }
-
-        .detail-hero-head {
-            display: flex;
-            flex-wrap: wrap;
-            align-items: center;
-            justify-content: space-between;
-            gap: 16px;
-        }
-
-        .detail-hero h1 {
-            margin: 0 0 10px;
-            font-size: 32px;
-            line-height: 1.08;
-        }
-
-        .detail-hero p {
-            margin: 0;
-            color: rgba(255, 255, 255, 0.82);
-            line-height: 1.6;
-        }
-
-        .status-pill {
-            display: inline-flex;
-            align-items: center;
-            gap: 8px;
-            padding: 10px 16px;
-            border-radius: 999px;
-            font-size: 13px;
-            font-weight: 800;
-            background: rgba(255, 255, 255, 0.16);
-            border: 1px solid rgba(255, 255, 255, 0.18);
-        }
-
-        .hero-grid {
-            display: grid;
-            grid-template-columns: repeat(4, minmax(0, 1fr));
-            gap: 14px;
-            margin-top: 18px;
-        }
-
-        .hero-stat {
-            padding: 16px;
-            border-radius: 18px;
-            background: rgba(255, 255, 255, 0.1);
-            border: 1px solid rgba(255, 255, 255, 0.12);
-        }
-
-        .hero-stat small {
-            display: block;
-            margin-bottom: 8px;
-            color: rgba(255, 255, 255, 0.72);
-            font-size: 12px;
-            text-transform: uppercase;
-            letter-spacing: 0.05em;
-            font-weight: 800;
-        }
-
-        .hero-stat strong {
-            font-size: 24px;
-            line-height: 1.12;
-        }
-
-        .detail-grid {
-            display: grid;
-            grid-template-columns: repeat(2, minmax(0, 1fr));
-            gap: 24px;
-        }
-
-        .detail-card {
-            padding: 22px;
-        }
-
-        .detail-card h3 {
-            margin: 0 0 18px;
-            color: #0a2a66;
-            font-size: 22px;
-        }
-
-        .detail-meta-grid {
-            display: grid;
-            grid-template-columns: repeat(2, minmax(0, 1fr));
-            gap: 14px;
-        }
-
-        .detail-item {
-            padding: 14px 16px;
-            border-radius: 16px;
-            background: #f8fbff;
-            border: 1px solid #e3ecfb;
-        }
-
-        .detail-item small {
-            display: block;
-            margin-bottom: 8px;
-            color: #7d93b8;
-            font-size: 12px;
-            text-transform: uppercase;
-            letter-spacing: 0.05em;
-            font-weight: 800;
-        }
-
-        .detail-item strong,
-        .detail-item span {
-            display: block;
-            color: #102a43;
-            font-size: 17px;
-            line-height: 1.45;
-            font-weight: 800;
-            word-break: break-word;
-        }
-
-        .detail-route {
-            display: grid;
-            gap: 14px;
-        }
-
-        .detail-route-block {
-            padding: 16px 18px;
-            border-radius: 18px;
-            background: #f8fbff;
-            border: 1px solid #e3ecfb;
-        }
-
-        .detail-route-block small {
-            display: block;
-            margin-bottom: 8px;
-            color: #6b85b4;
-            font-size: 12px;
-            text-transform: uppercase;
-            letter-spacing: 0.05em;
-            font-weight: 800;
-        }
-
-        .detail-route-block strong {
-            display: block;
-            color: #102a43;
-            font-size: 18px;
-            line-height: 1.55;
-        }
-
-        .detail-note {
-            margin-top: 14px;
-            padding: 14px 16px;
-            border-radius: 16px;
-            background: #fff8ed;
-            border: 1px solid #ffe0b3;
-            color: #8a5a00;
-            line-height: 1.7;
-            font-weight: 600;
-        }
-
-        .detail-empty,
-        .detail-loading,
-        .detail-error,
-        .detail-admin-note {
-            padding: 26px 24px;
-            border-radius: 20px;
-            text-align: center;
-            font-weight: 700;
-            line-height: 1.7;
-        }
-
-        .detail-loading,
-        .detail-empty {
-            background: #fff;
-            border: 1px dashed #dbe7ff;
-            color: #64748b;
-        }
-
-        .detail-error {
-            background: #fff5f5;
-            border: 1px solid #fecaca;
-            color: #b91c1c;
-        }
-
-        .detail-admin-note {
-            background: #fffbea;
-            border: 1px solid #fde68a;
-            color: #92400e;
-        }
-
-        .detail-logs {
-            display: grid;
-            gap: 12px;
-        }
-
-        .detail-log {
-            padding: 14px 16px;
-            border-radius: 16px;
-            background: #f8fbff;
-            border: 1px solid #e3ecfb;
-        }
-
-        .detail-log small {
-            display: block;
-            margin-bottom: 6px;
-            color: #6b7280;
-            font-weight: 700;
-        }
-
-        .detail-log strong {
-            display: block;
-            color: #102a43;
-            font-size: 16px;
-        }
-
-        @media (max-width: 1100px) {
-            .hero-grid,
-            .detail-grid {
-                grid-template-columns: repeat(2, minmax(0, 1fr));
-            }
-        }
-
-        @media (max-width: 760px) {
-            .hero-grid,
-            .detail-grid,
-            .detail-meta-grid {
-                grid-template-columns: 1fr;
-            }
-
-            .detail-hero-head {
-                align-items: flex-start;
-            }
-
-            .detail-hero h1 {
-                font-size: 28px;
-            }
-
-            .detail-card,
-            .detail-hero {
-                padding: 18px;
-            }
-        }
-    </style>
 </head>
 <body>
     <?php include __DIR__ . '/../includes/header_admin.php'; ?>
@@ -404,6 +150,70 @@ $requestedId = trim((string) ($_GET['id'] ?? ''));
                 }
             }
 
+            function normalizeMediaItems(items) {
+                return (Array.isArray(items) ? items : [])
+                    .filter((item) => item && typeof item === "object")
+                    .map((item, index) => {
+                        const url = normalizeText(item.view_url || item.url || item.download_url || "");
+                        if (!url) return null;
+                        const extension = normalizeText(item.extension || "").toLowerCase()
+                            || url.split("?")[0].split("#")[0].split(".").pop().toLowerCase();
+                        return {
+                            url,
+                            name: normalizeText(item.name || "") || `Tệp đính kèm ${index + 1}`,
+                            extension,
+                        };
+                    })
+                    .filter(Boolean);
+            }
+
+            function isImageExtension(extension) {
+                return ["jpg", "jpeg", "png", "gif", "webp", "bmp", "svg", "avif"].includes(
+                    String(extension || "").toLowerCase(),
+                );
+            }
+
+            function isVideoExtension(extension) {
+                return ["mp4", "mov", "webm", "mkv", "avi", "m4v", "3gp"].includes(
+                    String(extension || "").toLowerCase(),
+                );
+            }
+
+            function renderMediaGallery(items, emptyMessage) {
+                if (!Array.isArray(items) || !items.length) {
+                    return `<div class="detail-empty">${escapeHtml(emptyMessage)}</div>`;
+                }
+
+                return `
+                    <div class="detail-media-grid">
+                        ${items.map((item) => {
+                            const url = escapeHtml(item.url);
+                            const name = escapeHtml(item.name);
+                            const extension = String(item.extension || "").toLowerCase();
+                            const mediaContent = isImageExtension(extension)
+                                ? `<img src="${url}" alt="${name}">`
+                                : isVideoExtension(extension)
+                                    ? `<video src="${url}" controls preload="metadata"></video>`
+                                    : `<div class="detail-media-fallback"><i class="fa-solid fa-file-lines"></i></div>`;
+                            const mediaTypeLabel = isImageExtension(extension)
+                                ? "Ảnh đính kèm"
+                                : isVideoExtension(extension)
+                                    ? "Video đính kèm"
+                                    : "Tệp đính kèm";
+                            return `
+                                <a class="detail-media-item" href="${url}" target="_blank" rel="noreferrer">
+                                    ${mediaContent}
+                                    <div class="detail-media-meta">
+                                        <strong>${name}</strong>
+                                        <span>${mediaTypeLabel}</span>
+                                    </div>
+                                </a>
+                            `;
+                        }).join("")}
+                    </div>
+                `;
+            }
+
             function getListFn() {
                 if (typeof window.krudList === "function") {
                     return (payload) => window.krudList(payload);
@@ -446,6 +256,26 @@ $requestedId = trim((string) ($_GET['id'] ?? ''));
                 const status = deriveStatus(row);
                 const pricingMeta = parseJsonObject(row.chi_tiet_gia_cuoc_json);
                 const items = parseJsonArray(row.mat_hang_json);
+                const bookingMedia = normalizeMediaItems(
+                    parseJsonArray(row.attachments_json || row.attachments),
+                );
+                const shipperReports = normalizeMediaItems(
+                    parseJsonArray(row.shipper_reports_json || row.shipper_reports),
+                );
+                const feedbackMedia = normalizeMediaItems(
+                    parseJsonArray(row.feedback_media_json || row.feedback_media),
+                );
+                const legacyPodUrl = normalizeText(row.pod_image || row.anh_xac_nhan_giao_hang || "");
+                if (
+                    legacyPodUrl &&
+                    !shipperReports.some((item) => item.url === legacyPodUrl)
+                ) {
+                    shipperReports.push({
+                        url: legacyPodUrl,
+                        name: "Bằng chứng giao hàng",
+                        extension: legacyPodUrl.split("?")[0].split("#")[0].split(".").pop().toLowerCase(),
+                    });
+                }
 
                 return {
                     id: String(row.id || "").trim(),
@@ -479,7 +309,12 @@ $requestedId = trim((string) ($_GET['id'] ?? ''));
                     startedAt: normalizeText(row.ngaybatdauthucte || ""),
                     completedAt: normalizeText(row.ngayhoanthanhthucte || ""),
                     cancelledAt: normalizeText(row.ngayhuy || ""),
+                    shipperNote: normalizeText(row.ghi_chu_shipper || row.shipper_note || ""),
+                    feedback: normalizeText(row.phan_hoi || row.feedback || ""),
                     items,
+                    bookingMedia,
+                    shipperReports,
+                    feedbackMedia,
                     logs: [],
                 };
             }
@@ -593,7 +428,7 @@ $requestedId = trim((string) ($_GET['id'] ?? ''));
                             <div class="detail-log">
                                 <small>${escapeHtml(formatDateTime(log.time, "Hệ thống"))}</small>
                                 <strong>${escapeHtml(log.title)}</strong>
-                                ${log.note ? `<div style="margin-top:8px; color:#64748b;">${escapeHtml(log.note)}</div>` : ""}
+                                ${log.note ? `<div class="detail-log-note">${escapeHtml(log.note)}</div>` : ""}
                             </div>
                         `).join("")}
                     </div>
@@ -609,9 +444,9 @@ $requestedId = trim((string) ($_GET['id'] ?? ''));
                                 <h1>#${escapeHtml(order.code)}</h1>
                                 <p>Chi tiết đơn hàng admin đang đọc trực tiếp từ bảng KRUD <strong>${escapeHtml(tableName)}</strong>.</p>
                             </div>
-                            <div style="display:flex; flex-wrap:wrap; gap:10px; justify-content:flex-end;">
+                            <div class="detail-hero-actions">
                                 <span class="status-pill"><i class="fa-solid fa-circle"></i> ${escapeHtml(order.statusLabel)}</span>
-                                <a href="${standaloneDetailBaseUrl}${encodeURIComponent(order.code)}" target="_blank" rel="noreferrer" class="status-pill" style="text-decoration:none;">
+                                <a href="${standaloneDetailBaseUrl}${encodeURIComponent(order.code)}" target="_blank" rel="noreferrer" class="status-pill detail-hero-link">
                                     <i class="fa-solid fa-up-right-from-square"></i> Mở màn chi tiết chung
                                 </a>
                             </div>
@@ -666,7 +501,7 @@ $requestedId = trim((string) ($_GET['id'] ?? ''));
                                 </div>
                             </div>
 
-                            <div class="detail-route" style="margin-top:18px;">
+                            <div class="detail-route detail-route-spaced">
                                 <div class="detail-route-block">
                                     <small>Điểm lấy hàng</small>
                                     <strong>${escapeHtml(order.pickupAddress || "Chưa cập nhật")}</strong>
@@ -727,7 +562,7 @@ $requestedId = trim((string) ($_GET['id'] ?? ''));
                                 </div>
                             </div>
 
-                            <div class="detail-admin-note" style="margin-top:18px;">
+                            <div class="detail-admin-note detail-admin-note-spaced">
                                 Phần xem chi tiết admin đã nối KRUD và suy trạng thái theo các mốc thời gian thực tế. Các thao tác sửa trạng thái, phân công nhà cung cấp và ghi chú nội bộ của trang này chưa được nối lại trên KRUD.
                             </div>
                         </section>
@@ -774,6 +609,23 @@ $requestedId = trim((string) ($_GET['id'] ?? ''));
                                     <strong>${escapeHtml(order.shipperPhone || "Chưa phân công")}</strong>
                                 </div>
                             </div>
+                        </section>
+
+                        <section class="detail-card">
+                            <h3>Ảnh/video khi đặt đơn</h3>
+                            ${renderMediaGallery(order.bookingMedia, "Chưa có ảnh hoặc video khi đặt đơn.")}
+                        </section>
+
+                        <section class="detail-card">
+                            <h3>POD / Báo cáo NCC</h3>
+                            ${order.shipperNote ? `<div class="detail-note detail-note--compact"><strong>Báo cáo NCC:</strong> ${escapeHtml(order.shipperNote)}</div>` : ""}
+                            ${renderMediaGallery(order.shipperReports, "Chưa có ảnh/video POD hoặc báo cáo NCC.")}
+                        </section>
+
+                        <section class="detail-card">
+                            <h3>Phản hồi khách hàng</h3>
+                            ${order.feedback ? `<div class="detail-note detail-note--compact"><strong>Nội dung phản hồi:</strong> ${escapeHtml(order.feedback)}</div>` : ""}
+                            ${renderMediaGallery(order.feedbackMedia, "Chưa có ảnh/video phản hồi từ khách hàng.")}
                         </section>
 
                         <section class="detail-card">

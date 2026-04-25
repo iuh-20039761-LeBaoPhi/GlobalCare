@@ -1709,7 +1709,7 @@
       const dateFrom = String(params.date_from || "").trim();
       const dateTo = String(params.date_to || "").trim();
       const page = Math.max(Number(params.page || 1), 1);
-      const pageSize = 6;
+      const pageSize = 10;
       const filtered = summaries.filter((item) => {
         if (status && item.status !== status) return false;
         if (dateFrom && String(item.created_at || "").slice(0, 10) < dateFrom)
@@ -2088,6 +2088,35 @@
 
     if (action === "update-profile") {
       const formData = options.body;
+      const safeToken = (value, fallback = "unknown") =>
+        String(value == null ? "" : value)
+          .trim()
+          .toLowerCase()
+          .replace(/[^a-z0-9]+/g, "_")
+          .replace(/^_+|_+$/g, "") || fallback;
+      const padNumber = (value) => String(value).padStart(2, "0");
+      const timestamp = (() => {
+        const now = new Date();
+        return (
+          now.getFullYear() +
+          padNumber(now.getMonth() + 1) +
+          padNumber(now.getDate()) +
+          "_" +
+          padNumber(now.getHours()) +
+          padNumber(now.getMinutes()) +
+          padNumber(now.getSeconds())
+        );
+      })();
+      const profileRef = safeToken(
+        session.id || session.phone || session.so_dien_thoai || "guest",
+        "guest",
+      );
+      const buildProfileFileName = (file, assetType) => {
+        const originalName = String(file?.name || "").trim();
+        const extMatch = originalName.match(/(\.[a-z0-9]+)$/i);
+        const extension = extMatch ? extMatch[1].toLowerCase() : "";
+        return `profile_giaohang_customer_${profileRef}_${assetType}_${timestamp}${extension}`;
+      };
       const uploadSingleFile = async (fieldName, uploadOptions = {}) => {
         const file = formData?.get(fieldName);
         if (!(file instanceof File) || !file.size) return "";
@@ -2095,7 +2124,7 @@
           throw new Error("Hệ thống upload hồ sơ chưa sẵn sàng.");
         }
         const uploaded = await core.uploadFileToDrive(file, {
-          name: file.name,
+          name: buildProfileFileName(file, uploadOptions.assetType || "media"),
           proxyFile: uploadOptions.proxyFile || "",
           uploadKind: uploadOptions.uploadKind || "",
         });
@@ -2108,14 +2137,17 @@
       let cccdBackLink = "";
       try {
         avatarLink = await uploadSingleFile("avatar_file", {
+          assetType: "avatar",
           proxyFile: "khach-hang/upload.php",
           uploadKind: "avatar",
         });
         cccdFrontLink = await uploadSingleFile("cccd_front_file", {
+          assetType: "cccd_front",
           proxyFile: "khach-hang/upload.php",
           uploadKind: "cccd",
         });
         cccdBackLink = await uploadSingleFile("cccd_back_file", {
+          assetType: "cccd_back",
           proxyFile: "khach-hang/upload.php",
           uploadKind: "cccd",
         });
@@ -2363,7 +2395,6 @@
           : "Khu vực khách hàng"),
     );
     const menuItems = [
-      `<li><a href="${routes.dashboard}"><i class="fas fa-chart-line"></i> Tổng quan đặt đơn</a></li>`,
       `<li><a href="${routes.orders}"><i class="fas fa-box"></i> Đơn hàng của tôi</a></li>`,
     ];
 
@@ -2375,7 +2406,6 @@
 
     if (canReceiveOrders) {
       menuItems.push(
-        '<li><a href="../nha-cung-cap/dashboard-giaohang.html"><i class="fas fa-truck-ramp-box"></i> Tổng quan nhận đơn</a></li>',
         '<li><a href="../nha-cung-cap/don-hang-giaohang.html"><i class="fas fa-clipboard-list"></i> Đơn hàng của khách</a></li>',
         '<li><a href="../nha-cung-cap/ho-so-giaohang.html"><i class="fas fa-id-card"></i> Hồ sơ cá nhân</a></li>',
       );
@@ -2384,7 +2414,7 @@
     if (loginItem) {
       loginItem.className = "dropdown has-submenu customer-nav-dropdown";
       loginItem.innerHTML = `
-        <a href="${routes.dashboard}">Xin chào, ${firstName}</a>
+        <a href="${routes.orders}">Xin chào, ${firstName}</a>
         <ul class="dropdown-menu customer-nav-dropdown-menu">
           <li class="customer-nav-dropdown-summary">
             <div class="customer-nav-dropdown-avatar">${firstName.charAt(0)}</div>
