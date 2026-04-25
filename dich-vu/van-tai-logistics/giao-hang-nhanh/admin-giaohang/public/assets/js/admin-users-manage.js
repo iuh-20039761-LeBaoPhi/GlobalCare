@@ -126,7 +126,7 @@
   }
 
   function isLocked(user) {
-    return Number(user?.is_locked || 0) === 1 || user?.is_locked === true;
+    return String(user?.trangthai) === '1';
   }
 
   function canToggleLock(user) {
@@ -280,10 +280,7 @@
       const locked = action === "lock";
       await updateFn(USER_TABLE, {
         id: userId,
-        trangthai: locked ? "locked" : "active",
-        is_locked: locked ? 1 : 0,
-        bi_khoa: locked ? 1 : 0,
-        lock_reason: locked ? reason : "",
+        trangthai: locked ? "1" : "0",
         ly_do_khoa: locked ? reason : "",
         updated_at: new Date().toISOString(),
       }, userId);
