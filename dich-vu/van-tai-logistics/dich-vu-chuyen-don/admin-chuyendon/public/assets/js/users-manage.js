@@ -60,24 +60,24 @@ const userManager = (function () {
 
     function resolveStatus(value) {
         const normalized = normalizeLowerText(value);
-        if (["locked", "inactive", "blocked", "disabled"].includes(normalized)) {
-            return "locked";
+        if (["locked", "inactive", "blocked", "disabled", "1"].includes(normalized)) {
+            return "1";
         }
-        if (["pending", "waiting"].includes(normalized)) {
+        if (["pending", "waiting", "2"].includes(normalized)) {
             return "pending";
         }
-        return "active";
+        return "0";
     }
 
     function getStatusMeta(value) {
         const status = resolveStatus(value);
-        if (status === "locked") {
-            return { key: "locked", label: "Đang khóa", className: "is-locked" };
+        if (status === "1") {
+            return { key: "1", label: "Đang khóa", className: "is-locked" };
         }
         if (status === "pending") {
             return { key: "pending", label: "Chờ duyệt", className: "is-pending" };
         }
-        return { key: "active", label: "Đang hoạt động", className: "is-active" };
+        return { key: "0", label: "Đang hoạt động", className: "is-active" };
     }
 
     function getRoleLabel(role) {
@@ -156,7 +156,7 @@ const userManager = (function () {
         const total = state.allUsers.length;
         const providers = state.allUsers.filter((user) => user.moving_role === "provider").length;
         const pending = state.allUsers.filter((user) => user.resolved_status === "pending" || (user.moving_role === "provider" && !user.verification_complete)).length;
-        const locked = state.allUsers.filter((user) => user.resolved_status === "locked").length;
+        const locked = state.allUsers.filter((user) => user.resolved_status === "1").length;
 
         document.getElementById("statsUsersTotal").textContent = String(total);
         document.getElementById("statsUsersProviders").textContent = String(providers);
@@ -285,10 +285,10 @@ const userManager = (function () {
                             <button type="button" class="btn btn-outline" onclick="userManager.showUserModal('${escapeHtml(user.id)}')" title="Sửa">
                                 <i class="fas fa-pen-to-square"></i>
                             </button>
-                            <button type="button" class="btn btn-outline" onclick="userManager.quickUpdateStatus('${escapeHtml(user.id)}', 'active')" title="Duyệt hoạt động">
+                            <button type="button" class="btn btn-outline" onclick="userManager.quickUpdateStatus('${escapeHtml(user.id)}', '0')" title="Duyệt hoạt động">
                                 <i class="fas fa-circle-check" style="color:var(--success);"></i>
                             </button>
-                            <button type="button" class="btn btn-outline" onclick="userManager.quickUpdateStatus('${escapeHtml(user.id)}', 'locked')" title="Khóa">
+                            <button type="button" class="btn btn-outline" onclick="userManager.quickUpdateStatus('${escapeHtml(user.id)}', '1')" title="Khóa">
                                 <i class="fas fa-lock" style="color:var(--danger);"></i>
                             </button>
                             <button type="button" class="btn btn-outline" onclick="userManager.handleDelete('${escapeHtml(user.id)}')" title="Xóa">
@@ -338,7 +338,7 @@ const userManager = (function () {
             email: user?.email || "",
             vaitro: user?.moving_role || "customer",
             diachi: user?.diachi || "",
-            trangthai: user?.resolved_status || "active",
+            trangthai: user?.resolved_status || "0",
             ten_cong_ty: user?.ten_cong_ty || "",
             ma_so_thue: user?.ma_so_thue || "",
             dia_chi_doanh_nghiep: user?.dia_chi_doanh_nghiep || "",
@@ -459,7 +459,7 @@ const userManager = (function () {
                 trangthai: status,
                 updated_at: new Date().toISOString(),
             }, id);
-            showToast(status === "active" ? "Đã duyệt tài khoản hoạt động." : status === "locked" ? "Đã khóa tài khoản." : "Đã cập nhật trạng thái.");
+            showToast(status === "0" ? "Đã duyệt tài khoản hoạt động." : status === "1" ? "Đã khóa tài khoản." : "Đã cập nhật trạng thái.");
             await fetchUsers();
         } catch (error) {
             showToast(error?.message || "Không thể cập nhật trạng thái tài khoản.", "danger");

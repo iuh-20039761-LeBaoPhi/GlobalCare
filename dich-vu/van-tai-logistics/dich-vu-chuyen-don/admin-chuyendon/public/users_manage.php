@@ -285,9 +285,9 @@ require_once __DIR__ . '/../includes/header_admin.php';
                 <i class="fas fa-shield-halved"></i>
                 <select class="select" id="statusFilter" onchange="userManager.handleFilterChange()">
                     <option value="">Tất cả</option>
-                    <option value="active">Đang hoạt động</option>
+                    <option value="0">Đang hoạt động</option>
                     <option value="pending">Chờ duyệt</option>
-                    <option value="locked">Đang khóa</option>
+                    <option value="1">Đang khóa</option>
                 </select>
             </div>
         </div>
@@ -360,9 +360,9 @@ require_once __DIR__ . '/../includes/header_admin.php';
                     <div class="field">
                         <label class="label">Trạng thái</label>
                         <select id="trangthai" class="select">
-                            <option value="active">Đang hoạt động</option>
+                            <option value="0">Đang hoạt động</option>
                             <option value="pending">Chờ duyệt</option>
-                            <option value="locked">Đang khóa</option>
+                            <option value="1">Đang khóa</option>
                         </select>
                     </div>
                     <div class="field" id="passwordField">
@@ -427,10 +427,10 @@ require_once __DIR__ . '/../includes/header_admin.php';
                 <button type="button" class="btn btn-outline" onclick="userManager.applyQuickStatus('pending')">
                     <i class="fas fa-user-clock"></i>Chờ duyệt
                 </button>
-                <button type="button" class="btn btn-outline" onclick="userManager.applyQuickStatus('active')">
+                <button type="button" class="btn btn-outline" onclick="userManager.applyQuickStatus('0')">
                     <i class="fas fa-circle-check"></i>Duyệt hoạt động
                 </button>
-                <button type="button" class="btn btn-outline" onclick="userManager.applyQuickStatus('locked')">
+                <button type="button" class="btn btn-outline" onclick="userManager.applyQuickStatus('1')">
                     <i class="fas fa-lock"></i>Khóa tài khoản
                 </button>
             </div>
