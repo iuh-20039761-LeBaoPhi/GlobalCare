@@ -316,6 +316,9 @@ $pageTitle = $pageTitle ?? 'MamaCore - Staff Panel';
                         <i class="bi bi-receipt"></i> <span>Đơn hàng của tôi</span>
                     </a>
                 <?php endif; ?>
+                <a href="../../../../public/trang-ca-nhan.html" class="list-group-item">
+                    <i class="bi bi-person"></i> <span>Thông tin cá nhân</span>
+                </a>
                 <a href="../logout.php" class="list-group-item text-warning">
                     <i class="bi bi-box-arrow-right"></i> <span>Đăng xuất</span>
                 </a>
