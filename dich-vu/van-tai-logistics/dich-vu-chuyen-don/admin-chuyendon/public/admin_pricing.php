@@ -19,9 +19,10 @@ require_once __DIR__ . '/../includes/header_admin.php';
     <div>
         <div style="display: flex; align-items: center; gap: 12px; margin-bottom: 8px;">
             <span class="badge" id="moving-pricing-last-updated-badge" style="background: var(--primary-soft); color: var(--primary-deep); font-size: 10px; display: none;">Cập nhật lần cuối: <span id="moving-pricing-last-updated-time">--:--</span></span>
+            <div id="moving-pricing-source" class="muted" style="font-size: 12px; font-weight: 500;">Đang đồng bộ dữ liệu...</div>
         </div>
         <h1>Quản lý Bảng giá & Phụ phí</h1>
-        <p>Trang này lưu bảng giá lên KRUD, sau đó export lại <code>bang-gia-minh-bach.json</code> để frontend tiếp tục dùng cho hiển thị.</p>
+        <p>Hệ thống tự động đồng bộ giữa Cơ sở dữ liệu (KRUD) và file hiển thị (JSON). Mọi thay đổi sẽ được cập nhật ngay lập tức.</p>
         <div style="margin-top: 16px; display: flex; gap: 12px;">
             <a href="index.php" class="btn btn-outline" style="font-size: 13px; padding: 6px 12px;">
                 <i class="fas fa-arrow-left"></i> Quay lại Dashboard
@@ -39,14 +40,6 @@ require_once __DIR__ . '/../includes/header_admin.php';
     style="<?php echo is_array($flash) ? '' : 'display:none;'; ?>"
 ><?php echo is_array($flash) ? moving_admin_escape($flash['message'] ?? '') : ''; ?></div>
 
-<section class="panel" style="margin-bottom: 24px;">
-    <div class="section-header">
-        <div>
-            <h2>Trạng thái dữ liệu</h2>
-            <p class="muted" id="moving-pricing-source">Đang nạp dữ liệu từ KRUD...</p>
-        </div>
-    </div>
-</section>
 
 <section class="pricing-tabs-nav" id="moving-pricing-tabs">
     <?php foreach ($services as $idx => $svc): ?>
@@ -84,8 +77,8 @@ require_once __DIR__ . '/../includes/header_admin.php';
                 <table class="pricing-table">
                     <thead>
                         <tr>
-                            <th style="width: 60px; text-align: center;">Icon</th>
-                            <th>Loại xe / Slug</th>
+                            <th style="width: 60px; text-align: center;">Thứ tự</th>
+                            <th>Loại xe</th>
                             <th>Mở cửa (5km)</th>
                             <th>6-15km</th>
                             <th>16-30km</th>
@@ -187,8 +180,9 @@ require_once __DIR__ . '/../includes/header_admin.php';
                         <input class="input" type="text" name="ten_xe" required>
                     </div>
                     <div class="field">
-                        <label class="label">Mã định danh (Slug)</label>
-                        <input class="input" type="text" name="slug_xe" required>
+                        <label class="label">Thứ tự hiển thị</label>
+                        <input class="input" type="number" name="thu_tu" placeholder="Ví dụ: 1, 2, 3..." required>
+                        <input type="hidden" name="slug_xe">
                     </div>
                 </div>
 
@@ -214,21 +208,7 @@ require_once __DIR__ . '/../includes/header_admin.php';
                     </div>
                 </div>
 
-                <div class="pricing-modal-grid">
-                    <div class="field">
-                        <label class="label">Giá/km (Form)</label>
-                        <input class="input" type="number" name="gia_moi_km_form" required>
-                    </div>
-                    <div class="field">
-                        <label class="label">Giá/km đường dài (Form)</label>
-                        <input class="input" type="number" name="gia_moi_km_duong_dai_form" required>
-                    </div>
-                </div>
 
-                <div class="field">
-                    <label class="label">Phí tối thiểu (Form)</label>
-                    <input class="input" type="number" name="phi_toi_thieu_form" required>
-                </div>
             </form>
         </div>
         <div class="modal-footer">
@@ -255,9 +235,12 @@ require_once __DIR__ . '/../includes/header_admin.php';
                     <label class="label">Tên hiển thị</label>
                     <input class="input" type="text" name="ten_muc" required>
                 </div>
-                <div class="field">
-                    <label class="label">Mã định danh (Slug)</label>
-                    <input class="input" type="text" name="slug_muc" required>
+                <div class="pricing-modal-grid">
+                    <div class="field">
+                        <label class="label">Thứ tự hiển thị</label>
+                        <input class="input" type="number" name="thu_tu" placeholder="Ví dụ: 1, 2, 3..." required>
+                        <input type="hidden" name="slug_muc">
+                    </div>
                 </div>
                 <div class="field" id="item-editor-price-field">
                     <label class="label">Đơn giá (VNĐ)</label>
@@ -275,6 +258,9 @@ require_once __DIR__ . '/../includes/header_admin.php';
 
 <script>
 window.__MOVING_PRICING_FALLBACK__ = <?php echo json_encode($services, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES); ?>;
+// Khởi tạo stub để tránh lỗi khi người dùng click quá nhanh trước khi script load xong
+window.__ADMIN_PRICING_TABS__ = { setActive: function() {}, init: function() {} };
+window.__ADMIN_PRICING_MODAL__ = { openAddVehicle: function() {}, openEditVehicle: function() {}, openAddItem: function() {}, openEditItem: function() {}, close: function() {}, deleteVehicle: function() {}, deleteItem: function() {}, saveVehicle: function() {}, saveItem: function() {} };
 </script>
 <script src="assets/js/admin-api.js"></script>
 <script>
@@ -412,10 +398,7 @@ window.__MOVING_PRICING_FALLBACK__ = <?php echo json_encode($services, JSON_UNES
                     gia_mo_cua: toNumber(vehicle?.gia_mo_cua),
                     don_gia_km_6_15: getBandPrice(vehicle?.bang_gia_km, 6),
                     don_gia_km_16_30: getBandPrice(vehicle?.bang_gia_km, 16),
-                    don_gia_km_31_tro_len: getBandPrice(vehicle?.bang_gia_km, 31),
-                    gia_moi_km_form: toNumber(vehicle?.gia_moi_km),
-                    gia_moi_km_duong_dai_form: toNumber(vehicle?.gia_moi_km_duong_dai),
-                    phi_toi_thieu_form: toNumber(vehicle?.phi_toi_thieu)
+                    don_gia_km_31_tro_len: getBandPrice(vehicle?.bang_gia_km, 31)
                 });
             });
 
@@ -569,6 +552,8 @@ window.__MOVING_PRICING_FALLBACK__ = <?php echo json_encode($services, JSON_UNES
         }
 
         if (row) {
+            form.id.value = row.id;
+            form.thu_tu.value = row.thu_tu || 0;
             form.ten_muc.value = itemName;
             priceInput.value = config.showPrice ? toNumber(row.don_gia) : '0';
         }
@@ -605,14 +590,12 @@ window.__MOVING_PRICING_FALLBACK__ = <?php echo json_encode($services, JSON_UNES
             form.id.value = row.id;
             form.id_dich_vu.value = row.id_dich_vu;
             form.ten_xe.value = row.ten_xe;
-            form.slug_xe.value = row.slug_xe;
+            form.thu_tu.value = row.thu_tu || 0;
+            form.slug_xe.value = row.slug_xe || '';
             form.gia_mo_cua.value = row.gia_mo_cua;
             form.don_gia_km_6_15.value = row.don_gia_km_6_15;
             form.don_gia_km_16_30.value = row.don_gia_km_16_30;
             form.don_gia_km_31_tro_len.value = row.don_gia_km_31_tro_len;
-            form.gia_moi_km_form.value = row.gia_moi_km_form;
-            form.gia_moi_km_duong_dai_form.value = row.gia_moi_km_duong_dai_form;
-            form.phi_toi_thieu_form.value = row.phi_toi_thieu_form;
 
             modalManager.open(vehicleModal);
         },
@@ -624,6 +607,7 @@ window.__MOVING_PRICING_FALLBACK__ = <?php echo json_encode($services, JSON_UNES
             form.slug_muc.value = '';
             form.ten_muc.value = '';
             form.don_gia.value = '';
+            form.thu_tu.value = '0';
             configureItemEditor(viewKey);
             modalManager.open(itemModal);
         },
@@ -665,6 +649,7 @@ window.__MOVING_PRICING_FALLBACK__ = <?php echo json_encode($services, JSON_UNES
                     }
                     modalManager.close();
                     await finalizePricingMutation('Đã lưu dữ liệu xe thành công.');
+                    await refreshData(false);
                 }
             } catch (e) {
                 alert('Lỗi: ' + e.message);
@@ -701,6 +686,7 @@ window.__MOVING_PRICING_FALLBACK__ = <?php echo json_encode($services, JSON_UNES
                     }
                     modalManager.close();
                     await finalizePricingMutation('Đã lưu hạng mục thành công.');
+                    await refreshData(false);
                 }
             } catch (e) {
                 alert('Lỗi: ' + e.message);
@@ -714,11 +700,8 @@ window.__MOVING_PRICING_FALLBACK__ = <?php echo json_encode($services, JSON_UNES
             setBusy(true);
             try {
                 await window.adminApi.deleteMovingPricingVehicle(id);
-                applyState(
-                    state.vehicles.filter((row) => String(row?.id || '') !== String(id)),
-                    state.items
-                );
                 await finalizePricingMutation('Đã xóa loại xe.');
+                await refreshData(false);
             } catch (e) {
                 alert('Lỗi: ' + e.message);
             } finally {
@@ -731,11 +714,8 @@ window.__MOVING_PRICING_FALLBACK__ = <?php echo json_encode($services, JSON_UNES
             setBusy(true);
             try {
                 await window.adminApi.deleteMovingPricingItem(id);
-                applyState(
-                    state.vehicles,
-                    state.items.filter((row) => String(row?.id || '') !== String(id))
-                );
                 await finalizePricingMutation('Đã xóa hạng mục.');
+                await refreshData(false);
             } catch (e) {
                 alert('Lỗi: ' + e.message);
             } finally {
@@ -824,10 +804,7 @@ window.__MOVING_PRICING_FALLBACK__ = <?php echo json_encode($services, JSON_UNES
             gia_mo_cua: toNumber(row?.gia_mo_cua),
             don_gia_km_6_15: toNumber(row?.don_gia_km_6_15),
             don_gia_km_16_30: toNumber(row?.don_gia_km_16_30),
-            don_gia_km_31_tro_len: toNumber(row?.don_gia_km_31_tro_len),
-            gia_moi_km_form: toNumber(row?.gia_moi_km_form),
-            gia_moi_km_duong_dai_form: toNumber(row?.gia_moi_km_duong_dai_form),
-            phi_toi_thieu_form: toNumber(row?.phi_toi_thieu_form)
+            don_gia_km_31_tro_len: toNumber(row?.don_gia_km_31_tro_len)
         };
     }
 
@@ -932,37 +909,20 @@ window.__MOVING_PRICING_FALLBACK__ = <?php echo json_encode($services, JSON_UNES
                 shouldExportAfterCleanup = shouldExportAfterCleanup || normalized.changed;
             }
 
-            if (allowBootstrap) {
-                const backfilled = await backfillMissingPricingRows(vehicles, items, fallbackRows);
-                shouldReloadAfterBackfill = shouldReloadAfterBackfill || backfilled;
-                shouldExportAfterCleanup = shouldExportAfterCleanup || backfilled;
-                if (backfilled) {
-                    [vehicles, items] = await Promise.all([
-                        window.adminApi.listMovingPricingVehicles(),
-                        window.adminApi.listMovingPricingItems()
-                    ]);
-                    const normalized = await normalizeLegacyCheckboxPricing(items);
-                    items = normalized.rows;
-                    shouldExportAfterCleanup = shouldExportAfterCleanup || normalized.changed;
-                }
-            }
-
-            const hasKrudData = vehicles.length > 0 || items.length > 0;
-            if (!hasKrudData && allowBootstrap && (fallbackRows.vehicles.length || fallbackRows.items.length)) {
+            let hasKrudData = vehicles.length > 0 || items.length > 0;
+            if (allowBootstrap && !hasKrudData && (fallbackRows.vehicles.length || fallbackRows.items.length)) {
                 if (sourceBox) {
                     sourceBox.textContent = 'KRUD đang trống, đang nạp dữ liệu từ JSON fallback...';
                 }
-
                 await seedKrudFromFallback(fallbackRows);
                 [vehicles, items] = await Promise.all([
                     window.adminApi.listMovingPricingVehicles(),
                     window.adminApi.listMovingPricingItems()
                 ]);
-                {
-                    const normalized = await normalizeLegacyCheckboxPricing(items);
-                    items = normalized.rows;
-                    shouldExportAfterCleanup = shouldExportAfterCleanup || normalized.changed;
-                }
+                const normalized = await normalizeLegacyCheckboxPricing(items);
+                items = normalized.rows;
+                shouldExportAfterCleanup = true;
+                hasKrudData = true;
             }
 
             const hasData = vehicles.length > 0 || items.length > 0;
@@ -1042,30 +1002,32 @@ window.__MOVING_PRICING_FALLBACK__ = <?php echo json_encode($services, JSON_UNES
     function renderAll() {
         document.querySelectorAll('[data-tbody-vehicles]').forEach(tbody => {
             const svcId = tbody.dataset.tbodyVehicles;
-            const rows = state.vehicles.filter(v => v.id_dich_vu == svcId);
+            const rows = state.vehicles
+                .filter(v => v.id_dich_vu == svcId)
+                .sort((a, b) => (Number(a.thu_tu) || 0) - (Number(b.thu_tu) || 0));
             tbody.innerHTML = rows.map(v => `
                 <tr>
-                    <td style="text-align: center;">
-                        <div class="vehicle-icon-circle">
-                            ${getVehicleIcon(v.slug_xe)}
-                        </div>
+                    <td style="text-align: center; font-weight: 800; color: var(--primary-deep);">
+                        ${v.thu_tu || 0}
                     </td>
                     <td>
-                        <div style="font-weight: 700; color: var(--slate);">${v.ten_xe}</div>
-                        <div class="muted" style="font-size: 11px;">${v.slug_xe}</div>
+                        <div style="display: flex; align-items: center; gap: 12px;">
+                            <div class="vehicle-icon-circle" style="width: 32px; height: 32px; flex-shrink: 0;">
+                                ${getVehicleIcon(v.slug_xe)}
+                            </div>
+                             <div>
+                                <div style="font-weight: 700; color: var(--slate);">${v.ten_xe}</div>
+                            </div>
+                        </div>
                     </td>
                     <td><span class="pricing-value">${formatMoney(v.gia_mo_cua)}</span></td>
                     <td><span class="pricing-value">${formatMoney(v.don_gia_km_6_15)}</span></td>
                     <td><span class="pricing-value">${formatMoney(v.don_gia_km_16_30)}</span></td>
                     <td><span class="pricing-value">${formatMoney(v.don_gia_km_31_tro_len)}</span></td>
-                    <td>
-                        <div style="display: flex; gap: 8px;">
-                            <button type="button" class="pricing-action-btn" onclick="window.__ADMIN_PRICING_MODAL__.openEditVehicle('${v.id}')">
-                                <i class="fas fa-edit"></i> Sửa
-                            </button>
-                            <button type="button" class="pricing-action-btn pricing-action-btn--danger" onclick="window.__ADMIN_PRICING_MODAL__.deleteVehicle('${v.id}')">
-                                <i class="fas fa-trash"></i>
-                            </button>
+                    <td style="text-align: center;">
+                        <div style="display: flex; gap: 8px; justify-content: center;">
+                            <button type="button" class="btn-edit-small" onclick="window.__ADMIN_PRICING_MODAL__.openEditVehicle('${v.id}')"><i class="fas fa-edit"></i></button>
+                            <button type="button" class="btn-delete-small" onclick="window.__ADMIN_PRICING_MODAL__.deleteVehicle('${v.id}')" style="color: var(--danger);"><i class="fas fa-trash"></i></button>
                         </div>
                     </td>
                 </tr>
@@ -1075,9 +1037,11 @@ window.__MOVING_PRICING_FALLBACK__ = <?php echo json_encode($services, JSON_UNES
         document.querySelectorAll('[data-tbody-items]').forEach(tbody => {
             const [svcId, viewKey] = String(tbody.dataset.tbodyItems || '').split('::');
             const config = getItemViewConfig(viewKey);
-            const rows = state.items.filter((item) => (
-                item.id_dich_vu == svcId && getItemViewKey(item) === viewKey
-            ));
+            const rows = state.items
+                .filter((item) => (
+                    item.id_dich_vu == svcId && getItemViewKey(item) === viewKey
+                ))
+                .sort((a, b) => (Number(a.thu_tu) || 0) - (Number(b.thu_tu) || 0));
 
             if (!rows.length) {
                 tbody.innerHTML = `<tr><td colspan="${config.showPrice ? 3 : 2}" class="muted" style="text-align: center; padding: 12px;">Chưa có.</td></tr>`;
@@ -1097,7 +1061,6 @@ window.__MOVING_PRICING_FALLBACK__ = <?php echo json_encode($services, JSON_UNES
                         <tr>
                             <td>
                                 <div style="font-weight: 600;">${i.ten_muc}</div>
-                                <div class="muted" style="font-size: 10px;">${i.slug_muc}</div>
                             </td>
                             <td>${actions}</td>
                         </tr>
@@ -1108,7 +1071,6 @@ window.__MOVING_PRICING_FALLBACK__ = <?php echo json_encode($services, JSON_UNES
                     <tr>
                         <td>
                             <div style="font-weight: 600;">${i.ten_muc}</div>
-                            <div class="muted" style="font-size: 10px;">${i.slug_muc}</div>
                         </td>
                         <td><span class="pricing-value">${formatMoney(i.don_gia)}</span></td>
                         <td>${actions}</td>
@@ -1120,8 +1082,8 @@ window.__MOVING_PRICING_FALLBACK__ = <?php echo json_encode($services, JSON_UNES
 
     // --- Init ---
     document.addEventListener('DOMContentLoaded', () => {
-        setSourceStatus('Đang nạp dữ liệu từ KRUD...');
-        refreshData().then(() => {
+        setSourceStatus('Đang kiểm tra dữ liệu...');
+        refreshData({ exportAfterLoad: true }).then(() => {
             if (window.__ADMIN_PRICING_TABS__) {
                 window.__ADMIN_PRICING_TABS__.init();
             }
