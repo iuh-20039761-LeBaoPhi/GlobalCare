@@ -1933,10 +1933,10 @@
             const data = await response.json();
             if (data.success && data.user) {
               const user = data.user;
-            if (user.hovaten) $('#customerName').val(user.hovaten);
-            if (user.sodienthoai) $('#customerPhone').val(user.sodienthoai);
-            if (user.email) $('#customerEmail').val(user.email);
-            if (user.diachi) $('#customerAddress').val(user.diachi);
+              if (user.hovaten) $('#customerName').val(user.hovaten);
+              if (user.sodienthoai) $('#customerPhone').val(user.sodienthoai);
+              if (user.email) $('#customerEmail').val(user.email);
+              if (user.diachi) $('#customerAddress').val(user.diachi);
               // Tự động thu gọn nếu đã điền xong thông tin cơ bản và chưa bị thu gọn
               if (user.hovaten && user.sodienthoai) {
                 const box = document.getElementById('customerInfoBox');
@@ -2419,7 +2419,9 @@
             gio_ket_thuc_kehoach: data.endTime || '',
             tong_tien: normalizeMoneyToNumber(data.price),
             yeu_cau_khac: data.extraRequest || '',
-            ghi_chu: (data.note || '').trim()
+            ghi_chu: (data.note || '').trim(),
+            anh_id: data.anh_id || '',
+            video_id: data.video_id || ''
           };
 
           if (window.currentLoggedInId) {
@@ -2503,6 +2505,10 @@
             }
 
             var orderId = dbResult.id || (dbResult.data && dbResult.data.id) || dbResult.last_id || 0;
+            if (!orderId || orderId === 0) {
+              console.error('Lỗi: Không lấy được ID đơn hàng từ phản hồi:', dbResult);
+              throw new Error('Lỗi hệ thống: Không thể khởi tạo mã đơn hàng. Vui lòng liên hệ quản trị viên.');
+            }
             var serviceName = data.service || 'DichVu';
 
             // 2. Upload Ảnh/Video với tên file theo cấu trúc yêu cầu
