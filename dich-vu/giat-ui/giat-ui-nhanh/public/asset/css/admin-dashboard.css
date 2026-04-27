@@ -33,11 +33,7 @@ body {
 
 .sidebar-shell {
   width: 280px;
-  background: linear-gradient(
-    180deg,
-    var(--admin-dark) 0%,
-    var(--admin-dark-2) 100%
-  );
+  background: linear-gradient(180deg, #06b6d4, #3b82f6, #8b5cf6);
   color: #c5d6e8;
   border-right: 1px solid rgba(255, 255, 255, 0.08);
 }
