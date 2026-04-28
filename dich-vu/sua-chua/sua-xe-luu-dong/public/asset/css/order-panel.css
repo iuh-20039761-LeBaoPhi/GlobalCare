@@ -276,7 +276,7 @@
 .invoice-hero {
   border: 1px solid rgba(255, 255, 255, 0.15);
   border-radius: 20px;
-  padding: 24px;
+  padding: 10px;
   background: linear-gradient(to left, #859398, #283048);
   color: #ffffff;
   box-shadow: 0 20px 40px rgba(0, 0, 0, 0.2);
@@ -372,8 +372,8 @@
 
 .hero-progress-ring {
   --progress: 0;
-  width: 105px;
-  height: 105px;
+  width: 70px;
+  height: 70px;
   border-radius: 50%;
   background: conic-gradient(
     #38bdf8 calc(var(--progress) * 1%),
@@ -387,8 +387,8 @@
 
 .hero-progress-ring::before {
   content: "";
-  width: 82px;
-  height: 82px;
+  width: 60px;
+  height: 60px;
   border-radius: 50%;
   position: absolute;
   background: #1e293b;
@@ -402,7 +402,7 @@
 
 .hero-progress-content strong {
   display: block;
-  font-size: 1.5rem;
+  font-size: 0.8rem;
   line-height: 1.1;
   font-weight: 800;
   color: #fff;
@@ -410,7 +410,7 @@
 
 .hero-progress-content small {
   display: block;
-  font-size: 0.65rem;
+  font-size: 0.45rem;
   color: #94a3b8;
   text-transform: uppercase;
   letter-spacing: 0.05em;
@@ -1040,8 +1040,8 @@ select:focus-visible {
   }
 
   .hero-progress-ring {
-    width: 115px;
-    height: 115px;
+    width: 70px;
+    height: 70px;
     box-shadow: 0 10px 20px rgba(0, 0, 0, 0.2);
   }
 
@@ -1155,8 +1155,8 @@ select:focus-visible {
   }
 
   .hero-progress-ring::before {
-    width: 70px;
-    height: 70px;
+    width: 80px;
+    height: 80px;
   }
 
   .hero-progress-content strong {

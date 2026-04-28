@@ -304,11 +304,11 @@ body.order-standalone-page {
     text-shadow: none;
   }
 
-  .hero-progress-ring {
+  /* .hero-progress-ring {
     width: 115px;
     height: 115px;
     box-shadow: 0 10px 20px rgba(0, 0, 0, 0.2);
-  }
+  } */
 
   .standalone-action .btn, 
   #providerActionGroup .btn {

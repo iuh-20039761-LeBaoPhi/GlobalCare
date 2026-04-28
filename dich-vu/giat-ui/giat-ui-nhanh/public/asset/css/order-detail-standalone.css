@@ -305,11 +305,11 @@ body.order-standalone-page {
     text-shadow: none;
   }
 
-  .hero-progress-ring {
+  /* .hero-progress-ring {
     width: 115px;
     height: 115px;
     box-shadow: 0 10px 20px rgba(0, 0, 0, 0.2);
-  }
+  } */
 
   .standalone-action .btn, 
   #providerActionGroup .btn {
@@ -502,11 +502,11 @@ body.order-standalone-page {
     margin-top: 10px;
   }
 
-  .hero-progress-ring {
+  /* .hero-progress-ring {
     width: 110px;
     height: 110px;
     margin: 0 auto;
-  }
+  } */
 
   /* Action Buttons Mobile */
   .standalone-action {
