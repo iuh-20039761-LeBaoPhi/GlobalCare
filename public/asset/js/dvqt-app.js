@@ -243,7 +243,7 @@
             let s = str.toLowerCase();
             s = s.normalize("NFD").replace(/[\u0300-\u036f]/g, ""); // Xóa dấu tiếng Việt
             s = s.replace(/[đĐ]/g, "d");
-            s = s.replace(/[^a-z0-9.]/g, "-"); // Thay ký tự lạ bằng dấu -
+            s = s.replace(/[^a-z0-9._]/g, "-"); // Thay ký tự lạ bằng dấu - (giữ lại _)
             s = s.replace(/-+/g, "-"); // Xóa nhiều dấu - liên tiếp
             s = s.replace(/^-+|-+$/g, ""); // Xóa dấu - ở đầu/cuối
             return s;

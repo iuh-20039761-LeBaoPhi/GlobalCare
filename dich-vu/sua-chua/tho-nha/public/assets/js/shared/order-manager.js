@@ -22,20 +22,27 @@
             filter: 'all',
             selectedOrderId: null,
             isLoading: false,
-            initDone: false
+            initDone: false,
+            currentPage: 1
         },
 
         init: function(identity) {
-            if (this.state.initDone && this.state.identity === identity) {
-                this.loadOrders(false);
-                return;
-            }
             this.state.identity = identity;
             this.state.initDone = true;
 
             const store = window.ThoNhaOrderStore;
             const ui = window.ThoNhaOrderUI;
             if (!store || !ui) return console.error('[OrderManager] Missing dependencies!');
+
+            // Default filters to today
+            const els = this.getElements();
+            const listSec = els.listContainer;
+            const today = new Date().toISOString().substring(0, 10);
+            
+            const fromDateInput = listSec ? listSec.querySelector('#orderFromDate') : document.getElementById('orderFromDate');
+            const toDateInput = listSec ? listSec.querySelector('#orderToDate') : document.getElementById('orderToDate');
+            if (fromDateInput && !fromDateInput.value) fromDateInput.value = today;
+            if (toDateInput && !toDateInput.value) toDateInput.value = today;
 
             this.bindEvents();
             this.loadOrders(false);
@@ -44,29 +51,40 @@
         getElements: function() {
             const id = this.state.identity;
             const prefix = id === 'customer' ? 'customer' : 'provider';
+            const listSec = document.getElementById(prefix + 'ListSection');
+
             return {
-                listContainer: document.getElementById(prefix + 'ListSection'),
+                listContainer: listSec,
                 detailContainer: document.getElementById(prefix + 'DetailSection'),
                 // For Customer
-                orderBody: document.getElementById('customerOrderBody'),
-                mobileList: document.getElementById('customerMobileList'),
-                emptyState: document.getElementById('customerEmptyState'),
+                orderBody: listSec ? listSec.querySelector('#customerOrderBody') : document.getElementById('customerOrderBody'),
+                mobileList: listSec ? listSec.querySelector('#customerMobileList') : document.getElementById('customerMobileList'),
+                emptyState: listSec ? listSec.querySelector('#customerEmptyState') : document.getElementById('customerEmptyState'),
                 // For Provider
-                openBody: document.getElementById('openRequestBody'),
-                assignedBody: document.getElementById('assignedOrderBody'),
-                openMobileList: document.getElementById('openMobileList'),
-                assignedMobileList: document.getElementById('assignedMobileList'),
-                openEmpty: document.getElementById('openEmptyState'),
-                assignedEmpty: document.getElementById('assignedEmptyState'),
+                openBody: listSec ? listSec.querySelector('#openRequestBody') : document.getElementById('openRequestBody'),
+                assignedBody: listSec ? listSec.querySelector('#assignedOrderBody') : document.getElementById('assignedOrderBody'),
+                openMobileList: listSec ? listSec.querySelector('#openMobileList') : document.getElementById('openMobileList'),
+                assignedMobileList: listSec ? listSec.querySelector('#assignedMobileList') : document.getElementById('assignedMobileList'),
+                openEmpty: listSec ? listSec.querySelector('#openEmptyState') : document.getElementById('openEmptyState'),
+                assignedEmpty: listSec ? listSec.querySelector('#assignedEmptyState') : document.getElementById('assignedEmptyState'),
                 // Stats & Buttons
-                refreshBtn: document.getElementById('refresh' + (id === 'customer' ? 'Customer' : 'Provider') + 'Btn'),
+                refreshBtn: listSec ? listSec.querySelector('#refresh' + (id === 'customer' ? 'Customer' : 'Provider') + 'Btn') : document.getElementById('refresh' + (id === 'customer' ? 'Customer' : 'Provider') + 'Btn'),
                 stats: {
-                    all: document.getElementById('stat-all-count'),
-                    new: document.getElementById('stat-new-count'),
-                    doing: document.getElementById('stat-doing-count'),
-                    done: document.getElementById('stat-done-count'),
-                    open: document.getElementById('statOpen'),
-                    assigned: document.getElementById('statAssigned')
+                    all: listSec ? listSec.querySelector('#stat-all-count') : document.getElementById('stat-all-count'),
+                    allMob: listSec ? listSec.querySelector('#stat-all-count-mob') : document.getElementById('stat-all-count-mob'),
+                    new: listSec ? listSec.querySelector('#stat-new-count') : document.getElementById('stat-new-count'),
+                    newMob: listSec ? listSec.querySelector('#stat-new-count-mob') : document.getElementById('stat-new-count-mob'),
+                    confirmed: listSec ? listSec.querySelector('#stat-confirmed-count') : document.getElementById('stat-confirmed-count'),
+                    confirmedMob: listSec ? listSec.querySelector('#stat-confirmed-count-mob') : document.getElementById('stat-confirmed-count-mob'),
+                    doing: listSec ? listSec.querySelector('#stat-doing-count') : document.getElementById('stat-doing-count'),
+                    doingMob: listSec ? listSec.querySelector('#stat-doing-count-mob') : document.getElementById('stat-doing-count-mob'),
+                    done: listSec ? listSec.querySelector('#stat-done-count') : document.getElementById('stat-done-count'),
+                    doneMob: listSec ? listSec.querySelector('#stat-done-count-mob') : document.getElementById('stat-done-count-mob'),
+                    cancel: listSec ? listSec.querySelector('#stat-cancel-count') : document.getElementById('stat-cancel-count'),
+                    cancelMob: listSec ? listSec.querySelector('#stat-cancel-count-mob') : document.getElementById('stat-cancel-count-mob'),
+                    open: listSec ? listSec.querySelector('#statOpen') : document.getElementById('statOpen'),
+                    openMob: listSec ? listSec.querySelector('#statOpenMob') : document.getElementById('statOpenMob'),
+                    assigned: listSec ? listSec.querySelector('#statAssigned') : document.getElementById('statAssigned')
                 }
             };
         },
@@ -99,44 +117,126 @@
             const store = window.ThoNhaOrderStore;
             const ui = window.ThoNhaOrderUI;
             const id = this.state.identity;
-            const orders = store.getOrders();
+            let orders = store.getOrders() || [];
 
+            // 1. Lấy giá trị các ô lọc
+            const listSec = els.listContainer;
+            const fromDateInput = listSec ? listSec.querySelector('#orderFromDate') : document.getElementById('orderFromDate');
+            const toDateInput = listSec ? listSec.querySelector('#orderToDate') : document.getElementById('orderToDate');
+            const searchQueryInput = listSec ? listSec.querySelector('#orderSearchQuery') : document.getElementById('orderSearchQuery');
+
+            const fromDate = fromDateInput ? fromDateInput.value : '';
+            const toDate = toDateInput ? toDateInput.value : '';
+            const q = searchQueryInput ? searchQueryInput.value.toLowerCase().trim() : '';
+
+            // 2. Lọc theo Ngày (Ưu tiên createdAt, fallback dates.ordered)
+            let baseOrders = orders;
+            if (fromDate) {
+                baseOrders = baseOrders.filter(o => {
+                    const oDate = o.createdAt ? o.createdAt.substring(0, 10) : (o.dates && o.dates.ordered ? o.dates.ordered.substring(0, 10) : '');
+                    return oDate >= fromDate;
+                });
+            }
+            if (toDate) {
+                baseOrders = baseOrders.filter(o => {
+                    const oDate = o.createdAt ? o.createdAt.substring(0, 10) : (o.dates && o.dates.ordered ? o.dates.ordered.substring(0, 10) : '');
+                    return oDate <= toDate;
+                });
+            }
+
+            // 3. Lọc theo Từ khóa (Mã đơn, Tên dịch vụ, Tên khách hàng, Tên thợ)
+            if (q) {
+                baseOrders = baseOrders.filter(o => {
+                    const orderCode = String(o.orderCode || '').toLowerCase();
+                    const service = String(o.service || o.fullService || '').toLowerCase();
+                    const clientName = o.customer && o.customer.name ? String(o.customer.name).toLowerCase() : '';
+                    const providerName = o.provider && o.provider.name ? String(o.provider.name).toLowerCase() : '';
+                    
+                    return orderCode.includes(q) || service.includes(q) || clientName.includes(q) || providerName.includes(q);
+                });
+            }
+
+            // 4. Cập nhật thống kê số lượng (Stats) TRÊN DANH SÁCH ĐÃ QUA BỘ LỌC NGÀY/KÝ TỰ
             if (id === 'customer') {
-                const filter = this.state.filter;
-                const filtered = filter === 'all' ? orders : orders.filter(o => o.status === filter);
-                
-                // Update stats
-                if (els.stats.all) els.stats.all.textContent = orders.length;
-                if (els.stats.new) els.stats.new.textContent = orders.filter(o => o.status === 'new').length;
-                if (els.stats.doing) els.stats.doing.textContent = orders.filter(o => o.status === 'doing' || o.status === 'confirmed').length;
-                if (els.stats.done) els.stats.done.textContent = orders.filter(o => o.status === 'done').length;
+                if (els.stats.all) els.stats.all.textContent = baseOrders.length;
+                if (els.stats.allMob) els.stats.allMob.textContent = baseOrders.length;
+                if (els.stats.new) els.stats.new.textContent = baseOrders.filter(o => o.status === 'new').length;
+                if (els.stats.newMob) els.stats.newMob.textContent = baseOrders.filter(o => o.status === 'new').length;
+                if (els.stats.confirmed) els.stats.confirmed.textContent = baseOrders.filter(o => o.status === 'confirmed').length;
+                if (els.stats.confirmedMob) els.stats.confirmedMob.textContent = baseOrders.filter(o => o.status === 'confirmed').length;
+                if (els.stats.doing) els.stats.doing.textContent = baseOrders.filter(o => o.status === 'doing' || o.status === 'working').length;
+                if (els.stats.doingMob) els.stats.doingMob.textContent = baseOrders.filter(o => o.status === 'doing' || o.status === 'working').length;
+                if (els.stats.done) els.stats.done.textContent = baseOrders.filter(o => o.status === 'done').length;
+                if (els.stats.doneMob) els.stats.doneMob.textContent = baseOrders.filter(o => o.status === 'done').length;
+                if (els.stats.cancel) els.stats.cancel.textContent = baseOrders.filter(o => o.status === 'cancel').length;
+                if (els.stats.cancelMob) els.stats.cancelMob.textContent = baseOrders.filter(o => o.status === 'cancel').length;
+            } else {
+                if (els.stats.all) els.stats.all.textContent = baseOrders.length;
+                if (els.stats.allMob) els.stats.allMob.textContent = baseOrders.length;
+                if (els.stats.open) els.stats.open.textContent = baseOrders.filter(o => o.status === 'new').length;
+                if (els.stats.openMob) els.stats.openMob.textContent = baseOrders.filter(o => o.status === 'new').length;
+                if (els.stats.confirmed) els.stats.confirmed.textContent = baseOrders.filter(o => o.status === 'confirmed').length;
+                if (els.stats.confirmedMob) els.stats.confirmedMob.textContent = baseOrders.filter(o => o.status === 'confirmed').length;
+                if (els.stats.doing) els.stats.doing.textContent = baseOrders.filter(o => o.status === 'doing' || o.status === 'working').length;
+                if (els.stats.doingMob) els.stats.doingMob.textContent = baseOrders.filter(o => o.status === 'doing' || o.status === 'working').length;
+                if (els.stats.done) els.stats.done.textContent = baseOrders.filter(o => o.status === 'done').length;
+                if (els.stats.doneMob) els.stats.doneMob.textContent = baseOrders.filter(o => o.status === 'done').length;
+                if (els.stats.cancel) els.stats.cancel.textContent = baseOrders.filter(o => o.status === 'cancel').length;
+                if (els.stats.cancelMob) els.stats.cancelMob.textContent = baseOrders.filter(o => o.status === 'cancel').length;
+            }
 
-                ui.renderList(filtered, 'customer', {
+            // 5. Lọc theo Tab trạng thái
+            orders = baseOrders;
+            const filter = this.state.filter;
+            if (filter !== 'all') {
+                orders = orders.filter(o => {
+                    if (filter === 'doing') return (o.status === 'doing' || o.status === 'working');
+                    return o.status === filter;
+                });
+            }
+
+
+            // 6. Tính tổng tiền
+            const totalMoney = orders.reduce((sum, o) => sum + Number(o.total_price || 0), 0);
+            const totalMoneyStr = window.ThoNhaOrderViewUtils ? window.ThoNhaOrderViewUtils.formatCurrencyVn(totalMoney) : (totalMoney + ' đ');
+
+            const custTotalEl = document.getElementById('customerTotalMoney');
+            const provTotalEl = document.getElementById('providerTotalMoney');
+            if (custTotalEl) custTotalEl.textContent = totalMoneyStr;
+            if (provTotalEl) provTotalEl.textContent = totalMoneyStr;
+
+            // 7. Phân trang: 7 đơn 1 trang
+            const itemsPerPage = 7;
+            const totalOrders = orders.length;
+            const totalPages = Math.ceil(totalOrders / itemsPerPage) || 1;
+            
+            if (this.state.currentPage > totalPages) {
+                this.state.currentPage = totalPages;
+            }
+            if (this.state.currentPage < 1) {
+                this.state.currentPage = 1;
+            }
+
+            const startIndex = (this.state.currentPage - 1) * itemsPerPage;
+            const paginatedOrders = orders.slice(startIndex, startIndex + itemsPerPage);
+
+            // 8. Đổ dữ liệu ra UI
+            if (id === 'customer') {
+                ui.renderList(paginatedOrders, 'customer', {
                     body: els.orderBody,
                     mobile: els.mobileList,
                     empty: els.emptyState
                 });
             } else {
-                // Provider mode
-                const openOrders = orders.filter(o => o.status === 'new');
-                const assignedOrders = orders.filter(o => o.status !== 'new' && o.status !== 'cancel');
-
-                if (els.stats.open) els.stats.open.textContent = openOrders.length;
-                if (els.stats.assigned) els.stats.assigned.textContent = assignedOrders.length;
-                if (els.stats.doing) els.stats.doing.textContent = assignedOrders.filter(o => o.status === 'doing').length;
-                if (els.stats.done) els.stats.done.textContent = assignedOrders.filter(o => o.status === 'done').length;
-
-                ui.renderList(openOrders, 'provider', {
-                    body: els.openBody,
-                    mobile: els.openMobileList,
-                    empty: els.openEmpty
-                });
-                ui.renderList(assignedOrders, 'provider', {
+                ui.renderList(paginatedOrders, 'provider', {
                     body: els.assignedBody,
                     mobile: els.assignedMobileList,
                     empty: els.assignedEmpty
                 });
             }
+
+            // 9. Vẽ thanh phân trang
+            this.renderPagination(totalPages);
 
             // Sync Detail View
             if (this.state.selectedOrderId) {
@@ -208,16 +308,98 @@
             }
         },
 
+        renderPagination: function(totalPages) {
+            const id = this.state.identity;
+            const pagId = id === 'customer' ? 'customerPagination' : 'providerPagination';
+            const pagWrapId = id === 'customer' ? 'customerPaginationWrap' : 'providerPaginationWrap';
+            
+            const pagEl = document.getElementById(pagId);
+            const wrapEl = document.getElementById(pagWrapId);
+            if (!pagEl) return;
+
+            if (totalPages <= 1) {
+                if (wrapEl) wrapEl.style.display = 'none';
+                pagEl.innerHTML = '';
+                return;
+            }
+            if (wrapEl) wrapEl.style.display = 'flex';
+
+            let html = '';
+            
+            // Prev button
+            html += `<li class="page-item ${this.state.currentPage === 1 ? 'disabled' : ''}">
+                <a class="page-link" href="#" onclick="ThoNhaOrderManager.changePage(${this.state.currentPage - 1}); return false;" style="border-radius:8px; border:none; color:${this.state.currentPage === 1 ? '#cbd5e1' : '#10b981'}; background:#f8fafc; font-weight:600;"><i class="fas fa-chevron-left"></i></a>
+            </li>`;
+
+            // Page numbers
+            for (let i = 1; i <= totalPages; i++) {
+                const isActive = this.state.currentPage === i;
+                html += `<li class="page-item ${isActive ? 'active' : ''}">
+                    <a class="page-link" href="#" onclick="ThoNhaOrderManager.changePage(${i}); return false;" style="border-radius:8px; border:none; margin:0 3px; font-weight:700; ${isActive ? 'background:#10b981; color:#fff; box-shadow:0 4px 6px -1px rgba(16,185,129,0.2);' : 'background:#f8fafc; color:#475569;'}">${i}</a>
+                </li>`;
+            }
+
+            // Next button
+            html += `<li class="page-item ${this.state.currentPage === totalPages ? 'disabled' : ''}">
+                <a class="page-link" href="#" onclick="ThoNhaOrderManager.changePage(${this.state.currentPage + 1}); return false;" style="border-radius:8px; border:none; color:${this.state.currentPage === totalPages ? '#cbd5e1' : '#10b981'}; background:#f8fafc; font-weight:600;"><i class="fas fa-chevron-right"></i></a>
+            </li>`;
+
+            pagEl.innerHTML = html;
+        },
+
+        changePage: function(page) {
+            this.state.currentPage = page;
+            this.render();
+        },
+
         bindEvents: function() {
+            const els = this.getElements();
+            const listSec = els.listContainer;
+
             // Filter clicks
-            ['all', 'new', 'doing', 'done'].forEach(f => {
-                const el = document.getElementById('filter-' + f);
-                if (el) el.onclick = () => {
+            ['all', 'new', 'confirmed', 'doing', 'done', 'cancel'].forEach(f => {
+                const el = listSec ? listSec.querySelector('#filter-' + f) : document.getElementById('filter-' + f);
+                const elMob = listSec ? listSec.querySelector('#filter-' + f + '-mob') : document.getElementById('filter-' + f + '-mob');
+                
+                const clickHandler = (e) => {
+                    if (e) e.preventDefault();
                     this.state.filter = f;
                     this.state.selectedOrderId = null;
+                    this.state.currentPage = 1;
+                    
+                    const filterSec = listSec ? listSec.querySelector('#orderFilterSection') : document.getElementById('orderFilterSection');
+                    if (filterSec) {
+                        filterSec.querySelectorAll('.nav-link, .dropdown-item').forEach(btn => btn.classList.remove('active'));
+                    }
+                    if (el) el.classList.add('active');
+                    if (elMob) elMob.classList.add('active');
+
+                    // Cập nhật text của Dropdown Mobile
+                    const currentText = listSec ? listSec.querySelector('#currentStatusText') : document.getElementById('currentStatusText');
+                    const textMap = { 
+                        'all': 'Tất cả', 
+                        'new': 'Đang xác nhận', 
+                        'confirmed': 'Đã nhận', 
+                        'doing': 'Đã bắt đầu', 
+                        'done': 'Đã hoàn thành', 
+                        'cancel': 'Đã hủy' 
+                    };
+                    if (currentText && textMap[f]) currentText.textContent = textMap[f];
+
                     this.render();
                 };
+
+                if (el) el.onclick = clickHandler;
+                if (elMob) elMob.onclick = clickHandler;
             });
+
+            const fromDateInput = listSec ? listSec.querySelector('#orderFromDate') : document.getElementById('orderFromDate');
+            const toDateInput = listSec ? listSec.querySelector('#orderToDate') : document.getElementById('orderToDate');
+            const searchQueryInput = listSec ? listSec.querySelector('#orderSearchQuery') : document.getElementById('orderSearchQuery');
+
+            if (fromDateInput) fromDateInput.onchange = () => { this.state.currentPage = 1; this.render(); };
+            if (toDateInput) toDateInput.onchange = () => { this.state.currentPage = 1; this.render(); };
+            if (searchQueryInput) searchQueryInput.onkeyup = () => { this.state.currentPage = 1; this.render(); };
 
             // Global Delegated Click (Only bind once)
             if (!document.body.dataset.orderManagerBound) {
@@ -242,7 +424,6 @@
                 });
             }
 
-            const els = this.getElements();
             if (els.refreshBtn) {
                 els.refreshBtn.onclick = () => this.loadOrders(true);
             }

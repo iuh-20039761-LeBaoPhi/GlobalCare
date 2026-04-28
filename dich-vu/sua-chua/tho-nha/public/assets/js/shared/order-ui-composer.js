@@ -17,55 +17,48 @@ const ThoNhaOrderUI = (() => {
 
         // GIAO DIỆN ADMIN CHUẨN 9 CỘT 
         if (role === 'admin') {
-            const orderCode = `<td class="mono"><strong>${order.orderCode}</strong></td>`;
-            const providerName = order.provider.id ? utils.escapeHtml(order.provider.name) : '<em class="text-muted">Chưa nhận</em>';
-            const actionBtn = `<td class="detail-cell"><button class="btn btn-sm btn-outline-primary" data-action="view-detail" data-id="${order.id}" title="Xem chi tiết"><i class="fas fa-eye"></i></button></td>`;
-            return `
-                <tr>
-                    ${orderCode}
-                    <td>${utils.escapeHtml(order.customer.name)}</td>
-                    <td><div class="cell-service-text small fw-bold" title="${utils.escapeHtml(order.service)}">${utils.escapeHtml(order.service)}</div></td>
-                    <td><div class="small text-muted">${providerName}</div></td>
-                    <td><span class="text-danger fw-bold small">${utils.formatCurrencyVn(order.total_price)}</span></td>
-                    ${statusBadge}
-                    <td>${utils.formatDateTime(order.createdAt)}</td>
-                    ${actionBtn}
-                </tr>
-            `;
+            const colOrderCode = `<td class="mono"><strong>${order.orderCode}</strong></td>`;
+            const colCustomer = `<td><strong>${utils.escapeHtml(order.customer.name)}</strong><div class="small text-muted">${utils.escapeHtml(order.customer.phone)}</div></td>`;
+            const colService = `<td><div class="cell-service-text fw-bold" title="${utils.escapeHtml(order.service)}">${utils.escapeHtml(order.service)}</div></td>`;
+            const colStatus = `<td>${utils.buildStatusBadge(order.status)}</td>`;
+            const colPrice = `<td class="fw-bold text-primary" style="text-align: right; padding-right: 25px;">${utils.formatCurrencyVn(order.total_price)}</td>`;
+            const colAction = `<td class="text-end pe-4"><button class="btn btn-sm btn-light border rounded-pill px-3 fw-bold" data-action="view-detail" data-id="${order.id}">Xem</button></td>`;
+            
+            return `<tr>${colOrderCode}${colCustomer}${colService}${colStatus}${colPrice}${colAction}</tr>`;
         }
 
         // GIAO DIỆN THỢ (PROVIDER)
         if (role === 'provider') {
-            const orderCode = `<td class="mono"><strong>${order.orderCode}</strong></td>`;
-            const info = `<td><strong>${utils.escapeHtml(order.customer.name)}</strong><div class="small text-muted">${utils.escapeHtml(order.customer.phone)}</div></td>`;
-            const service = `<td><div class="cell-service-text fw-bold" title="${utils.escapeHtml(order.service)}">${utils.escapeHtml(order.service)}</div></td>`;
-            const time = `<td><div class="small fw-bold">${utils.formatDate(order.createdAt)}</div><div class="small text-muted">${utils.formatTime(order.createdAt)}</div></td>`;
-            const actionBtn = `<td class="detail-cell"><button class="btn-u-view" data-action="view-detail" data-id="${order.id}">Xem</button></td>`;
-            return `<tr>${orderCode}${info}${service}${time}${statusBadge}${actionBtn}</tr>`;
+            const colOrderCode = `<td class="mono"><strong>${order.orderCode}</strong></td>`;
+            const colCustomer = `<td><strong>${utils.escapeHtml(order.customer.name)}</strong><div class="small text-muted">${utils.escapeHtml(order.customer.phone)}</div></td>`;
+            const colService = `<td><div class="cell-service-text fw-bold" title="${utils.escapeHtml(order.service)}">${utils.escapeHtml(order.service)}</div></td>`;
+            const colStatus = `<td>${utils.buildStatusBadge(order.status)}</td>`;
+            const colPrice = `<td class="fw-bold text-primary" style="text-align: right; padding-right: 25px;">${utils.formatCurrencyVn(order.total_price)}</td>`;
+            const colAction = `<td class="text-end pe-4"><button class="btn btn-sm btn-light border rounded-pill px-3 fw-bold" data-action="view-detail" data-id="${order.id}">Xem</button></td>`;
+            
+            return `<tr>${colOrderCode}${colCustomer}${colService}${colStatus}${colPrice}${colAction}</tr>`;
         }
 
         // GIAO DIỆN KHÁCH HÀNG (CUSTOMER)
-        const orderCodeId = `<td><div class="fw-800" style="color:var(--u-primary)">${order.orderCode}</div></td>`;
-        const serviceInfo = `
+        const colOrderCode = `<td class="mono"><strong>${order.orderCode}</strong></td>`;
+        const colService = `
             <td>
                 <div class="fw-bold">${utils.escapeHtml(order.service)}</div>
                 <div class="small text-muted"><i class="fa-regular fa-file-lines me-1"></i>${utils.escapeHtml(order.note || 'Không có ghi chú')}</div>
             </td>
         `;
-        const dateHtml = `
-            <td>
-                <div class="small fw-bold">${utils.formatDate(order.createdAt)}</div>
-                <div class="small text-muted">${utils.formatTime(order.createdAt)}</div>
-            </td>
-        `;
-        const actionHtml = `
-            <td>
-                <button class="btn-u-view" data-action="view-detail" data-id="${order.id}">
-                    <i class="fa-regular fa-eye me-1"></i>Chi tiết
+        const providerName = order.provider && order.provider.id ? utils.escapeHtml(order.provider.name) : '<span class="badge bg-warning text-dark bg-opacity-10 px-2 py-1 rounded-pill" style="font-size:0.7rem;">Chờ thợ</span>';
+        const colProvider = `<td><div class="text-muted small">${providerName}</div></td>`;
+        const colPrice = `<td class="fw-bold text-primary" style="text-align: right; padding-right: 25px;">${utils.formatCurrencyVn(order.total_price)}</td>`;
+        const colAction = `
+            <td class="text-end pe-4">
+                <button class="btn btn-sm btn-light border rounded-pill px-3 fw-bold" data-action="view-detail" data-id="${order.id}">
+                    Xem
                 </button>
             </td>
         `;
-        return `<tr>${orderCodeId}${serviceInfo}${dateHtml}${statusBadge}${actionHtml}</tr>`;
+        
+        return `<tr>${colOrderCode}${colProvider}${colService}${statusBadge}${colPrice}${colAction}</tr>`;
     }
 
     /**

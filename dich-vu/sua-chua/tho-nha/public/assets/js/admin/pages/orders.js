@@ -15,8 +15,10 @@ window.initOrders = function() {
         selectedOrderId: null,
         isLoading: false,
         currentPage: 1,
-        pageSize: 10,
-        filteredOrders: []
+        pageSize: 7,
+        filteredOrders: [],
+        baseOrders: [],
+        filter: 'all'
     };
 
     var elements = {
@@ -25,10 +27,10 @@ window.initOrders = function() {
         ordersTableBody: document.getElementById('ordersTableBody'),
         mobileList: document.getElementById('adminMobileList'),
         pagination: document.getElementById('paginationContainer'),
-        refreshBtn: document.getElementById('refreshBtn'),
-        filterBtn: document.getElementById('filterBtn'),
-        searchInput: document.getElementById('searchInput'),
-        statusFilter: document.getElementById('statusFilter')
+        refreshBtn: document.getElementById('refreshAdminBtn'),
+        fromDate: document.getElementById('orderFromDate'),
+        toDate: document.getElementById('orderToDate'),
+        searchQuery: document.getElementById('orderSearchQuery')
     };
 
     async function loadData() {
@@ -37,13 +39,104 @@ window.initOrders = function() {
         
         try {
             const orders = await window.loadAllOrders(); // From shell.js logic
-            state.filteredOrders = orders;
-            state.currentPage = 1;
-            displayOrders();
+            state.baseOrders = orders || [];
+            
+            // Set default dates if empty
+            const today = new Date().toISOString().substring(0, 10);
+            if (elements.fromDate && !elements.fromDate.value) elements.fromDate.value = today;
+            if (elements.toDate && !elements.toDate.value) elements.toDate.value = today;
+
+            applyFilter();
         } catch (err) {
             console.error('[admin-order] API Error:', err);
         } finally {
             state.isLoading = false;
+        }
+    }
+
+    function applyFilter() {
+        let list = state.baseOrders || [];
+        
+        // 1. Lọc theo Ngày
+        const fromVal = elements.fromDate ? elements.fromDate.value : '';
+        const toVal = elements.toDate ? elements.toDate.value : '';
+        
+        if (fromVal) {
+            const fd = new Date(fromVal + 'T00:00:00');
+            list = list.filter(o => {
+                const d = o.createdAt || o.created_at;
+                return d && new Date(d) >= fd;
+            });
+        }
+        if (toVal) {
+            const td = new Date(toVal + 'T23:59:59');
+            list = list.filter(o => {
+                const d = o.createdAt || o.created_at;
+                return d && new Date(d) <= td;
+            });
+        }
+        
+        // 2. Lọc theo Từ khóa
+        const q = elements.searchQuery ? elements.searchQuery.value.trim().toLowerCase() : '';
+        if (q) {
+            list = list.filter(o => {
+                const code = String(o.orderCode || '').toLowerCase();
+                const client = o.customer && o.customer.name ? String(o.customer.name).toLowerCase() : '';
+                const svc = String(o.service || '').toLowerCase();
+                return code.includes(q) || client.includes(q) || svc.includes(q);
+            });
+        }
+        
+        // Cập nhật thống kê
+        updateStats(list);
+
+        // Tính tổng tiền
+        const totalMoney = list.reduce((sum, o) => sum + Number(o.total_price || 0), 0);
+        const totalMoneyStr = window.ThoNhaOrderViewUtils ? window.ThoNhaOrderViewUtils.formatCurrencyVn(totalMoney) : (totalMoney + ' đ');
+        const adminTotalEl = document.getElementById('adminTotalMoney');
+        if (adminTotalEl) adminTotalEl.textContent = totalMoneyStr;
+        
+        // 3. Lọc theo Tab trạng thái
+        if (state.filter !== 'all') {
+            list = list.filter(o => {
+                if (state.filter === 'doing') return (o.status === 'doing' || o.status === 'working');
+                return o.status === state.filter;
+            });
+        }
+        
+        state.filteredOrders = list;
+        state.currentPage = 1;
+        displayOrders();
+    }
+
+    function updateStats(list) {
+        const counts = {
+            all: list.length,
+            new: list.filter(o => o.status === 'new').length,
+            confirmed: list.filter(o => o.status === 'confirmed').length,
+            doing: list.filter(o => o.status === 'doing' || o.status === 'working').length,
+            done: list.filter(o => o.status === 'done').length,
+            cancel: list.filter(o => o.status === 'cancel').length
+        };
+
+        const map = {
+            'stat-all-count': counts.all,
+            'stat-all-count-mob': counts.all,
+            'statOpen': counts.new,
+            'statOpenMob': counts.new,
+            'stat-confirmed-count': counts.confirmed,
+            'stat-confirmed-count-mob': counts.confirmed,
+            'stat-doing-count': counts.doing,
+            'stat-doing-count-mob': counts.doing,
+            'stat-done-count': counts.done,
+            'stat-done-count-mob': counts.done,
+            'stat-cancel-count': counts.cancel,
+            'stat-cancel-count-mob': counts.cancel
+        };
+
+        for (const id in map) {
+            const el = document.getElementById(id);
+            if (el) el.textContent = map[id];
         }
     }
 
@@ -125,30 +218,51 @@ window.initOrders = function() {
     }
 
     function bindEvents() {
-        // Filter & Search
-        if (elements.filterBtn) {
-            elements.filterBtn.addEventListener('click', function() {
-                const search = (elements.searchInput?.value || '').toLowerCase();
-                const status = elements.statusFilter?.value;
-                state.filteredOrders = allOrders.filter(o => {
-                    const matchStatus = !status || o.status === status;
-                    const matchSearch = !search || 
-                        (o.orderCode && o.orderCode.toLowerCase().includes(search)) || 
-                        (o.customer && o.customer.phone && o.customer.phone.includes(search)) || 
-                        (o.customer && o.customer.name && o.customer.name.toLowerCase().includes(search)) ||
-                        (o.service && o.service.toLowerCase().includes(search));
-                    return matchStatus && matchSearch;
-                });
-                state.currentPage = 1;
-                displayOrders();
-            });
-        }
+        // Date filters & Search inputs
+        if (elements.fromDate) elements.fromDate.addEventListener('change', applyFilter);
+        if (elements.toDate) elements.toDate.addEventListener('change', applyFilter);
+        if (elements.searchQuery) elements.searchQuery.addEventListener('keyup', applyFilter);
         
         if (elements.refreshBtn) {
             elements.refreshBtn.addEventListener('click', loadData);
         }
 
-        // Custom Dropdown click
+        // Tab status clicks
+        ['all', 'new', 'confirmed', 'doing', 'done', 'cancel'].forEach(f => {
+            const el = document.getElementById('filter-' + f);
+            const elMob = document.getElementById('filter-' + f + '-mob');
+            
+            const clickHandler = (e) => {
+                if (e) e.preventDefault();
+                state.filter = f;
+                
+                const filterSec = document.getElementById('orderFilterSection');
+                if (filterSec) {
+                    filterSec.querySelectorAll('.nav-link, .dropdown-item').forEach(btn => btn.classList.remove('active'));
+                }
+                if (el) el.classList.add('active');
+                if (elMob) elMob.classList.add('active');
+
+                // Update mobile text
+                const currentText = document.getElementById('currentStatusText');
+                const textMap = { 
+                    'all': 'Tất cả', 
+                    'new': 'Đang xác nhận', 
+                    'confirmed': 'Đã nhận', 
+                    'doing': 'Đã bắt đầu', 
+                    'done': 'Đã hoàn thành', 
+                    'cancel': 'Đã hủy' 
+                };
+                if (currentText && textMap[f]) currentText.textContent = textMap[f];
+
+                applyFilter();
+            };
+
+            if (el) el.addEventListener('click', clickHandler);
+            if (elMob) elMob.addEventListener('click', clickHandler);
+        });
+
+        // Pagination
         if (elements.pagination) {
             elements.pagination.addEventListener('click', e => {
                 const link = e.target.closest('.page-link');
@@ -163,39 +277,13 @@ window.initOrders = function() {
             });
         }
 
-        const filterMenu = document.getElementById('statusFilterMenu');
-        const filterBtnDisplay = document.getElementById('statusFilterBtn');
-        const filterInput = document.getElementById('statusFilter');
-
-        if (filterMenu && filterBtnDisplay && filterInput) {
-            filterMenu.addEventListener('click', e => {
-                const item = e.target.closest('.dropdown-item');
-                if (!item) return;
-                e.preventDefault();
-
-                const value = item.dataset.value;
-                const text = item.textContent;
-
-                // Update UI & Input
-                filterInput.value = value;
-                filterBtnDisplay.textContent = text;
-                
-                // Active class
-                filterMenu.querySelectorAll('.dropdown-item').forEach(el => el.classList.remove('active'));
-                item.classList.add('active');
-
-                // Trigger filter
-                if (elements.filterBtn) elements.filterBtn.click();
-            });
-        }
-
         // Action delegation
         document.addEventListener('click', e => {
             const viewBtn = e.target.closest('[data-action="view-detail"]');
             if (viewBtn) {
                 e.preventDefault();
                 state.selectedOrderId = viewBtn.dataset.id;
-                const order = allOrders.find(o => o.id === state.selectedOrderId);
+                const order = state.baseOrders.find(o => String(o.id) === String(state.selectedOrderId));
                 if (order) showDetail(order);
                 return;
             }

@@ -297,3 +297,20 @@
     .stat-label { font-size: 0.7rem; line-height: 1.2; margin-bottom: 2px; }
     .stat-card h2 { font-size: 1.2rem; margin: 0; }
 }
+
+/* Custom status tab overrides for Admin/Users */
+.nav-pills .nav-link {
+    background: transparent;
+    color: #475569;
+    transition: all 0.2s ease-in-out;
+}
+.nav-pills .nav-link.active {
+    background: #10b981 !important;
+    color: #fff !important;
+    box-shadow: 0 4px 10px rgba(16, 185, 129, 0.2);
+}
+.nav-pills .nav-link:hover:not(.active) {
+    background: rgba(16, 185, 129, 0.05);
+    color: #10b981;
+}
+

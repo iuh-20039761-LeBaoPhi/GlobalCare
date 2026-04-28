@@ -744,10 +744,19 @@ function _bdAddMedia(file, previewBox) {
         img.style.cssText = 'width:100%;height:100%;object-fit:cover;';
         img.src = URL.createObjectURL(file);
         wrap.appendChild(img);
+    } else if (file.type.startsWith('video/')) {
+        const vid = document.createElement('video');
+        vid.style.cssText = 'width:100%;height:100%;object-fit:cover;background:#000;';
+        vid.src = URL.createObjectURL(file);
+        vid.muted = true;
+        vid.autoplay = true;
+        vid.loop = true;
+        vid.playsInline = true;
+        wrap.appendChild(vid);
     } else {
         const icon = document.createElement('div');
         icon.style.cssText = 'width:100%;height:100%;background:#0f2027;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;';
-        icon.innerHTML = `<i class="fas fa-video" style="color:#38ef7d;font-size:1.4rem;"></i><span style="color:#ccc;font-size:0.6rem;text-align:center;padding:0 4px;overflow:hidden;white-space:nowrap;text-overflow:ellipsis;width:100%;">${file.name}</span>`;
+        icon.innerHTML = `<i class="fas fa-file" style="color:#38ef7d;font-size:1.4rem;"></i><span style="color:#ccc;font-size:0.6rem;text-align:center;padding:0 4px;overflow:hidden;white-space:nowrap;text-overflow:ellipsis;width:100%;">${file.name}</span>`;
         wrap.appendChild(icon);
     }
     wrap.appendChild(removeBtn);
@@ -893,13 +902,35 @@ function _bdFillConfirm(name, phone, service, address, noteRaw) {
 
     // Đính kèm
     const mediaRow = document.getElementById('cf-media-row');
-    if (_bdMediaFiles.length > 0 && mediaRow) {
-        const imgs  = _bdMediaFiles.filter(m => m.file.type.startsWith('image/')).length;
-        const vids  = _bdMediaFiles.filter(m => m.file.type.startsWith('video/')).length;
-        const parts = [];
-        if (imgs > 0) parts.push(`${imgs} ảnh`);
-        if (vids > 0) parts.push(`${vids} video`);
-        document.getElementById('cf-media').textContent = parts.join(', ');
+    const mediaBox = document.getElementById('cf-media');
+    if (_bdMediaFiles && _bdMediaFiles.length > 0 && mediaRow && mediaBox) {
+        const photos = _bdMediaFiles.filter(m => m.file.type.startsWith('image/'));
+        const videos = _bdMediaFiles.filter(m => m.file.type.startsWith('video/'));
+
+        let html = '';
+
+        if (photos.length) {
+            html += `<div class="mb-2">
+                        <small class="text-muted d-block mb-1"><i class="fas fa-image me-1"></i> Hình ảnh:</small>
+                        <div class="d-flex flex-wrap gap-2">` + 
+                        photos.map(m => `<img src="${URL.createObjectURL(m.file)}" style="width:50px;height:50px;object-fit:cover;border-radius:6px;border:1px solid #ddd;">`).join('') +
+                        `</div>
+                     </div>`;
+        }
+
+        if (videos.length) {
+            html += `<div>
+                        <small class="text-muted d-block mb-1"><i class="fas fa-video me-1"></i> Video:</small>
+                        <div class="d-flex flex-wrap gap-2">` + 
+                        videos.map(m => {
+                            const vUrl = URL.createObjectURL(m.file);
+                            return `<video src="${vUrl}" muted autoplay loop playsinline style="width:50px;height:50px;object-fit:cover;border-radius:6px;background:#000;"></video>`;
+                        }).join('') +
+                        `</div>
+                     </div>`;
+        }
+
+        mediaBox.innerHTML = html;
         mediaRow.style.display = '';
     } else if (mediaRow) {
         mediaRow.style.display = 'none';
@@ -1015,28 +1046,7 @@ async function _bdSubmitApi(pendingData, submitBtn, onSuccess) {
     submitBtn.disabled  = true;
     submitBtn.innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span>Đang xử lý...';
 
-    // 1. LƯU ẢNH/VIDEO LÊN GOOGLE DRIVE
-    try {
-        const mediaIds = [];
-        if (_bdMediaFiles && _bdMediaFiles.length > 0) {
-            const app = window.DVQTApp;
-            for (let i = 0; i < _bdMediaFiles.length; i++) {
-                const item = _bdMediaFiles[i];
-                submitBtn.innerHTML = `<span class="spinner-border spinner-border-sm me-2"></span>Đang tải media ${i+1}/${_bdMediaFiles.length}...`;
-                try {
-                    const up = await app.uploadFile(item.file, { folderKey: 29 });
-                    if (up.success) mediaIds.push(up.fileId);
-                } catch (mediaErr) {
-                    console.error('Lỗi tải file lên Drive:', mediaErr);
-                }
-            }
-        }
-        pendingData.link_hinhanh_khachhang = mediaIds.join(',');
-    } catch (driveErr) {
-        console.error('Lỗi tiến trình tải Media:', driveErr);
-    }
-
-    // 2. LƯU DỰ LIỆU VÀO DATABASE (KRUD)
+    // 1. LƯU DỰ LIỆU VÀO DATABASE (KRUD) TRƯỚC
     let inserted = null;
     try {
         submitBtn.innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span>Đang lưu đơn hàng...';
@@ -1051,6 +1061,39 @@ async function _bdSubmitApi(pendingData, submitBtn, onSuccess) {
         submitBtn.disabled = false;
         submitBtn.innerHTML = '<i class="fas fa-check-circle me-2"></i> Xác nhận';
         return; // Dừng nếu không lưu được DB
+    }
+
+    // 2. LƯU ẢNH/VIDEO LÊN GOOGLE DRIVE
+    try {
+        const mediaIds = [];
+        if (_bdMediaFiles && _bdMediaFiles.length > 0) {
+            const app = window.DVQTApp;
+            const dLocal = new Date();
+            const padD = (n) => String(n).padStart(2, '0');
+            const timeUploadStr = `${padD(dLocal.getDate())}${padD(dLocal.getMonth()+1)}${dLocal.getFullYear()}_${padD(dLocal.getHours())}${padD(dLocal.getMinutes())}${padD(dLocal.getSeconds())}${String(dLocal.getMilliseconds()).padStart(3, '0')}`;
+            for (let i = 0; i < _bdMediaFiles.length; i++) {
+                const item = _bdMediaFiles[i];
+                submitBtn.innerHTML = `<span class="spinner-border spinner-border-sm me-2"></span>Đang tải media ${i+1}/${_bdMediaFiles.length}...`;
+                try {
+                    const cName = `${inserted.rawId}_thonha_${timeUploadStr}_datlich`;
+                    const up = await app.uploadFile(item.file, { folderKey: 29, customName: cName });
+                    if (up.success) {
+                        let finalId = up.fileId;
+                        if (item.file && item.file.type && item.file.type.startsWith('video/')) {
+                            finalId = 'vid_' + finalId;
+                        }
+                        mediaIds.push(finalId);
+                    }
+                } catch (mediaErr) {
+                    console.error('Lỗi tải file lên Drive:', mediaErr);
+                }
+            }
+            if (mediaIds.length > 0) {
+                await app.updateOrder(inserted.rawId, { link_hinhanh_khachhang: mediaIds.join(',') }, 'datlich_thonha');
+            }
+        }
+    } catch (driveErr) {
+        console.error('Lỗi tiến trình tải Media:', driveErr);
     }
 
     // 3. ĐƯA DỮ LIỆU VÀO GOOGLE SHEETS

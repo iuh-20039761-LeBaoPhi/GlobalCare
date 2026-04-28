@@ -156,13 +156,18 @@ const ThoNhaOrderDetailRenderer = (() => {
             if (raw.danhgiakhachhang) {
                 custTextEl.innerHTML = `<div>${raw.danhgiakhachhang}</div>`;
                 if (raw.hinhanhminhchung_kh) {
+                    const isVid = raw.hinhanhminhchung_kh.startsWith('vid_');
+                    const cleanId = raw.hinhanhminhchung_kh.replace('vid_', '');
                     custTextEl.innerHTML += `
-                        <div class="mt-2" style="position:relative; width:100%; height:200px; border-radius:12px; overflow:hidden; border:1px solid #eee;">
-                            <iframe src="https://drive.google.com/file/d/${raw.hinhanhminhchung_kh}/preview" 
-                                    frameborder="0" scrolling="no"
-                                    style="width: 100%; height: 100%; pointer-events: none;"></iframe>
-                            <a href="https://drive.google.com/file/d/${raw.hinhanhminhchung_kh}/view" target="_blank" 
-                               style="position: absolute; inset: 0; z-index: 10;"></a>
+                        <div class="mt-2">
+                            <small class="text-muted d-block mb-1 fw-bold"><i class="fas ${isVid ? 'fa-video' : 'fa-image'} me-1"></i> Minh chứng:</small>
+                            <div style="position:relative; width:100%; height:200px; border-radius:12px; overflow:hidden; border:1px solid #eee; background:${isVid ? '#000' : 'transparent'};">
+                                <iframe src="https://drive.google.com/file/d/${cleanId}/preview" 
+                                        frameborder="0" scrolling="no"
+                                        style="width: 100%; height: 100%; pointer-events: none;"></iframe>
+                                <a href="https://drive.google.com/file/d/${cleanId}/view" target="_blank" 
+                                   style="position: absolute; inset: 0; z-index: 10;"></a>
+                            </div>
                         </div>`;
                 }
                 if (custHeadEl) {
@@ -172,11 +177,12 @@ const ThoNhaOrderDetailRenderer = (() => {
             } else if (role === 'customer' && order.status === 'done') {
                 custTextEl.innerHTML = `
                     <textarea class="form-control mb-2" id="inputCustFeedback" placeholder="Nhập cảm nhận của bạn về dịch vụ..." rows="3"></textarea>
-                    <div class="d-flex gap-2">
+                    <div class="d-flex flex-column gap-2">
                         <div style="flex:1;">
-                            <input type="file" id="fileCustEvidence" class="form-control form-control-sm" accept="image/*">
+                            <input type="file" id="fileCustEvidence" class="form-control form-control-sm" accept="image/*,video/*" onchange="ThoNhaOrderDetailRenderer.handleReviewMediaPreview(this, 'custReviewPreviewBox')">
                         </div>
-                        <button class="btn btn-primary btn-sm px-3" data-action="submit-customer-feedback" data-id="${order.id}">Gửi đánh giá</button>
+                        <div id="custReviewPreviewBox" class="mt-1"></div>
+                        <button class="btn btn-primary btn-sm px-3 mt-1" data-action="submit-customer-feedback" data-id="${order.id}">Gửi đánh giá</button>
                     </div>
                 `;
             } else {
@@ -191,13 +197,18 @@ const ThoNhaOrderDetailRenderer = (() => {
             if (raw.danhgiancc) {
                 nccTextEl.innerHTML = `<div>${raw.danhgiancc}</div>`;
                 if (raw.hinhanhminhchung_ncc) {
+                    const isVid = raw.hinhanhminhchung_ncc.startsWith('vid_');
+                    const cleanId = raw.hinhanhminhchung_ncc.replace('vid_', '');
                     nccTextEl.innerHTML += `
-                        <div class="mt-2" style="position:relative; width:100%; height:200px; border-radius:12px; overflow:hidden; border:1px solid #eee;">
-                            <iframe src="https://drive.google.com/file/d/${raw.hinhanhminhchung_ncc}/preview" 
-                                    frameborder="0" scrolling="no"
-                                    style="width: 100%; height: 100%; pointer-events: none;"></iframe>
-                            <a href="https://drive.google.com/file/d/${raw.hinhanhminhchung_ncc}/view" target="_blank" 
-                               style="position: absolute; inset: 0; z-index: 10;"></a>
+                        <div class="mt-2">
+                            <small class="text-muted d-block mb-1 fw-bold"><i class="fas ${isVid ? 'fa-video' : 'fa-image'} me-1"></i> Minh chứng:</small>
+                            <div style="position:relative; width:100%; height:200px; border-radius:12px; overflow:hidden; border:1px solid #eee; background:${isVid ? '#000' : 'transparent'};">
+                                <iframe src="https://drive.google.com/file/d/${cleanId}/preview" 
+                                        frameborder="0" scrolling="no"
+                                        style="width: 100%; height: 100%; pointer-events: none;"></iframe>
+                                <a href="https://drive.google.com/file/d/${cleanId}/view" target="_blank" 
+                                   style="position: absolute; inset: 0; z-index: 10;"></a>
+                            </div>
                         </div>`;
                 }
                 if (nccHeadEl) {
@@ -207,11 +218,12 @@ const ThoNhaOrderDetailRenderer = (() => {
             } else if (role === 'provider' && order.status === 'done') {
                 nccTextEl.innerHTML = `
                     <textarea class="form-control mb-2" id="inputProviderFeedback" placeholder="Mô tả công việc đã hoàn thành hoặc sự cố..." rows="3"></textarea>
-                    <div class="d-flex gap-2">
+                    <div class="d-flex flex-column gap-2">
                         <div style="flex:1;">
-                            <input type="file" id="fileProviderEvidence" class="form-control form-control-sm" accept="image/*">
+                            <input type="file" id="fileProviderEvidence" class="form-control form-control-sm" accept="image/*,video/*" onchange="ThoNhaOrderDetailRenderer.handleReviewMediaPreview(this, 'provReviewPreviewBox')">
                         </div>
-                        <button class="btn btn-primary btn-sm px-3" data-action="submit-provider-feedback" data-id="${order.id}">Gửi báo cáo</button>
+                        <div id="provReviewPreviewBox" class="mt-1"></div>
+                        <button class="btn btn-primary btn-sm px-3 mt-1" data-action="submit-provider-feedback" data-id="${order.id}">Gửi báo cáo</button>
                     </div>
                 `;
             } else {
@@ -221,17 +233,19 @@ const ThoNhaOrderDetailRenderer = (() => {
     }
 
     /**
-     * Render ảnh đính kèm khi đặt đơn (Drive IDs) - Hiển thị dưới Ghi chú
+     * Render ảnh/video đính kèm khi đặt đơn (Drive IDs) - Hiển thị dưới Ghi chú
      */
     function renderBookingMedia(container, order) {
         const raw = order._raw || {};
         const mediaField = raw.link_hinhanh_khachhang || '';
         if (!mediaField) return;
 
-        const ids = mediaField.split(',').map(s => s.trim()).filter(Boolean);
-        if (ids.length === 0) return;
+        const allIds = mediaField.split(',').map(s => s.trim()).filter(Boolean);
+        if (allIds.length === 0) return;
 
-        // Mục tiêu: Chèn vào ngay trong cột Ghi chú khách hàng
+        const photoIds = allIds.filter(id => !id.startsWith('vid_'));
+        const videoIds = allIds.filter(id => id.startsWith('vid_')).map(id => id.replace('vid_', ''));
+
         const noteEl = container.querySelector('#detailNote');
         if (!noteEl) return;
 
@@ -240,23 +254,49 @@ const ThoNhaOrderDetailRenderer = (() => {
             galleryWrap = document.createElement('div');
             galleryWrap.id = 'detailBookingMediaWrap';
             galleryWrap.className = 'mt-2 pt-2 border-top-dashed';
-            galleryWrap.innerHTML = '<div id="detailBookingMediaGrid"></div>';
+            galleryWrap.innerHTML = '<div id="detailBookingMediaGrid" class="d-flex flex-column gap-3"></div>';
             noteEl.after(galleryWrap);
         }
 
         const mediaGrid = container.querySelector('#detailBookingMediaGrid');
         if (mediaGrid) {
-            mediaGrid.innerHTML = ids.map(id => {
-                return `
-                    <div class="booking-media-item-mini">
-                        <iframe src="https://drive.google.com/file/d/${id}/preview" 
-                                frameborder="0" scrolling="no"
-                                style="width: 100%; height: 100%; border-radius: 8px; pointer-events: none;"></iframe>
-                        <a href="https://drive.google.com/file/d/${id}/view" target="_blank" 
-                           style="position: absolute; inset: 0; z-index: 10;"></a>
+            let html = '';
+
+            if (photoIds.length > 0) {
+                html += `<div>
+                    <small class="text-muted d-block mb-1 fw-bold"><i class="fas fa-image me-1"></i> Hình ảnh đính kèm:</small>
+                    <div class="d-flex flex-wrap gap-2">
+                        ${photoIds.map(id => `
+                            <div class="booking-media-item-mini" style="position:relative; width:80px; height:80px; border-radius:8px; overflow:hidden; border:1px solid #e2e8f0;">
+                                <iframe src="https://drive.google.com/file/d/${id}/preview" 
+                                        frameborder="0" scrolling="no"
+                                        style="width: 100%; height: 100%; pointer-events: none;"></iframe>
+                                <a href="https://drive.google.com/file/d/${id}/view" target="_blank" 
+                                   style="position: absolute; inset: 0; z-index: 10;"></a>
+                            </div>
+                        `).join('')}
                     </div>
-                `;
-            }).join('');
+                </div>`;
+            }
+
+            if (videoIds.length > 0) {
+                html += `<div>
+                    <small class="text-muted d-block mb-1 fw-bold"><i class="fas fa-video me-1"></i> Video đính kèm:</small>
+                    <div class="d-flex flex-wrap gap-2">
+                        ${videoIds.map(id => `
+                            <div class="booking-media-item-mini" style="position:relative; width:120px; height:80px; border-radius:8px; overflow:hidden; border:1px solid #e2e8f0; background:#000;">
+                                <iframe src="https://drive.google.com/file/d/${id}/preview" 
+                                        frameborder="0" scrolling="no"
+                                        style="width: 100%; height: 100%; pointer-events: none;"></iframe>
+                                <a href="https://drive.google.com/file/d/${id}/view" target="_blank" 
+                                   style="position: absolute; inset: 0; z-index: 10;"></a>
+                            </div>
+                        `).join('')}
+                    </div>
+                </div>`;
+            }
+
+            mediaGrid.innerHTML = html;
         }
     }
 
@@ -341,7 +381,30 @@ const ThoNhaOrderDetailRenderer = (() => {
         }
     }
 
-    return { render };
+    function handleReviewMediaPreview(input, boxId) {
+        const box = document.getElementById(boxId);
+        if (!box) return;
+        box.innerHTML = '';
+        
+        if (input.files && input.files[0]) {
+            const file = input.files[0];
+            const url = URL.createObjectURL(file);
+            
+            if (file.type.startsWith('image/')) {
+                box.innerHTML = `
+                    <small class="text-muted d-block mb-1 fw-bold"><i class="fas fa-image me-1"></i> Hình ảnh đã chọn:</small>
+                    <img src="${url}" style="width:100px; height:100px; object-fit:cover; border-radius:8px; border:1px solid #ddd;">
+                `;
+            } else if (file.type.startsWith('video/')) {
+                box.innerHTML = `
+                    <small class="text-muted d-block mb-1 fw-bold"><i class="fas fa-video me-1"></i> Video đã chọn:</small>
+                    <video src="${url}" muted autoplay loop playsinline style="width:120px; height:80px; object-fit:cover; border-radius:8px; background:#000;"></video>
+                `;
+            }
+        }
+    }
+
+    return { render, handleReviewMediaPreview };
 })();
 
 window.ThoNhaOrderDetailRenderer = ThoNhaOrderDetailRenderer;

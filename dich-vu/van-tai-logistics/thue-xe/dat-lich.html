@@ -1462,32 +1462,7 @@ document.addEventListener('DOMContentLoaded', loadHeader);
             payload.id_nguoidung = accountResult?.userId || _standaloneSession?.id || null;
             payload.id_xe = _standaloneSelectedCarId || bookingData.car_id || _standaloneFallbackCarId || null;
 
-            // 3. Tải file media lên Drive (CATCH lỗi không để làm dừng các bước khác)
-            let driveIds = [];
-            try {
-                if (_standaloneMediaFiles && _standaloneMediaFiles.length > 0) {
-                    confirmBtn.innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span>Đang tải dữ liệu đính kèm...';
-                    for (const m of _standaloneMediaFiles) {
-                        try {
-                            const up = await DVQTApp.uploadFile(m.file, { folderKey: 30 });
-                            if (up && up.success && up.fileId) {
-                                let finalId = up.fileId;
-                                if (m.file.type.startsWith('video/')) {
-                                    finalId = 'vid_' + finalId;
-                                }
-                                driveIds.push(finalId);
-                            }
-                        } catch (err) {
-                            console.warn('Lỗi upload 1 file media:', err);
-                        }
-                    }
-                }
-            } catch (e) {
-                console.error("Lỗi Google Drive:", e);
-            }
-            payload.hinh_anh = driveIds.join(',');
-
-            // 4. Lưu DB (Bắt buộc thành công)
+            // 3. Lưu DB (Bắt buộc thành công)
             let rawId = null;
             try {
                 const result = await DVQTKrud.insertRow('datlich_thuexe', payload);
@@ -1501,6 +1476,38 @@ document.addEventListener('DOMContentLoaded', loadHeader);
                 confirmBtn.disabled = false;
                 confirmBtn.innerHTML = '<i class="fas fa-check me-2"></i> Xác nhận đặt xe';
                 return;
+            }
+
+            // 4. Tải file media lên Drive (CATCH lỗi không để làm dừng các bước khác)
+            let driveIds = [];
+            try {
+                if (_standaloneMediaFiles && _standaloneMediaFiles.length > 0) {
+                    confirmBtn.innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span>Đang tải dữ liệu đính kèm...';
+                    const dLocal = new Date();
+                    const padD = (n) => String(n).padStart(2, '0');
+                    const timeUploadStr = `${padD(dLocal.getDate())}${padD(dLocal.getMonth()+1)}${dLocal.getFullYear()}_${padD(dLocal.getHours())}${padD(dLocal.getMinutes())}${padD(dLocal.getSeconds())}${String(dLocal.getMilliseconds()).padStart(3, '0')}`;
+                    
+                    for (const m of _standaloneMediaFiles) {
+                        try {
+                            const cName = `${rawId}_thuexe_${timeUploadStr}_datlich`;
+                            const up = await DVQTApp.uploadFile(m.file, { folderKey: 30, customName: cName });
+                            if (up && up.success && up.fileId) {
+                                let finalId = up.fileId;
+                                if (m.file.type.startsWith('video/')) {
+                                    finalId = 'vid_' + finalId;
+                                }
+                                driveIds.push(finalId);
+                            }
+                        } catch (err) {
+                            console.warn('Lỗi upload 1 file media:', err);
+                        }
+                    }
+                    if (driveIds.length > 0) {
+                        await DVQTKrud.updateRow('datlich_thuexe', rawId, { hinh_anh: driveIds.join(',') });
+                    }
+                }
+            } catch (e) {
+                console.error("Lỗi Google Drive:", e);
             }
 
             // 5. Lưu vào Google Sheet (CATCH lỗi không làm dừng flow)

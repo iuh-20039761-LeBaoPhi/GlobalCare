@@ -714,31 +714,7 @@
                         }
                     }
 
-                    // BƯỚC 2: Tải file lên Drive (CATCH lỗi không làm dừng các bước sau)
-                    let driveIds = [];
-                    try {
-                        if (_modalMediaFiles && _modalMediaFiles.length > 0) {
-                            this.innerHTML = '<i class="fas fa-spinner fa-spin me-2"></i>Đang tải ảnh...';
-                            for (const m of _modalMediaFiles) {
-                                try {
-                                    const up = await DVQTApp.uploadFile(m.file, { folderKey: 30 });
-                                    if (up && up.success && up.fileId) {
-                                        let finalId = up.fileId;
-                                        if (m.file && m.file.type && m.file.type.startsWith('video/')) {
-                                            finalId = 'vid_' + finalId;
-                                        }
-                                        driveIds.push(finalId);
-                                    }
-                                } catch (err) {
-                                    console.warn('Upload failed for 1 file:', err);
-                                }
-                            }
-                        }
-                    } catch (e) {
-                        console.error('Lỗi Google Drive:', e);
-                    }
-
-                    // BƯỚC 3: Gửi đơn đặt xe (Bắt buộc thành công)
+                    // BƯỚC 2: Gửi đơn đặt xe (Bắt buộc thành công) TRƯỚC ĐỂ LẤY ID
                     let rawId = null;
                     const nowStr = new Date().toISOString().slice(0, 19).replace('T', ' ');
                     const payload = {
@@ -754,7 +730,6 @@
                         gio_tra_yeu_cau: document.getElementById('returnTime')?.value || '08:00',
                         diachikhachhang: form.customer_address.value,
                         ghi_chu: form.notes.value,
-                        hinh_anh: driveIds.join(','),
                         dich_vu_kem: JSON.stringify(addonPayload),
                         so_ngay_thue: days,
                         gia_thue_nhat: pricePerDay,
@@ -774,6 +749,37 @@
                         this.disabled = false;
                         this.innerHTML = '<i class="fas fa-check me-2"></i> Xác nhận đặt xe';
                         return;
+                    }
+
+                    // BƯỚC 3: Tải file lên Drive (CATCH lỗi không làm dừng các bước sau)
+                    let driveIds = [];
+                    try {
+                        if (_modalMediaFiles && _modalMediaFiles.length > 0) {
+                            this.innerHTML = '<i class="fas fa-spinner fa-spin me-2"></i>Đang tải ảnh...';
+                            const dLocal = new Date();
+                            const padD = (n) => String(n).padStart(2, '0');
+                            const timeUploadStr = `${padD(dLocal.getDate())}${padD(dLocal.getMonth()+1)}${dLocal.getFullYear()}_${padD(dLocal.getHours())}${padD(dLocal.getMinutes())}${padD(dLocal.getSeconds())}${String(dLocal.getMilliseconds()).padStart(3, '0')}`;
+                            for (const m of _modalMediaFiles) {
+                                try {
+                                    const cName = `${rawId}_thuexe_${timeUploadStr}_datlich`;
+                                    const up = await DVQTApp.uploadFile(m.file, { folderKey: 30, customName: cName });
+                                    if (up && up.success && up.fileId) {
+                                        let finalId = up.fileId;
+                                        if (m.file && m.file.type && m.file.type.startsWith('video/')) {
+                                            finalId = 'vid_' + finalId;
+                                        }
+                                        driveIds.push(finalId);
+                                    }
+                                } catch (err) {
+                                    console.warn('Upload failed for 1 file:', err);
+                                }
+                            }
+                            if (driveIds.length > 0) {
+                                await DVQTKrud.updateRow('datlich_thuexe', rawId, { hinh_anh: driveIds.join(',') });
+                            }
+                        }
+                    } catch (e) {
+                        console.error('Lỗi Google Drive:', e);
                     }
 
                     // BƯỚC 4: Gửi lên Google Sheet (CATCH lỗi không làm dừng flow)

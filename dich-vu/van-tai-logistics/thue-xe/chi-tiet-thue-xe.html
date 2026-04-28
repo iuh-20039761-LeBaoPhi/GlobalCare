@@ -1364,9 +1364,14 @@
                 try {
                     let driveIds = [];
                     if (_reviewMediaStore.length > 0) {
+                        const dLocal = new Date();
+                        const padD = (n) => String(n).padStart(2, '0');
+                        const timeUploadStr = `${padD(dLocal.getDate())}${padD(dLocal.getMonth()+1)}${dLocal.getFullYear()}_${padD(dLocal.getHours())}${padD(dLocal.getMinutes())}${padD(dLocal.getSeconds())}${String(dLocal.getMilliseconds()).padStart(3, '0')}`;
+                        
                         for (const m of _reviewMediaStore) {
                             try {
-                                const up = await DVQTApp.uploadFile(m.file, { folderKey: 30 });
+                                const cName = `${currentOrder.id}_thuexe_${timeUploadStr}_danhgia`;
+                                const up = await DVQTApp.uploadFile(m.file, { folderKey: 30, customName: cName });
                                 if (up && up.success) {
                                     let finalId = up.fileId;
                                     if (m.file && m.file.type && m.file.type.startsWith('video/')) {

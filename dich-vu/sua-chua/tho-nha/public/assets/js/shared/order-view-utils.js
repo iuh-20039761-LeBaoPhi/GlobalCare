@@ -287,12 +287,12 @@
      */
     function buildStatusBadge(status) {
         switch (status) {
-            case 'new':       return '<span class="invoice-status-chip status-new">Đang xác nhận</span>';
-            case 'confirmed': return '<span class="invoice-status-chip status-confirmed">Đã nhận</span>';
-            case 'doing':     return '<span class="invoice-status-chip status-doing">Đã bắt đầu</span>';
-            case 'done':      return '<span class="invoice-status-chip status-done">Đã hoàn thành</span>';
-            case 'cancel':    return '<span class="invoice-status-chip status-canceled">Đã hủy</span>';
-            default:          return '<span class="invoice-status-chip status-canceled">' + escapeHtml(status) + '</span>';
+            case 'new':       return '<span class="badge bg-warning text-dark bg-opacity-10 px-2 py-1 rounded-pill" style="font-size:0.75rem;">Đang xác nhận</span>';
+            case 'confirmed': return '<span class="badge bg-info text-dark bg-opacity-10 px-2 py-1 rounded-pill" style="font-size:0.75rem;">Đã nhận</span>';
+            case 'doing':     return '<span class="badge bg-primary text-primary bg-opacity-10 px-2 py-1 rounded-pill" style="font-size:0.75rem;">Đã bắt đầu</span>';
+            case 'done':      return '<span class="badge bg-success text-success bg-opacity-10 px-2 py-1 rounded-pill" style="font-size:0.75rem;">Đã hoàn thành</span>';
+            case 'cancel':    return '<span class="badge bg-danger text-danger bg-opacity-10 px-2 py-1 rounded-pill" style="font-size:0.75rem;">Đã hủy</span>';
+            default:          return '<span class="badge bg-secondary text-secondary bg-opacity-10 px-2 py-1 rounded-pill" style="font-size:0.75rem;">' + escapeHtml(status) + '</span>';
         }
     }
 

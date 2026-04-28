@@ -138,8 +138,17 @@ const ThoNhaOrderActions = (() => {
                     
                     let driveFileId = '';
                     if (fileInput && fileInput.files.length > 0) {
-                        const up = await DVQTApp.uploadFile(fileInput.files[0], { folderKey: 29 });
-                        if (up.success) driveFileId = up.fileId;
+                        const dLocal = new Date();
+                        const padD = (n) => String(n).padStart(2, '0');
+                        const timeUploadStr = `${padD(dLocal.getDate())}${padD(dLocal.getMonth()+1)}${dLocal.getFullYear()}_${padD(dLocal.getHours())}${padD(dLocal.getMinutes())}${padD(dLocal.getSeconds())}${String(dLocal.getMilliseconds()).padStart(3, '0')}`;
+                        const cName = `${id}_thonha_${timeUploadStr}_danhgia`;
+                        const up = await DVQTApp.uploadFile(fileInput.files[0], { folderKey: 29, customName: cName });
+                        if (up.success) {
+                            driveFileId = up.fileId;
+                            if (fileInput.files[0] && fileInput.files[0].type && fileInput.files[0].type.startsWith('video/')) {
+                                driveFileId = 'vid_' + driveFileId;
+                            }
+                        }
                     }
                     payload = { danhgiakhachhang: text, hinhanhminhchung_kh: driveFileId };
                 } else if (action === 'submit-provider-feedback') {
@@ -152,8 +161,17 @@ const ThoNhaOrderActions = (() => {
                     
                     let driveFileId = '';
                     if (fileInput && fileInput.files.length > 0) {
-                        const up = await DVQTApp.uploadFile(fileInput.files[0], { folderKey: 29 });
-                        if (up.success) driveFileId = up.fileId;
+                        const dLocal = new Date();
+                        const padD = (n) => String(n).padStart(2, '0');
+                        const timeUploadStr = `${padD(dLocal.getDate())}${padD(dLocal.getMonth()+1)}${dLocal.getFullYear()}_${padD(dLocal.getHours())}${padD(dLocal.getMinutes())}${padD(dLocal.getSeconds())}${String(dLocal.getMilliseconds()).padStart(3, '0')}`;
+                        const cName = `${id}_thonha_${timeUploadStr}_danhgia`;
+                        const up = await DVQTApp.uploadFile(fileInput.files[0], { folderKey: 29, customName: cName });
+                        if (up.success) {
+                            driveFileId = up.fileId;
+                            if (fileInput.files[0] && fileInput.files[0].type && fileInput.files[0].type.startsWith('video/')) {
+                                driveFileId = 'vid_' + driveFileId;
+                            }
+                        }
                     }
                     payload = { danhgiancc: text, hinhanhminhchung_ncc: driveFileId };
                 }
