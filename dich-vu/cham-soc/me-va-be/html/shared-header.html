@@ -19,7 +19,9 @@
         <img class="header-logo" src="assets/logomvb.png" alt="cham-soc-me-va-be" />
       </a>
     </div>
-    <button class="navbar-toggler border-0 ms-2" type="button" id="menuToggle" aria-expanded="false" aria-controls="navMenu">
+    <button class="navbar-toggler border-0 ms-2" type="button" id="menuToggle"
+      data-bs-toggle="collapse" data-bs-target="#navMenu"
+      aria-controls="navMenu" aria-expanded="false">
       <span class="navbar-toggler-icon"></span>
     </button>
 
@@ -69,19 +71,3 @@
     </div>
   </div>
 </nav>
-<script>
-(function () {
-  var btn = document.getElementById('menuToggle');
-  var menu = document.getElementById('navMenu');
-  if (!btn || !menu) return;
-  function toggleMenu(e) {
-    e.preventDefault();
-    var isOpen = menu.classList.contains('show');
-    menu.classList.toggle('show', !isOpen);
-    menu.classList.toggle('collapse', isOpen);
-    btn.setAttribute('aria-expanded', String(!isOpen));
-  }
-  btn.addEventListener('click', toggleMenu);
-  btn.addEventListener('touchend', toggleMenu, { passive: false });
-})();
-</script>
