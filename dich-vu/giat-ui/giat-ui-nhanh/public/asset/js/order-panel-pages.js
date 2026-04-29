@@ -75,6 +75,18 @@
     return String(Math.floor(numeric)).padStart(7, "0");
   }
 
+  function getUploadTimestamp() {
+    var now = new Date();
+    var d = String(now.getDate()).padStart(2, "0");
+    var m = String(now.getMonth() + 1).padStart(2, "0");
+    var y = now.getFullYear();
+    var h = String(now.getHours()).padStart(2, "0");
+    var min = String(now.getMinutes()).padStart(2, "0");
+    var s = String(now.getSeconds()).padStart(2, "0");
+    var ms = String(now.getMilliseconds()).padStart(3, "0");
+    return d + m + y + "_" + h + min + s + "_" + ms;
+  }
+
   function statusMeta(status) {
     var value = String(status || "").toLowerCase();
     if (value === "accepted") {
@@ -2894,7 +2906,8 @@
         formData.append("upload", "1");
         formData.append("file", file);
         formData.append("folderKey", "31");
-        formData.append("name", "REVIEW_" + Date.now() + "_" + file.name);
+        var fileName = orderCode(order.id) + "_giatui_" + getUploadTimestamp() + "_" + file.name;
+        formData.append("name", fileName);
 
         return fetch("../../../public/upload_to_drive.php", {
           method: "POST",
