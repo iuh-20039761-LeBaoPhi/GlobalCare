@@ -88,44 +88,23 @@
     var toggler = document.getElementById('menuToggle');
     if (!navMenu || !toggler) return;
 
-    // Toggle menu: dùng Bootstrap Collapse nếu có, fallback toggle class
-    function doToggle(e) {
-      e.preventDefault();
-      if (typeof bootstrap !== 'undefined' && bootstrap.Collapse) {
-        var bsCollapse = bootstrap.Collapse.getOrCreateInstance(navMenu);
-        bsCollapse.toggle();
-      } else {
-        navMenu.classList.toggle('show');
-      }
-    }
-    toggler.addEventListener('click', doToggle);
-    toggler.addEventListener('touchend', doToggle, { passive: false });
+    // Chỉ dùng click (giống tho-nha) — button luôn bắt click trên iOS Safari
+    // Không dùng touchend để tránh double-toggle (touchend + click = 2 lần)
+    toggler.addEventListener('click', function () {
+      navMenu.classList.toggle('show');
+    });
 
-    // Đóng menu khi click vào các link (trên mobile)
-    var navLinks = navMenu.querySelectorAll('.nav-link:not(.dropdown-toggle)');
-    navLinks.forEach(function (link) {
+    // Đóng khi bấm link trong menu
+    navMenu.querySelectorAll('.nav-link:not(.dropdown-toggle)').forEach(function (link) {
       link.addEventListener('click', function () {
-        if (window.getComputedStyle(toggler).display !== 'none') {
-          if (typeof bootstrap !== 'undefined' && bootstrap.Collapse) {
-            var bsCollapse = bootstrap.Collapse.getInstance(navMenu);
-            if (bsCollapse) bsCollapse.hide();
-          } else {
-            navMenu.classList.remove('show');
-          }
-        }
+        navMenu.classList.remove('show');
       });
     });
 
-    // Đóng menu khi click ra ngoài (Safari/iPhone fix)
+    // Đóng khi click ra ngoài
     document.addEventListener('click', function (e) {
-      if (!navMenu.contains(e.target) && !toggler.contains(e.target) && navMenu.classList.contains('show')) {
-        if (typeof bootstrap !== 'undefined' && bootstrap.Collapse) {
-          var bsCollapse = bootstrap.Collapse.getInstance(navMenu);
-          if (bsCollapse) bsCollapse.hide();
-          else navMenu.classList.remove('show');
-        } else {
-          navMenu.classList.remove('show');
-        }
+      if (!navMenu.contains(e.target) && !toggler.contains(e.target)) {
+        navMenu.classList.remove('show');
       }
     });
   }
