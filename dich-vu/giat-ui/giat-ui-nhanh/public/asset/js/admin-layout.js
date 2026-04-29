@@ -195,10 +195,10 @@
 
           var isProvider = idDichVu.indexOf("11") !== -1;
           if (!isProvider) {
-            var navDonNhan = aside.querySelector("#nav-don-nhan");
-            if (navDonNhan) {
-              navDonNhan.style.setProperty("display", "none", "important");
-            }
+            ["#nav-don-nhan", "#nav-dich-vu-dang-ky"].forEach(function (id) {
+              var el = aside.querySelector(id);
+              if (el) el.style.setProperty("display", "none", "important");
+            });
           }
         }
       })

@@ -1055,21 +1055,33 @@
     }
 
     var providerId = resolveProviderId(user);
+    var userIdString = String(user && user.id ? user.id : providerId);
 
-    return Promise.resolve(
+    return Promise.all([
       shared.fetchAllOrders(BOOKING_TABLE, 500, 1, {
         userTable: USER_TABLE,
         customerTable: USER_TABLE,
         providerTable: USER_TABLE,
       }),
-    )
-      .then(function (rows) {
+      window.krudList({ table: "dichvu_giatuinhanh", limit: 1000 })
+    ])
+      .then(function (results) {
+        var rows = results[0];
+        var categories = extractRows(results[1]);
+        
+        // Lấy danh sách tên dịch vụ mà user này đã đăng ký
+        var registeredServiceNames = categories
+          .filter(function(cat) {
+            var providers = String(cat.id_nguoidung || '').split(',').map(function(s) { return s.trim(); }).filter(Boolean);
+            return providers.indexOf(userIdString) !== -1;
+          })
+          .map(function(cat) { return String(cat.tendichvu || '').trim(); });
+
         var pendingOrders = [];
         var assignedOrders = [];
 
         (rows || []).forEach(function (row) {
           var mappedOrder = mapDbOrderToPanelOrder(row);
-          
           // KHÔNG cho hiển thị đơn của chính mình đặt trong mục Đơn nhận làm
           var currentPhone = user && normalizePhone(user.user_tel || user.sodienthoai || user.phone);
           var orderPhone = mappedOrder.customer && normalizePhone(mappedOrder.customer.phone);
@@ -1083,7 +1095,11 @@
           var status = String(mappedOrder.status || "").toLowerCase();
 
           if (status === "pending") {
-            pendingOrders.push(mappedOrder);
+            // Lọc theo dịch vụ đăng ký: Chỉ hiện đơn nếu dịch vụ đó được provider đăng ký làm
+            var orderService = String(row.dichvu || '').trim();
+            if (registeredServiceNames.indexOf(orderService) !== -1) {
+              pendingOrders.push(mappedOrder);
+            }
             return;
           }
 
@@ -1120,7 +1136,8 @@
           allOrders: statsOrders.slice(),
         };
       })
-      .catch(function () {
+      .catch(function (err) {
+        console.error("Lỗi loadProviderOrders:", err);
         return {
           providerId: providerId,
           pendingOrders: [],

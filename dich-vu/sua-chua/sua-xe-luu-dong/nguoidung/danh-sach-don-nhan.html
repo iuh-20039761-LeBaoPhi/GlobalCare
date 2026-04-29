@@ -136,14 +136,14 @@
                     <th>Thao tác</th>
                   </tr>
                 </thead>
-                <tbody id="ordersTableBody"></tbody>
-                <tfoot id="summaryTableBody" class="table-light fw-bold border-top-2">
+
+                <tbody id="ordersTableBody">
                   <tr>
-                    <td colspan="5" class="text-end">Tổng cộng:</td>
-                    <td id="totalOrdersCount" class="text-center">0</td>
-                    <td id="totalOrdersAmount" class="text-primary">0đ</td>
+                    <td colspan="7" class="text-center py-4 text-muted">
+                      Đang tải danh sách đơn hàng...
+                    </td>
                   </tr>
-                </tfoot>
+                </tbody>
               </table>
             </div>
 
@@ -268,6 +268,13 @@
                     <th>Thao tác</th>
                   </tr>
                 </thead>
+                <tbody id="summaryAssignedTableBody">
+                  <tr class="table-light fw-bold">
+                    <td colspan="5" class="text-end">Tổng cộng (<span id="totalAssignedOrdersCount">0</span>):</td>
+                    <td id="totalAssignedOrdersAmount">0 đ</td>
+                    <td></td>
+                  </tr>
+                </tbody>
                 <tbody id="providerAssignedTableBody">
                   <tr>
                     <td colspan="7" class="text-center py-4 text-muted">
@@ -275,13 +282,6 @@
                     </td>
                   </tr>
                 </tbody>
-                <tfoot id="summaryAssignedTableBody" class="table-light fw-bold border-top-2">
-                  <tr>
-                    <td colspan="5" class="text-end">Tổng cộng:</td>
-                    <td id="totalAssignedOrdersCount" class="text-center">0</td>
-                    <td id="totalAssignedOrdersAmount" class="text-primary">0đ</td>
-                  </tr>
-                </tfoot>
               </table>
             </div>
 
