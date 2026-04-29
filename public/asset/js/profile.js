@@ -579,8 +579,10 @@
 
                 const uName = (payload.hovaten || currentUser.hovaten || 'user').replace(/\s+/g, '-');
                 const uPhone = currentUser.sdt || currentUser.sodienthoai || '';
-                const ts = `${pad(d.getDate())}${pad(d.getMonth()+1)}${d.getFullYear()}-${pad(d.getHours())}${pad(d.getMinutes())}${pad(d.getSeconds())}-${d.getMilliseconds()}`;
-                const baseSlug = `${uName}-${uPhone}-${ts}`;
+                const d = new Date();
+                const pad = (n) => String(n).padStart(2, '0');
+                const ts = `${pad(d.getDate())}${pad(d.getMonth()+1)}${d.getFullYear()}_${pad(d.getHours())}${pad(d.getMinutes())}${pad(d.getSeconds())}_${String(d.getMilliseconds()).padStart(3, '0')}`;
+                const baseSlug = `${uName}_${uPhone}_${ts}`;
 
                 if (avatarFile) {
                     btn.innerHTML = '<i class="fas fa-spinner fa-spin me-1"></i> Đang tải lên ảnh đại diện...';
