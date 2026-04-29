@@ -239,6 +239,18 @@
     return String(Math.floor(id)).padStart(7, "0");
   }
 
+  function getUploadTimestamp() {
+    var now = new Date();
+    var d = String(now.getDate()).padStart(2, "0");
+    var m = String(now.getMonth() + 1).padStart(2, "0");
+    var y = now.getFullYear();
+    var h = String(now.getHours()).padStart(2, "0");
+    var min = String(now.getMinutes()).padStart(2, "0");
+    var s = String(now.getSeconds()).padStart(2, "0");
+    var ms = String(now.getMilliseconds()).padStart(3, "0");
+    return d + m + y + "_" + h + min + s + "_" + ms;
+  }
+
   /**
    * Định dạng số thành chuỗi tiền tệ tiếng Việt (ví dụ: 100.000 đ).
    * @param {number|string} value Giá trị số.
@@ -1734,7 +1746,8 @@
       formData.append("upload", "1");
       formData.append("file", file);
       formData.append("folderKey", "31");
-      formData.append("name", "REVIEW_" + Date.now() + "_" + file.name);
+      var fileName = formatOrderCode(state.orderRaw.id) + "_giatui_" + getUploadTimestamp() + "_" + file.name;
+      formData.append("name", fileName);
 
       var res = await fetch("../../../public/upload_to_drive.php", {
         method: "POST",
